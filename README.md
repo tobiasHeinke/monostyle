@@ -9,8 +9,8 @@ because they can have false positives.
 For example style guide rules that have exceptions which can't be filtered away.
 
 Monostyle is build as a framework and not as a ready-made tool
-because the tools require customization like markup filtering or you might not want to Chicago style title case. 
-It includes its own RST parser and a port of the [Reflow line wrapper] (https://metacpan.org/pod/Text::Reflow).
+because the tools require customization like markup filtering or you might not want to use Chicago style title case. 
+It includes its own RST parser and a port of the [Reflow line wrapper](https://metacpan.org/pod/Text::Reflow).
 Its utilities can also be used for text editing with scripts.
 
 
@@ -30,7 +30,7 @@ python spelling.py
 
 ## Running Monostyle
 
-Monostyle has three modes:
+Monostyle has four modes:
 
 <dl>
   <dt>internal -i</dt>
@@ -40,8 +40,10 @@ Monostyle has three modes:
       To check changes by others made to the repository.
       Run this before you update your repository with SVN.
    </dd>
-  <dt>file -f</dt>
+  <dt>patch -p</dt>
   <dd>To check changes in a patch-file.</dd>
+  <dt>file -f</dt>
+  <dd>To check whole files/directories.</dd>
   <dt>root -r</dt>
   <dd>
       The root is (absolute) path to where the diff is/was created usually the local project directory.
