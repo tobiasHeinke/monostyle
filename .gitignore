@@ -1,0 +1,6 @@
+*.pyc
+*.egg
+
+build/
+dist/
+monostyle.egg-info/
