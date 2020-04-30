@@ -1,6 +1,10 @@
+__pycache__
 *.pyc
+
 *.egg
 
+*.egg-info/
 build/
 dist/
-monostyle.egg-info/
+
+monostyle/data/lexicon.csv

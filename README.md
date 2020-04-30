@@ -1,6 +1,9 @@
 
 # Monostyle
 
+[![PyPI version shields.io](https://img.shields.io/pypi/v/monostyle.svg)](https://pypi.python.org/pypi/monostyle/)
+[![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/tobiasHeinke/monostyle/blob/master/LICENSE)
+
 Monostyle is a framework for style checking and linting covering all parts of a style guide.
 
 Its tools are applied on new or changed content
