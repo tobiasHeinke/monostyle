@@ -26,9 +26,9 @@ On first run you have to confirm to start this (or also if the dictionary file i
 
 The dictionary has to be updated from time to time or after a bigger portion of content has been added
 to include the new words (of cause the whole project has to be spell-checked).
-To do this run the `spelling.py` script:
+To do this run the `spelling` script:
 ```sh
-python spelling.py
+python -m monostyle.spelling
 ```
 
 ## Running Monostyle

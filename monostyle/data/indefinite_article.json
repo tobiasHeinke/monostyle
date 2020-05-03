@@ -1,0 +1,38 @@
+{
+"source partial": ["https://github.com/retextjs/retext-indefinite-article/tree/master/lib"],
+
+  "a":{
+		"syllable": [
+			"hom",
+			"hon",
+			"hotel",
+			"hour"
+	  ],
+	  "letter": [
+			"f", "h", "l", "m", "n", "r", "s", "x"
+	  ],
+		"acronym": [
+			"NURBS"
+		]
+  },
+  "an":{
+	  "syllable": [
+			"eu",
+			"once",
+			"one",
+			"ubi",
+			"una",
+			"uni",
+			"ur",
+			"usa",
+			"use",
+			"usu",
+			"ut"
+	  ],
+	  "letter": [
+			"u"
+	  ],
+		"acronym": [
+		]
+	}
+}

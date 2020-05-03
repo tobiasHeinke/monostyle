@@ -7,10 +7,10 @@ import monostyle
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setuptools.setup(
+setup(
     name="monostyle",
     version=monostyle.__version__,
-    license="GPLv3+"
+    license="GPLv3+",
     author="Tobias Heinke",
     author_email="tobias.heinke@outlook.com",
     description="A framework for style checking and linting",
@@ -26,7 +26,7 @@ setuptools.setup(
     platforms="any",
     python_requires='>=3.6',
     zip_safe=False,
-    packages=setuptools.find_packages(),
+    packages=find_packages(),
     include_package_data=True,
     package_data={
         "": ["*.json", "*.txt"],

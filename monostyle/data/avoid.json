@@ -1,0 +1,76 @@
+{
+"style":[
+	"thus",
+	"say you",
+	"now you should have",
+	"#https://developer.salesforce.com/docs/atlas.en-us.216.0.salesforce_pubs_style_guide.meta/salesforce_pubs_style_guide/style_allow_let.htm",
+	[["allow", "let"], "restructure so the reader is the subject"]
+],
+"vague":[
+	"another",
+	"eventually",
+	"here",
+	"happens", "happening",
+	"maybe",
+	"nothing",
+	"other",
+	"thing", "things"
+],
+"qualifiers":[
+	"a bit",
+	"a little",
+	"a lot",
+	"especially",
+	"most",
+	"often",
+	"really",
+	"quite",
+	"some",
+	"somewhat",
+	"something",
+	"sometimes\\?",
+	"usually",
+	"very"
+],
+"difficulty":[
+	"easy", "easily",
+	"clearly",
+	"just",
+	"simple", "simply",
+	"straightforward"
+],
+"humanization":[
+	"acts",
+	"ask",
+	"behave",
+	"comes\\? up",
+	"concern",
+	"decides",
+	"guess",
+	"tell", "tells",
+	"try", "tries",
+	"will do"
+],
+"voice":[
+	"I(?!\\.e\\.)", "I'(ll|m|ve)", "me", "mine",
+	"we", "we'(ll|re|ve)", "us", "our", "let's",
+	"the user"
+],
+"pronoun":[
+	"he", "he'(d|ll|s)", "his",
+	"she", "she'(d|ll|s)", "her"
+],
+"modal verbs":[
+	"#https://developer.salesforce.com/docs/atlas.en-us.216.0.salesforce_pubs_style_guide.meta/salesforce_pubs_style_guide/style_can.htm",
+	["could", "can"],
+	["may", "not use"],
+	["might", "use imperative"],
+	["should", "must or _ recommends"]
+],
+"vulgar":[
+	["check out", ["please refer to", "see"]],
+	"whatever", "what ever",
+	"whatnot",
+	"what so ever", "whatsoever"
+]
+}

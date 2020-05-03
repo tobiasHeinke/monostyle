@@ -1,0 +1,142 @@
+{
+"#source": "https://en.wikipedia.org/ corresponding page or 'list of' page",
+"#source2": "https://en.wiktionary.org/wiki/Category:English_lemmas",
+"#source: suffixes": "https://dictionary.cambridge.org/grammar/british-grammar/suffixes",
+"determiner": {
+	"article": [
+		"the", "a", "an"
+	],
+	"demonstrative": [
+		"here", "that", "there", "these", "this", "those"
+	],
+	"possessive": [
+		"my", "mine", "your", "yours", "his", "her", "hers", "its",
+		"our", "ours", "their", "theirs"
+	],
+	"quantifier": {
+		"number": [
+			"null", "zero", "one", "two", "three", "four", "five",
+			"six", "seven", "eight", "nine",
+			"ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+			"sixteen", "seventeen", "eighteen", "nineteen",
+			"twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"
+	  ],
+		"ordinal": [
+			"zeroth", "noughth", "first", "second", "third", "fourth", "fifth",
+			"sixth", "seventh", "eighth", "ninth",
+			"tenth", "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth",
+			"sixteenth", "seventeenth", "eighteenth", "nineteenth", "twentieth",
+			"thirtieth", "fortieth", "fiftieth", "sixtieth", "seventieth", "eightieth", "ninetieth"
+		],
+		"nonspecific": [
+			"dozen", "score", "first", "single", "once", "double", "triple", "much"
+		]
+	},
+	"distributive": [
+		"each", "any", "either", "neither"
+	],
+	"interrogative": [
+		"which", "what", "whose"
+	]
+},
+"auxiliary": [
+	"do", "does", "did", "have", "has", "had",
+	"be", "being", "been", "am", "is", "are", "was", "were",
+	"can", "could", "may", "might", "shall", "should", "will", "would", "must"
+],
+"pronoun": [
+	"I", "me", "my", "mine", "myself", "you", "your", "yours", "yourself", "yourselves",
+	"he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "it", "its", "itself",
+	"we", "us", "our", "ours", "ourselves", "they", "them", "their", "theirs", "themselves",
+	"this", "these", "those", "that", "former", "latter",
+	"who", "whom", "whose", "what", "which", "which",
+	"something", "someone", "somebody", "anything", "anyone", "anybody",
+	"nothing", "no", "one", "nobody"
+],
+"conjunction": {
+	"coordinating": [
+		"for", "and", "nor", "but", "or", "yet", "so"
+	],
+	"correlative": [
+		"so", "as", "than"
+	],
+	"subordinate": [
+		"after", "although", "as", "as far as", "as if", "as long as",
+		"as soon as", "as though", "because", "before", "even if", "even though",
+		"every time", "if", "in order that", "since", "so", "so that",
+		"than", "though", "unless", "until", "when", "whenever", "where",
+		"whereas", "wherever", "while"
+	]
+},
+"preposition": {
+	"one": [
+		"aboard", "about", "above", "absent", "across", "after", "against", "along",
+		"alongside", "amid", "among", "apropos", "around", "as", "astride", "at", "atop",
+		"bar", "before", "behind", "below", "beneath", "beside", "besides", "between",
+		"beyond", "but", "by",
+		"circa", "come", "despite", "down", "during", "except", "for", "from",
+		"in", "inside", "into", "less", "like",
+		"minus", "near", "notwithstanding", "postpositional",
+		"of", "off", "on", "onto", "ontop", "opposite", "out", "outside", "over",
+		"pace", "past", "per", "plus", "post", "pre", "pro", "re", "short", "since",
+		"than", "through", "throughout", "till", "to", "toward", "towards",
+		"under", "underneath", "unlike", "until", "up", "upon", "upside",
+		"versus", "via", "vice", "vis-à-vis", "with", "within", "without", "worth"
+	],
+	"two": [
+		"as", "for", "from", "of", "on", "per", "than", "to", "with"
+	]
+},
+
+"abbreviation": {
+	"#source": "https://metacpan.org/pod/Text::Reflow",
+	"title": {
+		"civil": [
+			"Dr", "Hon", "Esq", "Mlle", "Mme", "Mr", "Mrs", "Miss", "Prof"
+		],
+		"military": [
+			"Pvt", "Cpl", "Sgt", "Ens", "Lieut", "Capt", "Cmdr",
+		  "Maj", "Col", "Gen", "Adm"
+	  ],
+		"nobility_cleric": [
+			"Bart", "Rev"
+		]
+	},
+	"road_signs": [
+		"No", "St", "Ave", "Rd", "Blvd", "Ct", "Cir"
+	],
+	"month": [
+		"Jan", "Feb", "Mar", "Apr", "Jun", "Jul",
+		"Aug", "Sep", "Sept", "Oct", "Nov", "Dec"
+	],
+	"phrase": [
+		"e.g", "i.e", "iz", "n.b", "etc", "a.k.a", "viz", "vs", "nbr", "co"
+	],
+	"doc": [
+		"Fig", "Tab", "al"
+	]
+},
+"noun": [
+	"body", "collective", "display", "drive", "energy",
+	"family", "fantasy", "file", "frequency",
+	"gradient", "hierarchy", "hotkey",
+	"key", "material", "manual", "money", "normal",
+	"overlay", "parent", "perspective", "profile", "property", "purpose", "proxy",
+	"ray", "tile", "tutorial", "way",
+	"-ancy", "-dom", "-ee", "-ence", "-ency", "-hood", "-ion", "-ism",
+	"-ist", "-ity", "-logy", "-logy", "-ment", "-ness", "-ry", "-ship"
+],
+"#participle": " auxiliary + suffix",
+"participle": ["-ing", "-en"],
+"verb": [
+	"apply", "able", "began", "bent", "copy", "choose", "disable", "enable", "lay", "prevent",
+	"-ate", "-en", "-ify", "-ise", "-ize"
+],
+"adverb": ["-ly", "-ward", "-wards", "-ways", "-wise"],
+"adjective": [
+	"cool", "hot", "new", "greater", "higher",
+	"-able", "-ible", "-al", "-ial", "-ful", "-ic", "-ical", "-ish", "-ive", "-ative", "-less",
+	"-eous", "-ious", "-ous", "-ose", "-y", "-ile", "-ant", "-ent", "-an", "-ian", "-ary"
+],
+"interjection": []
+}
