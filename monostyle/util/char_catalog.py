@@ -10,7 +10,7 @@ import re
 from monostyle.util.monostylestd import get_data_file, get_branch
 
 class CharCatalog:
-    """Unicode character categories.."""
+    """Unicode character categories."""
 
     def __init__(self):
         self.data = get_data_file("char_catalog")

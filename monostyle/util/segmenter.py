@@ -3,7 +3,7 @@
 util.segmenter
 ~~~~~~~~~~~~~~
 
-Segmentation and word classification.
+Text segmentation.
 """
 
 import re

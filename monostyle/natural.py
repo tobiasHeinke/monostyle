@@ -425,17 +425,6 @@ OPS = (
 )
 
 
-def line_reports(reports):
-    lines = []
-    for report in reports:
-        if report is not None:
-            lines.append(str(report))
-            if report.line != "":
-                lines.append(">>> " + re.sub(r"\n", "¶", report.line))
-
-    return lines
-
-
 def main():
     import argparse
 
