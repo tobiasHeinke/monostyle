@@ -44,7 +44,6 @@ tool_selection = {
 # Project Directories
 # -------------------
 
-root_dir = ""
 rst_dir = "manual"
 po_dir = "locale"
 build_dir = "build"
@@ -87,3 +86,56 @@ console_options = {
 # module name : {function name : {variable name: variable value}}
 config_override = {
 }
+# --- END ---
+
+
+import os
+
+def setup_config(root):
+    """Create user config file or overide config."""
+    config_fn = os.path.normpath(os.path.join(root, "monostyle", "config.py"))
+    if not os.path.isfile(config_fn):
+        text = read_config_file(__file__)
+        text = text[:text.find("# --- END ---")]
+        write_config_file(config_fn, text)
+    else:
+        text = read_config_file(config_fn)
+        if text is None:
+            return False
+
+        try:
+            code = compile(text, config_fn, 'exec')
+        except SyntaxError:
+            print("Syntax error in config.py")
+            return False
+
+        namespace = {"__file__": config_fn}
+        exec(code, namespace)
+        
+        config_options = ("tool_selection", "rst_dir", "po_dir", "build_dir", "img_dir",
+                          "console_options", "config_override")
+        for key, val in namespace.items():
+            if key in config_options and val is not None:
+                globals()[key] = val
+
+    return True
+
+
+def read_config_file(config_fn):
+    try:
+        with open(config_fn, 'r', encoding='utf-8') as config_file:
+            text = config_file.read()
+
+        return text
+
+    except IOError:
+        print("config.py not found:", config_fn)
+
+
+def write_config_file(config_fn, text):
+    try:
+        with open(config_fn, 'w', encoding='utf-8') as config_file:
+            config_file.write(text)
+
+    except (IOError, OSError) as err:
+        print("{0}: cannot write: {1}".format(config_fn, err))

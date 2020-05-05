@@ -304,18 +304,14 @@ def main():
 
     parser.add_argument("-r", "--root",
                         dest="root", nargs='?', const="",
-                        help="defines the ROOT directory of the working copy or "
-                             "if left empty the root defined in the config")
+                        help="defines the ROOT directory of the project")
 
     args = parser.parse_args()
 
     if args.root is None:
         root_dir = os.getcwd()
     else:
-        if len(args.root.strip()) == 0:
-            root_dir = monostylestd.ROOT_DIR
-        else:
-            root_dir = os.path.normpath(args.root)
+        root_dir = os.path.normpath(args.root)
 
         if not os.path.exists(root_dir):
             print('Error: root {0} does not exists'.format(args.root))

@@ -153,6 +153,27 @@ def update(path, rev=None):
         pass
 
 
+#------------------------
+
+
+def setup(root):
+    """Add a folder in the root directory for user config and file storage."""
+    config_dir = os.path.normpath(os.path.join(root, "monostyle"))
+
+    if not os.path.isdir(config_dir):
+        if not monostylestd.ask_user(("Create user config folder in '", root, "'")):
+            # run with default config
+            return True
+
+        try:
+            os.mkdir(config_dir)
+
+        except (IOError, OSError) as err:
+            print("{0}: cannot create: {1}".format(config_dir, err))
+            return False
+
+    return config.setup_config(root)
+
 
 def main():
     import argparse
@@ -173,8 +194,7 @@ def main():
 
     parser.add_argument("-r", "--root",
                         dest="root", nargs='?', const="",
-                        help="defines the ROOT directory of the working copy or "
-                             "if left empty the root defined in the config")
+                        help="defines the ROOT directory of the projekt")
 
     parser.add_argument("-u", "--update",
                         dest="up", nargs='?', const=None, metavar='REV',
@@ -192,10 +212,7 @@ def main():
     if args.root is None:
         root_dir = os.getcwd()
     else:
-        if len(args.root.strip()) == 0:
-            root_dir = monostylestd.ROOT_DIR
-        else:
-            root_dir = os.path.normpath(args.root)
+        root_dir = os.path.normpath(args.root)
 
         if not os.path.exists(root_dir):
             print('Error: root {0} does not exists'.format(args.root))
@@ -203,6 +220,10 @@ def main():
 
     root_dir = monostylestd.replace_windows_path_sep(root_dir)
     monostylestd.ROOT_DIR = root_dir
+
+    setup_sucess = setup(root_dir)
+    if not setup_sucess:
+        return 2
 
     if not args.filename and not args.patch:
         is_internal = bool(args.internal is not None)
@@ -235,6 +256,7 @@ def main():
         autofix.run(reports, RSTParser)
     if args.min_severity:
         file_opener.open_reports_files(reports, args.min_severity)
+
 
 if __name__ == "__main__":
     main()

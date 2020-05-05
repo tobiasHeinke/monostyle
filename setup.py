@@ -31,9 +31,6 @@ setup(
     package_data={
         "": ["*.json", "*.txt"],
     },
-    exclude_package_data={
-        "": ["data/*.csv"],
-    },
     entry_points={
         "console_scripts": [
             "monostyle = monostyle.__init__:main",

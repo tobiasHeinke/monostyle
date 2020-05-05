@@ -14,7 +14,7 @@ import json
 import monostyle.config as config
 from monostyle.util.fragment import Fragment
 
-ROOT_DIR = config.root_dir
+ROOT_DIR = None
 RST_DIR = config.rst_dir
 PO_DIR = config.po_dir
 IMG_DIR = config.img_dir
@@ -214,6 +214,20 @@ def print_title(title, to_upper=False, underline='='):
     print('', *title, sep='\n')
     if underline is not None:
         print(underline * max(len(l) for l in title))
+
+
+def ask_user(question):
+    """Get user confirmation via console input.""" 
+    pos = ("y", "yes")
+    neg = ("n", "no")
+    ip = input("".join(question) + " (y/n)?")
+    while (True):
+        if ip in ("h", "help"):
+            print("confirm by entering:", "'" + "', '".join(pos) + "'")
+            print("or chancel with:", "'" + "', '".join(neg) + "'")
+            ip = input("input: ")
+        else:
+            return ip in pos
 
 
 #------------------------

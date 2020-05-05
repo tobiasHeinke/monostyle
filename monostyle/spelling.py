@@ -179,9 +179,9 @@ def lower_first(word):
 
 def read_csv_lexicon():
     lexicon = []
-    lex_fn = os.path.normpath(os.path.join(os.path.dirname(__file__), "data", "lexicon.csv"))
+    lex_fn = os.path.normpath(os.path.join(monostylestd.ROOT_DIR, "monostyle", "lexicon.csv"))
     try:
-        with open(lex_fn, newline='') as csvfile:
+        with open(lex_fn, newline='', encoding='utf-8') as csvfile:
             csv_reader = csv.reader(csvfile)
 
             for row in csv_reader:
@@ -194,10 +194,10 @@ def read_csv_lexicon():
 
 
 def write_csv_lexicon(lexicon):
-    lex_fn = os.path.normpath(os.path.join(os.path.dirname(__file__), "data", "lexicon.csv"))
+    lex_fn = os.path.normpath(os.path.join(monostylestd.ROOT_DIR, "monostyle", "lexicon.csv"))
     count = 0
     try:
-        with open(lex_fn, 'w', newline='') as csvfile:
+        with open(lex_fn, 'w', newline='', encoding='utf-8') as csvfile:
             csv_writer = csv.writer(csvfile)
             for ent in lexicon:
                 csv_writer.writerow(ent)
@@ -232,24 +232,17 @@ def compile_lib():
     return re_lib
 
 
-def ask_user():
-    pos = ("y", "yes")
-    neg = ("n", "no")
-    ip = input("The lexicon does not exist in the data folder do you want to build it (y/n)?")
-    while (True):
-        if ip in ("h", "help"):
-            print("confirm by entering:", "'" + "', '".join(pos) + "'")
-            print("or chancel with:", "'" + "', '".join(neg) + "'")
-            ip = input("input: ")
-        else:
-            return ip in pos
-
-
 def init(_):
+    config_dir = os.path.normpath(os.path.join(monostylestd.ROOT_DIR, "monostyle"))
+    if not os.path.isdir(config_dir):
+        print("No user config found skipping spell checking")
+        return None
+
     re_lib = compile_lib()
     data = read_csv_lexicon()
     if data is None:
-        if ask_user():
+        if monostylestd.ask_user(("The lexicon does not exist in the user config folder ",
+                                  "do you want to build it")):
             lex_new = build_lexicon(re_lib)
             write_csv_lexicon(lex_new)
             data = lex_new
@@ -275,18 +268,14 @@ def main():
 
     parser.add_argument("-r", "--root",
                         dest="root", nargs='?', const="",
-                        help="defines the ROOT directory of the working copy or "
-                             "if left empty the root defined in the config")
+                        help="defines the ROOT directory of the project")
 
     args = parser.parse_args()
 
     if args.root is None:
         root_dir = os.getcwd()
     else:
-        if len(args.root.strip()) == 0:
-            root_dir = monostylestd.ROOT_DIR
-        else:
-            root_dir = os.path.normpath(args.root)
+        root_dir = os.path.normpath(args.root)
 
         if not os.path.exists(root_dir):
             print('Error: root {0} does not exists'.format(args.root))

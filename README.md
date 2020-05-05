@@ -49,9 +49,8 @@ Monostyle has four modes:
   <dd>To check whole files/directories.</dd>
   <dt>root -r</dt>
   <dd>
-      The root is (absolute) path to where the diff is/was created usually the local project directory.
-      If not set the directory where Monostyle is run from is used as a root.
-      Leave it empty to use the root from the configuration or specify a path.
+      The root is (absolute) path to the local project directory or where the patch file was created.
+      If not set the directory where Monostyle is run from is used as the root.
   </dd>
 </dl>
 
