@@ -20,7 +20,7 @@ import importlib.util
 
 from . import config
 from .util import monostylestd
-from .util.monostylestd import Report
+from .util.report import Report, print_reports
 from .rst_parser.core import RSTParser
 from .rst_parser import hunk_post_parser
 from . import svn_inter
@@ -246,7 +246,7 @@ def main():
         reports = get_reports_file(monostylestd.replace_windows_path_sep(args.filename))
 
 
-    monostylestd.print_reports(reports)
+    print_reports(reports)
 
     if args.up or (args.auto and args.external is not None):
         update(root_dir, args.up)

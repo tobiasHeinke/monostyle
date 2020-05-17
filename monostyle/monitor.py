@@ -8,7 +8,7 @@ Monitor files for changes.
 
 import re
 import monostyle.util.monostylestd as monostylestd
-from monostyle.util.monostylestd import Report
+from monostyle.util.report import Report
 
 def init(_):
     fns = monostylestd.get_override(__file__, "init", "fns", [])

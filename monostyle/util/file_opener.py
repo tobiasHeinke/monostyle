@@ -9,7 +9,9 @@ Open files in a text editor.
 import os
 import sys
 import subprocess
-from monostyle.util.monostylestd import Report, path_to_rel
+
+from monostyle.util.monostylestd import path_to_rel
+from monostyle.util.report import Report
 
 # For other text editors see:
 # https://developer.blender.org/diffusion/BM/browse/trunk/blender_docs/tools/open_quickfix_in_editor.py

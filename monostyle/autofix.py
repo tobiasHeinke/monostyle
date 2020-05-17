@@ -6,9 +6,10 @@ autofix
 Apply autofixes to the working copy.
 """
 
-import monostyle.util.monostylestd as monostylestd
 import monostyle.reflow
+import monostyle.util.monostylestd as monostylestd
 from monostyle.util.editor import Editor
+from monostyle.util.report import print_reports
 
 
 def run(reports, rst_parser):
@@ -48,4 +49,4 @@ def apply(group_fn, rst_parser):
 
         if len(unlocated) != 0:
             monostylestd.print_title("Reflow Unlocated Reports", underline='-')
-            monostylestd.print_reports(unlocated)
+            print_reports(unlocated)

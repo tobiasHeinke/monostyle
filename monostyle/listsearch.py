@@ -10,7 +10,7 @@ import os
 import re
 
 import monostyle.util.monostylestd as monostylestd
-from monostyle.util.monostylestd import Report
+from monostyle.util.report import Report, print_reports
 from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.segmenter import Segmenter
@@ -321,7 +321,7 @@ def main():
     monostylestd.ROOT_DIR = root_dir
 
     reports = hub(args.ops)
-    monostylestd.print_reports(reports)
+    print_reports(reports)
 
 
 if __name__ == "__main__":

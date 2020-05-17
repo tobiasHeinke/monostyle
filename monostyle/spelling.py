@@ -11,7 +11,7 @@ import re
 import csv
 
 import monostyle.util.monostylestd as monostylestd
-from monostyle.util.monostylestd import Report
+from monostyle.util.report import Report
 from monostyle.util.fragment import Fragment
 
 from monostyle.rst_parser.core import RSTParser

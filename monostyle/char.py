@@ -10,7 +10,7 @@ import os
 import re
 
 import monostyle.util.monostylestd as monostylestd
-from monostyle.util.monostylestd import Report
+from monostyle.util.report import Report, print_reports
 from monostyle.util.fragment import Fragment
 from monostyle.rst_parser.core import RSTParser
 
@@ -161,7 +161,7 @@ def main():
     else:
         reports = hub(args.op_names)
 
-    monostylestd.print_reports(reports)
+    print_reports(reports)
 
 if __name__ == "__main__":
     main()

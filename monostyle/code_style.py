@@ -10,7 +10,7 @@ import os
 import re
 
 import monostyle.util.monostylestd as monostylestd
-from monostyle.util.monostylestd import Report
+from monostyle.util.report import Report, print_reports
 from monostyle.util.fragment import Fragment
 from monostyle.util.pos import PartofSpeech
 from monostyle.util.char_catalog import CharCatalog
@@ -574,7 +574,7 @@ def main():
     monostylestd.ROOT_DIR = root_dir
 
     reports = hub(args.op_names)
-    monostylestd.print_reports(reports)
+    print_reports(reports)
 
 
 if __name__ == "__main__":
