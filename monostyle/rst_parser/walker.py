@@ -89,8 +89,10 @@ def iter_nodeparts_instr(root, instr_pos, instr_neg, leafs_only=True):
 
     for node in root.child_nodes:
         enter, part_node_name_rule_pos = rules(node, instr_pos, True)
-        enter, part_node_name_rule_neg = rules(node, instr_neg, False)
+        if not enter:
+            continue
 
+        enter, part_node_name_rule_neg = rules(node, instr_neg, False)
         if enter:
             for part in node.child_nodes:
                 if ((part_node_name_rule_pos is None or part_node_name_rule_pos == "*" or

@@ -8,6 +8,7 @@ Interface to SVN.
 # Based on https://developer.blender.org/diffusion/BM/browse/trunk/blender_docs/tools/svn_commit.py
 
 
+import os
 import re
 import subprocess
 
@@ -16,7 +17,7 @@ from monostyle.util.fragment import Fragment
 
 def added_files(is_internal, path):
     rev_max = 0
-    for line in svn_status(is_internal, path):
+    for line in status(is_internal, path):
         line = line.decode('utf-8')
         if line.startswith("Status "):
             continue
@@ -46,8 +47,8 @@ def added_files(is_internal, path):
         print("Highest revision is ", rev_max)
 
 
-def difference(from_svn, is_internal, fn_source, rev, changed_files):
-    op = svn_diff if from_svn else file_diff
+def difference(from_vsn, is_internal, fn_source, rev, changed_files):
+    op = diff if from_vsn else file_diff
 
     is_change = False
     if rev is None:
@@ -149,7 +150,7 @@ def difference(from_svn, is_internal, fn_source, rev, changed_files):
 
 def update_files(path, rev=None):
     rev_up = ""
-    for line in svn_update(path, rev):
+    for line in update(path, rev):
         line = line.decode('utf-8')
         if len(line) != 0:
             if line.startswith("Updating "):
@@ -167,19 +168,20 @@ def update_files(path, rev=None):
                 yield fn, conflict, rev_up
 
 
-def svn_status(is_internal, path):
+def status(is_internal, path):
+    if path == "":
+        print("svn status empty parameter")
+        return None
+
     cmd = ["status"]
     if not is_internal:
         cmd.append("-u")# --show-updates
 
-    if path == "":
-        print("svn update empty parameter")
-        return None
     cmd.append(path)
     return exec_command(cmd)
 
 
-def svn_diff(path, rev, is_change=False):
+def diff(path, rev, is_change=False):
     cmd = ["diff"]
     if not is_change:
         cmd.append("-r")
@@ -192,7 +194,7 @@ def svn_diff(path, rev, is_change=False):
     return exec_command(cmd)
 
 
-def svn_update(path, rev=None):
+def update(path, rev=None):
     if path == "":
         print("svn update empty parameter")
         return None
@@ -204,7 +206,7 @@ def svn_update(path, rev=None):
     return exec_command(cmd)
 
 
-def svn_add(path):
+def add(path):
     if path == "":
         print("svn add empty parameter")
         return None
@@ -213,7 +215,7 @@ def svn_add(path):
     return exec_command(cmd)
 
 
-def svn_delete(path):
+def delete(path):
     if path == "":
         print("svn delete empty parameter")
         return None
@@ -222,7 +224,7 @@ def svn_delete(path):
     return exec_command(cmd)
 
 
-def svn_move(src, dst):
+def move(src, dst):
     if src == "" or dst == "":
         print("svn move empty parameter")
         return None
@@ -268,7 +270,7 @@ def replace_windows_path_sep(fn):
     return re.sub(r"\\", "/", fn)
 
 
-def run_diff(from_svn, is_internal, path, rev):
+def run_diff(from_vsn, is_internal, path, rev):
     def read_file(fn):
         try:
             with open(fn, "r", encoding="utf-8") as f:
@@ -280,25 +282,21 @@ def run_diff(from_svn, is_internal, path, rev):
             print("{0}: cannot open: {1}".format(fn, err))
 
 
-    if from_svn:
+    if from_vsn:
         changed_files = []
-        # file extension
-        ext_re = re.compile(r"\.[A-Za-z0-9]+?$")
         binary_ext = (".png", ".jpg", ".jpeg", ".gif", ".pyc")
         for fn, new, add_mod, rev_file in added_files(is_internal, path):
-            if add_mod:
-                if ext_m := re.search(ext_re, fn):
-                    # if it has an extension it is not a folder
-                    if ext_m.group(0) not in binary_ext:
-                        if new and is_internal:
-                            # unversioned
-                            text = read_file(fn)
-                            text = [l for l in text.splitlines(keepends=True)]
-                            fg = Fragment.from_org_len(fn, text, 0, start_lincol=(0, 0))
-                            yield fg, None
-                        else:
-                            changed_files.append(fn)
+            if add_mod and not os.path.isdir(fn):
+                if os.path.splitext(fn)[1] not in binary_ext:
+                    if new and is_internal:
+                        # unversioned
+                        text = read_file(fn)
+                        text = [l for l in text.splitlines(keepends=True)]
+                        fg = Fragment.from_org_len(fn, text, 0, start_lincol=(0, 0))
+                        yield fg, None
+                    else:
+                        changed_files.append(fn)
     else:
         changed_files = None
 
-    yield from difference(from_svn, is_internal, path, rev, changed_files)
+    yield from difference(from_vsn, is_internal, path, rev, changed_files)

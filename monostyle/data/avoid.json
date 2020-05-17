@@ -1,6 +1,6 @@
 {
 "style":[
-	"thus",
+	"hence",
 	"say you",
 	"now you should have",
 	"#https://developer.salesforce.com/docs/atlas.en-us.216.0.salesforce_pubs_style_guide.meta/salesforce_pubs_style_guide/style_allow_let.htm",
@@ -8,47 +8,64 @@
 ],
 "vague":[
 	"another",
+	"anything",
 	"eventually",
-	"here",
 	"happens", "happening",
+	"here",
 	"maybe",
 	"nothing",
 	"other",
+	"really",
+	"strictly",
 	"thing", "things"
 ],
 "qualifiers":[
 	"a bit",
 	"a little",
 	"a lot",
+	"almost",
+	"enough",
 	"especially",
+	"few",
+	"huge",
+	"many",
 	"most",
 	"often",
-	"really",
+	"partially",
+	"partly",
 	"quite",
+	"rare", "rarely",
 	"some",
-	"somewhat",
 	"something",
 	"sometimes\\?",
+	"somewhat",
+	"tiny",
+	"totally",
 	"usually",
 	"very"
 ],
 "difficulty":[
-	"easy", "easily",
 	"clearly",
+	"easy", "easily",
 	"just",
+	"mere", "merely",
+	"obvious", "obviously",
 	"simple", "simply",
 	"straightforward"
 ],
 "humanization":[
 	"acts",
 	"ask",
-	"behave",
+	"behave", "behaves",
+	"chooses",
 	"comes\\? up",
 	"concern",
 	"decides",
 	"guess",
+	"takes",
 	"tell", "tells",
 	"try", "tries",
+	"visits",
 	"will do"
 ],
 "voice":[
@@ -67,10 +84,14 @@
 	["might", "use imperative"],
 	["should", "must or _ recommends"]
 ],
-"vulgar":[
+"informal":[
+	"# only ambiguous or spaced compounds",
 	["check out", ["please refer to", "see"]],
+	["go into", ["switch to", "enter, open"]],
+	[["kind of", "sort of"], "type of"],
+	"neat",
 	"whatever", "what ever",
-	"whatnot",
-	"what so ever", "whatsoever"
+	"what not",
+	"what so ever"
 ]
 }

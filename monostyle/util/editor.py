@@ -249,7 +249,7 @@ class FNEditor:
             if virtual:
                 print(ent.fn, "->", str(ent))
             else:
-                monostyle.svn_inter.svn_move(ent.fn, str(ent))
+                monostyle.svn_inter.move(ent.fn, str(ent))
 
         self._changes.clear()
 

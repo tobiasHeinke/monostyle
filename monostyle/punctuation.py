@@ -45,7 +45,7 @@ def number_pre():
     re_lib["spelloutspace"] = (pattern, msg)
 
     # FP: math, code
-    pattern_str = r"(?:\w |^)([0-9]|[1-2][0-2])(?: \w|$)"
+    pattern_str = r"(?:\w |^)([0-9]|1[0-2])(?: \w|$)"
     pattern = re.compile(pattern_str)
     msg = "low digit in text"
     re_lib["lowdigit"] = (pattern, msg)
@@ -59,6 +59,11 @@ def number_pre():
     pattern = re.compile(pattern_str)
     msg = "zero at number start"
     re_lib["zeronodot"] = (pattern, msg)
+
+    pattern_str = start + r"\d\.\d*0{2,}(?=\D|\Z)"
+    pattern = re.compile(pattern_str)
+    msg = "trailing zeros"
+    re_lib["zerotrail"] = (pattern, msg)
 
 
     pattern_str = r"\d ?x( ?\d)?"
@@ -352,16 +357,26 @@ def mark_pre():
     re_lib["optplur"] = (pattern, msg)
 
     # FP: cut toctree
-    pattern_str = r"[/&]"
+    pattern_str = r"&"
     pattern = re.compile(pattern_str)
-    msg = "Ampersand or slash in continuous text should be spelled out and/or "
-    msg += "(if it not short for alias)"
-    re_lib["enum"] = (pattern, msg)
+    msg = "Ampersand in continuous text should be spelled out and"
+    re_lib["enumamp"] = (pattern, msg)
 
-    pattern_str = r"[<>]"
+    pattern_str = r"/"
     pattern = re.compile(pattern_str)
-    msg = "greater/less-than signs should be spelled out"
-    re_lib["compare"] = (pattern, msg)
+    msg = "Slash in continuous text should be spelled out or "
+    msg += "(if it not short for alias)"
+    re_lib["enumslash"] = (pattern, msg)
+
+    pattern_str = r">"
+    pattern = re.compile(pattern_str)
+    msg = "greater-than sign should be spelled out"
+    re_lib["greater"] = (pattern, msg)
+
+    pattern_str = r"<"
+    pattern = re.compile(pattern_str)
+    msg = "less-than sign should be spelled out"
+    re_lib["less"] = (pattern, msg)
 
     args = dict()
     args["re_lib"] = re_lib

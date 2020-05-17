@@ -27,7 +27,7 @@ from . import svn_inter
 from . import autofix
 from .util import file_opener
 
-__version__ = "0.0.1rc1"
+__version__ = "0.0.1rc2"
 
 RSTParser = RSTParser()
 RSTParser.parse_block_quote = True
@@ -59,13 +59,13 @@ def import_module(name):
         print("module import: can't find the {0} module".format(name))
 
 
-def get_reports_version(from_svn, is_internal, path, rev=None):
+def get_reports_version(from_vsn, is_internal, path, rev=None):
     """Gets text snippets (hunk) from SVN."""
     mods = init_tools()
 
     reports = []
     show_current = True
-    for fg, context, msg in svn_inter.run_diff(from_svn, is_internal, path, rev):
+    for fg, context, msg in svn_inter.run_diff(from_vsn, is_internal, path, rev):
         if msg is not None:
             reports.append(Report('W', "svn diff", fg, msg))
             continue
@@ -159,7 +159,6 @@ def update(path, rev=None):
 def setup(root):
     """Add a folder in the root directory for user config and file storage."""
     config_dir = os.path.normpath(os.path.join(root, "monostyle"))
-
     if not os.path.isdir(config_dir):
         if not monostylestd.ask_user(("Create user config folder in '", root, "'")):
             # run with default config

@@ -213,6 +213,82 @@ def indention(document, reports):
     return reports
 
 
+def role_kbd_pre():
+
+    re_lib = dict()
+    # config: allow "Regular key pressed as a modifier"
+    regular_as_mod = True
+
+    pattern_str = ''.join((
+        # Modifier
+        r"^(Shift(?:\-|\Z))?(Ctrl(?:\-|\Z))?(Alt(?:\-|\Z))?((?:Cmd|OSKey)(?:\-|\Z))?",
+
+        # Alphanumeric
+        # Note, shifted keys such as '!?:<>"' should not be included.
+        r"((?:",
+        r"[A-Z0-9]|",
+        r"[=\[\];']|",
+
+        # Named
+        '|'.join((
+            "Comma", "Period", "Slash", "Backslash", "Minus", "AccentGrave",
+            # Editing
+            "Tab", "Backspace", "Delete", "Return", "Spacebar",
+            # Navigation
+            "Esc", "PageUp", "PageDown", "Home", "End",
+            "Up", "Down", "Left", "Right", "Menu",
+        )), '|',
+        # Numpad
+        r"(?:Numpad(?:[0-9]|Plus|Minus|Delete|Slash|Period|Asterisk))|",
+        # Function
+        r"(?:F[1-9]|F1[0-2])",
+        r")(?:\-|\Z))",
+        r"{0,2}" if regular_as_mod else r"?",
+
+        # Mouse
+        r"(",
+        # Wheel
+        r"(?:Wheel(Up|Down|In|Out)?)|",
+        # Buttons
+        r"(?:(?:L|M|R)MB)|",
+        # Stylus
+        r"(?:Pen|Eraser)",
+        r")?$",
+    ))
+
+    re_lib["valid_kbd"] = re.compile(pattern_str)
+
+    # Directly repeated pressed key e.g. A-A or Left-Left.
+    re_lib["repeat_kbd"] = re.compile(r"(?:\-|\A)([^ \-]+?)\-\1")
+
+    args = dict()
+    args["re_lib"] = re_lib
+
+    return args
+
+
+def role_kbd(document, reports, re_lib):
+    """Report non-conforming uses of the :kbd: role."""
+    toolname = "role kbd"
+
+    valid_kbd = re_lib["valid_kbd"]
+    repeat_kbd = re_lib["repeat_kbd"]
+
+    for node in rst_walker.iter_node(document.body, ("role",), enter_pos=False):
+        if rst_walker.is_of(node, "role", "kbd"):
+            content = str(node.body.code)
+
+            # chained (not pressed simultaneously): e.g. G X 5
+            for k in content.split():
+                if not re.match(valid_kbd, k) or re.search(repeat_kbd, k):
+                    msg = "invalid keyboard shortcut"
+                    if content != k:
+                        msg += ": " + k
+                    reports.append(Report('W', toolname, node.body.code, msg))
+
+    return reports
+
+
 def leak_pre():
     toolname = "leak"
 
@@ -496,6 +572,7 @@ OPS = (
     ("directive", search_directive),
     ("heading-level", heading_level),
     ("indent", indention),
+    ("kbd", role_kbd, role_kbd_pre),
     ("leak", search_code, leak_pre)
 )
 

@@ -4,7 +4,7 @@
 [![PyPI version shields.io](https://img.shields.io/pypi/v/monostyle.svg)](https://pypi.python.org/pypi/monostyle/)
 [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/tobiasHeinke/monostyle/blob/master/LICENSE)
 
-Monostyle is a framework for style checking and linting covering all parts of a style guide.
+Monostyle is a framework for documentation style checking and linting covering all parts of a style guide.
 
 Its tools are applied on new or changed content
 which makes it fast and it allows a wider range of tools,
@@ -49,7 +49,7 @@ Monostyle has four modes:
   <dd>To check whole files/directories.</dd>
   <dt>root -r</dt>
   <dd>
-      The root is (absolute) path to the local project directory or where the patch file was created.
+      The root is (absolute) path to the project directory or where the patch file was created.
       If not set the directory where Monostyle is run from is used as the root.
   </dd>
 </dl>
@@ -58,11 +58,13 @@ Post processing:
 
 <dl>
   <dt>update -u</dt>
-  <dd>Update the local copy.</dd>
+  <dd>Update the working copy.</dd>
   <dt>autofix -a</dt>
   <dd>Apply autofixes. This also does an update if the changes are from external.</dd>
   <dt>open -o</dt>
-  <dd>Open a file in a text editor if the report has a severity higher than specified.</dd>
+  <dd>Open a file in a text editor if the report has a severity higher than specified.
+      Please check if your editor is available (else please make a I/PR to add it).
+  </dd>
 </dl>
 
 For more info on command line arguments use the `--help` command.
@@ -76,6 +78,6 @@ the section has to be checked manually.
 
 You can set a revision for internal, external and update.
 It can be colon separated or dash separated for the "change" syntax.
-When a side is kept empty e.g. ":ARG" it will default to BASE (your local copy) on the left and
+When a side is kept empty e.g. ":ARG" it will default to BASE (your working copy) on the left and
 on the right to HEAD (the latest revision in the repository).
 External revision uses the "change" syntax for single arguments "ARG".

@@ -333,10 +333,9 @@ def repeated_words(document, reports, config):
     }
 
     buf = []
-    # add 'to', 'as', 'of' ?
-    ignore = ("a", "an", "the", "and", "or")
-    # config: min distance to apply filter
-    ignore_dis = 1
+    # config: min distance from where on to apply filter
+    ignore_article = (("a", "an", "the"), 2)
+    ignore_pre_pro = (("and", "or", "to", "as", "of"), 1)
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
         if part.child_nodes.is_empty():
@@ -354,13 +353,16 @@ def repeated_words(document, reports, config):
                         if word_buf == word_stem:
                             if word_lower == "rst":
                                 continue
-                            if distance > ignore_dis and word_stem in ignore:
+                            if distance >= ignore_article[1] and word_stem in ignore_article[0]:
+                                continue
+                            if distance >= ignore_pre_pro[1] and word_stem in ignore_pre_pro[0]:
                                 continue
 
+                            sev = 'W' if distance == 0 else 'I'
                             msg = toolname + ": " + str(distance) + " words in between"
                             line = monostylestd.getline_punc(document.body.code, word.start_pos,
                                                              word.span_len(), 50, 30)
-                            reports.append(Report('W', toolname, word, msg, line))
+                            reports.append(Report(sev, toolname, word, msg, line))
                             break
 
                     if len(buf) == buf_size - 1:

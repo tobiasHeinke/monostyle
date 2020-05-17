@@ -217,7 +217,7 @@ def print_title(title, to_upper=False, underline='='):
 
 
 def ask_user(question):
-    """Get user confirmation via console input.""" 
+    """Get user confirmation via console input."""
     pos = ("y", "yes")
     neg = ("n", "no")
     ip = input("".join(question) + " (y/n)?")
@@ -329,6 +329,10 @@ def get_data_file(path):
         print("{0}: cannot read data file: {1}".format(data_path[0], err))
         return None
 
+    except json.JSONDecodeError as err:
+        print("{0}: cannot decode data file: {1}".format(data_path[0], err))
+        return None
+
     return get_branch(data, data_path, 1)
 
 
@@ -348,8 +352,7 @@ def get_branch(data, path, index=0, silent=False):
 
 def get_override(file, toolname, varname, default):
     """Override configuration variables."""
-    if file_trim_m := re.search(r"([^/\\.]+?)(\.\w+)?\Z", file):
-        file = file_trim_m.group(1)
+    file = os.path.splitext(os.path.basename(file))[0]
 
     if ((seg := get_branch(config.config_override, (file, toolname, varname), silent=True))
             is not None):

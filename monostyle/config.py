@@ -12,7 +12,7 @@ tool_selection = {
         "ext": ".rst"
     },
     "markup": {
-        "tools": ("directive", "heading-level", "indent", "leak"),
+        "tools": ("directive", "heading-level", "indent", "kbd", "leak"),
         "ext": ".rst"
     },
     "code_style": {
@@ -111,7 +111,7 @@ def setup_config(root):
 
         namespace = {"__file__": config_fn}
         exec(code, namespace)
-        
+
         config_options = ("tool_selection", "rst_dir", "po_dir", "build_dir", "img_dir",
                           "console_options", "config_override")
         for key, val in namespace.items():
