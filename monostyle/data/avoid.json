@@ -4,7 +4,7 @@
 	"say you",
 	"now you should have",
 	"#https://developer.salesforce.com/docs/atlas.en-us.216.0.salesforce_pubs_style_guide.meta/salesforce_pubs_style_guide/style_allow_let.htm",
-	[["allow", "let"], "restructure so the reader is the subject"]
+	[["allows\\?", "lets\\?"], "restructure so the reader is the subject"]
 ],
 "vague":[
 	"actual", "actually",
@@ -64,6 +64,7 @@
 	"straightforward"
 ],
 "humanization":[
+	"accepts",
 	"acts",
 	"ask",
 	"behave", "behaves",

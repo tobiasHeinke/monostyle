@@ -54,6 +54,7 @@ def ask_user(question):
 #------------------------
 # Context
 
+
 def getline_lineno(fg, lineno):
     """Extracts single line selected by its line number."""
     return fg.slice((lineno, 0), (lineno+1, 0), True)

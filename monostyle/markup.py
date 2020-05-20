@@ -35,7 +35,7 @@ def heading_level(document, reports):
         if level_cur == -1:
             out = node.name_end.code.copy()
             out.content = node.name_end.code.content[0]
-            msg = "unknown level: " + heading_char
+            msg = Report.existing(what="unknown level: " + heading_char + " ")
             reports.append(Report('W', toolname, out, msg))
 
         elif level_cur <= 2:
@@ -44,25 +44,27 @@ def heading_level(document, reports):
                 if not document.code.fn.endswith("manual/index.rst"):
                     out = node.name_end.code.copy()
                     out.content = node.name_end.code.content[0]
-                    msg = "main index char not on main" + heading_char
+                    msg = Report.existing(what="main index title: " + heading_char + " ",
+                                          where="not on main")
                     reports.append(Report('W', toolname, out, msg))
 
             elif level_cur == 1:
                 if not document.code.fn.endswith("index.rst"):
                     out = node.name_end.code.copy()
                     out.content = node.name_end.code.content[0]
-                    msg = "index title char on page" + heading_char
+                    msg = Report.existing(what="index title: " + heading_char + " ",
+                                          where="on page")
                     reports.append(Report('W', toolname, out, msg))
 
             elif document.code.fn.endswith("index.rst"):
                 out = node.name_end.code.copy()
                 out.content = heading_char
-                msg = "page title char on index"
+                msg = Report.existing(what="page title", where="on index")
                 reports.append(Report('W', toolname, out, msg))
 
             title_count += 1
             if title_count > 1:
-                msg = "more than one title heading: " + str(title_count)
+                msg = Report.over(what="title headings: " + str(title_count))
                 out = node.name_end.code.copy()
                 out.content = heading_char
                 reports.append(Report('W', toolname, out, msg))
@@ -73,14 +75,16 @@ def heading_level(document, reports):
                 if document.body.code.start_lincol[0] == 0:
                     out = node.name_end.code.copy()
                     out.content = heading_char
-                    msg = "no title heading"
+                    msg = Report.missing(what="title heading")
                     reports.append(Report('W', toolname, out, msg))
                     # report only once
                     title_count = 1
 
             elif level_cur > level_prev + 1:
-                msg = "wrong level: {0} > {1}  should be: {2}".format(level_chars[level_prev],
-                          heading_char, level_chars[level_prev + 1])
+                msg = Report.substitution(what="wrong level: {0} > {1}".format(
+                                          level_chars[level_prev], heading_char),
+                                          with_what=level_chars[level_prev + 1])
+
                 out = node.name_end.code.copy()
                 out.content = node.name_end.code.content[0]
                 reports.append(Report('W', toolname, out, msg))
@@ -156,11 +160,11 @@ def indention(document, reports):
 
         if (len(stack_prev) != 0 and stack_cur[0] not in stack_prev and
                 stack_cur[0] > stack_prev[0]):
-            msg = "wrong indent"
-            msg += ": should be " + str(stack_prev[-1]) + " chars"
-            if len(stack_prev) != 1:
-                msg += " or " + str(stack_prev[-2]) + " chars"
 
+            with_what = str(stack_prev[-1]) + " chars"
+            if len(stack_prev) != 1:
+                with_what += " or " + str(stack_prev[-2]) + " chars"
+            msg = Report.substitution(what="wrong indent", with_what=with_what)
             out = Fragment.from_org_len(document.code.fn, "", -1,
                                         start_lincol=(line.start_lincol[0],
                                                       stack_cur[0]))
@@ -197,15 +201,17 @@ def indention(document, reports):
 
                 if (ind_trg_next is not None and
                         node.name_start.code.start_lincol[1] != ind_trg_next):
-                    msg = "target not on same indent level"
+                    msg = Report.existing(what="target", where="not on same indent level")
                     reports.append(Report('W', toolname, node.id.code, msg))
 
         elif (rst_walker.is_of(node, "dir", "admonition") and
               str(rst_walker.get_attr(node, "class")).strip() == "refbox") and node.body:
             for node_field in rst_walker.iter_node(node.body, "field"):
                 if node_field.name_end.code.end_lincol[1] != refbox_col:
-                    msg = "ref-box wrong indent: should be {:+} chars".format(
-                              refbox_col - node_field.name_end.code.end_lincol[1])
+                    msg = Report.substitution(what="ref-box wrong indent",
+                                              with_what="{:+} chars".format(
+                                              refbox_col - node_field.name_end.code.end_lincol[1]))
+
                     out = node_field.name_end.code.copy()
                     out.clear(False)
                     reports.append(Report('E', toolname, out, msg, line))
@@ -298,29 +304,29 @@ def leak_pre():
     # Directive
     pattern_str = r"\:\:[A-Za-z\d_-]"
     pattern = re.compile(pattern_str)
-    msg = "no space after directive"
+    msg = Report.missing(what="space", where="after directive")
     re_lib["dirend"] = (pattern, msg)
 
     pattern_str = r"\s\.\.[A-Za-z]"
     pattern = re.compile(pattern_str)
-    msg = "no space in middle directive"
+    msg = Report.missing(what="space", where="in middle of directive")
     re_lib["dirmid"] = (pattern, msg)
 
     # List
     pattern_str = r"^ *\-[A-Za-z]"
     pattern = re.compile(pattern_str)
-    msg = "no space after unordered list"
+    msg = Report.missing(what="space", where="after unordered list")
     re_lib["unordend"] = (pattern, msg)
 
     pattern_str = r"^ *#\.[A-Za-z]"
     pattern = re.compile(pattern_str)
-    msg = "no space after ordered list"
+    msg = Report.missing(what="space", where="after ordered list")
     re_lib["ordend"] = (pattern, msg)
 
     pattern_str = r"^( *)\b(?!(\-|\#\.) ).*\n" # capture indent, not list
     pattern_str += r"\1(\-|\#\.) " # same indent, list
     pattern = re.compile(pattern_str, re.MULTILINE)
-    msg = "no empty line over list"
+    msg = Report.missing(what="empty line", where="over list")
     re_lib["overlist"] = (pattern, msg)
 
     # INLINE
@@ -328,125 +334,125 @@ def leak_pre():
     # FP: list, code
     pattern_str = r"(?<=\s)(\*\*?|``?)\s[^\-]"
     pattern = re.compile(pattern_str)
-    msg = "spaced inline markup"
+    msg = Report.existing(what="spaces", where="around inline markup char")
     re_lib["spaceinline"] = (pattern, msg)
 
     # FP: target, math
     pattern_str = r"(?<=[A-Za-z])(\*\*?|``?)[A-Za-z]"
     pattern = re.compile(pattern_str)
-    msg = "unspaced inline markup"
+    msg = Report.missing(what="space", where="before/after inline markup char")
     re_lib["unspaceinline"] = (pattern, msg)
 
     # Role
     pattern_str = r"\w\:(?:[\w_-]+?)\:`"
     pattern = re.compile(pattern_str)
-    msg = "no space before role"
+    msg = Report.missing(what="space", where="before role")
     re_lib["rolestart"] = (pattern, msg)
 
     pattern_str = r"\:(?:[\w_-]+?)\:[ `\:]`"
     pattern = re.compile(pattern_str)
-    msg = "spaced middle role"
+    msg = Report.existing(what="space", where="between role type and body")
     re_lib["rolemid"] = (pattern, msg)
 
     pattern_str = r"\:(?:[\w_-]+?)\:`[^`]+?`\w"
     pattern = re.compile(pattern_str)
-    msg = "no space after role"
+    msg = Report.missing(what="space", where="after role")
     re_lib["roleend"] = (pattern, msg)
 
     pattern_str = r"(\:[\w_-]+?[;,.|]`)|([;,.|][\w\-]+?\:`)"
     pattern = re.compile(pattern_str)
-    msg = "wrong separator role"
+    msg = Report.existing(what="wrong mark", where="role body")
     re_lib["rolesep"] = (pattern, msg)
 
     pattern_str = r"\:(?:doc|ref)\:`[\w\/ _&]+?[^ ]<[\w>\/ _]+?`"
     pattern = re.compile(pattern_str)
-    msg = "no space after link title"
+    msg = Report.missing(what="space", where="after link title")
     re_lib["linkaddr"] = (pattern, msg)
 
     pattern_str = r"\:(?:abbr)\:`[\w\/ _&.]+?[^ ]\([\w _.]+?\)`"
     pattern = re.compile(pattern_str)
-    msg = "no space after abbreviation title"
+    msg = Report.missing(what="space", where="after abbreviation title")
     re_lib["abbr"] = (pattern, msg)
 
     # internal links not starting with slash
-    # -with title
+    # -no title
     pattern_str = r"\:doc\:`[\w _]+?\/[\w_\/]+?`"
     pattern = re.compile(pattern_str)
-    msg = "internal link no slash start"
+    msg = Report.missing(what="slash", where="at internal link start")
     re_lib["inlinkstart"] = (pattern, msg)
 
-    # -no title
+    # -with title
     pattern_str = r"\:doc\:`[\w\/ _&]+?<\w"
     pattern = re.compile(pattern_str)
-    msg = "internal link no slash start"
+    msg = Report.missing(what="slash", where="at internal link start")
     re_lib["inlinkslash"] = (pattern, msg)
 
-    # internal links ending with file extention
+    # internal links ending with file extension
     pattern_str = r"\:doc\:`[^`]+?\.rst>?`"
     pattern = re.compile(pattern_str)
-    msg = "internal link with file extention"
+    msg = Report.existing(what="file extension", where="at internal link end")
     re_lib["inlinkext"] = (pattern, msg)
 
     # internal links with title and no closing bracket
     pattern_str = r"\:doc\:`[^`]+? <[^`]*?[^>]`"
     pattern = re.compile(pattern_str)
-    msg = "internal link no closing >"
+    msg = Report.missing(what="closing bracket", where="at internal link end")
     re_lib["inlinkclose"] = (pattern, msg)
 
     # Hyperlink
     pattern_str = r"[A-Za-z]_`[^`]"
     pattern = re.compile(pattern_str)
-    msg = "no space before hyperlink"
+    msg = Report.missing(what="space", where="before hyperlink")
     re_lib["loclinkstart"] = (pattern, msg)
 
     pattern_str = r"[^`]`__?[A-Za-z]"
     pattern = re.compile(pattern_str)
-    msg = "no space after link"
+    msg = Report.missing(what="space", where="after hyperlink")
     re_lib["linkend"] = (pattern, msg)
 
     pattern_str = r"https?\:\/\/[^`]+?>`(?!_)"
     pattern = re.compile(pattern_str)
-    msg = "no underscore after external link"
+    msg = Report.missing(what="underscore", where="after external hyperlink")
     re_lib["exlinkend"] = (pattern, msg)
 
     # Substitution
     pattern_str = r"\w\|\w"
     pattern = re.compile(pattern_str)
-    msg = "no space after substitution"
+    msg = Report.missing(what="space", where="before/after substitution")
     re_lib["subst"] = (pattern, msg)
 
     pattern_str = r"[A-Za-z]_\|"
     pattern = re.compile(pattern_str)
-    msg = "no space before substitution"
+    msg = Report.missing(what="space", where="before substitution")
     re_lib["subststart"] = (pattern, msg)
 
     pattern_str = r"\|_[A-Za-z]"
     pattern = re.compile(pattern_str)
-    msg = "no space after substitution"
+    msg = Report.missing(what="space", where="after substitution")
     re_lib["substend"] = (pattern, msg)
 
 
     # Arrow
     pattern_str = r"[^ \-`]\-\->"
     pattern = re.compile(pattern_str)
-    msg = "no space before arrow"
+    msg = Report.missing(what="space", where="before arrow")
     re_lib["arrowstart"] = (pattern, msg)
 
     pattern_str = r"[^\-<]\->"
     pattern = re.compile(pattern_str)
-    msg = "bad length arrow"
+    msg = Report.under(what="dashes", where="in arrow")
     re_lib["arrowlen"] = (pattern, msg)
 
     pattern_str = r"\->[^ `|]"
     pattern = re.compile(pattern_str)
-    msg = "no space after arrow"
+    msg = Report.missing(what="space", where="after arrow")
     re_lib["arrowend"] = (pattern, msg)
 
     # En-dash
     # min 1 letter in line to not match heading underline
     pattern_str = r"(\w.*([^\s\-]\-{2}[^\->]))|(([^\s\-]\-{2}[^\->]).*\w)"
     pattern = re.compile(pattern_str)
-    msg = "no space before en-dash"
+    msg = Report.missing(what="space", where="before en-dash")
     re_lib["endashstart"] = (pattern, msg)
 
     # not match: arrow
@@ -454,7 +460,7 @@ def leak_pre():
     # min 1 letter in line to not match heading underline
     pattern_str = r"(\w.*\-{2}[^\s\->])|(\-{2}[^\s\->].*\w)"
     pattern = re.compile(pattern_str)
-    msg = "no space after en-dash"
+    msg = Report.missing(what="space", where="after en-dash")
     re_lib["endashend"] = (pattern, msg)
 
     args = dict()

@@ -86,6 +86,13 @@ console_options = {
 # module name : {function name : {variable name: variable value}}
 config_override = {
 }
+
+# Message Template Override
+# -------------------------
+
+# template name : string
+template_override = {
+}
 # --- END ---
 
 
@@ -113,7 +120,7 @@ def setup_config(root):
         exec(code, namespace)
 
         config_options = ("tool_selection", "rst_dir", "po_dir", "build_dir", "img_dir",
-                          "console_options", "config_override")
+                          "console_options", "config_override", "template_override")
         for key, val in namespace.items():
             if key in config_options and val is not None:
                 globals()[key] = val

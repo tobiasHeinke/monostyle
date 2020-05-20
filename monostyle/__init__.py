@@ -171,7 +171,10 @@ def setup(root):
             print("{0}: cannot create: {1}".format(config_dir, err))
             return False
 
-    return config.setup_config(root)
+    success = config.setup_config(root)
+    if success:
+        Report.override_templates(config.template_override)
+    return success
 
 
 def main():

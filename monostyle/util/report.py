@@ -6,8 +6,73 @@ util.report
 Tool output.
 """
 
+import re
+
 import monostyle.config as config
 from monostyle.util.monostylestd import path_to_rel, print_title
+
+
+class MsgTemplate():
+
+    __slots__ = ('_template', '_components')
+
+    key_re = re.compile(r"(?:(?<=[^{])|\A)\{(\?)?(\w+?)\}(?:(?=[^}])|\Z)")
+    esc_re = re.compile(r"([{}])(?=\1)")
+
+
+    def __init__(self, template):
+        self._template = template
+        self._components = self.parse(template)
+
+
+    def parse(self, template):
+        """Parse template.
+        {key} and {?key} for optional components.
+        Escape with ouble curly bracket.
+        """
+        components = []
+        last = 0
+        for key_m in re.finditer(self.key_re, template):
+            before = template[last:key_m.start(0)].strip()
+            if len(before) != 0:
+                components.append((False, re.sub(self.esc_re, "", before), False))
+            components.append((True, key_m.group(2), bool(key_m.group(1) is not None)))
+            last = key_m.end(0)
+
+        if last != len(template):
+            components.append((False, template[last:].strip(), False))
+
+        return tuple(components)
+
+
+    def substitute(self, mapping=None, **kwargs):
+        """Substitute template keys. kwargs overrides mapping."""
+        if mapping is not None:
+            if kwargs is not None:
+                mapping.update(kwargs)
+
+            kwargs = mapping
+
+        msg = []
+        missing_keys = None
+        for is_key, value, is_optional in self._components:
+            if not is_key:
+                msg.append(value)
+            else:
+                subst = str(kwargs.get(value, "")).strip()
+                if len(subst) != 0:
+                    msg.append(subst)
+                elif not is_optional:
+                    if missing_keys is None:
+                        missing_keys = []
+                    msg.append("{" + value + "}")
+                    missing_keys.append(value)
+
+        msg = " ".join(msg)
+        if missing_keys is not None:
+            print("Error missing template keys:", ", ".join(missing_keys), "in message:", msg)
+
+        return msg
 
 
 class Report():
@@ -32,6 +97,9 @@ class Report():
         self.fix = fix
 
 
+    #--------------------
+    # Severity
+
     error = 'E'
     warning = 'W'
     info = 'I'
@@ -52,6 +120,38 @@ class Report():
         'L': "[=]",
         'U': "[ ]"
     }
+
+
+    #--------------------
+    # Message Templates
+
+    quantity = MsgTemplate("{what} {?where} {?how}").substitute
+    existing = MsgTemplate("{what} {?where}").substitute
+    missing = MsgTemplate("no {what} {?where}").substitute
+    under = MsgTemplate("too few {what} {?where}").substitute
+    over = MsgTemplate("too many {what} {?where}").substitute
+
+    misplaced = MsgTemplate("{what} {where} should be {to_where}").substitute
+    misformatted = MsgTemplate("{what} {?where} {?how}").substitute
+
+    substitution = MsgTemplate("{what} {?where} should be {with_what}").substitute
+    conditional = MsgTemplate("{what} {?where} should be {with_what} {when}").substitute
+    option = MsgTemplate("{what} {?where} should be either {with_what}").substitute
+
+    msg_templates = ("quantity", "existing", "missing", "under", "over",
+                  "misplaced", "misformatted", "substitution", "conditional", "option")
+
+
+    def override_templates(new_templates):
+        """Override or add templates with a dict."""
+        for key, value in new_templates.items():
+            if (isinstance(key, str) and isinstance(value, str) and
+                    (key in Report.msg_templates or getattr(Report, key) is None)):
+                setattr(Report, key, MsgTemplate(value).substitute)
+
+
+    #--------------------
+
 
     def repr(self, options=None):
         if options is None:

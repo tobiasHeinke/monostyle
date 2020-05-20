@@ -27,18 +27,23 @@ def heading_cap_pre():
 
     pattern_str = r"\-[a-z]"
     pattern = re.compile(pattern_str)
-    msg = "heading lowercase after hyphen"
+    msg = Report.misformatted(what="lowercase", where="in heading after hyphen")
     re_lib["hypen"] = (pattern, msg)
 
     pattern_str = r"[^\w \-&/()'\"\\?!:,\n]"
     pattern = re.compile(pattern_str)
-    msg = "heading not allowed punctuation"
+    msg = Report.existing(what="not allowed punctuation", where="in heading")
     re_lib["nonchar"] = (pattern, msg)
 
-    pattern_str = r"\b(and|or)\b"
+    pattern_str = r"\band\b"
     pattern = re.compile(pattern_str, re.IGNORECASE)
-    msg = "heading and/or should be shortened to & or /"
-    re_lib["enum"] = (pattern, msg)
+    msg = Report.substitution(what="and", where="in heading", with_what="ampersand")
+    re_lib["and"] = (pattern, msg)
+
+    pattern_str = r"\bor\b"
+    pattern = re.compile(pattern_str, re.IGNORECASE)
+    msg = Report.substitution(what="or", where="in heading", with_what="slash")
+    re_lib["or"] = (pattern, msg)
 
     return {"re_lib": re_lib}
 
@@ -57,11 +62,13 @@ def heading_cap(document, reports, re_lib):
                   (path[0] in ("preposition", "conjunction", "pronoun") or
                    (path[0] == "determiner" and path[1] == "article") or
                    path[0] == "auxiliary")))):
-            msg = "heading lowercase"
+
+            where = "in heading"
             if is_first_word:
-                msg += " at start"
+                where = "at the start of a heading"
             elif is_last_word:
-                msg += " at end"
+                where = "at the end of a heading"
+            msg = Report.misformatted(what="lowercase", where=where)
             reports.append(Report('W', toolname, word, msg, node.name.code))
         return reports
 
@@ -173,34 +180,34 @@ def indefinite_article(document, reports, re_lib, data):
                     if buf in ("a", "A"):
                         if re.match(vowel_re, word_str):
                             if is_fp(word, word_str, data["an"]):
-                                msg = "a before vowel"
+                                msg = Report.existing(what="a", where="before vowel")
                                 line = monostylestd.getline_punc(document.body.code, word.start_pos,
                                                                  len(word_str), 50, 30)
                                 reports.append(Report('E', toolname, word, msg, line))
                         else:
                             if not is_fp(word, word_str, data["a"]):
-                                msg = "a before vowel sound"
+                                msg = Report.existing(what="a", where="before vowel sound")
                                 line = monostylestd.getline_punc(document.body.code, word.start_pos,
                                                                  len(word_str), 50, 30)
                                 reports.append(Report('E', toolname, word, msg, line))
 
                     elif buf in ("an", "An"):
                         if re.match(digit_re, word_str):
-                            msg = "an before digit"
+                            msg = Report.existing(what="an", where="before digit")
                             line = monostylestd.getline_punc(document.body.code, word.start_pos,
                                                              len(word_str), 50, 30)
                             reports.append(Report('E', toolname, word, msg, line))
                         else:
                             if re.match(vowel_re, word_str):
                                 if not is_fp(word, word_str, data["an"]):
-                                    msg = "an before consonant sound"
+                                    msg = Report.existing(what="an", where="before consonant sound")
                                     line = monostylestd.getline_punc(document.body.code,
                                                                      word.start_pos,
                                                                      len(word_str), 50, 30)
                                     reports.append(Report('E', toolname, word, msg, line))
                             else:
                                 if is_fp(word, word_str, data["a"]):
-                                    msg = "an before consonant"
+                                    msg = Report.existing(what="an", where="before consonant")
                                     line = monostylestd.getline_punc(document.body.code,
                                                                      word.start_pos,
                                                                      len(word_str), 50, 30)
@@ -224,19 +231,19 @@ def grammar_pre():
     re_lib = dict()
     pattern_str = r"s's"
     pattern = re.compile(pattern_str)
-    msg = "s apostrophe"
+    msg = Report.existing(what="s apostrophe", where="after s")
     re_lib["sapos"] = (pattern, msg)
 
     pattern_str = r"'s\-"
     pattern = re.compile(pattern_str)
-    msg = "apostrophe in compound"
+    msg = Report.existing(what="apostrophe", where="in compound")
     re_lib["aposcomp"] = (pattern, msg)
 
     pattern_str = (r"(?:'",
                    '|'.join((r"(?<!numb)er", "more", "less", "different(?:ly)?",
                              "else", "otherwise")), r")\s+?then")
     pattern = re.compile(''.join(pattern_str), re.DOTALL)
-    msg = "then after comparison should be than"
+    msg = Report.substitution(what="then", where="after comparison", with_what="than")
     re_lib["comparethen"] = (pattern, msg)
 
     args = dict()
@@ -359,7 +366,8 @@ def repeated_words(document, reports, config):
                                 continue
 
                             sev = 'W' if distance == 0 else 'I'
-                            msg = toolname + ": " + str(distance) + " words in between"
+                            msg = Report.quantity(what="repeated words",
+                                                  how=str(distance) + " words in between")
                             line = monostylestd.getline_punc(document.body.code, word.start_pos,
                                                              word.span_len(), 50, 30)
                             reports.append(Report(sev, toolname, word, msg, line))
