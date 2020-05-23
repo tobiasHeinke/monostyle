@@ -19,9 +19,10 @@
 	[["list box"], "list view"],
 	[["color band"], "color ramp"],
 
-	[["node graph"], "node tree"],
+	[["node graph", "node map"], "node tree"],
 	[["noodles"], "node setup"],
 	[["command(?![ -]line)"], "tool (if not console command)"],
+	[["windows\\?"], "only when referring to an OS window"],
 
 	[["top header", "Info editor header"], "Topbar"],
 	[["Tool Shelf", "toolshelf", "tools shelf", "toolsshelf"], "Sidebar"],
@@ -33,12 +34,12 @@
 ],
 "Editors":[
 	[["3D\\-[vV]iewport"], "3D Viewport"],
-	[["3d [vV]iew", "3[dD] view"], "3D View"],
+	[["3d [vV]iew", "3[dD] view"], "3D Viewport"],
 	[["image editor"], "Image editor"],
 	[["u[vV].editor", "[uU][v] editor"], "UV editor"],
-	[["Node [eE]ditor"], "node editor"],
+	[["(?<![tT]exture) Node [eE]ditor"], "node editor"],
 	[["shader [eE]ditor"], "Shader editor"],
-	[["compositor"], "Compositor"],
+	[["compositor", "[cC]ompositor [eE]ditor"], "Compositor"],
 	[["texture [nN]ode [eE]ditor", "[tT]exture node [eE]ditor"], "Texture Node editor"],
 	[["sequencer", "sequence [eE]ditor"], "Sequencer"],
 	[["vse"], "VSE"],

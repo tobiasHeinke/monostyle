@@ -21,7 +21,7 @@ class Editor:
         self._status = True
 
 
-    def form_file(self, fn):
+    def from_file(fn):
         return Editor(Fragment(fn, None, 0, 0))
 
 
@@ -186,26 +186,27 @@ class EditorSession:
 
     def add(self, fg):
         if (self._last_index is not None and
-                self._editor_stack[self._last_index].fn == fg.fn):
+                self._editor_stack[self._last_index].fg.fn == fg.fn):
             self._editor_stack[self._last_index].add(fg)
         else:
             for index, ed in enumerate(reversed(self._editor_stack)):
-                if ed.fn == fg.fn:
+                if ed.fg.fn == fg.fn:
                     ed.add(fg)
                     self._last_index = len(self._editor_stack) - 1 - index
                     break
             else:
-                ed = Editor(fg.fn)
+                ed = Editor.from_file(fg.fn)
                 ed.add(fg)
                 self._editor_stack.append(ed)
                 self._last_index = len(self._editor_stack) - 1
 
 
+    # no virtual output, return as list/iter?
     def apply(self, pos_lc=True):
         for ed in self._editor_stack:
             ed.apply(False, pos_lc)
             if not ed:
-                print("Editor error: overlap in " + ed.fn)
+                print("Editor error: overlap in", ed.fg.fn)
                 self._status = False
 
         self._editor_stack.clear()
@@ -341,7 +342,7 @@ class FNEditor:
 
                 if (ent.fn != rec.fn and str(ent) == str(rec)):
                     self._status = False
-                    print("FNEditor error: file same new  {0} -> ({1}, {2})".format(
+                    print("FNEditor error: file same new {0} -> ({1}, {2})".format(
                         ent.fn, rec.fn, str(ent)))
 
         return self._status
@@ -354,11 +355,11 @@ class FNEditor:
         for ent in self._changes:
             if not os.path.isfile(ent.fn):
                 self._status = False
-                print("FNEditor error: file not found " + ent.fn)
+                print("FNEditor error: file not found", ent.fn)
 
-            if os.path.isfile(ent["new"]):
+            if os.path.isfile(str(ent)):
                 self._status = False
-                print("FNEditor error: file already exists " + ent["new"])
+                print("FNEditor error: file already exists", str(ent))
 
         return self._status
 

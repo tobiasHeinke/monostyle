@@ -7,15 +7,24 @@
 	[["allow", "let"], "restructure so the reader is the subject"]
 ],
 "vague":[
+	"actual", "actually",
 	"another",
+	"any",
+	"anyhow",
 	"anything",
+	"anytime",
+	"anyway",
+	"anywhere",
+	"elsewhere",
+	"enhances",
 	"eventually",
 	"happens", "happening",
 	"here",
-	"maybe",
+	"improves",
 	"nothing",
 	"other",
 	"really",
+	"refines",
 	"strictly",
 	"thing", "things",
 	"way"
@@ -61,8 +70,10 @@
 	"chooses",
 	"comes\\? up",
 	"concern",
+	"controls",
 	"decides",
 	"guess",
+	"makes",
 	"takes",
 	"tell", "tells",
 	"try", "tries",
@@ -85,12 +96,20 @@
 	["might", "use imperative"],
 	["should", "must or _ recommends"]
 ],
+"uncertainty":[
+	"likely",
+	"maybe",
+	"occasionally",
+	"possibly",
+	"probably"
+],
 "informal":[
 	"# only ambiguous or spaced compounds",
 	["check out", ["please refer to", "see"]],
-	["go into", ["switch to", "enter, open"]],
+	["go into", ["switch to", "enter", "open"]],
 	[["kind of", "sort of"], "type of"],
 	"neat", "nicely",
+	[["turn on", "turn off"], ["de/activate", "dis/enable"]],
 	"whatever", "what ever",
 	"what not",
 	"what so ever"

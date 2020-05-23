@@ -122,7 +122,7 @@
 	"gradient", "hierarchy", "hotkey",
 	"key", "material", "manual", "money", "normal",
 	"overlay", "parent", "perspective", "profile", "property", "purpose", "proxy",
-	"ray", "tile", "tutorial", "way",
+	"ray", "sky", "tile", "tutorial", "way",
 	"-ancy", "-dom", "-ee", "-ence", "-ency", "-hood", "-ion", "-ism",
 	"-ist", "-ity", "-logy", "-ment", "-ness", "-ry", "-ship"
 ],
