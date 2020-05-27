@@ -158,7 +158,8 @@ class Report():
             options = {}
         options = {
             "format_str": "{fn}{loc} {severity} {out} {msg}{line}",
-            "show_filename":True,
+            "show_filename": True,
+            "absolute_path": False,
             "show_end": False,
 
             "severity_display": "char",
@@ -168,7 +169,7 @@ class Report():
             "out_max_len": 100,
             "out_ellipse": "…",
 
-            "show_line":True,
+            "show_line": True,
             "line_max_len": 200,
             "line_indent": ">>>",
             "line_ellipse": "…",
@@ -183,7 +184,10 @@ class Report():
         output["loc"] = ""
 
         if not options.get("file_title", False) and options["show_filename"]:
-            output["fn"] = path_to_rel(self.out.fn) + ":"
+            if options["absolute_path"]:
+                output["fn"] = self.out.fn + ":"
+            else:
+                output["fn"] = path_to_rel(self.out.fn) + ":"
 
         if options["severity_display"] == "char":
             output["severity"] = self.severity
@@ -245,6 +249,7 @@ def print_reports(reports, options=None):
 
     options = {
         "file_title": True,
+        "absolute_path": False,
         "file_title_underline": None,
         "show_summary": False,
         "summary_overline": '_',
@@ -256,8 +261,8 @@ def print_reports(reports, options=None):
         if report is not None:
             if options["file_title"]:
                 if fn_prev != report.out.fn:
-                    print_title(path_to_rel(report.out.fn),
-                                underline=options["file_title_underline"])
+                    fn = report.out.fn if options["absolute_path"] else path_to_rel(report.out.fn)
+                    print_title(fn, underline=options["file_title_underline"])
 
                 fn_prev = report.out.fn
 

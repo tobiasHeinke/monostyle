@@ -61,7 +61,8 @@ console_options = {
     "summary_overline": "_",
 
     "format_str": "{fn}{loc} {severity} {out} {msg} {fix}{line}",
-    "show_filename":True,
+    "show_filename": True,
+    "absolute_path": True,
     "show_end": False,
 
     # options: 'long', 'char', 'icon',
@@ -72,7 +73,7 @@ console_options = {
     "out_max_len": 100,
     "out_ellipse": "…",
 
-    "show_line":True,
+    "show_line": True,
     "line_max_len": 200,
     "line_indent": ">>>",
     "line_ellipse": "…",
