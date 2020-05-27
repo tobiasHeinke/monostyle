@@ -199,7 +199,7 @@ def line_style(document, reports, re_lib, config):
 
 def long_line(document, reports):
     """Finds overly long lines."""
-    toolname = "long line"
+    toolname = "long-line"
     limit = 118
 
     found_lineno = -1
@@ -244,7 +244,7 @@ def long_line(document, reports):
 
 def heading_lines(document, reports):
     """Heading over/underline char count and indent."""
-    toolname = "heading char count"
+    toolname = "heading-char-count"
 
     for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
         heading_char = node.name_end.code.content[0][0]
@@ -306,7 +306,7 @@ def is_blank_node(node):
 
 def blank_line(document, reports):
     """Blank line markup formatting."""
-    toolname = "blank line"
+    toolname = "blank-line"
 
     def count_trailnl(node, nl_count):
         newline_re = re.compile(r"\s*\Z", re.DOTALL)

@@ -18,7 +18,7 @@ import monostyle.rst_parser.walker as rst_walker
 
 def heading_level(document, reports):
     """Heading hierarchy defined by the under/overline char."""
-    toolname = "heading level"
+    toolname = "heading-level"
 
     level_chars = ('%', '#', '*', '=', '-', '^', '"', "'")
     levels = {level_char: index for index, level_char in enumerate(level_chars)}
@@ -275,7 +275,7 @@ def role_kbd_pre():
 
 def role_kbd(document, reports, re_lib):
     """Report non-conforming uses of the :kbd: role."""
-    toolname = "role kbd"
+    toolname = "role-kbd"
 
     valid_kbd = re_lib["valid_kbd"]
     repeat_kbd = re_lib["repeat_kbd"]

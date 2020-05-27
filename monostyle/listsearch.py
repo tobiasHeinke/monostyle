@@ -131,7 +131,7 @@ def parse_config(re_conf_str):
 
 def search_free(document, reports, comlist):
     """Search terms in document."""
-    toolname = "list search"
+    toolname = "list-search"
 
     instr_pos = {
         "sect": {"*": ["name"]},
@@ -170,7 +170,7 @@ def search_free(document, reports, comlist):
 
 def search_word(document, reports, comlist, config):
     """Search terms in document within word boundaries."""
-    toolname = "search word"
+    toolname = "search-word"
 
     instr_pos = {
         "sect": {"*": ["name"]},

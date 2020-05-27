@@ -136,8 +136,8 @@ def filter_reports(reports_hunk, context, reports):
     """Filter out reports in the diff context else add to final reports."""
     for report in reports_hunk:
         if (report.tool in
-                ("mark", "blank line", "indention", "heading level",
-                 "heading char count", "flavor") and#"find word",
+                ("mark", "blank-line", "indention", "heading-level",
+                 "heading-char-count", "flavor") and#"find-word",
                 report.out.start_lincol is not None and report.out.start_lincol[0] in context):
             continue
 

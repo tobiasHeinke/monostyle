@@ -50,7 +50,7 @@ def heading_cap_pre():
 
 def heading_cap(document, reports, re_lib):
     """Check the heading title capitalization."""
-    toolname = "heading capitalization"
+    toolname = "heading-capitalization"
 
     def word_cap(reports, word, is_first_word, is_last_word):
         word_str = str(word)
@@ -126,7 +126,7 @@ def indefinite_article_pre():
 
 def indefinite_article(document, reports, re_lib, data):
     """Check correct use of indefinite articles (a and an)."""
-    toolname = "indefinite article"
+    toolname = "indefinite-article"
 
     def is_fp(word, word_str, data):
         """Check if is not a false positive."""
@@ -300,7 +300,7 @@ def repeated_words_pre():
 
 def repeated_words(document, reports, config):
     """Find repeated words e.g. the the example."""
-    toolname = "repeated words"
+    toolname = "repeated-words"
 
     def porter_stemmer_patch(word_lower):
         """Distinguish some words."""

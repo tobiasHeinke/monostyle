@@ -17,7 +17,7 @@ from monostyle.rst_parser.core import RSTParser
 
 def char_expl(document, reports):
     """Explicit search for not allowed chars."""
-    toolname = "char explicit"
+    toolname = "char-explicit"
 
     text = str(document.code)
     repchar_re = re.compile("\uFFFD")
@@ -47,7 +47,7 @@ def char_expl(document, reports):
 
 def char_region(document, reports):
     """All chars outside of the defined Unicode region."""
-    toolname = "char region"
+    toolname = "char-region"
 
     text = str(document.code)
     parttern_str = r"[^\n -~À-ʨ" + ''.join(('©', '®', '°', '±', '€', '™')) + r"]"
@@ -62,7 +62,7 @@ def char_region(document, reports):
 
 def file_encoding():
     """Check text encoding."""
-    toolname = "file encoding"
+    toolname = "file-encoding"
 
     reports = []
     # standard Unicode replace char <?>

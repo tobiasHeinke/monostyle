@@ -26,7 +26,7 @@ POS = PartofSpeech()
 
 def search(document, reports, re_lib, data, config):
     """Search for rare or new words."""
-    toolname = "new word"
+    toolname = "new-word"
     # compare words in the text.
     text_words = []
     for word in word_filtered(document):
