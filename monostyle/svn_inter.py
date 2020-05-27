@@ -44,7 +44,7 @@ def added_files(is_internal, path):
         yield fn, new, add_mod, rev_file
 
     if not is_internal:
-        print("Highest revision is ", rev_max)
+        print("Highest revision is", rev_max)
 
 
 def difference(from_vsn, is_internal, fn_source, rev, changed_files):

@@ -28,7 +28,7 @@ class MsgTemplate():
     def parse(self, template):
         """Parse template.
         {key} and {?key} for optional components.
-        Escape with ouble curly bracket.
+        Escape with double curly bracket.
         """
         components = []
         last = 0

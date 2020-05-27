@@ -16,7 +16,7 @@ tool_selection = {
         "ext": ".rst"
     },
     "code_style": {
-        "tools": ("heading-char-count", "flavor", "line-style", "long-line", "newline", "style-add"),
+        "tools": ("heading-char-count", "flavor", "line-style", "long-line", "blank-line", "style-add"),
         "ext": ".rst"
     },
     "natural": {

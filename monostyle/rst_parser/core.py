@@ -492,7 +492,7 @@ class RSTParser:
                         node.active.name_end.append_code(line)
                     else:
                         print("{0}:{1}: {2}".format(line.fn, line.start_lincol[0],
-                                                    "section missing new line"))
+                                                    "section missing blank line"))
 
                     node.append_child(node.active)
                     node.active = None

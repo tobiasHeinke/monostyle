@@ -35,7 +35,7 @@ def heading_level(document, reports):
         if level_cur == -1:
             out = node.name_end.code.copy()
             out.content = node.name_end.code.content[0]
-            msg = Report.existing(what="unknown level: " + heading_char + " ")
+            msg = Report.existing(what="unknown level: " + heading_char)
             reports.append(Report('W', toolname, out, msg))
 
         elif level_cur <= 2:
@@ -44,7 +44,7 @@ def heading_level(document, reports):
                 if not document.code.fn.endswith("manual/index.rst"):
                     out = node.name_end.code.copy()
                     out.content = node.name_end.code.content[0]
-                    msg = Report.existing(what="main index title: " + heading_char + " ",
+                    msg = Report.existing(what="main index title: " + heading_char,
                                           where="not on main")
                     reports.append(Report('W', toolname, out, msg))
 
@@ -52,7 +52,7 @@ def heading_level(document, reports):
                 if not document.code.fn.endswith("index.rst"):
                     out = node.name_end.code.copy()
                     out.content = node.name_end.code.content[0]
-                    msg = Report.existing(what="index title: " + heading_char + " ",
+                    msg = Report.existing(what="index title: " + heading_char,
                                           where="on page")
                     reports.append(Report('W', toolname, out, msg))
 
@@ -326,7 +326,7 @@ def leak_pre():
     pattern_str = r"^( *)\b(?!(\-|\#\.) ).*\n" # capture indent, not list
     pattern_str += r"\1(\-|\#\.) " # same indent, list
     pattern = re.compile(pattern_str, re.MULTILINE)
-    msg = Report.missing(what="empty line", where="over list")
+    msg = Report.missing(what="blank line", where="over list")
     re_lib["overlist"] = (pattern, msg)
 
     # INLINE

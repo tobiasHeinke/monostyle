@@ -28,12 +28,12 @@ def eol_pre():
     re_lib = dict()
     pattern_str = r"\n{2}\Z"
     pattern = re.compile(pattern_str, re.MULTILINE)
-    msg = Report.existing(what="two or more empty lines", where="at end of file")
+    msg = Report.existing(what="two or more blank lines", where="at end of file")
     re_lib["trailingnl"] = (pattern, msg)
 
     pattern_str = r"(?<!\n)\Z"
     pattern = re.compile(pattern_str, re.MULTILINE)
-    msg = Report.existing(what="zero empty lines", where="at end of file")
+    msg = Report.existing(what="zero blank lines", where="at end of file")
     re_lib["eofzero"] = (pattern, msg)
 
     args = dict()
@@ -96,7 +96,7 @@ def flavor(document, reports):
 
             if (len(node.body.code) == 1 and
                     node.body.child_nodes.first().node_name == "text" and
-                    is_nl_node(node.body.child_nodes.first())):
+                    is_blank_node(node.body.child_nodes.first())):
                 out = node.name_start.code.copy()
                 out.clear(True)
                 msg = Report.missing(what="empty comment", where="in empty list item")
@@ -297,16 +297,16 @@ def heading_lines(document, reports):
     return reports
 
 
-def is_nl_node(node):
+def is_blank_node(node):
     """The node is empty or contains only whitespaces."""
     if node.node_name == "text":
         return node.code.isspace()
     return False
 
 
-def newline(document, reports):
-    """Newline markup formatting."""
-    toolname = "newline"
+def blank_line(document, reports):
+    """Blank line markup formatting."""
+    toolname = "blank line"
 
     def count_trailnl(node, nl_count):
         newline_re = re.compile(r"\s*\Z", re.DOTALL)
@@ -354,16 +354,16 @@ def newline(document, reports):
             if (node.node_name == "sect" and
                     node.name_end.code.content[0][0] in ('%', '#', '*')):
                 cond_plain = 1
-                msg_plain = Report.quantity(what="one empty line", where="over title heading")
+                msg_plain = Report.quantity(what="one blank line", where="over title heading")
                 cond_between = 2
                 msg_between = msg_plain
                 cond_over = 0
-                msg_over = Report.missing(what="empty line", where="over title heading")
+                msg_over = Report.missing(what="blank line", where="over title heading")
             else:
                 cond_plain = 3
-                msg_plain = Report.quantity(what="two empty line", where="over " + display_name)
+                msg_plain = Report.quantity(what="two blank line", where="over " + display_name)
                 cond_between = 2
-                msg_between = Report.quantity(what="one empty line", where="over " + display_name)
+                msg_between = Report.quantity(what="one blank line", where="over " + display_name)
                 cond_over = cond_plain
                 msg_over = msg_plain
 
@@ -401,13 +401,14 @@ def newline(document, reports):
 
         elif node.node_name in ("target", "comment"):
             cond_plain = 2
-            msg = Report.under(what="empty lines", where="over " + node.node_name)
+            msg = Report.under(what="blank lines", where="over " + node.node_name)
             nl_count, _, __ = count_nl(node, cond_plain)
 
             if nl_count > cond_plain:
                 next_node = node.next
                 while (next_node and
-                       (next_node.node_name in ("target", "comment") or is_nl_node(next_node))):
+                       (next_node.node_name in ("target", "comment") or
+                       is_blank_node(next_node))):
                     next_node = next_node.next
 
                 if not next_node or next_node.node_name not in ("sect", "rubric"):
@@ -416,7 +417,7 @@ def newline(document, reports):
                     out.clear(True)
                     reports.append(Report('W', toolname, out, msg, node.code))
 
-        elif node.prev and not is_nl_node(node):
+        elif node.prev and not is_blank_node(node):
             if rst_walker.is_of(node, "dir",
                                 ("admonition", "hint", "important", "note", "tip",
                                  "warning", "seealso", "code-block")):
@@ -427,7 +428,7 @@ def newline(document, reports):
                 if first_node is not None and re.match(r"\n ", str(first_node.code)):
                     out = first_node.code.copy()
                     out.clear(True)
-                    msg = Report.missing(what="empty line",
+                    msg = Report.missing(what="blank line",
                                          where="after head " + node.node_name +
                                                " " + str(node.name.code))
                     reports.append(Report('W', toolname, out, msg))
@@ -440,18 +441,18 @@ def newline(document, reports):
                 naming = node.node_name
                 if node.name:
                     naming += " " + str(node.name.code).strip()
-                msg = Report.quantity(what="one empty line", where="over " + naming,
+                msg = Report.quantity(what="one blank line", where="over " + naming,
                                       how=": {:+}".format(cond_plain - nl_count))
                 out = node.code.copy()
                 out.clear(True)
                 reports.append(Report('W', toolname, out, msg))
 
-    if is_nl_node(node):
+    if is_blank_node(node):
         while node and not node.prev and node.parent_node:
             node = node.parent_node
 
         cond_plain = 2
-        msg = Report.quantity(what="three or more empty lines")
+        msg = Report.quantity(what="three or more blank lines")
         nl_count, _, __ = count_nl(node, cond_plain)
 
         if nl_count >= cond_plain:
@@ -477,7 +478,7 @@ def style_add(document, reports):
         if node.node_name == "target":
             next_node = node.next
 
-            while next_node and (next_node.node_name == "target" or is_nl_node(next_node)):
+            while next_node and (next_node.node_name == "target" or is_blank_node(next_node)):
                 next_node = next_node.next
 
             if rst_walker.is_of(next_node, "dir", ("figure", "image", "list-table")):
@@ -548,7 +549,7 @@ OPS = (
     ("heading-char-count", heading_lines),
     ("line-style", line_style, line_style_pre),
     ("long-line", long_line),
-    ("newline", newline),
+    ("blank-line", blank_line),
     ("style-add", style_add)
 )
 
