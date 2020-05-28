@@ -378,7 +378,7 @@ def leak_pre():
     pattern_str = r"\:doc\:`(?:[^/\\][^<>]+?`|[^`]+?<[^/\\])"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="slash", where="at internal link start")
-    re_lib["inlinkstart"] = (pattern, msg)
+    re_lib["inlinkslash"] = (pattern, msg)
 
     pattern_str = r"\:doc\:`([^`]+?\s<)?[A-Za-z]\:[/\\]"
     pattern = re.compile(pattern_str)
