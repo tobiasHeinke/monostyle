@@ -229,8 +229,8 @@ def texts_recursive(path=None, ext_pos=()):
         path = ROOT_DIR
 
     ext_names = '/'.join(ext[1:] for ext in ext_pos) # strip dot
-    _, ext = os.path.splitext(path)
-    if len(ext) != 0:
+    if not os.path.isdir(path):
+        ext = os.path.splitext(path)[1]
         if len(ext_pos) != 0 and ext.lower() not in ext_pos:
             return None
         print("\rread {}-file".format(ext_names), end='', flush=True)
@@ -269,8 +269,8 @@ def files_recursive(path=None, ext_pos=(), split_output=False):
     if isinstance(ext_pos, str):
         ext_pos = (ext_pos,)
 
-    name, ext = os.path.splitext(path)
-    if len(ext) != 0:
+    if not os.path.isdir(path):
+        name, ext = os.path.splitext(path)
         if len(ext_pos) != 0 and ext.lower() not in ext_pos:
             return None
         if not split_output:

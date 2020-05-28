@@ -374,26 +374,22 @@ def leak_pre():
     msg = Report.missing(what="space", where="after abbreviation title")
     re_lib["abbr"] = (pattern, msg)
 
-    # internal links not starting with slash
-    # -no title
-    pattern_str = r"\:doc\:`[\w _]+?\/[\w_\/]+?`"
+    # Internal link
+    pattern_str = r"\:doc\:`(?:[^/\\][^<>]+?`|[^`]+?<[^/\\])"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="slash", where="at internal link start")
     re_lib["inlinkstart"] = (pattern, msg)
 
-    # -with title
-    pattern_str = r"\:doc\:`[\w\/ _&]+?<\w"
+    pattern_str = r"\:doc\:`([^`]+?\s<)?[A-Za-z]\:[/\\]"
     pattern = re.compile(pattern_str)
-    msg = Report.missing(what="slash", where="at internal link start")
-    re_lib["inlinkslash"] = (pattern, msg)
+    msg = Report.existing(what="drive", where="at internal link start")
+    re_lib["inlinkdrive"] = (pattern, msg)
 
-    # internal links ending with file extension
     pattern_str = r"\:doc\:`[^`]+?\.rst>?`"
     pattern = re.compile(pattern_str)
     msg = Report.existing(what="file extension", where="at internal link end")
     re_lib["inlinkext"] = (pattern, msg)
 
-    # internal links with title and no closing bracket
     pattern_str = r"\:doc\:`[^`]+? <[^`]*?[^>]`"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="closing bracket", where="at internal link end")

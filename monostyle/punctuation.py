@@ -334,7 +334,7 @@ def mark_pre():
     msg = Report.missing(what="space", where="after/before quote mark")
     re_lib["unquote"] = (pattern, msg)
 
-    pattern_str = r"([^\w\d\s\-\.])\1|[^.]\.\.[^.]"
+    pattern_str = r"([^\w\d\s\-\.])\1|(?<!\.)\.\.(?!\.)"
     pattern = re.compile(pattern_str)
     msg = Report.existing(what="double punctuation")
     re_lib["double"] = (pattern, msg)
