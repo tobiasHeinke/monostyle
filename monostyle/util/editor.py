@@ -41,11 +41,9 @@ class Editor:
                 return None
 
             text = [l for l in text.splitlines(keepends=True)]
-            text_src = Fragment.from_org_len(self.fg.fn, text, 0, start_lincol=(0, 0))
-        else:
-            text_src = self.fg
+            return Fragment.from_org_len(self.fg.fn, text, 0, start_lincol=(0, 0))
 
-        return text_src
+        return self.fg
 
 
     def _write(self, text_dst):
@@ -165,15 +163,55 @@ class Editor:
 
         return False
 
-    def __iter(self):
-        for ent in self._changes:
-            yield ent
+
+class FNEditor(Editor):
+    """File renaming with SVN."""
+
+    def from_file(fn):
+        return FNEditor(Fragment(fn, None, 0, 0))
+
+
+    def _read(self):
+        """Check if the file exists and return source Fragment."""
+        import os.path
+
+        if not os.path.isfile(self.fg.fn):
+            self._status = False
+            print("FNEditor error: file not found", self.fg.fn)
+            return None
+
+        if self.fg.content is None:
+            return Fragment.from_initial(self.fg.fn, self.fg.fn)
+
+        return self.fg
+
+
+    def _write(self, text_dst):
+        """Check the new name is free and rename file."""
+        import os.path
+        import monostyle.svn_inter
+
+        if os.path.isfile(str(text_dst)):
+            self._status = False
+            print("FNEditor error: file already exists", str(text_dst))
+            return None
+
+        monostyle.svn_inter.move(self.fg.fn, str(text_dst))
+        return text_dst
 
 
 class EditorSession:
-    """Session with one editor per file."""
+    """Session with one editor per file.
 
-    def __init__(self):
+    mode -- selects the type of editor.
+    """
+
+    def __init__(self, mode="text"):
+        if mode == "text":
+            self._editor_class = Editor
+        else:
+            self._editor_class = FNEditor
+
         self._editor_stack = []
         # Store the index of the last accessed editor for performance.
         self._last_index = None
@@ -189,181 +227,32 @@ class EditorSession:
                 self._editor_stack[self._last_index].fg.fn == fg.fn):
             self._editor_stack[self._last_index].add(fg)
         else:
-            for index, ed in enumerate(reversed(self._editor_stack)):
-                if ed.fg.fn == fg.fn:
-                    ed.add(fg)
+            for index, editor in enumerate(reversed(self._editor_stack)):
+                if editor.fg.fn == fg.fn:
+                    editor.add(fg)
                     self._last_index = len(self._editor_stack) - 1 - index
                     break
             else:
-                ed = Editor.from_file(fg.fn)
-                ed.add(fg)
-                self._editor_stack.append(ed)
+                editor = self._editor_class.from_file(fg.fn)
+                editor.add(fg)
+                self._editor_stack.append(editor)
                 self._last_index = len(self._editor_stack) - 1
 
 
-    # no virtual output, return as list/iter?
-    def apply(self, pos_lc=True):
-        for ed in self._editor_stack:
-            ed.apply(False, pos_lc)
-            if not ed:
-                print("Editor error: overlap in", ed.fg.fn)
+    def apply(self, virtual=False, pos_lc=True, stop_on_conflict=False):
+        if virtual:
+            result = []
+        for editor in self._editor_stack:
+            out = editor.apply(virtual=virtual, pos_lc=pos_lc)
+            if virtual:
+                result.append(out)
+
+            if not editor:
+                print("Editor error: conflict in", ed.fg.fn)
                 self._status = False
+                if stop_on_conflict:
+                    break
 
         self._editor_stack.clear()
-
-
-class FNEditor:
-    """File renaming session with SVN."""
-
-    def __init__(self):
-        self._changes = []
-        self._status = True
-
-
-    def __bool__(self):
-        return self._status
-
-
-    def add(self, fg):
-        self._changes.append(fg)
-
-
-    def apply(self, virtual, pos_lc=True):
-        import monostyle.svn_inter
-
-        if len(self._changes) == 0:
-            return True
-
-        self._remove_doubles()
-        self._changes.sort(key=lambda ent: (ent.fn, ent.get_start(pos_lc)))
-        if not self._check_integrity_replace(pos_lc):
-            return None
-        self._replace(pos_lc)
-
-        if not self._check_integrity_join():
-            return None
-        self._join()
-
-        if not self._check_existence():
-            return None
-        for ent in self._changes:
-            if virtual:
-                print(ent.fn, "->", str(ent))
-            else:
-                monostyle.svn_inter.move(ent.fn, str(ent))
-
-        self._changes.clear()
-
-
-    def _remove_doubles(self):
-        """Remove doublicated entries."""
-        new_changes = []
-        for ent in self._changes:
-            for ent_new in new_changes:
-                if ent == ent_new:
-                    break
-            else:
-                new_changes.append(ent)
-
-        self._changes = new_changes
-
-
-    def _replace(self, pos_lc):
-        """Apply replacement changes with same fn."""
-
-        stack_join = []
-        text_dst = None
-        after = None
-        is_first = True
-        for ent in self._changes:
-            if not is_first and ent.fn != text_dst.fn:
-                if after:
-                    text_dst.combine(after)
-
-                stack_join.append(text_dst)
-                is_first = True
-
-            if is_first:
-                text_dst = Fragment(ent.fn, [], 0, 0)
-                after = Fragment.from_org_len(ent.fn, ent.fn, 0)
-                is_first = False
-
-            before, _, after = after.slice(ent.get_start(pos_lc), ent.get_end(pos_lc))
-
-            if before:
-                text_dst.combine(before)
-
-            text_dst.combine(ent)
-
-        if after:
-            text_dst.combine(after)
-
-        stack_join.append(text_dst)
-        self._changes = stack_join
-
-
-    def _join(self):
-        """Join chain of changes."""
-
-        stack_join = []
-        for ent in self._changes:
-            for rec in stack_join:
-                if ent.fn == str(rec):
-                    rec.content = ent.content
-                    break
-            else:
-                stack_join.append(ent)
-
-        self._changes = stack_join
-
-
-    def _check_integrity_replace(self, pos_lc):
-        """Check for overlaps of the start to end span."""
-        prev = None
-        for ent in self._changes:
-            if prev and prev.fn == ent.fn:
-                if ent.is_in_span(prev.get_start(pos_lc)) or ent.is_in_span(prev.get_end(pos_lc)):
-                    self._status = False
-                    break
-
-            prev = ent
-
-        return self._status
-
-
-    def _check_integrity_join(self):
-        """Check for more than one rename of the same file."""
-        for ent in self._changes:
-            for rec in self._changes:
-                if ent.fn == rec.fn and str(ent) != str(rec):
-                    self._status = False
-                    print("FNEditor error: file same old {0} -> ({1}, {2})".format(
-                        ent.fn, str(ent), str(rec)))
-
-                if (ent.fn != rec.fn and str(ent) == str(rec)):
-                    self._status = False
-                    print("FNEditor error: file same new {0} -> ({1}, {2})".format(
-                        ent.fn, rec.fn, str(ent)))
-
-        return self._status
-
-
-    def _check_existence(self):
-        """Check if the file exists and the new name is free."""
-        import os.path
-
-        for ent in self._changes:
-            if not os.path.isfile(ent.fn):
-                self._status = False
-                print("FNEditor error: file not found", ent.fn)
-
-            if os.path.isfile(str(ent)):
-                self._status = False
-                print("FNEditor error: file already exists", str(ent))
-
-        return self._status
-
-
-    def __iter(self):
-        for ent in self._changes:
-            yield ent
+        if virtual:
+            return result
