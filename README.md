@@ -40,13 +40,13 @@ Monostyle has four modes:
   <dd>To check your own changes.</dd>
   <dt>external -e</dt>
   <dd>
-      To check changes by others made to the repository.
+      To check changes made to the repository by others.
       Run this before you update your working copy with SVN.
    </dd>
   <dt>patch -p</dt>
   <dd>To check changes in a patch-file.</dd>
   <dt>file -f</dt>
-  <dd>To check whole files/directories.</dd>
+  <dd>To check a file or directory.</dd>
   <dt>root -r</dt>
   <dd>
       The root is the absolute path to the project directory or where the patch file was created.
