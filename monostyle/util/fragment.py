@@ -163,158 +163,83 @@ class Fragment():
         return self
 
 
-    def slice_match_obj(self, match_obj, groupno, right_inner=False):
+    def slice_match_obj(self, match_obj, groupno, right_inner=False, output_zero=True):
         """Slice by span defined by a regex match object."""
         if len(match_obj.groups()) >= groupno and match_obj.group(groupno) is not None:
             at_start = self.loc_to_abs(match_obj.start(groupno))
             at_end = self.loc_to_abs(match_obj.end(groupno))
 
-            return self.slice(at_start, at_end, right_inner)
+            return self.slice(at_start, at_end, right_inner, output_zero)
 
 
-    def slice(self, at_start, at_end=None, right_inner=False):# is_abs
+    def slice(self, at_start, at_end=None, right_inner=False, output_zero=True):
         """Cut span."""
+
+        start_pos_abs = None
         if isinstance(at_start, int):
-            # keep in bounds
-            if at_start < self.start_pos:
-                at_start = self.start_pos
+            start_pos_abs = at_start
+            at_start = self.pos_to_lincol(at_start, True)
+            if at_end is not None:
+                at_end = self.pos_to_lincol(at_end, True)
 
-            at_start_rel = self.loc_to_rel(at_start)
-            if at_end is None:
-                if at_start_rel == 0:
-                    if not right_inner:
-                        return None, self # copy?
+        at_start_rel = self.loc_to_rel(at_start)
+        if at_end is not None:
+            at_end_rel = self.loc_to_rel(at_end)
 
-                    return self
-
-                if at_start >= self.end_pos:
-                    if not right_inner:
-                        return self, None
-
-                    return None
-            else:
-                if at_end < at_start:
-                    at_end = at_start
-
-                # keep in bounds
-                if at_end > self.end_pos:
-                    at_end = self.end_pos
-
-                at_end_rel = self.loc_to_rel(at_end)
-
-                if at_end_rel == 0:
-                    fg = Fragment(self.fn, [], self.start_pos, self.start_pos,
-                                  self.start_lincol, self.start_lincol)
-                    if not right_inner:
-                        return None, fg, self
-
-                    return fg
-
-            cursor = 0
-            on_start = True
-            for index, line in enumerate(self.content):
-                if on_start and at_start_rel >= cursor and at_start_rel <= cursor + len(line):
-                    at_start_rel_lincol = (index, at_start_rel - cursor)
-                    if not right_inner:
-                        a_cont = self.content[:at_start_rel_lincol[0]]
-                        a_cont.append(line[:at_start_rel_lincol[1]])
-                        a = Fragment.from_org_len(self.fn, a_cont, self.start_pos,
-                                                  start_lincol=self.start_lincol)
-                    b_cont = [line[at_start_rel_lincol[1]:]]
-                    at_start_abs_lincol = self.loc_to_abs(at_start_rel_lincol)
-                    if at_end is None:
-                        b_cont.extend(self.content[at_start_rel_lincol[0]+1:])
-                        at_start_abs_lincol_set = at_start_abs_lincol if self.start_lincol else None
-                        b = Fragment.from_org_len(self.fn, b_cont, at_start,
-                                                  start_lincol=at_start_abs_lincol_set)
-                        if not right_inner:
-                            return a, b
-
-                        return b
-
-                    on_start = False
-
-                if (at_end is not None and not on_start and
-                        at_end_rel >= cursor and at_end_rel <= cursor + len(line)):
-                    at_end_rel_lincol = (index, at_end_rel - cursor)
-                    if at_start_rel_lincol[0] == at_end_rel_lincol[0]:
-                        b_cont = [b_cont[0][:at_end_rel_lincol[1] - at_start_rel_lincol[1]]]
-                    else:
-                        b_cont.extend(self.content[at_start_rel_lincol[0]+1:at_end_rel_lincol[0]])
-                        b_cont.extend([line[:at_end_rel_lincol[1]]])
-                    at_start_abs_lincol_set = at_start_abs_lincol if self.start_lincol else None
-                    b = Fragment.from_org_len(self.fn, b_cont, at_start,
-                                              start_lincol=at_start_abs_lincol_set)
-                    if not right_inner:
-                        c_cont = [line[at_end_rel_lincol[1]:]]
-                        if at_end_rel_lincol[0] < len(self.content) - 1:
-                            c_cont.extend(self.content[at_end_rel_lincol[0]+1:])
-                        at_end_abs_lincol = self.loc_to_abs(at_end_rel_lincol)
-                        at_end_abs_lincol_set = at_end_abs_lincol if self.end_lincol else None
-                        c = Fragment.from_org_len(self.fn, c_cont, at_end,
-                                                  start_lincol=at_end_abs_lincol_set)
-                        return a, b, c
-
-                    return b
-
-                cursor += len(line)
+        start_rel = (0, 0)
+        if self.end_lincol is not None:
+            end_rel = self.loc_to_rel(self.end_lincol)
         else:
-            # todo keep in bounds
-            at_start_rel = self.loc_to_rel(at_start)
-            if at_end is None:
-                if at_start_rel[0] > len(self.content) - 1:
-                    if not right_inner:
-                        return self, None
+            end_rel = self.loc_to_rel(self.pos_to_lincol(self.end_pos, True))
 
-                    return None
-                if at_start_rel[0] < 0:
-                    if not right_inner:
-                        return None, self
-
-                    return self
-            else:
-                if (at_end[0] < at_start[0] or
-                        (at_end[0] == at_start[0] and at_end[1] < at_start[1])):
-                    at_end = at_start
-
-                at_end_rel = self.loc_to_rel(at_end)
-                if at_end_rel[0] < 0:
-                    if not right_inner:
-                        return None, None, self
-
-                    return None
-
-            a_cont = self.content[:at_start_rel[0]]
-            a_cont.append(self.content[at_start_rel[0]][:at_start_rel[1]])
-            a = Fragment.from_org_len(self.fn, a_cont, self.start_pos,
-                                      start_lincol=self.start_lincol)
-
-            if at_end is None:
-                b_cont = [self.content[at_start_rel[0]][at_start_rel[1]:]]
-                if at_start_rel[0] + 1 < len(self.content):
-                    b_cont.extend(self.content[at_start_rel[0]+1:])
-                b = Fragment.from_org_len(self.fn, b_cont, a.end_pos, start_lincol=at_start)
-
-                if not right_inner:
-                    return a, b
-
-                return b
-
-            if at_start_rel[0] == at_end_rel[0]:
-                b_cont = [self.content[at_start_rel[0]][at_start_rel[1]:at_end_rel[1]]]
-            else:
-                b_cont = [self.content[at_start_rel[0]][at_start_rel[1]:]]
-                b_cont.extend(self.content[at_start_rel[0]+1:at_end_rel[0]])
-                b_cont.extend([self.content[at_end_rel[0]][:at_end_rel[1]]])
-            b = Fragment.from_org_len(self.fn, b_cont, a.end_pos, start_lincol=at_start)
+        cuts = []
+        if at_end is None:
             if not right_inner:
-                c_cont = [self.content[at_end_rel[0]][at_end_rel[1]:]]
-                if at_end_rel[0] < len(self.content) - 1:
-                    c_cont.extend(self.content[at_end_rel[0]+1:])
-                c = Fragment.from_org_len(self.fn, c_cont, b.end_pos, start_lincol=at_end)
-                return a, b, c
+                cuts.append((start_rel, at_start_rel, self.start_pos, self.start_lincol))
+            cuts.append((at_start_rel, end_rel, start_pos_abs, at_start))
+        else:
+            if not right_inner:
+                cuts.append((start_rel, at_start_rel, self.start_pos, self.start_lincol))
+            cuts.append((at_start_rel, at_end_rel, start_pos_abs, at_start))
+            if not right_inner:
+                cuts.append((at_end_rel, end_rel, None, at_end))
 
-            return b
+        out = []
+        for start, end, pos_abs, lincol_abs in cuts:
+            if start <= start_rel and end <= start_rel:
+                fg = self.copy().clear(True) if output_zero else None
+            elif end >= end_rel and start <= start_rel:
+                fg = self.copy()
+            elif start >= end_rel:
+                fg = self.copy().clear(False) if output_zero else None
+            elif start == end and not output_zero:
+                fg = None
+            else:
+                if start == end:
+                    cont = []
+                else:
+                    cont = [self.content[start[0]][start[1]:]]
+                    if start[0] == end[0]:
+                        cont = cont[-1][:end[1] - start[1]]
+                    else:
+                        if start[0] + 1 < len(self.content):
+                            cont.extend(self.content[start[0]+1:end[0]])
+                        cont.extend([self.content[end[0]][:end[1]]])
+
+                if pos_abs is None:
+                    if start_pos_abs is not None:
+                        pos_abs = start_pos_abs
+                    else:
+                        pos_abs = self.lincol_to_pos(at_start, True)
+
+                lincol_abs = lincol_abs if self.start_lincol else None
+                fg = Fragment.from_org_len(self.fn, cont, pos_abs,
+                                           start_lincol=lincol_abs)
+                start_pos_abs = fg.end_pos
+
+            out.append(fg)
+
+        return out[0] if len(out) == 1 else tuple(out)
 
 
     def splitlines(self, buffered=False):
@@ -383,57 +308,67 @@ class Fragment():
         return (loc_rel_lineno, loc_rel_colno)
 
 
-    def lincol_to_pos(self, lincol):
+    def lincol_to_pos(self, lincol, keep_bounds=False):
         """Convert a lincol location to a pos location."""
         # todo bounds
+        lincol = self.loc_to_rel(lincol)
+        if lincol < (0, 0):
+            if keep_bounds:
+                return self.start_pos
+            return None
+
         cursor = 0
         for index, line in enumerate(self.content):
             if lincol[0] == index:
-                return cursor + lincol[1]
+                return self.loc_to_abs(cursor + lincol[1])
 
             cursor += len(line)
 
+        if keep_bounds:
+            return self.loc_to_abs(cursor)
 
-    def pos_to_lincol(self, pos):
+
+    def pos_to_lincol(self, pos, keep_bounds=False):
         """Convert a pos location to a lincol location."""
+
+        pos = self.loc_to_rel(pos)
+        if pos < 0:
+            if keep_bounds:
+                return self.start_lincol if self.start_lincol else (0, 0)
+            return None
 
         cursor = 0
         for index, line in enumerate(self.content):
             # favor next line start over current end
             if pos >= cursor and pos - cursor < len(line):
-                return (index, pos - cursor)
+                return self.loc_to_abs((index, pos - cursor))
 
             cursor += len(line)
+
+        if keep_bounds:
+            if len(self.content) == 0:
+                return self.loc_to_abs((0, 0))
+            else:
+                return self.loc_to_abs((len(self.content) - 1, len(self.content[-1])))
 
 
     def is_in_span(self, loc, include_start=True, include_end=True):
         """Check if the location is between start and end."""
 
-        if isinstance(loc, int):
-            if self.start_pos == self.end_pos:
-                if include_start and include_end and loc == self.start_pos:
-                    return True
-            else:
-                if ((include_start and loc == self.start_pos) or
-                        (include_end and loc == self.end_pos)):
-                    return True
+        pos_lc = bool(isinstance(loc, int))
+        self_start = self.get_start(pos_lc)
+        self_end = self.get_end(pos_lc)
 
-            if loc > self.start_pos and loc < self.end_pos:
+        if self_start == self_end:
+            if include_start and include_end and loc == self_start:
                 return True
         else:
-            if self.start_lincol == self.end_lincol:
-                if include_start and include_end and loc == self.start_lincol:
-                    return True
-            else:
-                if ((include_start and loc == self.start_lincol) or
-                        (include_end and loc == self.end_lincol)):
-                    return True
-
-            if (((loc[0] == self.start_lincol[0] and loc[1] > self.start_lincol[1]) or
-                    loc[0] > self.start_lincol[0]) and
-                    (loc[0] < self.end_lincol[0] or
-                     (loc[0] == self.end_lincol[0] and loc[1] < self.end_lincol[1]))):
+            if ((include_start and loc == self_start) or
+                    (include_end and loc == self_end)):
                 return True
+
+        if loc > self_start and loc < self_end:
+            return True
 
         return False
 
@@ -442,11 +377,11 @@ class Fragment():
         """Remove content. Turn into zero-length Fragment at start or end."""
         self.content.clear()
         if start_end:
-            self.start_pos = self.end_pos
-            self.start_lincol = self.end_lincol
-        else:
             self.end_pos = self.start_pos
             self.end_lincol = self.start_lincol
+        else:
+            self.start_pos = self.end_pos
+            self.start_lincol = self.end_lincol
 
         return self
 
@@ -502,7 +437,7 @@ class Fragment():
 
 
     def __repr__(self):
-        return self.repr(True, True, False)
+        return self.repr(bool(not self.end_lincol), True, False)
 
 
     def repr(self, show_pos, show_fn=False, show_content=True):

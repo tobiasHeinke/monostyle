@@ -81,7 +81,8 @@ class Editor:
         text_dst = text_src.copy().clear(True)
         after = text_src
         for ent in self._changes:
-            before, _, after = after.slice(ent.get_start(pos_lc), ent.get_end(pos_lc))
+            before, _, after = after.slice(ent.get_start(pos_lc), ent.get_end(pos_lc,
+                                           output_zero=True)
 
             if before:
                 text_dst.combine(before)
