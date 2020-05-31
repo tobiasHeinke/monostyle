@@ -165,9 +165,8 @@ def indention(document, reports):
             if len(stack_prev) != 1:
                 with_what += " or " + str(stack_prev[-2]) + " chars"
             msg = Report.substitution(what="wrong indent", with_what=with_what)
-            out = Fragment.from_org_len(document.code.fn, "", -1,
-                                        start_lincol=(line.start_lincol[0],
-                                                      stack_cur[0]))
+            out = Fragment(document.code.fn, "", -1,
+                           start_lincol=(line.start_lincol[0], stack_cur[0]))
             reports.append(Report('E', toolname, out, msg, line))
 
         if stack_cur[0] == 0:

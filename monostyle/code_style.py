@@ -232,8 +232,7 @@ def long_line(document, reports):
                 if line.end_lincol[0] == found_lineno:
                     continue
 
-                out = Fragment.from_org_len(document.code.fn, "", line.end_pos,
-                                            start_lincol=line.end_lincol)
+                out = line.copy().clear(False)
                 msg = "long line"
                 reports.append(Report('W', toolname, out, msg, line, "reflow"))
                 found_lineno = line.end_lincol[0]

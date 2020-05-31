@@ -217,8 +217,7 @@ def pairs(document, reports, re_lib, config):
                             msg = "long span"
                             msg += " - " + str(lincol_abs[0] + 1) + ","
                             msg += str(lincol_abs[1] + 1)
-                            out = Fragment.from_org_len(document.code.fn, ent[0], -1,
-                                                        start_lincol=ent[1])
+                            out = Fragment(document.code.fn, ent[0], -1, start_lincol=ent[1])
                             reports.append(Report('W', toolname, out, msg))
 
                         # invert index
@@ -236,7 +235,7 @@ def pairs(document, reports, re_lib, config):
     if len(stack) != 0:
         msg = "unclosed pairs"
         for ent in stack:
-            out = Fragment.from_org_len(document.code.fn, ent[0], -1, start_lincol=ent[1])
+            out = Fragment(document.code.fn, ent[0], -1, start_lincol=ent[1])
             reports.append(Report('W', toolname, out, msg))
 
     if max_line_span is not None:
@@ -253,9 +252,7 @@ def pairs(document, reports, re_lib, config):
                 msg = "long span"
                 msg += " - " + str(node.body_start.code.end_lincol[0] + 1)
                 msg += "," + str(node.body_end.code.start_lincol[1] + 1)
-                out = Fragment.from_org_len(document.code.fn, "", -1,
-                                            start_lincol=node.body_start.code.start_lincol)
-                reports.append(Report('W', toolname, out, msg))
+                reports.append(Report('W', toolname, node.body_start.code, msg))
 
             if node.body_start.code.end_pos == node.body_end.code.start_pos:
                 msg = "zero span"
@@ -473,8 +470,7 @@ def mark(document, reports, re_lib):
                                              ("Hotkey", "Menu", "Panel", "Mode",
                                               "Tool", "Editor", "Header", "Type"))):
 
-                        out = Fragment.from_org_len(document.code.fn, [], part.code.end_pos,
-                                                    start_lincol=part.code.end_lincol)
+                        out = part.code.copy().clear(False)
                         msg = re_lib["nopuncend"][1].format("paragraph")
                         line = monostylestd.getline_punc(document.body.code, part.code.end_pos,
                                                          0, 50, 0)
@@ -482,7 +478,7 @@ def mark(document, reports, re_lib):
 
                 else:
                     if comma_m := re.search(comma_re, part_str):
-                        out = Fragment.from_org_len(document.code.fn, comma_m.group(0),
+                        out = Fragment(document.code.fn, comma_m.group(0),
                                                     part.code.start_pos + comma_m.start(),
                                                     start_lincol=part.code.end_lincol)
                         msg = re_lib["commaend"][1].format(part.parent_node.node_name +
@@ -491,7 +487,7 @@ def mark(document, reports, re_lib):
 
         elif rst_walker.is_of(part, ("role", "hyperlink"), "*", "head"):
             if noend_m := re.search(noend_re, str(part.code)):
-                out = Fragment.from_org_len(document.code.fn, noend_m.group(0),
+                out = Fragment(document.code.fn, noend_m.group(0),
                                             part.code.start_pos + noend_m.start(),
                                             start_lincol=part.code.end_lincol)
                 msg = re_lib["nopuncend"][1].format(part.parent_node.node_name + " " +

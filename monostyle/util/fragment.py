@@ -18,50 +18,46 @@ class Fragment():
     __slots__ = ('fn', 'content', 'start_pos', 'end_pos', 'start_lincol', 'end_lincol')
 
 
-    def __init__(self, fn, content, start_pos, end_pos, start_lincol=None, end_lincol=None):
+    def __init__(self, fn, content, start_pos=None, end_pos=None, start_lincol=None, end_lincol=None, use_lincol=True):
+        """content is split into lines if use_lincol.
+        starts defaults to zero (because the start_lincol can not be measured).
+        ends are measured/derived from content if None.
+        """
         self.fn = fn
-        if isinstance(content, str):
-            self.content = [str(content)]
+
+        start_pos = int(start_pos) if start_pos is not None else 0
+        end_pos = int(end_pos) if end_pos is not None else None
+
+        if content is None:
+            content = []
+        elif isinstance(content, str):
+            if use_lincol:
+                content = [l for l in content.splitlines(keepends=True)]
+            else:
+                content = [content]
         else:
-            self.content = content.copy() if content else content
+            content = content.copy()
 
-        self.start_pos = int(start_pos)
-        self.end_pos = int(end_pos)
+        self.content = content
 
+        if end_pos is None:
+            end_pos = start_pos + sum(map(len, content))
+
+        if use_lincol:
+            if start_lincol is None:
+                start_lincol = (0, 0)
+            if end_lincol is None:
+                if len(content) == 0:
+                    end_lincol = start_lincol
+                elif len(content) == 1:
+                    end_lincol = (start_lincol[0], start_lincol[1] + len(content[-1]))
+                else:
+                    end_lincol = (start_lincol[0] + max(0, len(content) - 1), len(content[-1]))
+
+        self.start_pos = start_pos
+        self.end_pos = end_pos
         self.start_lincol = start_lincol
         self.end_lincol = end_lincol
-
-
-    def from_org_len(fn, content, start_pos, offset_pos=0, start_lincol=None, offset_lincol=(0, 0)):
-        """Constructor from content length."""
-        end_lincol = None
-
-        if isinstance(content, str):
-            end_pos = start_pos + len(content)
-            if start_lincol:
-                end_lincol = (start_lincol[0], start_lincol[1] + len(content))
-        else:
-            end_pos = start_pos
-            line = ""
-            for line in content:
-                end_pos += len(line)
-
-            if start_lincol:
-                if len(content) == 1:
-                    end_lincol = (start_lincol[0], start_lincol[1] + len(line))
-                else:
-                    end_lincol = (start_lincol[0] + max(0, len(content) - 1), len(line))
-
-        return Fragment(fn, content, start_pos, end_pos,
-                        start_lincol, end_lincol).add_offset(offset_pos, offset_lincol)
-
-
-    def from_initial(fn, content, use_lincol=True):
-        """Constructor from at zero and content length."""
-        if isinstance(content, str):
-            content = [l for l in content.splitlines(keepends=True)]
-        start_lincol = (0, 0) if use_lincol else None
-        return Fragment.from_org_len(fn, content, 0, start_lincol=start_lincol)
 
 
     def add_offset(self, offset_pos=None, offset_lincol=None):
@@ -323,7 +319,7 @@ class Fragment():
 
     def splitlines(self, buffered=False):
         """Split the content into line Fragments per list item."""
-        offset_pos = self.start_pos
+        start_pos = self.start_pos
         apply_colno_offset = True
         lineno_offset = self.start_lincol[0] if self.start_lincol else 0
         for lineno, line_str in enumerate(self.content, lineno_offset):
@@ -335,9 +331,9 @@ class Fragment():
                     start_lincol = (lineno, 0)
             else:
                 start_lincol = None
-            line = Fragment.from_org_len(self.fn, line_str, 0, offset_pos, start_lincol)
+            line = Fragment(self.fn, line_str, start_pos, start_lincol=start_lincol)
             yield line
-            offset_pos = line.end_pos
+            start_pos = line.end_pos
 
         if buffered:
             yield None

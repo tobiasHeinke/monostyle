@@ -22,7 +22,7 @@ class Editor:
 
 
     def from_file(fn):
-        return Editor(Fragment(fn, None, 0, 0))
+        return Editor(Fragment(fn, None))
 
 
     def __bool__(self):
@@ -31,7 +31,7 @@ class Editor:
 
     def _read(self):
         """Return stored text or read it from the file."""
-        if self.fg.content is None:
+        if len(self.fg.content) == 0:
             try:
                 with open(self.fg.fn, "r", encoding="utf-8") as f:
                     text = f.read()
@@ -40,8 +40,7 @@ class Editor:
                 print("{0}: cannot read: {1}".format(self.fg.fn, err))
                 return None
 
-            text = [l for l in text.splitlines(keepends=True)]
-            return Fragment.from_org_len(self.fg.fn, text, 0, start_lincol=(0, 0))
+            return Fragment(self.fg.fn, text)
 
         return self.fg
 
@@ -79,8 +78,7 @@ class Editor:
         if not self._check_integrity(pos_lc):
             return None
 
-        text_dst = Fragment(text_src.fn, [], text_src.start_pos, text_src.start_pos,
-                            text_src.start_lincol, text_src.start_lincol)
+        text_dst = text_src.copy().clear(True)
         after = text_src
         for ent in self._changes:
             before, _, after = after.slice(ent.get_start(pos_lc), ent.get_end(pos_lc))
@@ -168,7 +166,7 @@ class FNEditor(Editor):
     """File renaming with SVN."""
 
     def from_file(fn):
-        return FNEditor(Fragment(fn, None, 0, 0))
+        return FNEditor(Fragment(fn, None))
 
 
     def _read(self):
@@ -181,7 +179,7 @@ class FNEditor(Editor):
             return None
 
         if self.fg.content is None:
-            return Fragment.from_initial(self.fg.fn, self.fg.fn)
+            return Fragment(self.fg.fn, self.fg.fn)
 
         return self.fg
 

@@ -74,17 +74,17 @@ def file_encoding():
                 text = f.read()
 
             except UnicodeEncodeError as err:
-                out = Fragment.from_org_len(fn, str(err), 0, start_lincol=-1)
-                msg = "encode error"
+                out = Fragment(fn, "")
+                msg = "encode error: " + str(err)
                 reports.append(Report('E', toolname, out, msg))
 
             except:
-                out = Fragment.from_org_len(fn, "", 0, start_lincol=-1)
+                out = Fragment(fn, "")
                 msg = "unknown encode error"
                 reports.append(Report('E', toolname, out, msg))
 
             else:
-                document_fg = Fragment.from_initial(fn, text)
+                document_fg = Fragment(fn, text)
                 for repchar_m in re.finditer(repchar_re, text):
                     out = document_fg.slice_match_obj(repchar_m, 0, True)
                     msg = "unsupported character"

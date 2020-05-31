@@ -225,8 +225,7 @@ def process_inline(node, boxes, ind_first, options):
         box_mid.demerits -= options["markupid"]
         boxes.append(box_mid)
 
-    space_end = Fragment.from_org_len(code.fn, [], code.end_pos,
-                                      start_lincol=code.end_lincol)
+    space_end = code.copy().clear(False)
     boxes.append(Box(str(code), space_end, extra_len))
 
     return boxes
@@ -260,7 +259,7 @@ def process_text_leaf(code, boxes, ind_first, no_space_end):
         was_split = True
 
     if not was_split:
-        space = Fragment.from_org_len(code.fn, [], code.end_pos, start_lincol=code.end_lincol)
+        space = code.copy().clear(False)
         boxes.append(Box(str(code), space, extra_len))
         no_space_end = True
 

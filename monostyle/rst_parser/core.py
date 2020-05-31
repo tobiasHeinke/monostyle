@@ -437,7 +437,7 @@ class RSTParser:
     # Block
 
     def document(self, fn, text):
-        fg = Fragment.from_initial(fn, text)
+        fg = Fragment(fn, text)
         newnode = NodeRST("document", fg)
         newnode.append_part("body", fg)
         return newnode

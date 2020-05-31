@@ -292,7 +292,7 @@ def run_diff(from_vsn, is_internal, path, rev):
                         # unversioned
                         text = read_file(fn)
                         text = [l for l in text.splitlines(keepends=True)]
-                        fg = Fragment.from_org_len(fn, text, 0, start_lincol=(0, 0))
+                        fg = Fragment(fn, text)
                         yield fg, None
                     else:
                         changed_files.append(fn)
