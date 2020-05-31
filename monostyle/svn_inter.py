@@ -206,6 +206,9 @@ def update(path, rev=None):
     return exec_command(cmd)
 
 
+# -------------
+
+
 def add(path):
     if path == "":
         print("svn add empty parameter")
@@ -233,12 +236,54 @@ def move(src, dst):
     return exec_command(cmd)
 
 
+# -------------
+
+
+def prop_get(path, name):
+    if path == "":
+        print("svn propget empty parameter")
+        return None
+
+    cmd = ["propget", name, path]
+    return exec_command(cmd)
+
+
+def prop_set(path, name, value):
+    if path == "":
+        print("svn propset empty parameter")
+        return None
+
+    cmd = ["propset", name, value, path]
+    return exec_command(cmd)
+
+
+def prop_delete(path, name):
+    if path == "":
+        print("svn propdel empty parameter")
+        return None
+
+    cmd = ["propdel", name, path]
+    return exec_command(cmd)
+
+
+def prop_keys(path):
+    if path == "":
+        print("svn proplist empty parameter")
+        return None
+
+    cmd = ["proplist", path]
+    return exec_command(cmd)
+
+
 def exec_command(cmd_args):
     cmd = ["svn"]
     cmd.extend(cmd_args)
+    
+    silent = bool(cmd_args[0] in ("propget", "proplist"))
     try:
-        action_name = "fetching" if cmd_args[0] in ("status", "diff", "update") else "applying"
-        print(action_name, cmd_args[0] + ": ...", end="")
+        if not silent:
+            print("fetching" if cmd_args[0] in ("status", "diff", "update") else "applying",
+                 cmd_args[0] + ": ...", end="")
         output = subprocess.check_output(cmd)
     except OSError as err:
         print("svn", cmd_args[0], "error:", err)
@@ -247,7 +292,8 @@ def exec_command(cmd_args):
     except Exception as err:
         print("svn", cmd_args[0], "unexpected error", err)
     else:
-        print("\b" * 3 + "done")
+        if not silent:
+            print("\b" * 3 + "done")
         return output.splitlines()
 
 

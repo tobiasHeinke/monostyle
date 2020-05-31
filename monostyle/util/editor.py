@@ -179,7 +179,7 @@ class FNEditor(Editor):
             print("FNEditor error: file not found", self.fg.fn)
             return None
 
-        if self.fg.content is None:
+        if len(self.fg.content) == 0:
             return Fragment(self.fg.fn, self.fg.fn)
 
         return self.fg
@@ -199,6 +199,64 @@ class FNEditor(Editor):
         return text_dst
 
 
+class PropEditor(Editor):
+    """File properties editing with SVN.
+    Note the file has to be versioned.
+    The key/name has to be appended to the filename of the Fragment separated with a colon.
+    Non-binary property values only.
+    """
+
+    def from_file(fn):
+        return PropEditor(Fragment(fn, None))
+
+
+    def join_key(fn, key):
+        return ':'.join((fn, key))
+
+
+    def split_key(fn):
+        if (dot_idx := fn.rfind('.')) != -1:
+            if (colon_idx := fn.find(':', dot_idx)) != -1:
+                return fn[:colon_idx], fn[colon_idx + 1:]
+
+        return fn
+
+
+    def _read(self):
+        """Get file property."""
+        import os.path
+        import monostyle.svn_inter
+
+        fn, key = PropEditor.split_key(self.fg.fn)
+        if not os.path.isfile(fn):
+            self._status = False
+            print("PropEditor error: file not found", fn)
+            return None
+
+        if len(self.fg.content) == 0:
+            content = []
+            for line in monostyle.svn_inter.prop_get(fn, key):
+                content.append(line.decode("utf-8"))
+            return Fragment(self.fg.fn, content)
+
+        return self.fg
+
+
+    def _write(self, text_dst):
+        """Change property in file."""
+        import os.path
+        import monostyle.svn_inter
+
+        fn, key = PropEditor.split_key(self.fg.fn)
+        if not os.path.isfile(fn):
+            self._status = False
+            print("PropEditor error: file not found", fn)
+            return None
+
+        monostyle.svn_inter.prop_set(fn, key, str(text_dst))
+        return text_dst
+
+
 class EditorSession:
     """Session with one editor per file.
 
@@ -208,8 +266,13 @@ class EditorSession:
     def __init__(self, mode="text"):
         if mode == "text":
             self._editor_class = Editor
-        else:
+        elif mode in ("fn", "filename"):
             self._editor_class = FNEditor
+        elif mode in ("prop", "props", "property", "properties",
+                     "conf", "config", "configuration"):
+            self._editor_class = PropEditor
+        else:
+            print("Unknown EditorSession mode:", mode)
 
         self._editor_stack = []
         # Store the index of the last accessed editor for performance.

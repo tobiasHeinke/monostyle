@@ -264,6 +264,7 @@ def files_recursive(path=None, ext_pos=(), split_output=False):
     """Yield files in the sub-/directories."""
     if path is None:
         path = ROOT_DIR
+    path = replace_windows_path_sep(path)
 
     if isinstance(ext_pos, str):
         ext_pos = (ext_pos,)
@@ -284,10 +285,11 @@ def files_recursive(path=None, ext_pos=(), split_output=False):
             if dirpath.startswith("."):
                 continue
 
+            dirpath = replace_windows_path_sep(dirpath)
             for filename in filenames:
                 name, ext = os.path.splitext(filename)
                 if len(ext_pos) == 0 or ext.lower() in ext_pos:
                     if not split_output:
-                        yield os.path.join(dirpath, filename)
+                        yield '/'.join((dirpath, filename))
                     else:
                         yield dirpath, name, ext
