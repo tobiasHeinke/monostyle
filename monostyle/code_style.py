@@ -11,7 +11,6 @@ import re
 
 import monostyle.util.monostylestd as monostylestd
 from monostyle.util.report import Report, print_reports
-from monostyle.util.fragment import Fragment
 from monostyle.util.pos import PartofSpeech
 from monostyle.util.char_catalog import CharCatalog
 from monostyle.rst_parser.core import RSTParser
@@ -407,7 +406,7 @@ def blank_line(document, reports):
                 next_node = node.next
                 while (next_node and
                        (next_node.node_name in ("target", "comment") or
-                       is_blank_node(next_node))):
+                        is_blank_node(next_node))):
                     next_node = next_node.next
 
                 if not next_node or next_node.node_name not in ("sect", "rubric"):
@@ -523,7 +522,7 @@ def init(op_names):
                 ops.append((op[1], args))
                 break
         else:
-            print("research: unknown operation: " + op_name)
+            print("code_style: unknown operation: " + op_name)
 
     return ops
 

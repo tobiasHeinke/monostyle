@@ -108,7 +108,8 @@
 "informal":[
 	"# only ambiguous or spaced compounds",
 	["check out", ["please refer to", "see"]],
-	["go into", ["switch to", "enter", "open"]],
+	["go(ing)\\? in(to)\\?", ["switch to", "enter", "open"]],
+	"going (?!to)",
 	[["kind of", "sort of"], "type of"],
 	"neat", "nicely",
 	[["turn on", "turn off"], ["de/activate", "dis/enable"]],

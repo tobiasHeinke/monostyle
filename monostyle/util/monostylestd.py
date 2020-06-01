@@ -12,7 +12,6 @@ import re
 import json
 
 import monostyle.config as config
-from monostyle.util.fragment import Fragment
 
 ROOT_DIR = None
 RST_DIR = config.rst_dir

@@ -9,7 +9,7 @@ A RST parser.
 import re
 import monostyle.util.monostylestd as monostylestd
 from monostyle.util.fragment import Fragment
-from monostyle.util.nodes import Node, LinkedList
+from monostyle.util.nodes import LinkedList
 from monostyle.rst_parser.rst_node import NodeRST, NodePartRST
 import monostyle.rst_parser.walker as rst_walker
 

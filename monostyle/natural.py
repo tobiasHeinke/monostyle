@@ -11,7 +11,6 @@ import re
 
 import monostyle.util.monostylestd as monostylestd
 from monostyle.util.report import Report, print_reports
-from monostyle.util.fragment import Fragment
 from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.segmenter import Segmenter
@@ -407,7 +406,7 @@ def init(op_names):
                 ops.append((op[1], args))
                 break
         else:
-            print("Unknown operation: " + op_name)
+            print("natural: unknown operation: " + op_name)
             return None
 
     return ops

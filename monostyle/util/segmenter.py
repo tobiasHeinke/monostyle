@@ -7,7 +7,6 @@ Text segmentation.
 """
 
 import re
-from monostyle.util.fragment import Fragment
 from monostyle.util.char_catalog import CharCatalog
 from monostyle.util.pos import PartofSpeech
 

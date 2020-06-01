@@ -4,7 +4,7 @@ rst_parser.rst_node
 ~~~~~~~~~~~~~~~~~~~
 """
 
-from monostyle.util.nodes import Node, LinkedList
+from monostyle.util.nodes import Node
 
 class NodeRST(Node):
 

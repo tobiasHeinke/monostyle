@@ -275,7 +275,7 @@ def init(op_names):
                 ops.append((op[1], {"data": data_comp, "config": config}))
                 break
         else:
-            print("Unknown operation: " + op_name)
+            print("listsearch: unknown operation: " + op_name)
             return None
 
     return ops

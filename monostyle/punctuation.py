@@ -478,18 +478,14 @@ def mark(document, reports, re_lib):
 
                 else:
                     if comma_m := re.search(comma_re, part_str):
-                        out = Fragment(document.code.fn, comma_m.group(0),
-                                                    part.code.start_pos + comma_m.start(),
-                                                    start_lincol=part.code.end_lincol)
+                        out = part.code.slice_match_obj(comma_m, 0, True)
                         msg = re_lib["commaend"][1].format(part.parent_node.node_name +
                                                            " " + part.node_name)
                         reports.append(Report('W', toolname, out, msg))
 
         elif rst_walker.is_of(part, ("role", "hyperlink"), "*", "head"):
             if noend_m := re.search(noend_re, str(part.code)):
-                out = Fragment(document.code.fn, noend_m.group(0),
-                                            part.code.start_pos + noend_m.start(),
-                                            start_lincol=part.code.end_lincol)
+                out = part.code.slice_match_obj(noend_m, 0, True)
                 msg = re_lib["nopuncend"][1].format(part.parent_node.node_name + " " +
                                                     part.node_name)
                 reports.append(Report('W', toolname, out, msg))
@@ -602,7 +598,7 @@ def init(op_names):
                 ops.append((op[1], args))
                 break
         else:
-            print("repattern: unknown operation: " + op_name)
+            print("punctuation: unknown operation: " + op_name)
 
     return ops
 

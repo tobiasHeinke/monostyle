@@ -550,7 +550,7 @@ def init(op_names):
                 ops.append((op[1], args))
                 break
         else:
-            print("research: unknown operation: " + op_name)
+            print("markup: unknown operation: " + op_name)
 
     return ops
 

@@ -139,7 +139,7 @@ class Report():
     option = MsgTemplate("{what} {?where} should be either {with_what}").substitute
 
     msg_templates = ("quantity", "existing", "missing", "under", "over",
-                  "misplaced", "misformatted", "substitution", "conditional", "option")
+                     "misplaced", "misformatted", "substitution", "conditional", "option")
 
 
     def override_templates(new_templates):

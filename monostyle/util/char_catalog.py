@@ -137,7 +137,7 @@ class CharCatalog:
         """Find ranges and store them as tubles."""
         region = []
         buf = None
-        last = None
+        last = ""
         was_esc = False
         was_adjoin = False
         for c in chars:

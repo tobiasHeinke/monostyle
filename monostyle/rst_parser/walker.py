@@ -6,8 +6,7 @@ rst_parser.walker
 RST node tree walker.
 """
 
-from monostyle.util.nodes import Node, LinkedList
-from monostyle.rst_parser.rst_node import NodeRST, NodePartRST
+from monostyle.rst_parser.rst_node import NodeRST
 
 
 def iter_node(root, names=None, enter_pos=True, leafs_only=False):

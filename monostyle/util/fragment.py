@@ -18,7 +18,8 @@ class Fragment():
     __slots__ = ('fn', 'content', 'start_pos', 'end_pos', 'start_lincol', 'end_lincol')
 
 
-    def __init__(self, fn, content, start_pos=None, end_pos=None, start_lincol=None, end_lincol=None, use_lincol=True):
+    def __init__(self, fn, content, start_pos=None, end_pos=None,
+                 start_lincol=None, end_lincol=None, use_lincol=True):
         """content is split into lines if use_lincol.
         starts defaults to zero (because the start_lincol can not be measured).
         ends are measured/derived from content if None.
@@ -233,8 +234,7 @@ class Fragment():
                         pos_abs = self.lincol_to_pos(at_start, True)
 
                 lincol_abs = lincol_abs if self.start_lincol else None
-                fg = Fragment.from_org_len(self.fn, cont, pos_abs,
-                                           start_lincol=lincol_abs)
+                fg = Fragment(self.fn, cont, pos_abs, start_lincol=lincol_abs)
                 start_pos_abs = fg.end_pos
 
             out.append(fg)
@@ -310,7 +310,7 @@ class Fragment():
 
     def lincol_to_pos(self, lincol, keep_bounds=False):
         """Convert a lincol location to a pos location."""
-        # todo bounds
+
         lincol = self.loc_to_rel(lincol)
         if lincol < (0, 0):
             if keep_bounds:
@@ -348,8 +348,8 @@ class Fragment():
         if keep_bounds:
             if len(self.content) == 0:
                 return self.loc_to_abs((0, 0))
-            else:
-                return self.loc_to_abs((len(self.content) - 1, len(self.content[-1])))
+
+            return self.loc_to_abs((len(self.content) - 1, len(self.content[-1])))
 
 
     def is_in_span(self, loc, include_start=True, include_end=True):
@@ -398,7 +398,7 @@ class Fragment():
 
     def __eq__(self, other):
         """Returns if the Fragment are the same."""
-        if not isinstance(other, Fragment):
+        if type(other) != Fragment:
             return False
 
         if self is other:
