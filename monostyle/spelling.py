@@ -256,6 +256,7 @@ def init(_):
 def main():
 
     import argparse
+    from monostyle import setup
 
     descr = "Write lexicon."
     parser = argparse.ArgumentParser(description=descr)
@@ -282,6 +283,10 @@ def main():
 
     root_dir = monostylestd.replace_windows_path_sep(root_dir)
     monostylestd.ROOT_DIR = root_dir
+
+    setup_sucess = setup(root_dir)
+    if not setup_sucess:
+        return 2
 
     re_lib = compile_lib()
     lex_new = build_lexicon(re_lib)
