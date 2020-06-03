@@ -100,7 +100,7 @@ class Editor:
 
 
     def _remove_doubles(self):
-        """Remove doublicated entries."""
+        """Remove duplicated entries."""
         new_changes = []
         for ent in self._changes:
             for ent_new in new_changes:
@@ -219,7 +219,7 @@ class PropEditor(Editor):
             if (colon_idx := fn.find(':', dot_idx)) != -1:
                 return fn[:colon_idx], fn[colon_idx + 1:]
 
-        return fn
+        return fn, None
 
 
     def _read(self):
@@ -228,6 +228,11 @@ class PropEditor(Editor):
         import monostyle.svn_inter
 
         fn, key = PropEditor.split_key(self.fg.fn)
+        if not key:
+            self._status = False
+            print("PropEditor error: no key", fn)
+            return None
+
         if not os.path.isfile(fn):
             self._status = False
             print("PropEditor error: file not found", fn)
@@ -248,6 +253,11 @@ class PropEditor(Editor):
         import monostyle.svn_inter
 
         fn, key = PropEditor.split_key(self.fg.fn)
+        if not key:
+            self._status = False
+            print("PropEditor error: no key", fn)
+            return None
+
         if not os.path.isfile(fn):
             self._status = False
             print("PropEditor error: file not found", fn)
@@ -269,7 +279,7 @@ class EditorSession:
         elif mode in ("fn", "filename"):
             self._editor_class = FNEditor
         elif mode in ("prop", "props", "property", "properties",
-                     "conf", "config", "configuration"):
+                      "conf", "config", "configuration"):
             self._editor_class = PropEditor
         else:
             print("Unknown EditorSession mode:", mode)

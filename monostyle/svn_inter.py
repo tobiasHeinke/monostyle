@@ -278,12 +278,12 @@ def prop_keys(path):
 def exec_command(cmd_args):
     cmd = ["svn"]
     cmd.extend(cmd_args)
-    
+
     silent = bool(cmd_args[0] in ("propget", "proplist"))
     try:
         if not silent:
             print("fetching" if cmd_args[0] in ("status", "diff", "update") else "applying",
-                 cmd_args[0] + ": ...", end="")
+                  cmd_args[0] + ": ...", end="")
         output = subprocess.check_output(cmd)
     except OSError as err:
         print("svn", cmd_args[0], "error:", err)
