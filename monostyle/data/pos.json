@@ -134,7 +134,7 @@
 ],
 "adverb": ["-ly", "-ward", "-wards", "-ways", "-wise"],
 "adjective": [
-	"cool", "hot", "new", "greater", "higher",
+	"cool", "cold", "greater", "higher", "hot", "new", "old",
 	"-able", "-ible", "-al", "-ial", "-ful", "-ic", "-ical", "-ish", "-ive", "-ative", "-less",
 	"-eous", "-ious", "-ous", "-ose", "-y", "-ile", "-ant", "-ent", "-an", "-ian", "-ary"
 ],

@@ -485,7 +485,7 @@ def mark(document, reports, re_lib):
 
         elif rst_walker.is_of(part, ("role", "hyperlink"), "*", "head"):
             if noend_m := re.search(noend_re, str(part.code)):
-                out = part.code.slice_match_obj(noend_m, 0, True)
+                out = part.code.copy().clear(False)
                 msg = re_lib["nopuncend"][1].format(part.parent_node.node_name + " " +
                                                     part.node_name)
                 reports.append(Report('W', toolname, out, msg))

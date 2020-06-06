@@ -459,4 +459,5 @@ class Fragment():
     def copy(self):
         """Returns a deep copy."""
         return Fragment(self.fn, self.content.copy(), self.start_pos,
-                        self.end_pos, self.start_lincol, self.end_lincol)
+                        self.end_pos, self.start_lincol, self.end_lincol,
+                        bool(self.start_lincol is not None))

@@ -47,16 +47,16 @@
 	"rare", "rarely",
 	"some",
 	"something",
-	"sometimes\\?",
 	"somewhat",
 	"tiny",
 	"totally",
+	"#typically",
 	"usually",
 	"very"
 ],
 "difficulty":[
 	"clearly",
-	"easy", "easily",
+	"easy", "easily", "easier",
 	"just",
 	"mere", "merely",
 	"obvious", "obviously",
@@ -84,7 +84,7 @@
 "voice":[
 	"I(?!\\.e\\.)", "I'(ll|m|ve)", "me", "mine",
 	"we", "we'(ll|re|ve)", "us", "our", "let's",
-	"the user"
+	"the user(?! interface)"
 ],
 "pronoun":[
 	"he", "he'(d|ll|s)", "his",
@@ -103,13 +103,14 @@
 	"occasionally",
 	"possibly",
 	"probably",
-	"seems\\?"
+	"seems\\?",
+	"sometimes\\?"
 ],
 "informal":[
 	"# only ambiguous or spaced compounds",
 	["check out", ["please refer to", "see"]],
 	["go(ing)\\? in(to)\\?", ["switch to", "enter", "open"]],
-	"going (?!to)",
+	"going(?! to)",
 	[["kind of", "sort of"], "type of"],
 	"neat", "nicely",
 	[["turn on", "turn off"], ["de/activate", "dis/enable"]],
