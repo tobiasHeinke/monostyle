@@ -28,7 +28,6 @@ Data model based on https://github.com/bramstein/typeset
 
 import re
 from monostyle.util.pos import PartofSpeech
-from monostyle.rst_parser.rst_node import NodePartRST
 from monostyle.util.nodes import Node, LinkedList
 import monostyle.rst_parser.walker as rst_walker
 
@@ -120,7 +119,7 @@ def fix(root_rst, reports):
                 if node.body.code.is_in_span(report.out.start_lincol):
                     reports_pro.append(report)
                     if is_first_report:
-                        changes_para = reflow(node.body)
+                        changes_para = reflow(node)
                         changes.extend(changes_para)
                         is_first_report = False
 
@@ -132,34 +131,34 @@ def fix(root_rst, reports):
 
 def reflow(node):
     """Main function."""
-    optimum_abs = [70, 100, 1]      # Best line length 65. [start, end, step]
-    maximum_abs = 118	      # Maximum possible line length 80
+    optimum_abs = (70, 100, 1)  # Best line length 65. [start, end, step]
+    maximum_abs = 118           # Maximum possible line length 80
     options = {
-        "semantic": 30,	      # Extent to which semantic factors matter 20
+        "semantic": 30,       # Extent to which semantic factors matter 20
         "namebreak": 20,      # Penalty for splitting up name 10
         "sentence": 20,       # Penalty for sentence widows and orphans 6
-        "dosentence2": True,       # Apply sentence second word
+        "dosentence2": True,  # Apply sentence second word
         "sentence2": 5,       # Penalty for sentence second word
         "independent": 10,    # Penalty for independent clause w's & o's
-        "dependent": 6,	      # Penalty for dependent clause w's & o's
-        "paraorphan": 5,       # Penalty for a short last line (1 or 2 words) in a paragraph
+        "dependent": 6,       # Penalty for dependent clause w's & o's
+        "paraorphan": 5,      # Penalty for a short last line (1 or 2 words) in a paragraph
         "connpenalty": 1,     # Multiplier to avoid penalties at end of line
-        "parenthesis": 40,     # Penalty for splitting up within parenthesis
-        "quote": 40,     # Penalty for splitting up within quotes
-        "math": 30,     # Penalty for digits and operators
-        "markupid": 50,     # Penalty for splitting up markup
+        "parenthesis": 40,    # Penalty for splitting up within parenthesis
+        "quote": 40,          # Penalty for splitting up within quotes
+        "math": 30,           # Penalty for digits and operators
+        "markupbreak": 45,    # Penalty for splitting up markup at breaking point
+        "markup": 55,         # Penalty for splitting up markup
 
         "penaltylimit": 33554432 #0x2000000
     }
 
     ind_first, ind_block = measure_indent(node)
-    offset_first = node.code.start_lincol[1] + ind_first
-    optimum = [optimum_abs[0] - offset_first, optimum_abs[1] - offset_first, optimum_abs[2]]
-    maximum = maximum_abs - offset_first
+    optimum = [optimum_abs[0] - ind_block, optimum_abs[1] - ind_block, optimum_abs[2]]
+    maximum = maximum_abs - ind_block
     # print(show_limes(node, options["optimum"], options["maximum"]), end="\n")
 
     changes_para = []
-    boxes = process_para(node, ind_first, options)
+    boxes = process_para(node, ind_first - ind_block, options)
     if len(boxes) > 1:
         boxes = reflow_penalties(boxes, options)
         # show_demerits(boxes)
@@ -172,97 +171,45 @@ def reflow(node):
     return changes_para
 
 
-def process_para(node, ind_first, options):
+def process_para(node, ind_offset, options):
     """Iterate over paragraph nodes."""
-    def iter_para_nodes(node):
-        if not isinstance(node, NodePartRST):
+    def iter_para_parts(node):
+        if node.child_nodes.is_empty():
             yield node
         else:
-            yield from rst_walker.iter_node(node)
+            yield from rst_walker.iter_nodeparts(node, ("head", "body", "id_start"),
+                                                 leafs_only=True)
 
-    is_first = True
     boxes = LinkedList()
-    no_space_end = False
-    if node.child_nodes.is_empty():
-        boxes = process_text_leaf(node.code, boxes, ind_first, no_space_end)
-    else:
-        for node in iter_para_nodes(node):
-            if node.node_name == "text":
-                if node.body.child_nodes.is_empty():
-                    boxes, no_space_end = process_text_leaf(node.body.code, boxes,
-                                                            ind_first, no_space_end)
+    is_first = True
+    last = node.code.start_pos
+    extra_len = node.code.start_lincol[1] + ind_offset
 
-            else:
-                boxes = process_inline(node, boxes, ind_first, options)
-                no_space_end = True
-
+    for part in iter_para_parts(node.body):
+        code_str = str(part.code)
+        for m in re.finditer(r"\s+", code_str, re.DOTALL):
             if is_first:
-                ind_first = None
                 is_first = False
+                if m.start() == 0:
+                    continue
+
+            space = part.code.slice_match_obj(m, 0, True)
+            word = node.code.slice(last, part.code.loc_to_abs(m.start(0)), True)
+            demerits = 0
+            if part.node_name == "id_start":
+                demerits = options["markupbreak"]
+            elif part.parent_node.node_name != "text":
+                demerits = options["markup"]
+            boxes.append(Box(str(word), space, demerits, extra_len))
+            last = space.end_pos
+            extra_len = 0
+
+    if last != node.code.end_pos:
+        space = node.code.copy().clear(False)
+        word = node.code.slice(last, node.code.end_pos, True)
+        boxes.append(Box(str(word), space, 0, extra_len))
 
     return boxes
-
-
-def process_inline(node, boxes, ind_first, options):
-    """Split inline markup node."""
-    if ind_first:
-        extra_len = ind_first
-    else:
-        extra_len = 0
-
-    code = node.code
-    if node.head and node.id:
-        if m := re.match(r"\s+", str(node.id_start.code), re.DOTALL):
-            before, space_mid, code = code.slice(node.id_start.code.start_pos,
-                                                 node.id_start.code.loc_to_abs(m.end(0)))
-        else:
-            before, space_mid, code = code.slice(node.id_start.code.start_pos,
-                                                 node.id_start.code.end_pos)
-
-        box_mid = Box(str(before), space_mid, extra_len)
-        extra_len = 0
-        box_mid.demerits -= options["markupid"]
-        boxes.append(box_mid)
-
-    space_end = code.copy().clear(False)
-    boxes.append(Box(str(code), space_end, extra_len))
-
-    return boxes
-
-
-def process_text_leaf(code, boxes, ind_first, no_space_end):
-    """Split inline text node."""
-    if ind_first:
-        #was already measured
-        extra_len = ind_first
-    else:
-        extra_len = 0
-
-    code_str = str(code)
-    last = None
-    was_split = False
-    for m in re.finditer(r"\s+", code_str, re.DOTALL):
-        space = code.slice_match_obj(m, 0, True)
-        if no_space_end and not boxes.is_empty():
-            boxes.last().space = space
-        if last:
-            word = code.slice(code.loc_to_abs(last), code.loc_to_abs(m.start(0)), True)
-
-            if no_space_end and not boxes.is_empty():
-                boxes.last().content += str(word)
-            else:
-                boxes.append(Box(str(word), space, extra_len))
-
-        no_space_end = False
-        last = m.end(0)
-        was_split = True
-
-    if not was_split:
-        space = code.copy().clear(False)
-        boxes.append(Box(str(code), space, extra_len))
-        no_space_end = True
-
-    return boxes, no_space_end
 
 
 
@@ -355,7 +302,7 @@ def reflow_penalties(boxes, options):
             if box.prev: box.prev.demerits -= options["sentence"]
             if box.next: box.next.demerits -= options["sentence"]
 
-        if re.search(r"\,$", box.content):	# Comma after word
+        if re.search(r"\,$", box.content): # Comma after word
             box.demerits += options["dependent"] / 2
             if box.prev: box.prev.demerits -= options["dependent"]
             if box.next: box.next.demerits -= options["dependent"]
@@ -378,13 +325,13 @@ def reflow_penalties(boxes, options):
             box.demerits -= options["namebreak"] # possessive
 
         if re.match(r"\d", box.content):
+            box.demerits -= options["math"]
             if box.prev: box.prev.demerits -= options["math"]
-            if box.next: box.next.demerits -= options["math"]
 
         if single_char_m := re.match(r"\\?(.)$", box.content):
             if single_char_m.group(1) != "a":
+                box.demerits -= options["math"]
                 if box.prev: box.prev.demerits -= options["math"]
-                if box.next: box.next.demerits -= options["math"]
 
         path = pos_weight(box.content)
         if path and path[0] != "abbreviation":

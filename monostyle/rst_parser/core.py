@@ -1162,7 +1162,7 @@ def print_node(root, output=None, ind=-1, path="", show_loc=False, show_pos=Fals
         output = []
     ind += 1
     for node in root.child_nodes:
-        output.append((" " * ind) + node.node_name, node.code.repr(show_pos))
+        output.append((" " * ind) + node.node_name)
         for part in node.child_nodes:
             if part.node_name in ("name", "head", "id", "attr", "body"):
                 if not part.child_nodes.is_empty():

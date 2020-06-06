@@ -26,18 +26,21 @@ def iter_node(root, names=None, enter_pos=True, leafs_only=False):
         if enter:
             for part in node.child_nodes:
                 if not part.child_nodes.is_empty():
-                    yield from iter_node(part, names, enter_pos)
+                    yield from iter_node(part, names, enter_pos, leafs_only)
 
 
-def iter_nodeparts(root, leafs_only=True):
+def iter_nodeparts(root, names=None, enter_pos=True, leafs_only=True):
     for node in root.child_nodes:
         for part in node.child_nodes:
-            if not part.child_nodes.is_empty():
-                if not leafs_only:
+            enter = True
+            if not names or part.node_name in names:
+                enter = enter_pos
+
+                if not leafs_only or part.child_nodes.is_empty():
                     yield part
-                yield from iter_nodeparts(part)
-            else:
-                yield part
+
+            if enter and not part.child_nodes.is_empty():
+                yield from iter_nodeparts(part, names, enter_pos, leafs_only)
 
 
 def iter_nodeparts_instr(root, instr_pos, instr_neg, leafs_only=True):
