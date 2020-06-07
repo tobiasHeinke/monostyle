@@ -51,7 +51,7 @@
 	"this", "these", "those", "that", "former", "latter",
 	"who", "whom", "whose", "what", "which", "which",
 	"something", "someone", "somebody", "anything", "anyone", "anybody",
-	"nothing", "no", "one", "nobody"
+	"nothing", "no one", "no-one", "nobody"
 ],
 "conjunction": {
 	"coordinating": [

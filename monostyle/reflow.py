@@ -194,7 +194,7 @@ def process_para(node, ind_offset, options):
                     continue
 
             space = part.code.slice_match_obj(m, 0, True)
-            word = node.code.slice(last, part.code.loc_to_abs(m.start(0)), True)
+            word = node.code.slice(last, space.start_pos, True)
             demerits = 0
             if part.node_name == "id_start":
                 demerits = options["markupbreak"]
@@ -206,7 +206,7 @@ def process_para(node, ind_offset, options):
 
     if last != node.code.end_pos:
         space = node.code.copy().clear(False)
-        word = node.code.slice(last, node.code.end_pos, True)
+        word = node.code.slice(last, space.start_pos, True)
         boxes.append(Box(str(word), space, 0, extra_len))
 
     return boxes

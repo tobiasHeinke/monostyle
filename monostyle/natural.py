@@ -53,21 +53,23 @@ def heading_cap(document, reports, re_lib):
 
     def word_cap(reports, word, is_first_word, is_last_word):
         word_str = str(word)
-        path = POS.classify(word_str)
+        if word_str[0].isupper() and (is_first_word or is_last_word):
+            return reports
 
-        if ((word_str[0].islower() and (is_first_word or is_last_word)) or
+        path = POS.classify(word_str.lower())
+        if (not (is_first_word or is_last_word) and
                 (word_str[0].islower() !=
                  (len(path) != 0 and
-                  (path[0] in ("preposition", "conjunction", "pronoun") or
-                   (path[0] == "determiner" and path[1] == "article") or
-                   path[0] == "auxiliary")))):
+                  (path[0] in ("preposition", "conjunction", "pronoun", "auxiliary") or
+                   path[0] == "determiner" and path[1] == "article")))):
 
             where = "in heading"
             if is_first_word:
                 where = "at the start of a heading"
             elif is_last_word:
                 where = "at the end of a heading"
-            msg = Report.misformatted(what="lowercase", where=where)
+            msg = Report.misformatted(what="lowercase" if word_str[0].islower() else "uppercase",
+                                      where=where)
             reports.append(Report('W', toolname, word, msg, node.name.code))
         return reports
 
@@ -87,7 +89,8 @@ def heading_cap(document, reports, re_lib):
     for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
         is_first_word = True
         for part in rst_walker.iter_nodeparts_instr(node.name, instr_pos, instr_neg, False):
-            part_str = str(part.code)
+            if is_first_word and part.parent_node.prev is not None:
+                is_first_word = False
 
             buf = None
             for word in Segmenter.iter_word(part.code):
@@ -97,10 +100,12 @@ def heading_cap(document, reports, re_lib):
                 buf = word
 
             if buf:
-                is_last_word = bool(part.next is None)
+                # ignore part.next, one part per node
+                is_last_word = bool(part.parent_node.next is None)
                 reports = word_cap(reports, buf, is_first_word, is_last_word)
                 is_first_word = False
 
+            part_str = str(part.code)
             for pattern, msg in re_lib.values():
                 for m in re.finditer(pattern, part_str):
                     out = part.code.slice_match_obj(m, 0, True)

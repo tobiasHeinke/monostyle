@@ -177,7 +177,7 @@ def line_style(document, reports, re_lib, config):
             for m in re.finditer(value[0], text):
                 msg = value[1]
                 if is_lw:
-                    path = POS.classify(str(m.group(1)))
+                    path = POS.classify(str(m.group(1).lower()))
                     if (len(path) != 0 and
                             (path[0] == "adjective" or
                              (path[0] == "determiner" and path[1] == "article"))):

@@ -56,7 +56,7 @@ def open_files(files, show_current=False):
             nonexistents.append(fn + ":" + str(lincol[0] + 1) + ":" + str(lincol[1] + 1))
 
     if show_current:
-        print("opening: done")
+        print("\ropening: done")
 
     if len(nonexistents) != 0:
         print("Failed to open {0} of {1} files.".format(len(nonexistents), len(files)))
