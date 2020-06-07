@@ -128,14 +128,12 @@ def number(document, reports, re_lib):
     }
     instr_neg = {
         "dir": {
-            "figure": ["head", "attr"],
-            "code-block": "*", "default":"*", "youtube":"*", "vimeo":"*"
+            "figure": ["head"],
+            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
         },
-        "substdef": {"image": ["head", "attr"], "unicode":"*", "replace":"*"},
-        "role": {"doc": ["id"], "ref": ["id"], "term": ["id"], "kbd": "*"},
-        "hyperlink": {"*": ["id"]},
-        "literal": "*", "standalone": "*",
-        "footref": "*", "citref": "*"
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
+        "role": {"kbd": "*"},
+        "literal": "*", "standalone": "*", "footref": "*", "citref": "*"
     }
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
@@ -187,13 +185,12 @@ def pairs(document, reports, re_lib, config):
         "*": {"*": ["head", "body"]}
     }
     instr_neg = {
-        "dir": {"code-block": "*", "default":"*", "math":"*", "youtube":"*", "vimeo":"*"},
-        "substdef": {"unicode":"*", "replace":"*"},
+        "dir": {"code-block": "*", "default": "*", "math": "*", "youtube": "*", "vimeo": "*"},
+        "substdef": {"unicode": "*", "replace": "*"},
         "target": "*",
         "comment": "*",
         "role": {"kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"},
-        "hyperlink": {"*": ["id"]}, "literal": "*",
-        "standalone": "*"
+        "literal": "*", "standalone": "*"
     }
 
     max_line_span = config.get("max_line_span")
@@ -387,19 +384,17 @@ def mark(document, reports, re_lib):
     """Check for punctuation marks and parenthesis."""
     toolname = "mark"
 
-    instr_neg = {
-        "dir": {
-            "figure": ["head", "attr"], "toctree":"*",
-            "code-block": "*", "default":"*", "youtube":"*", "vimeo":"*"
-        },
-        "substdef": {"image": ["head", "attr"], "unicode":"*", "replace":"*"},
-        "role": {"doc": ["id"], "ref": ["id"], "term": ["id"], "abbr": ["id"]},
-        "hyperlink": {"*": ["id"]},
-        "standalone": "*"
-    }
     instr_pos = {
         "field": {"*": ["name", "body"]},
         "*": {"*": ["head", "body"]}
+    }
+    instr_neg = {
+        "dir": {
+            "figure": ["head"], "toctree": "*",
+            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
+        },
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
+        "literal": "*", "standalone": "*"
     }
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
@@ -422,16 +417,14 @@ def mark(document, reports, re_lib):
     }
     instr_neg = {
         "dir": {
-            "*": ["attr"], "figure": ["head", "attr"], "toctree": "*",
+            "figure": ["head"], "toctree": "*",
             "admonition": ["head"], "hint": ["head"], "important": ["head"],
             "note": ["head"], "tip": ["head"], "warning": ["head"], "rubric": ["head"],
-            "code-block": "*", "default":"*", "youtube":"*", "vimeo":"*"
+            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": "*",
         "def": {"*": ["head"]},
         "target": {"*": ["head"]},
-        "role": {"doc": ["id"], "ref": ["id"], "term": ["id"]},
-        "hyperlink": {"*": ["id"]},
         "standalone": "*"
     }
 
@@ -544,8 +537,8 @@ def whitespace(document, reports, re_lib):
         "*": {"*": "*"}
     }
     instr_neg = {
-        "dir": {"code-block": "*", "default":"*"},
-        "substdef": {"image": ["head", "attr"], "unicode":"*"},
+        "dir": {"code-block": "*", "default": "*"},
+        "substdef": {"image": ["head"], "unicode": "*"},
         "comment": "*"
     }
 

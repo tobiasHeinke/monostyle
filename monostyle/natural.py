@@ -79,11 +79,9 @@ def heading_cap(document, reports, re_lib):
     }
     instr_neg = {
         "role": {
-            "doc": ["id"], "ref": ["id"], "term": ["id"],
             "kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"
         },
-        "hyperlink": {"*": ["id"]},
-        "standalone": "*", "literal": "*"
+        "literal": "*", "standalone": "*"
     }
 
     for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
@@ -150,26 +148,23 @@ def indefinite_article(document, reports, re_lib, data):
     vowel_re = re_lib["vowel"]
     digit_re = re_lib["digit"]
 
-    instr_neg = {
-        "dir": {
-            "figure": ["head", "attr"],
-            "code-block": "*", "default":"*", "include":"*", "toctree":"*",
-            "parsed-literal":"*", "math":"*", "youtube":"*", "vimeo":"*"
-        },
-        "substdef": {"image": ["head", "attr"], "unicode":"*", "replace":"*"},
-        "target": "*",
-        "role": {
-            "doc": ["id"], "ref": ["id"], "term": ["id"],
-            "class": "*", "mod": "*", "math": "*"
-        },
-        "hyperlink": {"*": ["id"]},
-        "literal": "*",
-        "standalone": "*"
-    }
     instr_pos = {
         "sect": {"*": ["name"]},
         "field": {"*": ["name", "body"]},
         "*": {"*": ["head", "body"]}
+    }
+    instr_neg = {
+        "dir": {
+            "figure": ["head"],
+            "code-block": "*", "default": "*", "include": "*", "toctree": "*",
+            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
+        },
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
+        "target": "*",
+        "role": {
+            "class": "*", "mod": "*", "math": "*"
+        },
+        "literal": "*", "standalone": "*"
     }
 
     buf = None
@@ -266,19 +261,16 @@ def search_pure(document, reports, re_lib, config):
     }
     instr_neg = {
         "dir": {
-            "figure": ["head", "attr"],
-            "code-block": "*", "default":"*", "include":"*",
-            "math":"*", "youtube":"*", "vimeo":"*"
+            "figure": ["head"],
+            "code-block": "*", "default": "*", "include": "*",
+            "math": "*", "youtube": "*", "vimeo": "*"
         },
-        "substdef": {"image": ["head", "attr"], "unicode":"*", "replace":"*"},
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "target": "*",
         "role": {
-            "doc": ["id"], "ref": ["id"], "term": ["id"],
             "kbd": "*", "class": "*", "mod": "*", "math": "*"
         },
-        "hyperlink": {"*": ["id"]},
-        "literal": "*",
-        "standalone": "*"
+        "literal": "*", "standalone": "*"
     }
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
@@ -329,18 +321,16 @@ def repeated_words(document, reports, config):
     }
     instr_neg = {
         "dir": {
-            "figure": ["head", "attr"],
-            "code-block": "*", "default":"*", "include":"*", "toctree":"*",
-            "parsed-literal":"*", "math":"*", "youtube":"*", "vimeo":"*"
+            "figure": ["head"],
+            "code-block": "*", "default": "*", "include": "*", "toctree": "*",
+            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
         },
-        "substdef": {"image": ["head", "attr"], "unicode":"*", "replace":"*"},
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "target": "*",
         "role": {
-            "doc": ["id"], "ref": ["id"], "term": ["id"],
             "kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"
         },
-        "hyperlink": {"*": ["id"]},
-        "standalone": "*", "literal": "*"
+        "literal": "*", "standalone": "*"
     }
 
     buf = []

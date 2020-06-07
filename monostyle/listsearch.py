@@ -138,17 +138,15 @@ def search_free(document, reports, comlist):
     }
     instr_neg = {
         "dir": {
-            "figure": ["head", "attr"],
-            "code-block": "*", "default":"*", "include":"*",
-            "math":"*", "youtube":"*", "vimeo":"*"
+            "figure": ["head"],
+            "code-block": "*", "default": "*", "include": "*",
+            "math": "*", "youtube": "*", "vimeo": "*"
         },
-        "substdef": {"image": ["head", "attr"], "unicode":"*", "replace":"*"},
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "target": "*",
         "role": {
-            "doc": ["id"], "ref": ["id"], "term": ["id"],
             "kbd": "*", "class": "*", "mod": "*", "math": "*"
         },
-        "hyperlink": {"*": ["id"]},
         "standalone": "*"
     }
 
@@ -176,17 +174,15 @@ def search_word(document, reports, comlist, config):
     }
     instr_neg = {
         "dir": {
-            "figure": ["head", "attr"],
-            "code-block": "*", "default":"*", "include":"*",
-            "math":"*", "youtube":"*", "vimeo":"*"
+            "figure": ["head"],
+            "code-block": "*", "default": "*", "include": "*",
+            "math": "*", "youtube": "*", "vimeo": "*"
         },
-        "substdef": {"image": ["head", "attr"], "unicode":"*", "replace":"*"},
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "target": "*",
         "role": {
-            "doc": ["id"], "ref": ["id"], "term": ["id"],
             "kbd": "*", "class": "*", "mod": "*", "math": "*"
         },
-        "hyperlink": {"*": ["id"]},
         "standalone": "*"
     }
 

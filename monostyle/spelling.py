@@ -124,17 +124,15 @@ def word_filtered(document):
     }
     instr_neg = {
         "dir": {
-            "figure": ["head", "attr"],
-            "code-block": "*", "default":"*", "include":"*", "toctree":"*",
-            "parsed-literal":"*", "math":"*", "youtube":"*", "vimeo":"*"
+            "figure": ["head"],
+            "code-block": "*", "default": "*", "include": "*", "toctree": "*",
+            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
         },
-        "substdef": {"image": ["head", "attr"], "unicode":"*", "replace":"*"},
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "target": "*", "comment": "*",
         "role": {
-            "doc": ["id"], "ref": ["id"], "term": ["id"],
             "kbd": "*", "class": "*", "mod": "*", "math": "*"
         },
-        "hyperlink": {"*": ["id"]},
         "literal": "*", "standalone": "*"
     }
 
