@@ -419,7 +419,7 @@ def leak_pre():
     re_lib["exlinkend"] = (pattern, msg)
 
     # Substitution
-    pattern_str = r"\w\|\w"
+    pattern_str = r"[^\s_]\|[A-Za-z]|[A-Za-z]\|[^\s_]"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="space", where="before/after substitution")
     re_lib["subst"] = (pattern, msg)

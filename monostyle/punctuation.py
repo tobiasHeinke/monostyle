@@ -31,6 +31,11 @@ def number_pre():
     msg = Report.missing(what="separator", where="between four digits")
     re_lib["digitsep"] = (pattern, msg)
 
+    pattern_str = start + r"\d,\d{1,2}\b"
+    pattern = re.compile(pattern_str)
+    msg = Report.existing(what="separator", where="between less than four digits")
+    re_lib["digitsepless"] = (pattern, msg)
+
     pattern_str = r"\d \d"
     pattern = re.compile(pattern_str)
     msg = Report.existing(what="space", where="between digits")
@@ -316,9 +321,8 @@ def mark_pre():
 
     # match: uppercase to not: ellipsis, directive starter, number, extensions...
     # FP: code, target
-    # todo comma number
-    punc_nodot = punc.replace('.', '')
-    pattern_str = r"[" + punc_nodot + r"][" + pare_close + r"]?\S|\.[A-Z]"
+    punc_nodot = punc.replace('.', '').replace(',', '')
+    pattern_str = r"[" + punc_nodot + r"][" + pare_close + r"]?\S|\.[A-Z]|,[^\s\d]"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="space", where="after punctuation mark")
     re_lib["puncspaceend"] = (pattern, msg)
@@ -477,7 +481,7 @@ def mark(document, reports, re_lib):
                         reports.append(Report('W', toolname, out, msg))
 
         elif rst_walker.is_of(part, ("role", "hyperlink"), "*", "head"):
-            if noend_m := re.search(noend_re, str(part.code)):
+            if re.search(noend_re, str(part.code)):
                 out = part.code.copy().clear(False)
                 msg = re_lib["nopuncend"][1].format(part.parent_node.node_name + " " +
                                                     part.node_name)
