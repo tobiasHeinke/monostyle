@@ -182,6 +182,7 @@ class RSTParser:
                 line_strip = str(line).lstrip(' ')
                 is_not_empty = bool(len(line_strip.strip()) != 0)
 
+                was_on = on
                 if is_not_empty:
                     ind_cur = line.start_lincol[1] + len(line) - len(line_strip)
                     if is_first_not_empty:
@@ -202,7 +203,7 @@ class RSTParser:
                 if is_sec and not is_first:
                     # alternative when head first indent as unknown
                     if ind_first_unkown: # only if text node x
-                        if on and is_block_start and not sub:
+                        if not was_on and not sub:
                             on = False
 
                             ind_start[0] = ind_cur
