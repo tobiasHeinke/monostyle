@@ -117,7 +117,7 @@
 	]
 },
 "noun": [
-	"body", "collective", "display", "drive", "energy",
+	"body", "collective", "client", "display", "drive", "energy",
 	"family", "fantasy", "file",
 	"gradient", "hierarchy", "hotkey",
 	"key", "material", "manual", "money", "normal",
@@ -134,7 +134,7 @@
 ],
 "adverb": ["-ly", "-ward", "-wards", "-ways", "-wise"],
 "adjective": [
-	"cool", "cold", "greater", "higher", "hot", "new", "old",
+	"big", "cool", "cold", "greater", "higher", "hot", "new", "old", "small",
 	"-able", "-ible", "-al", "-ial", "-ful", "-ic", "-ical", "-ish", "-ive", "-ative", "-less",
 	"-eous", "-ious", "-ous", "-ose", "-y", "-ile", "-ant", "-ent", "-an", "-ian", "-ary"
 ],

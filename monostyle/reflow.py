@@ -131,7 +131,7 @@ def fix(root_rst, reports):
 
 def reflow(node):
     """Main function."""
-    optimum_abs = (70, 100, 1)  # Best line length 65. [start, end, step]
+    optimum_abs = (70, 110, 1)  # Best line length 65. [start, end, step]
     maximum_abs = 118           # Maximum possible line length 80
     options = {
         "semantic": 30,       # Extent to which semantic factors matter 20
@@ -146,8 +146,8 @@ def reflow(node):
         "parenthesis": 40,    # Penalty for splitting up within parenthesis
         "quote": 40,          # Penalty for splitting up within quotes
         "math": 30,           # Penalty for digits and operators
-        "markupbreak": 45,    # Penalty for splitting up markup at breaking point
-        "markup": 55,         # Penalty for splitting up markup
+        "markupbreak": 60,    # Penalty for splitting up markup at breaking point
+        "markup": 70,         # Penalty for splitting up markup
 
         "penaltylimit": 33554432 #0x2000000
     }
@@ -197,9 +197,9 @@ def process_para(node, ind_offset, options):
             word = node.code.slice(last, space.start_pos, True)
             demerits = 0
             if part.node_name == "id_start":
-                demerits = options["markupbreak"]
+                demerits = -options["markupbreak"]
             elif part.parent_node.node_name != "text":
-                demerits = options["markup"]
+                demerits = -options["markup"]
             boxes.append(Box(str(word), space, demerits, extra_len))
             last = space.end_pos
             extra_len = 0
@@ -367,7 +367,7 @@ def pos_weight(word):
         },
         "interjection": [0, 0],
         "determiner": {
-            "article": [2, -4],
+            "article": [2, -5],
             "demonstrative": [0, 0],
             "possessive": [0, 0],
             "quantifier": {
