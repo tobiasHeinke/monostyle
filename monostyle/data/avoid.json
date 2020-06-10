@@ -4,7 +4,7 @@
 	"say you",
 	"now you should have",
 	"#https://developer.salesforce.com/docs/atlas.en-us.216.0.salesforce_pubs_style_guide.meta/salesforce_pubs_style_guide/style_allow_let.htm",
-	[["allows\\?", "lets\\?"], "restructure so the reader is the subject"]
+	[["allows?", "lets?"], "restructure so the reader is the subject"]
 ],
 "vague":[
 	"actual", "actually",
@@ -69,7 +69,7 @@
 	"ask",
 	"behave", "behaves",
 	"chooses",
-	"comes\\? up",
+	"comes? up",
 	"concern",
 	"controls",
 	"decides",
@@ -102,14 +102,15 @@
 	"maybe",
 	"occasionally",
 	"possibly",
+	"potentially",
 	"probably",
-	"seems\\?",
-	"sometimes\\?"
+	"seems?",
+	"sometimes?"
 ],
 "informal":[
 	"# only ambiguous or spaced compounds",
 	["check out", ["please refer to", "see"]],
-	["go(ing)\\? in(to)\\?", ["switch to", "enter", "open"]],
+	["go(ing)? in(to)?", ["switch to", "enter", "open"]],
 	"going(?! to)",
 	[["kind of", "sort of"], "type of"],
 	"neat", "nicely",
@@ -120,7 +121,14 @@
 ],
 "development":[
 	"at the moment",
+	"currently(?! select)",
+	"deprecated",
+	"features?",
+	"implementation", "implemented",
 	"now",
-	"currently"
+	"#since",
+	"support(s|ed)?",
+	"unsupported",
+	"version"
 ]
 }

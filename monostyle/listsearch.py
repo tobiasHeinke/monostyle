@@ -69,10 +69,9 @@ def compile_searchlist(searchlist, re_conf):
         if isinstance(terms, str):
             terms = [terms]
 
-        for term in terms:
-            if term == "":
+        for pattern_str in terms:
+            if pattern_str == "":
                 continue
-            pattern_str = term
             # comment
             if pattern_str.startswith('#'):
                 # skip entire entry
@@ -90,7 +89,6 @@ def compile_searchlist(searchlist, re_conf):
                     pattern_str = PorterStemmer.stem(pattern_str, 0, len(pattern_str)-1)
                 else:
                     pattern_str = pattern_str[:-1]
-                    term = pattern_str
             else:
                 if re_conf["overline"]:
                     pattern_str = pattern_str.replace(' ', r'(?s\s+)')
@@ -104,8 +102,8 @@ def compile_searchlist(searchlist, re_conf):
 
             if not isinstance(msg, str):
                 msg = '/'.join(msg)
-            ent = [pattern, term, msg]
-            comlist.append(ent)
+
+            comlist.append((pattern, msg))
 
     return comlist
 
@@ -156,10 +154,9 @@ def search_free(document, reports, comlist):
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
         part_str = str(part.code)
-        for pattern, term, msg in comlist:
+        for pattern, msg in comlist:
             for m in re.finditer(pattern, part_str):
                 out = part.code.slice_match_obj(m, 0, True)
-                out.content = [term]
                 line = monostylestd.getline_punc(document.body.code,
                                                  part.code.start_pos + m.start(),
                                                  len(m.group(0)), 50, 30)
@@ -201,7 +198,7 @@ def search_word(document, reports, comlist, config):
             if config["stem"]:
                 word_stem = PorterStemmer.stem(word_str, 0, len(word_str)-1)
 
-            for pattern, term, msg in comlist:
+            for pattern, msg in comlist:
                 if config["stem"]:
                     if not pattern.endswith('|'):
                         if pattern != word_stem:
@@ -213,7 +210,6 @@ def search_word(document, reports, comlist, config):
                 if pattern != word_str:
                     continue
 
-                word.content = [term]
                 line = monostylestd.getline_punc(document.body.code, word.start_pos,
                                                  word.span_len(), 50, 30)
                 reports.append(Report('I', toolname, word, msg, line))
