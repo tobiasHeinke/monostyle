@@ -7,27 +7,35 @@
 	[["allows?", "lets?"], "restructure so the reader is the subject"]
 ],
 "vague":[
+	"#another",
+	"#other",
+	"achieved",
 	"actual", "actually",
-	"another",
 	"any",
 	"anyhow",
 	"anything",
 	"anytime",
 	"anyway",
 	"anywhere",
+	"done",
 	"elsewhere",
 	"enhances",
 	"eventually",
+	"gives?",
 	"happens", "happening",
 	"here",
 	"improves",
+	"make", "making",
 	"nothing",
-	"other",
+	"operate", "operating",
 	"really",
 	"refines",
 	"strictly",
-	"thing", "things",
-	"way"
+	"things?",
+	"ways?",
+	"whenever",
+	"wherever",
+	"work", "working"
 ],
 "qualifiers":[
 	"a bit",
@@ -50,8 +58,6 @@
 	"somewhat",
 	"tiny",
 	"totally",
-	"#typically",
-	"usually",
 	"very"
 ],
 "difficulty":[
@@ -76,7 +82,7 @@
 	"guess",
 	"makes",
 	"takes",
-	"tell", "tells",
+	"tells?",
 	"try", "tries",
 	"visits",
 	"will do"
@@ -100,12 +106,15 @@
 "uncertainty":[
 	"likely",
 	"maybe",
+	"normally",
 	"occasionally",
 	"possibly",
 	"potentially",
 	"probably",
 	"seems?",
-	"sometimes?"
+	"sometimes?",
+	"typically",
+	"usually"
 ],
 "informal":[
 	"# only ambiguous or spaced compounds",
@@ -120,13 +129,19 @@
 	"what so ever"
 ],
 "development":[
+	"#since",
+	"#alpha, beta",
 	"at the moment",
-	"currently(?! select)",
+	"currently(?! selected)",
+	"dependenc(y|ies)",
 	"deprecated",
+	"develop(s|ed|ing|ment)?",
+	"experimental",
 	"features?",
 	"implementation", "implemented",
 	"now",
-	"#since",
+	"prototype",
+	"so far",
 	"support(s|ed)?",
 	"unsupported",
 	"version"

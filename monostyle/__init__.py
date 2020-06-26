@@ -248,7 +248,8 @@ def main():
     else:
         reports = get_reports_file(monostylestd.replace_windows_path_sep(args.filename))
 
-
+    if not args.auto and "console_options" in config.__dict__.keys():
+        config.console_options["show_autofix"] = False
     print_reports(reports)
 
     if args.up or (args.auto and args.external is not None):

@@ -203,20 +203,19 @@ def long_line(document, reports):
 
     found_lineno = -1
 
-    for part in rst_walker.iter_nodeparts(document.body):
+    instr_pos = {
+        "*": "*"
+    }
+    instr_neg = {
+        "dir": {
+            "figure": ["head"], "parsed-literal": "*"
+        },
+        "substdef": {"image": ["head"]},
+    }
+
+    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
         for line in part.code.splitlines():
             if line.end_lincol[1] > limit:
-                par_node = part
-                up_counter = 0
-                while up_counter < 4 and par_node.parent_node:
-                    par_node = par_node.parent_node
-                    up_counter += 1
-
-                if (up_counter == 4 and
-                        (rst_walker.is_of(par_node, "*", ("figure", "image"), "head") or
-                         rst_walker.is_of(par_node, "dir", "parsed-literal"))):
-                    continue
-
                 if part.parent_node.node_name == "text" and len(str(part.code).strip()) == 0:
                     continue
 
@@ -419,12 +418,9 @@ def blank_line(document, reports):
             if rst_walker.is_of(node, "dir",
                                 ("admonition", "hint", "important", "note", "tip",
                                  "warning", "seealso", "code-block")):
-                first_node = node.head.child_nodes.first()
-                while first_node and not first_node.child_nodes.is_empty():
-                    first_node = first_node.child_nodes.first()
 
-                if first_node is not None and re.match(r"\n ", str(first_node.code)):
-                    out = first_node.code.copy()
+                if node.head is not None and re.match(r"\n ", str(node.head.code)):
+                    out = node.head.code.copy()
                     out.clear(True)
                     msg = Report.missing(what="blank line",
                                          where="after head " + node.node_name +

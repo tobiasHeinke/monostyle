@@ -22,7 +22,7 @@ def added_files(is_internal, path):
         if line.startswith("Status "):
             continue
 
-        add_mod = bool(line[0] in ('D', 'R')) #," "
+        add_mod = bool(not line[0] in ('D', 'R')) #," "
 
         if is_internal:
             new = bool(line[0] in ('?', 'A'))
@@ -105,7 +105,7 @@ def difference(from_vsn, is_internal, fn_source, rev, changed_files):
             fn = line[len("Index: "):]
             fn = replace_windows_path_sep(fn)
             # skip whole file
-            skip = bool(not(changed_files is None or fn not in changed_files))
+            skip = bool(not(changed_files is None or fn in changed_files))
             body = False
 
         elif line.startswith("Property changes on: "):
@@ -337,9 +337,8 @@ def run_diff(from_vsn, is_internal, path, rev):
                     if new and is_internal:
                         # unversioned
                         text = read_file(fn)
-                        text = [l for l in text.splitlines(keepends=True)]
                         fg = Fragment(fn, text)
-                        yield fg, None
+                        yield fg, None, None
                     else:
                         changed_files.append(fn)
     else:

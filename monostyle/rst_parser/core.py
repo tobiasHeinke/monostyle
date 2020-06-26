@@ -140,7 +140,7 @@ class RSTParser:
                 mid = (mid_a if name != "literal" else mid_a[:-2], mid, mid_b)
             else:
                 mid = (r"(", mid, r")")
-            if name not in ("link", "parenthesis"):
+            if name not in {"link", "parenthesis"}:
                 before = (before_a, before_no, before_b)
             else:
                 before = ()
@@ -266,12 +266,12 @@ class RSTParser:
 
             if node.active.node_name == "field":
                 node, sub = self.field(line, is_not_empty, is_block_start, on, node, sub)
-            elif node.active.node_name in ("bullet", "enum"):
+            elif node.active.node_name in {"bullet", "enum"}:
                 node, sub = self.be_list(line, is_block_start, on, node, sub)
             elif node.active.node_name == "line":
                 node, sub = self.line_block(line, is_block_start, on, node, sub)
-            elif node.active.node_name in ("dir", "target", "comment", "substdef",
-                                           "footdef", "citdef"):
+            elif node.active.node_name in {"dir", "target", "comment", "substdef",
+                                           "footdef", "citdef"}:
                 node, sub = self.explicit_block(line, is_not_empty, is_block_end, on, node, sub)
             elif node.active.node_name == "trans":
                 node = self.transition(line, is_not_empty, is_block_start, on, node)
@@ -478,7 +478,7 @@ class RSTParser:
                 node.active.append_part("name", line, True)
                 node.active.node_name = "sect"
 
-            elif node.active.node_name in ("text", "sect"):
+            elif node.active.node_name in {"text", "sect"}:
                 if m := re.match(self.re_lib["trans"], str(line)):
                     node.active.node_name = "sect"
                     if node.active.body:
@@ -631,7 +631,7 @@ class RSTParser:
                     newnode.append_part("body", after_name)
 
                 else:
-                    if node.active and node.active.node_name in ("bullet", "enum"):
+                    if node.active and node.active.node_name in {"bullet", "enum"}:
                         node.append_child(node.active)
                         node.active = None
                         if node.parent_node.parent_node:
@@ -659,7 +659,7 @@ class RSTParser:
                 node.append_child(node.active)
             node.active = newnode
 
-        elif node.active and node.active.node_name in ("bullet", "enum"):
+        elif node.active and node.active.node_name in {"bullet", "enum"}:
             node.active.body.append_code(line)
 
         return node, sub
@@ -840,12 +840,13 @@ class RSTParser:
                        (not node.active or node.active.node_name == "text"))):
             if (node.active and
                     (not is_block_end or
-                     node.active.node_name in ("dir", "target", "comment", "substdef",
-                                               "footdef", "citdef"))):
+                     node.active.node_name in {"dir", "target", "comment", "substdef",
+                                               "footdef", "citdef"})):
                 if node.active:
                     node.append_child(node.active)
                 node.active.active = None
                 node.active = None
+                return node, sub
 
             if starter_m := re.match(self.re_lib["exp"], str(line)):
                 newnode = NodeRST("exp", line)
@@ -1077,7 +1078,7 @@ class RSTParser:
                                                     "inline body unexpected content"))
 
             else:
-                if name_str is None or name_str not in ("term", "abbr"):
+                if name_str is None or name_str not in {"term", "abbr"}:
                     node.id = node.body
                     node.id.node_name = "id"
                     node.id.child_nodes = LinkedList(node.id)
@@ -1165,7 +1166,7 @@ def print_node(root, output=None, ind=-1, path="", show_loc=False, show_pos=Fals
     for node in root.child_nodes:
         output.append((" " * ind) + node.node_name)
         for part in node.child_nodes:
-            if part.node_name in ("name", "head", "id", "attr", "body"):
+            if part.node_name in {"name", "head", "id", "attr", "body"}:
                 if not part.child_nodes.is_empty():
                     ph = path + part.node_name[0]
                     output = print_node(part, output, ind, ph, show_loc, show_pos)

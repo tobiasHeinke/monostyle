@@ -174,6 +174,7 @@ class Report():
             "line_indent": ">>>",
             "line_ellipse": "…",
 
+            "show_autofix": False,
             "autofix_mark": "@",
             **options
         }
@@ -226,7 +227,7 @@ class Report():
                 output["line"] = output["line"][:options["line_max_len"]] + options["line_ellipse"]
             output["line"] = "\n" + options["line_indent"] + output["line"]
 
-        if self.fix is not None:
+        if options["show_autofix"] and self.fix is not None:
             output["fix"] = options["autofix_mark"]
         return options["format_str"].format(**output)
 

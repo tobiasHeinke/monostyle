@@ -137,6 +137,7 @@ def number(document, reports, re_lib):
             "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
+        "comment": "*",
         "role": {"kbd": "*"},
         "literal": "*", "standalone": "*", "footref": "*", "citref": "*"
     }

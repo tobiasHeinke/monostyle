@@ -7,20 +7,12 @@ Project configuration.
 """
 
 tool_selection = {
-    "listsearch": {
-        "tools": ("simplify", "blender/UI", "blender/Editors", "blender/Modes", "avoid/*"),
-        "ext": ".rst"
-    },
     "markup": {
         "tools": ("directive", "heading-level", "indent", "kbd", "leak"),
         "ext": ".rst"
     },
-    "code_style": {
-        "tools": ("heading-char-count", "flavor", "line-style", "long-line", "blank-line", "style-add"),
-        "ext": ".rst"
-    },
-    "natural": {
-        "tools": ("article", "grammar", "heading-cap", "repeated"),
+    "listsearch": {
+        "tools": ("simplify", "blender/UI", "blender/Editors", "blender/Modes", "avoid/*"),
         "ext": ".rst"
     },
     "spelling": {
@@ -32,7 +24,15 @@ tool_selection = {
         "ext": ".rst"
     },
     "char": {
-        "tools": ("char-region"),
+        "tools": ("char-search"),
+        "ext": ".rst"
+    },
+    "natural": {
+        "tools": ("article", "grammar", "heading-cap", "repeated"),
+        "ext": ".rst"
+    },
+    "code_style": {
+        "tools": ("heading-char-count", "flavor", "line-style", "long-line", "blank-line", "style-add"),
         "ext": ".rst"
     },
     "monitor": {
@@ -78,6 +78,7 @@ console_options = {
     "line_indent": ">>>",
     "line_ellipse": "…",
 
+    "show_autofix": True,
     "autofix_mark": "/autofixed/"
 }
 

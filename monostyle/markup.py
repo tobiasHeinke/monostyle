@@ -381,90 +381,66 @@ def leak_pre():
     msg = Report.missing(what="space", where="after abbreviation title")
     re_lib["abbr"] = (pattern, msg)
 
-    # Internal link
     pattern_str = r"\:doc\:`(?:[^/\\][^<>]+?`|[^`]+?<[^/\\])"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="slash", where="at internal link start")
-    re_lib["inlinkslash"] = (pattern, msg)
+    re_lib["docstart"] = (pattern, msg)
 
     pattern_str = r"\:doc\:`([^`]+?\s<)?[A-Za-z]\:[/\\]"
     pattern = re.compile(pattern_str)
     msg = Report.existing(what="drive", where="at internal link start")
-    re_lib["inlinkdrive"] = (pattern, msg)
+    re_lib["docdrive"] = (pattern, msg)
 
     pattern_str = r"\:doc\:`[^`]+?\.rst>?`"
     pattern = re.compile(pattern_str)
     msg = Report.existing(what="file extension", where="at internal link end")
-    re_lib["inlinkext"] = (pattern, msg)
+    re_lib["docext"] = (pattern, msg)
 
     pattern_str = r"\:doc\:`[^`]+? <[^`]*?[^>]`"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="closing bracket", where="at internal link end")
-    re_lib["inlinkclose"] = (pattern, msg)
+    re_lib["docclose"] = (pattern, msg)
 
-    # Hyperlink
+    # Internal target
     pattern_str = r"[A-Za-z]_`[^`]"
     pattern = re.compile(pattern_str)
-    msg = Report.missing(what="space", where="before hyperlink")
-    re_lib["loclinkstart"] = (pattern, msg)
+    msg = Report.missing(what="space", where="before internal target")
+    re_lib["intrgtstart"] = (pattern, msg)
 
+    # Hyperlink
     pattern_str = r"[^`]`__?[A-Za-z]"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="space", where="after hyperlink")
     re_lib["linkend"] = (pattern, msg)
 
+    # Hyperlink & Standalone
     pattern_str = r"https?\:\/\/[^`]+?>`(?!_)"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="underscore", where="after external hyperlink")
     re_lib["exlinkend"] = (pattern, msg)
 
     # Substitution
-    pattern_str = r"[^\s_]\|[A-Za-z]|[A-Za-z]\|[^\s_]"
+    pattern_str = r"[A-Za-z]\|[A-Za-z]|[A-Za-z]\|_{0,2}[A-Za-z]"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="space", where="before/after substitution")
     re_lib["subst"] = (pattern, msg)
 
-    pattern_str = r"[A-Za-z]_\|"
-    pattern = re.compile(pattern_str)
-    msg = Report.missing(what="space", where="before substitution")
-    re_lib["subststart"] = (pattern, msg)
-
-    pattern_str = r"\|_[A-Za-z]"
-    pattern = re.compile(pattern_str)
-    msg = Report.missing(what="space", where="after substitution")
-    re_lib["substend"] = (pattern, msg)
-
-
     # Arrow
-    pattern_str = r"[^ \-`]\-\->"
+    pattern_str = r"(?:[^ \-`]\-\->)|(?:\->[^ `|])"
     pattern = re.compile(pattern_str)
-    msg = Report.missing(what="space", where="before arrow")
-    re_lib["arrowstart"] = (pattern, msg)
+    msg = Report.missing(what="space", where="before/after arrow")
+    re_lib["arrow"] = (pattern, msg)
 
     pattern_str = r"[^\-<]\->"
     pattern = re.compile(pattern_str)
     msg = Report.under(what="dashes", where="in arrow")
     re_lib["arrowlen"] = (pattern, msg)
 
-    pattern_str = r"\->[^ `|]"
+    # Dash
+    pattern_str = r"(?:\w(\-{2,3})(?![->]))|(?:(?<![<-])(\-{2,3})\w)"
     pattern = re.compile(pattern_str)
-    msg = Report.missing(what="space", where="after arrow")
-    re_lib["arrowend"] = (pattern, msg)
-
-    # En-dash
-    # min 1 letter in line to not match heading underline
-    pattern_str = r"(\w.*([^\s\-]\-{2}[^\->]))|(([^\s\-]\-{2}[^\->]).*\w)"
-    pattern = re.compile(pattern_str)
-    msg = Report.missing(what="space", where="before en-dash")
-    re_lib["endashstart"] = (pattern, msg)
-
-    # not match: arrow
-    # FP: code, literal
-    # min 1 letter in line to not match heading underline
-    pattern_str = r"(\w.*\-{2}[^\s\->])|(\-{2}[^\s\->].*\w)"
-    pattern = re.compile(pattern_str)
-    msg = Report.missing(what="space", where="after en-dash")
-    re_lib["endashend"] = (pattern, msg)
+    msg = Report.missing(what="space", where="before/after dash")
+    re_lib["dash"] = (pattern, msg)
 
     args = dict()
     args["re_lib"] = re_lib
