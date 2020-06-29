@@ -413,7 +413,6 @@ def leak_pre():
     msg = Report.missing(what="space", where="after hyperlink")
     re_lib["linkend"] = (pattern, msg)
 
-    # Hyperlink & Standalone
     pattern_str = r"https?\:\/\/[^`]+?>`(?!_)"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="underscore", where="after external hyperlink")

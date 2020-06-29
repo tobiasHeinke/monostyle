@@ -125,7 +125,11 @@ def setup_config(root):
                           "console_options", "config_override", "template_override")
         for key, val in namespace.items():
             if key in config_options and val is not None:
-                globals()[key] = val
+                try:
+                   globals()[key] = type(globals()[key])(val)
+                except (TypeError, ValueError):
+                    print("Config wrong type {0} expected {1}".format(
+                              key, type(globals()[key]).__name__))
 
     return True
 

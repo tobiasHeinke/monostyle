@@ -23,7 +23,6 @@ from .util import monostylestd
 from .util.report import Report, print_reports
 from .rst_parser.core import RSTParser
 from .rst_parser import hunk_post_parser
-from . import svn_inter
 from . import autofix
 from .util import file_opener
 
@@ -45,14 +44,16 @@ def init_tools():
     return mods
 
 
-def import_module(name):
+def import_module(name, dst=None):
     """Import module."""
+    if dst is None:
+        dst = name
     name = "monostyle." + name
     if name in sys.modules:
         print("module import: {0} already in sys.modules".format(name))
     elif (spec := importlib.util.find_spec(name)) is not None:
         module = importlib.util.module_from_spec(spec)
-        sys.modules[name] = module
+        sys.modules[dst] = module
         spec.loader.exec_module(module)
         return module
     else:
@@ -157,10 +158,19 @@ def update(path, rev=None):
 
 
 def setup(root):
-    """Add a folder in the root directory for user config and file storage."""
+    """Setup user config and file storage."""
+    is_repo = False
+    if os.path.isdir(os.path.normpath(os.path.join(root, ".svn"))):
+        is_repo = True
+
+    global svn_inter
+    svn_inter = import_module("svn_inter")
+
     config_dir = os.path.normpath(os.path.join(root, "monostyle"))
     if not os.path.isdir(config_dir):
-        if not monostylestd.ask_user(("Create user config folder in '", root, "'")):
+        if not monostylestd.ask_user(("Create user config folder in '", root, "'",
+                                      "" if is_repo else " even though it's not the top folder "
+                                      "of a repository")):
             # run with default config
             return True
 
@@ -248,7 +258,7 @@ def main():
     else:
         reports = get_reports_file(monostylestd.replace_windows_path_sep(args.filename))
 
-    if not args.auto and "console_options" in config.__dict__.keys():
+    if not args.auto and "console_options" in vars(config).keys():
         config.console_options["show_autofix"] = False
     print_reports(reports)
 

@@ -177,7 +177,11 @@ def get_override(file, toolname, varname, default):
 
     if ((seg := get_branch(config.config_override, (file, toolname, varname), silent=True))
             is not None):
-        return seg
+        try:
+           return type(default)(seg)
+        except (TypeError, ValueError):
+            print("Config override wrong type {0} expected {1}".format(
+                      ":".join((file, toolname, varname)), type(default).__name__))
 
     return default
 
@@ -235,8 +239,7 @@ def texts_recursive(path=None, ext_pos=()):
         print("\rread {}-file".format(ext_names), end='', flush=True)
         yield single_text(path)
     else:
-        file_count_total = 0
-        for fn in files_recursive(path, ext_pos): file_count_total += 1
+        file_count_total = sum(map(lambda _: 1, files_recursive(path, ext_pos)))
         counter = 0
         for fn in files_recursive(path, ext_pos):
             print("\rread {}-files: [{:4.0%}]".format(ext_names, counter / file_count_total),

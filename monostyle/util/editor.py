@@ -166,6 +166,12 @@ class Editor:
 class FNEditor(Editor):
     """File renaming with SVN."""
 
+    def __init__(self, fg):
+        super().__init__(fg)
+        global monostyle
+        import monostyle.svn_inter
+
+
     def from_file(fn):
         return FNEditor(Fragment(fn, None))
 
@@ -188,7 +194,6 @@ class FNEditor(Editor):
     def _write(self, text_dst):
         """Check the new name is free and rename file."""
         import os.path
-        import monostyle.svn_inter
 
         if os.path.isfile(str(text_dst)):
             self._status = False
