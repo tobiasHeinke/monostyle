@@ -176,7 +176,6 @@ class RSTParser:
         ind_start = [0]
         ind_cur = 0
         on = False
-        is_block_start = True
         sub = False
         root = node
 
@@ -186,14 +185,20 @@ class RSTParser:
 
         node.is_parsing = True
         line = None
+        buf_info = {"is_not_empty": False}
         for buf in node.code.splitlines(True):
-            if line:
-                line_strip = str(line).lstrip(' ')
-                is_not_empty = bool(len(line_strip.strip()) != 0)
+            if buf:
+                buf_info = {"is_block_start": not buf_info["is_not_empty"]}
+                buf_info["line_str"] = str(buf)
+                buf_info["line_strip"] = buf_info["line_str"].lstrip(' ')
+                buf_info["is_not_empty"] = bool(len(buf_info["line_strip"].strip()) != 0)
+            else:
+                buf_info = None
 
+            if line:
                 was_on = on
-                if is_not_empty:
-                    ind_cur = line.start_lincol[1] + len(line) - len(line_strip)
+                if line_info["is_not_empty"]:
+                    ind_cur = line.start_lincol[1] + len(line_info["line_str"]) - len(line_info["line_strip"])
                     if is_first_not_empty:
                         # first defines the base indent
                         # block-quote at start will be a text node if not doc start
@@ -205,10 +210,10 @@ class RSTParser:
                         on = False
                     elif ind_cur > ind_start[-1]:
                         on = True
-                        is_block_start = True
+                        line_info["is_block_start"] = True
                     else:
                         on = False
-                        is_block_start = True
+                        line_info["is_block_start"] = True
 
                 if is_sec and not is_first:
                     # alternative when head first indent as unknown
@@ -225,14 +230,12 @@ class RSTParser:
                     ind_start.clear()
                     ind_start.append(ind_cur)
 
-                is_block_end = bool(not buf or len(str(buf).strip()) == 0)
-                on, ind_start, node, sub = self.process_line(
-                    line, is_not_empty, is_block_start, is_block_end,
+                line_info["is_block_end"] = bool(not buf_info or len(buf_info["line_strip"].strip()) == 0) # todo or ind < old
+                on, ind_start, node, sub = self.process_line(line, line_info,
                     on, ind_cur, ind_start, node, sub)
 
-                is_block_start = not is_not_empty
-
             line = buf
+            line_info = buf_info
 
         if node.active:
             if (node.child_nodes.last() and
@@ -247,73 +250,71 @@ class RSTParser:
         return root
 
 
-    def process_line(self, line, is_not_empty, is_block_start, is_block_end,
-                     on, ind_cur, ind_start, node, sub):
+    def process_line(self, line, line_info, on, ind_cur, ind_start, node, sub):
 
         was_sub = sub
         free = True
         if not node.active:
-            if is_not_empty:
-                node, sub = self.field(line, is_block_start, on, node, sub)
+            if line_info["is_not_empty"]:
+                node, sub = self.field(line, line_info, on, node, sub)
                 if not node.active:
-                    node, sub = self.be_list(line, is_block_start, on, node, sub)
+                    node, sub = self.be_list(line, line_info, on, node, sub)
                 if not node.active:
-                    node, sub = self.line_block(line, is_block_start, on, node, sub)
+                    node, sub = self.line_block(line, line_info, on, node, sub)
                 if not node.active:
-                    node, sub = self.option(line, is_block_start, on, node, sub)
+                    node, sub = self.option(line, line_info, on, node, sub)
                 if not node.active:
-                    node, sub = self.explicit_block(line, is_not_empty, is_block_end, on, node, sub)
+                    node, sub = self.explicit_block(line, line_info, on, node, sub)
                 if not node.active:
-                    node = self.transition(line, is_not_empty, is_block_start, node)
+                    node = self.transition(line, line_info, node)
                 if not node.active:
-                    node = self.doctest(line, is_not_empty, is_block_start, node)
+                    node = self.doctest(line, line_info, node)
                 if not node.active:
-                    node = self.block_quote(line, is_not_empty, is_block_start, on, node)
+                    node = self.block_quote(line, line_info, on, node)
 
             if not node.active or (node.active and node.active.node_name == "text"):
-                node = self.textnode(line, is_not_empty, node)
+                node = self.textnode(line, line_info, node)
             if sub:
-                node, sub = self.def_list(line, is_not_empty, on, node, sub)
+                node, sub = self.def_list(line, line_info, on, node, sub)
 
         else:
             free = False
 
             if node.active.node_name == "field":
-                node, sub = self.field(line, is_block_start, on, node, sub)
+                node, sub = self.field(line, line_info, on, node, sub)
             elif node.active.node_name in {"bullet", "enum"}:
-                node, sub = self.be_list(line, is_block_start, on, node, sub)
+                node, sub = self.be_list(line, line_info, on, node, sub)
             elif node.active.node_name == "line":
-                node, sub = self.line_block(line, is_block_start, on, node, sub)
+                node, sub = self.line_block(line, line_info, on, node, sub)
             elif node.active.node_name == "option":
-                node, sub = self.option(line, is_block_start, on, node, sub)
+                node, sub = self.option(line, line_info, on, node, sub)
             elif node.active.node_name in {"dir", "target", "comment", "substdef",
                                            "footdef", "citdef"}:
-                node, sub = self.explicit_block(line, is_not_empty, is_block_end, on, node, sub)
+                node, sub = self.explicit_block(line, line_info, on, node, sub)
             elif node.active.node_name == "trans":
-                node = self.transition(line, is_not_empty, is_block_start, node)
+                node = self.transition(line, line_info, node)
                 if node.active:
-                    node = self.section(line, is_not_empty, is_block_end, node)
+                    node = self.section(line, line_info, node)
             elif node.active.node_name == "sect":
-                node = self.section(line, is_not_empty, is_block_end, node)
+                node = self.section(line, line_info, node)
             elif node.active.node_name == "doctest":
-                node = self.doctest(line, is_not_empty, is_block_start, node)
+                node = self.doctest(line, line_info, node)
             elif node.active.node_name == "block-quote":
-                node = self.block_quote(line, is_not_empty, is_block_start, on, node)
+                node = self.block_quote(line, line_info, on, node)
             else:
-                node = self.section(line, is_not_empty, is_block_end, node)
+                node = self.section(line, line_info, node)
                 if (node.active and node.active.node_name != "sect") or sub:
-                    node, sub = self.def_list(line, is_not_empty, on, node, sub)
+                    node, sub = self.def_list(line, line_info, on, node, sub)
                     if node.active and node.active.node_name == "text":
-                        if is_block_end:
-                            node, sub = self.explicit_block(line, is_not_empty, is_block_end,
-                                                            on, node, sub)
+                        if line_info["is_block_end"]:
+                            node, sub = self.explicit_block(line, line_info, on, node, sub)
                         if node.active.node_name == "text":
-                            node = self.textnode(line, is_not_empty, on, node)
+                            node = self.textnode(line, line_info, node)
 
         rematch = False
         if node.active:
             on = True
-        elif not free and is_not_empty:
+        elif not free and line_info["is_not_empty"]:
             rematch = True
 
         if sub != was_sub:
@@ -323,15 +324,14 @@ class RSTParser:
                 else:
                     ind_start.append(ind_start[-1])
             else:
-                if not node.active and is_not_empty and not free:
+                if not node.active and line_info["is_not_empty"] and not free:
                     rematch = True
                 if len(ind_start) > 1:
                     ind_start.pop(len(ind_start) - 1)
 
         if rematch:
-            is_block_start = True
-            on, ind_start, node, sub = self.process_line(
-                line, is_not_empty, is_block_start, is_block_end,
+            line_info["is_block_start"] = True
+            on, ind_start, node, sub = self.process_line(line, line_info,
                 on, ind_cur, ind_start, node, sub)
 
         return on, ind_start, node, sub
@@ -466,16 +466,16 @@ class RSTParser:
         return newnode
 
 
-    def transition(self, line, is_not_empty, is_block_start, node):
+    def transition(self, line, line_info, node):
         if not node.active:
-            if is_block_start:
-                if m := re.match(self.re_lib["trans"], str(line)):
+            if line_info["is_block_start"]:
+                if m := re.match(self.re_lib["trans"], line_info["line_str"]):
                     newnode = NodeRST("trans", line)
                     newnode.append_part("indent", line.slice_match_obj(m, 1, True))
                     newnode.append_part("name_start", line.slice_match_obj(m, 2, True))
                     node.active = newnode
 
-        elif not is_not_empty:
+        elif not line_info["is_not_empty"]:
             node.active.name_start.append_code(line)
             node.append_child(node.active)
             node.active = None
@@ -483,10 +483,10 @@ class RSTParser:
         return node
 
 
-    def section(self, line, is_not_empty, is_block_end, node):
+    def section(self, line, line_info, node):
         if node.active:
             if node.active.node_name == "trans":
-                if is_block_end:
+                if line_info["is_block_end"]:
                     node.append_child(node.active)
                     node.active = None
                     return node
@@ -495,7 +495,7 @@ class RSTParser:
                 node.active.node_name = "sect"
 
             elif node.active.node_name in {"text", "sect"}:
-                if re.match(self.re_lib["trans"], str(line)):
+                if re.match(self.re_lib["trans"], line_info["line_str"]):
                     node.active.node_name = "sect"
                     if node.active.body:
                         # move inside node
@@ -505,7 +505,7 @@ class RSTParser:
                     node.active.append_part("name_end", line, True)
 
                 elif node.active.node_name == "sect":
-                    if not is_not_empty:
+                    if not line_info["is_not_empty"]:
                         node.active.name_end.append_code(line)
                     else:
                         print("{0}:{1}: {2}".format(line.fn, line.start_lincol[0],
@@ -518,17 +518,17 @@ class RSTParser:
         return node
 
 
-    def textnode(self, line, is_not_empty, node):
+    def textnode(self, line, line_info, node):
         if node.active:
             node.active.body.append_code(line)
-            if not is_not_empty:
+            if not line_info["is_not_empty"]:
                 node.append_child(node.active)
                 node.active = None
 
         else:
             newnode = NodeRST("text", line)
             newnode.append_part("body", line)
-            if is_not_empty:
+            if line_info["is_not_empty"]:
                 node.active = newnode
             else:
                 node.append_child(newnode)
@@ -539,7 +539,7 @@ class RSTParser:
         return node
 
 
-    def doctest(self, line, is_not_empty, is_block_start, node):
+    def doctest(self, line, line_info, node):
         if not node.active:
             if line_info["is_block_start"]:
                 if m := re.match(self.re_lib["doctest"], line_info["line_str"]):
@@ -550,14 +550,14 @@ class RSTParser:
                     node.active = newnode
         else:
             node.active.body.append_code(line)
-            if not is_not_empty:
+            if not line_info["is_not_empty"]:
                 node.append_child(node.active)
                 node.active = None
 
         return node
 
 
-    def def_list(self, line, is_not_empty, on, node, sub):
+    def def_list(self, line, line_info, on, node, sub):
         if not on:
             if node.active and node.active.node_name != "text":
                 if node.active and node.active.node_name != "def":
@@ -581,7 +581,7 @@ class RSTParser:
 
         else:
             if node.active:
-                if node.active.node_name == "text" and is_not_empty:
+                if node.active.node_name == "text" and line_info["is_not_empty"]:
                     # only def node in def-list
                     # is_block_start info is lost with the text node
                     if not sub:
@@ -625,13 +625,13 @@ class RSTParser:
         return node, sub
 
 
-    def block_quote(self, line, is_not_empty, is_block_start, on, node):
+    def block_quote(self, line, line_info, on, node):
         if on:
             if node.active and node.active.node_name == "block-quote":
-                if not is_not_empty and is_block_start:
+                if not line_info["is_not_empty"] and line_info["is_block_start"]:
                     node.append_child(node.active)
                     node.active = None
-                    node = self.textnode(line, is_not_empty, node)
+                    node = self.textnode(line, line_info, node)
                 else:
                     node.active.body.append_code(line)
 
@@ -648,9 +648,9 @@ class RSTParser:
         return node
 
 
-    def be_list(self, line, is_block_start, on, node, sub):
+    def be_list(self, line, line_info, on, node, sub):
         if not on:
-            if m := re.match(self.re_lib["bullet"], str(line)):
+            if m := re.match(self.re_lib["bullet"], line_info["line_str"]):
                 newnode = NodeRST("bullet", line)
                 newnode.append_part("indent", line.slice_match_obj(m, 1, True))
                 _, fg, after_name = line.slice_match_obj(m, 2)
@@ -658,7 +658,7 @@ class RSTParser:
                 newnode.append_part("body", after_name)
 
             else:
-                if m := re.match(self.re_lib["enum"], str(line)):
+                if m := re.match(self.re_lib["enum"], line_info["line_str"]):
                     newnode = NodeRST("enum", line)
                     newnode.append_part("indent", line.slice_match_obj(m, 1, True))
                     if m.group(2):
@@ -677,7 +677,7 @@ class RSTParser:
                         sub = False
                     return node, sub
 
-            if is_block_start:
+            if line_info["is_block_start"]:
                 # different list type after another
                 if (sub and (node.active and
                              node.active.node_name != newnode.node_name)):
@@ -703,16 +703,16 @@ class RSTParser:
         return node, sub
 
 
-    def line_block(self, line, is_block_start, on, node, sub):
+    def line_block(self, line, line_info, on, node, sub):
         if not on:
-            if m := re.match(self.re_lib["line"], str(line)):
+            if m := re.match(self.re_lib["line"], line_info["line_str"]):
                 newnode = NodeRST("line", line)
                 newnode.append_part("indent", line.slice_match_obj(m, 1, True))
                 _, fg, after_name = line.slice_match_obj(m, 2)
                 newnode.append_part("name_start", fg)
                 newnode.append_part("body", after_name)
 
-                if is_block_start and (not sub or node.parent_node.node_name != "line-list"):
+                if line_info["is_block_start"] and (not sub or node.parent_node.node_name != "line-list"):
                     prime = NodeRST(newnode.node_name + "-list", None)
                     prime.append_part("body", None)
                     node.append_child(prime)
@@ -737,10 +737,9 @@ class RSTParser:
         return node, sub
 
 
-    def field(self, line, is_block_start, on, node, sub):
-
+    def field(self, line, line_info, on, node, sub):
         if not on:
-            if m := re.match(self.re_lib["field"], str(line)):
+            if m := re.match(self.re_lib["field"], line_info["line_str"]):
                 newnode = NodeRST("field", line)
                 newnode.append_part("indent", line.slice_match_obj(m, 1, True))
                 newnode.append_part("name_start", line.slice_match_obj(m, 2, True))
@@ -749,7 +748,7 @@ class RSTParser:
                 newnode.append_part("name_end", fg)
                 newnode.append_part("body", after_name)
 
-                if is_block_start and (not sub or node.parent_node.node_name != "field-list"):
+                if line_info["is_block_start"] and (not sub or node.parent_node.node_name != "field-list"):
                     prime = NodeRST(newnode.node_name + "-list", None)
                     prime.append_part("body", None)
 
@@ -782,9 +781,9 @@ class RSTParser:
         return node, sub
 
 
-    def option(self, line, is_block_start, on, node, sub):
+    def option(self, line, line_info, on, node, sub):
         if not on:
-            if m := re.match(self.re_lib["option"], str(line)):
+            if m := re.match(self.re_lib["option"], line_info["line_str"]):
                 print(m.groups())
                 newnode = NodeRST("option", line)
                 newnode.append_part("indent", line.slice_match_obj(m, 1, True))
@@ -796,7 +795,7 @@ class RSTParser:
                 else:
                     newnode.append_part("body", line.slice(line.loc_to_abs(m.end(2)), right_inner=True))
 
-                if is_block_start and (not sub or node.parent_node.node_name != "option-list"):
+                if line_info["is_block_start"] and (not sub or node.parent_node.node_name != "option-list"):
                     prime = NodeRST(newnode.node_name + "-list", None)
                     prime.append_part("body", None)
                     node.append_child(prime)
@@ -821,11 +820,11 @@ class RSTParser:
         return node, sub
 
 
-    def explicit_block(self, line, is_not_empty, is_block_end, on, node, sub):
-        def factory(line, line_str, newnode, is_anon_target):
-            target_anon_m = re.match(self.re_lib["target-anon"], line_str)
+    def explicit_block(self, line, line_info, on, node, sub):
+        def factory(line, line_info, newnode, is_anon_target):
+            target_anon_m = re.match(self.re_lib["target-anon"], line_info["line_str"])
             if not (is_anon_target or target_anon_m):
-                if sub_m := re.match(self.re_lib["substdef"], line_str):
+                if sub_m := re.match(self.re_lib["substdef"], line_info["line_str"]):
                     newnode.node_name = "substdef"
 
                     newnode.append_part("id_start", line.slice_match_obj(sub_m, 3, True))
@@ -842,7 +841,7 @@ class RSTParser:
                     newnode.active = newnode.head
                     return newnode
 
-                if foot_m := re.match(self.re_lib["footdef"], line_str):
+                if foot_m := re.match(self.re_lib["footdef"], line_info["line_str"]):
                     newnode.node_name = "footdef"
                     newnode.append_part("id_start", line.slice_match_obj(foot_m, 3, True))
                     newnode.append_part("id", line.slice_match_obj(foot_m, 4, True))
@@ -852,7 +851,7 @@ class RSTParser:
                     newnode.active = newnode.head
                     return newnode
 
-                if cit_m := re.match(self.re_lib["citdef"], line_str):
+                if cit_m := re.match(self.re_lib["citdef"], line_info["line_str"]):
                     newnode.node_name = "citdef"
                     newnode.append_part("id_start", line.slice_match_obj(cit_m, 3, True))
                     newnode.append_part("id", line.slice_match_obj(cit_m, 4, True))
@@ -862,7 +861,7 @@ class RSTParser:
                     newnode.active = newnode.head
                     return newnode
 
-                if target_m := re.match(self.re_lib["target"], line_str):
+                if target_m := re.match(self.re_lib["target"], line_info["line_str"]):
                     newnode.node_name = "target"
                     _, fg, after_id = line.slice_match_obj(target_m, 3)
                     newnode.name_start.code.combine(fg)
@@ -880,7 +879,7 @@ class RSTParser:
                     newnode.active = newnode.head
                     return newnode
 
-                if dir_m := re.match(self.re_lib["dir"], line_str):
+                if dir_m := re.match(self.re_lib["dir"], line_info["line_str"]):
                     newnode.node_name = "dir"
                     newnode.append_part("name", line.slice_match_obj(dir_m, 3, True))
                     _, fg, after_name = line.slice_match_obj(dir_m, 4)
@@ -913,8 +912,8 @@ class RSTParser:
                     return newnode
 
 
-        def quoted(line, is_not_empty, node):
-            if is_not_empty and re.match(self.re_lib["quoted"], str(line)):
+        def quoted(line, line_info, node):
+            if line_info["is_not_empty"] and re.match(self.re_lib["quoted"], line_info["line_str"]):
                 node.active.body.append_code(line)
             else:
                 node.append_child(node.active)
@@ -923,14 +922,14 @@ class RSTParser:
             return node
 
 
-        if (not on or (is_block_end and
+        if (not on or (line_info["is_block_end"] and
                        (not node.active or node.active.node_name == "text"))):
             if (node.active and
-                    (not is_block_end or
+                    (not line_info["is_block_end"] or
                      node.active.node_name in {"dir", "target", "comment", "substdef",
                                                "footdef", "citdef"})):
                 if node.active.node_name == "dir" and node.active.name is None:
-                    node = quoted(line, is_not_empty, node)
+                    node = quoted(line, line_info, node)
                 else:
                     if node.active:
                         node.append_child(node.active)
@@ -938,17 +937,16 @@ class RSTParser:
                     node.active = None
                 return node, sub
 
-            if starter_m := re.match(self.re_lib["exp"], str(line)):
+            if starter_m := re.match(self.re_lib["exp"], line_info["line_str"]):
                 newnode = NodeRST("exp", line)
-                line_str = str(line)
                 newnode.append_part("indent", line.slice_match_obj(starter_m, 1, True))
                 _, fg, after_starter = line.slice_match_obj(starter_m, 2)
                 newnode.append_part("name_start", fg)
                 is_anon_target = bool(str(starter_m.group(2)).startswith("__"))
-                newnode = factory(line, line_str, newnode, is_anon_target)
+                newnode = factory(line, line_info, newnode, is_anon_target)
 
             else:
-                if starter_m := re.search(self.re_lib["dftdir"], str(line)):
+                if starter_m := re.search(self.re_lib["dftdir"], line_info["line_str"]):
                     newnode = NodeRST("dir", None)
                     if starter_m.group(1):
                         newnode.append_part("indent", line.slice_match_obj(starter_m, 1, True))
@@ -961,7 +959,7 @@ class RSTParser:
                             node.append_child(node.active)
                             node.active.active = None
                             node.active = None
-                        self.textnode(before_starter, is_not_empty, node)
+                        self.textnode(before_starter, line_info, node)
 
                     if node.active:
                         node.append_child(node.active)
@@ -980,10 +978,10 @@ class RSTParser:
 
         elif node.active:
             if node.active.active.node_name == "head":
-                if is_not_empty:
+                if line_info["is_not_empty"]:
                     attr_part = NodePartRST("attr", None)
                     attr_part.parent_node = node.active
-                    attr_node, sub = self.field(line, True, False, attr_part, sub)
+                    attr_node, sub = self.field(line, {"is_block_start": True, **line_info}, False, attr_part, sub)
                     if sub:
                         node.active.attr = attr_part
                         node.active.child_nodes.append(attr_part)
@@ -999,7 +997,7 @@ class RSTParser:
                 else:
                     node.active.head.append_code(line)
 
-                if not is_not_empty:
+                if not line_info["is_not_empty"]:
                     if node.active.node_name != "target":
                         node.active.active = NodePartRST("body", None)
                     else:
