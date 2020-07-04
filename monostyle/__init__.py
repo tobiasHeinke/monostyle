@@ -29,7 +29,6 @@ from .util import file_opener
 __version__ = "0.0.1rc2"
 
 RSTParser = RSTParser()
-RSTParser.parse_block_quote = True
 
 
 def init_tools():

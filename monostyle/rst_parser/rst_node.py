@@ -48,8 +48,15 @@ class NodeRST(Node):
             newpart = NodePartRST(name, None)
 
         self.child_nodes.append(newpart)
+
         if is_full_line:
             newpart.append_code(code)
+        setattr(self, name, newpart)
+
+
+    def insert_part(self, name, code, after):
+        newpart = NodePartRST(name, code)
+        self.child_nodes.insert_after(after, newpart)
         setattr(self, name, newpart)
 
 
@@ -140,8 +147,7 @@ class NodePartRST(Node):
                 self.append_code(newnode.code)
 
             if (newnode.code is not None and
-                    self.parent_node.node_name in ("def-list", "bullet-list", "enum-list",
-                                                   "field-list", "line-list") and
+                    self.parent_node.node_name.endswith("-list") and
                     self.parent_node.parent_node is not None and not self.parent_node.is_parsing and
                     not self.parent_node.parent_node.is_parsing):
                 self.parent_node.parent_node.append_code(newnode.code)

@@ -4,7 +4,7 @@ RST Parser Specification
 ************************
 
 The Nodes are universal, thus the same for each markup type.
-Each node has a list node parts ordered as they appear in the rst source.
+Each node has a list of node parts ordered as they appear in the rst source.
 The parts are also linked in slots corresponding to their node_name.
 
 	indent
@@ -47,6 +47,11 @@ block-quote:
 		{body}
 
 
+doctest:
+
+	>>> {body}
+
+
 Definition list:
 
 	def-list
@@ -78,6 +83,13 @@ Field Block:
 	field-list
 		field
 			: {name} : {body}
+
+
+Option list:
+
+	option-list
+		option
+			- {name} ␣␣ {body}
 
 
 Explicit Block:
@@ -121,6 +133,7 @@ literal, strong, emphasis, int-target, hyperlink, foot, cit, standalone
 
 role
 	: {name} : ` {body} `
+	` {body} ` : {name} :
 
 	default
 		` {body} `
@@ -164,8 +177,8 @@ RST Specification Deviation:
 Naming
 ------
 
-Paragraph: text (block/inline are not differentiated)
-(Indented) Literal Block: dir with name None (aka default directive)
+Paragraph: text. Block/inline are not differentiated.
+Literal Block: dir with name None (aka default directive). Indented/quoted are not differentiated.
 Interpreted Text: role with name None (aka default role)
 
 
@@ -179,21 +192,21 @@ No isolated/ adjacent rules for punctuation in "reference" names.
 Body
 ----
 
-Unsupported: quoted literal blocks, Doctest blocks, options lists, tables
-No Recognition: Def. list: term: classifier, bibliographic fields, RCS keywords, block-quote attributions
+Unsupported: tables
+No Recognition: Def. list: term: classifier, bibliographic fields and RCS keywords, block-quote attributions
 
 Lists at block start only.
-Default directive requires an empty line between start and body.
+Default directive requires a blank line between start and body.
 Default directive no multi line head.
-Block-quote at start or preceded by only empty lines will be a text node.
-Block-quote no separation by two empty lines; will be one.
-Field names cannot contain colons 
+Block-quote in a snippet (not starting at line 1) at the first line or preceded by only blank lines will be a text node.
+Options lists option name itself and aliases are not split.
+Options lists args limited allowed chars.
 
 Inline
 ------
 
-Role name only at start and not at end `body`:name:
 No inline elements over two paragraphs.
-No other escape than backslash or spaces on both sides. 
-Single line standalone link.
-Standalone limited number of recognized protocols and no mailto.
+No other escape than backslash or spaces on both sides.
+Standalone link on a single line only.
+Standalone limited number of recognized protocols.
+Standalone no allowed-char checks, but mails without mailto must contain a dot after the at sign.
