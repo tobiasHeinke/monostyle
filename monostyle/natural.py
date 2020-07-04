@@ -218,7 +218,7 @@ def indefinite_article(document, reports, re_lib, data):
                 buf = None
 
         else:
-            if part.parent_node.node_name in ("def", "bullet", "enum", "field", "lineblock"):
+            if part.parent_node.node_name in ("def", "bullet", "enum", "field", "line"):
                 buf = None
 
     return reports
@@ -283,6 +283,155 @@ def search_pure(document, reports, re_lib, config):
                                                  len(m.group(0)), 50, 0)
                 reports.append(Report(config.get("severity"), config.get("toolname"),
                                       out, msg, line))
+
+    return reports
+
+
+def metric(document, reports):
+    """Measure length of segments like paragraphs, sentences and words."""
+    toolname = "metric"
+
+    # source: https://www.gov.uk/guidance/content-design/writing-for-gov-uk
+    conf = {
+        "sect_len": 69,
+        # gov.uk recommends 8/9 but too many technical terms
+        "word_len": 15,
+        "sen_len": 25,
+        "para_long": 5,
+        "para_short": 2
+    }
+
+    def compare(node_cur, sen, counter, reports, sub_para=False, is_last=False):
+        if node_cur.node_name == "sect":
+            if counter["sect"] > conf["sect_len"]:
+                out = node_cur.code.copy().clear(True)
+                msg = Report.quantity(what="long heading",
+                                      how="{0}/{1} letters".format(
+                                          counter["sect"], conf["sect_len"]))
+                reports.append(Report('I', toolname, out, msg, node_cur.code))
+
+        else:
+            if counter["sen"] > conf["sen_len"]:
+                out = sen.copy().clear(True)
+                msg = Report.quantity(what="long sentence",
+                                      how="{0}/{1} words".format(
+                                          counter["sen"], conf["sen_len"]))
+                reports.append(Report('I', toolname, out, msg, sen))
+            if not sub_para:
+                if counter["para"] > conf["para_long"]:
+                    out = node_cur.code.copy().clear(True)
+                    msg = Report.quantity(what="long paragraph",
+                                          how="{0}/{1} sentences".format(
+                                              counter["para"], conf["para_long"]))
+                    reports.append(Report('I', toolname, out, msg, node_cur.code))
+                check = False
+                if counter["para"] <= conf["para_short"] and counter["para"] != 0:
+                    counter["para_short"] += 1
+                else:
+                    check = True
+                if (check or is_last):
+                    if counter["para_short"] > 1:
+                        out = node_cur.code.copy().clear(True)
+                        msg = Report.quantity(what="multiple short paragraph",
+                                              how="{0}/{1} paragraphs".format(
+                                                  counter["para_short"], 1))
+                        reports.append(Report('I', toolname, out, msg, node_cur.code))
+                        counter["para_short"] = 0
+                    elif counter["para"] != 0:
+                        counter["para_short"] = 0
+
+        return reports
+
+    instr_pos = {
+        "sect": {"*": ["name"]},
+        "*": {"*": ["head", "body"]}
+    }
+    instr_neg = {
+        "dir": {
+            "*": ["head"], "include": "*", "toctree": "*",
+            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
+        },
+        "def": {"*": ["head"]},
+        "substdef": {"*": ["head"], "unicode": "*", "replace": "*"},
+        "target": "*",
+        "role": {
+            "kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"
+        },
+        "standalone": "*", "literal": "*", "substitution": "*"
+    }
+    node_cur = None
+    node_prev = None
+    is_open = False
+    sen = None
+    counter = {
+        "sect": 0,
+        "sen": 0,
+        "para": 0,
+        "para_short": 0,
+    }
+
+    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
+        if node_cur is None or part.code.end_pos > node_cur.code.end_pos:
+            if node_cur:
+                if is_open and sen and not sen.isspace():
+                    counter["para"] += 1
+                node_prev = node_cur
+                is_last = bool(rst_walker.is_of(node_cur.parent_node,
+                                                ("def", "dir", "enum", "bullet", "field")) and
+                               node_cur.next is None)
+                reports = compare(node_cur, sen, counter, reports, is_last=is_last)
+                if is_last:
+                    counter["para_short"] = 0
+                    node_prev = None
+
+                if (rst_walker.is_of(part, "dir", ("code-block", "default")) or
+                        rst_walker.is_of(part, "comment")):
+                    counter["para_short"] = 0
+                    continue
+
+            if (part.parent_node.node_name == "sect" or
+                    (part.parent_node.node_name == "text" and
+                     not rst_walker.is_of(part.parent_node.parent_node, "text"))):
+                node_cur = part.parent_node
+            else:
+                node_cur = None
+
+            for key in counter:
+                if key != "para_short":
+                    counter[key] = 0
+
+            if (node_cur and node_prev and
+                    (node_cur.node_name == "sect" or
+                     (rst_walker.is_of(node_cur.parent_node,
+                                       ("def", "dir", "enum", "bullet", "field")) and
+                      node_cur.prev is None))):
+                reports = compare(node_prev, sen, counter, reports, is_last=True)
+                counter["para_short"] = 0
+                node_prev = None
+
+        if node_cur and part.child_nodes.is_empty():
+            if part.code.end_pos <= node_cur.code.end_pos:
+                if node_cur.node_name == "sect":
+                    counter["sect"] += len(part.code)
+                else:
+                    for sen, is_open in Segmenter.iter_sentence(part.code, output_openess=True):
+                        for word in Segmenter.iter_word(sen):
+                            counter["sen"] += 1
+                            if len(word) >= conf["word_len"]:
+                                msg = Report.quantity(what="long word",
+                                                      how="{0}/{1} letters".format(
+                                                          len(word), conf["word_len"]))
+                                reports.append(Report('I', toolname, word, msg))
+
+                        if not is_open:
+                            reports = compare(node_cur, sen, counter, reports, True)
+                            counter["sen"] = 0
+                            counter["para"] += 1
+
+    if node_cur:
+        if is_open and sen and not sen.isspace():
+            counter["para"] += 1
+        reports = compare(node_cur, sen, counter, reports, is_last=True)
 
     return reports
 
@@ -379,7 +528,7 @@ def repeated_words(document, reports, config):
                 buf.clear()
 
         else:
-            if rst_walker.is_of(part, ("bullet", "enum", "lineblock", "def", "field")):
+            if rst_walker.is_of(part, ("bullet", "enum", "line", "def", "field")):
                 buf.clear()
 
     return reports
@@ -425,6 +574,7 @@ OPS = (
     ("article", indefinite_article, indefinite_article_pre),
     ("heading-cap", heading_cap, heading_cap_pre),
     ("grammar", search_pure, grammar_pre),
+    ("metric", metric, None),
     ("repeated", repeated_words, repeated_words_pre),
 )
 

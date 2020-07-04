@@ -28,7 +28,7 @@ tool_selection = {
         "ext": ".rst"
     },
     "natural": {
-        "tools": ("article", "grammar", "heading-cap", "repeated"),
+        "tools": ("article", "grammar", "heading-cap", "metric", "repeated"),
         "ext": ".rst"
     },
     "code_style": {

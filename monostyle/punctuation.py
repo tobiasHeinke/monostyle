@@ -138,7 +138,7 @@ def number(document, reports, re_lib):
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "comment": "*",
-        "role": {"kbd": "*"},
+        "role": {"kbd": "*", "sub": "*", "sup": "*"},
         "literal": "*", "standalone": "*", "footref": "*", "citref": "*"
     }
 
@@ -466,7 +466,8 @@ def mark(document, reports, re_lib):
                     # refbox parts
                     if (not rst_walker.is_of(par_node, "field",
                                              ("Hotkey", "Menu", "Panel", "Mode",
-                                              "Tool", "Editor", "Header", "Type"))):
+                                              "Tool", "Editor", "Header", "Type")) and
+                            (not rst_walker.is_of(part.next_leaf(), "dir", "default") or part_str.endswith(" "))):
 
                         out = part.code.copy().clear(False)
                         msg = re_lib["nopuncend"][1].format("paragraph")

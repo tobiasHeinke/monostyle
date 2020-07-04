@@ -129,8 +129,8 @@
 	"what so ever"
 ],
 "development":[
-	"#since",
 	"#alpha, beta",
+	"#since",
 	"at the moment",
 	"currently(?! selected)",
 	"dependenc(y|ies)",
@@ -138,9 +138,13 @@
 	"develop(s|ed|ing|ment)?",
 	"experimental",
 	"features?",
+	"future",
 	"implementation", "implemented",
+	"legacy",
 	"now",
+	"past",
 	"prototype",
+	"release",
 	"so far",
 	"support(s|ed)?",
 	"unsupported",

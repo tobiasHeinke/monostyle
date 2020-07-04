@@ -93,7 +93,7 @@ class Segmenter:
         yield fg.slice(buf_start, right_inner=True)
 
 
-    def iter_sentence(self, fg, crop_start=False, crop_end=False):
+    def iter_sentence(self, fg, crop_start=False, crop_end=False, output_openess=False):
         buf_start = 0
         sent_re = self.sent_re
         text = str(fg)
@@ -108,12 +108,20 @@ class Segmenter:
                 buf_start = sent_m.end(0)
                 continue
 
-            yield fg.slice(buf_start + fg.start_pos, sent_m.end(0) + fg.start_pos, True)
+            sent_fg = fg.slice(buf_start + fg.start_pos, sent_m.end(0) + fg.start_pos, True)
+            if not output_openess:
+                yield sent_fg
+            else:
+                yield sent_fg, False
 
             buf_start = sent_m.end(0)
 
         if not crop_end and buf_start != len(text):
-            yield fg.slice(buf_start + fg.start_pos, right_inner=True)
+            sent_fg = fg.slice(buf_start + fg.start_pos, right_inner=True)
+            if not output_openess:
+                yield sent_fg
+            else:
+                yield sent_fg, True
 
 
     def iter_clause(self, fg):
