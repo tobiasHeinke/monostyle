@@ -210,3 +210,12 @@ No other escape than backslash or spaces on both sides.
 Standalone link on a single line only.
 Standalone limited number of recognized protocols.
 Standalone no allowed-char checks, but mails without mailto must contain a dot after the at sign.
+
+
+Enviroment
+==========
+
+In general all code documentation related are unsupported like role mod or dir index.
+
+Content: include, toctree
+Numbers: section, figure, math, toctree, enum, ...

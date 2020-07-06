@@ -7,7 +7,6 @@ A RST parser.
 """
 
 import re
-import monostyle.util.monostylestd as monostylestd
 from monostyle.util.fragment import Fragment
 from monostyle.util.nodes import LinkedList
 from monostyle.rst_parser.rst_node import NodeRST, NodePartRST
@@ -36,7 +35,11 @@ class RSTParser:
         'versionadded', 'versionchanged', 'warning'
     )
 
-    substitution = {'release':'', 'version':'', 'today':''}
+    substitution = {
+        'release': Fragment('', ''),
+        'version': Fragment('', ''),
+        'today': Fragment('', ''),
+    }
 
     trans_chars = ('!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', '-', ',', '.', '/',
                    ':', ';', '<', '=', '>', '?', '@', '[', ']', '^', '_', '`', '{', '|', '}', '~')
@@ -784,7 +787,6 @@ class RSTParser:
     def option(self, line, line_info, on, node, sub):
         if not on:
             if m := re.match(self.re_lib["option"], line_info["line_str"]):
-                print(m.groups())
                 newnode = NodeRST("option", line)
                 newnode.append_part("indent", line.slice_match_obj(m, 1, True))
                 newnode.append_part("name", line.slice_match_obj(m, 2, True))
@@ -1191,71 +1193,6 @@ class RSTParser:
 
 
 # -----------------------------------------------------------------------------
-# Common Operations
-
-
-def get_link_titles(rst_parser):
-    """Get titles."""
-    targets = []
-    docs = []
-
-    for fn, text in monostylestd.rst_texts():
-        doc = rst_parser.document(fn, text)
-        doc.body = rst_parser.parse_block(doc.body)
-        is_first = True
-        for node in rst_walker.iter_node(doc.body, ("sect",)):
-            if is_first:
-                fn = monostylestd.path_to_rel(fn, "rst")
-                fn = '/' + fn[:-4]
-
-                docs.append([fn, node.name.code])
-                is_first = False
-
-            p = node.prev
-            while p and p.node_name == "target": # or empty
-                targets.append([str(p.id.code).strip(), node.name.code])
-                p = p.prev
-
-    return docs, targets
-
-
-def resolve_link_title(document, docs, targets):
-    """Insert the link title (defined by section titles) if it is not set in the role."""
-
-    for node in rst_walker.iter_node(document.body, ("role",)):
-        name = str(node.name.code).strip() if node.name else ""
-        if name == "doc":
-            if not node.head:
-                link_content = str(node.id.code).strip()
-
-                for fn_doc, title_doc in docs:
-                    if link_content == fn_doc:
-                        node.append_part("head", title_doc) # order
-                        break
-                else:
-                    print("{0}:{1}: {2}".format(node.id.code.fn, node.id.code.start_lincol[0],
-                                                "resolve link titles: unknown doc:"))
-                    print(link_content)
-
-
-        elif name == "ref":
-            if not node.head:
-                link_content = str(node.id.code).strip()
-
-                for target, title in targets:
-                    if link_content == target:
-                        node.append_part("head", title) # order
-                        break
-                else:
-                    if not link_content.startswith(("fig-", "tab-")):
-                        print("{0}:{1}: {2}".format(node.id.code.fn, node.id.code.start_lincol[0],
-                                                    "resolve link titles: unknown ref:"))
-                        print(link_content)
-
-    return document
-
-
-
 
 
 def print_node(root, output=None, ind=-1, path="", show_loc=False, show_pos=False):
