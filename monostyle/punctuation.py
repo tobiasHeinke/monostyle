@@ -138,15 +138,20 @@ def number(document, reports, re_lib):
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "comment": "*",
-        "role": {"kbd": "*", "sub": "*", "sup": "*"},
+        "role": {"kbd": "*"},
         "literal": "*", "standalone": "*", "footref": "*", "citref": "*"
     }
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
         part_str = str(part.code)
-        for value in re_lib.values():
+        for key, value in re_lib.items():
             pattern = value[0]
             for m in re.finditer(pattern, part_str):
+                if (key == "lowdigit" and
+                        (rst_walker.is_of("role", {"math", "sub", "sup"}) or
+                         rst_walker.is_of("dir", "math"))):
+                    continue
+
                 out = part.code.slice_match_obj(m, 0, True)
                 line = monostylestd.getline_punc(document.body.code,
                                                  part.code.start_pos + m.start(),

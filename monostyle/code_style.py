@@ -322,6 +322,8 @@ def blank_line(document, reports):
 
 
     def count_nl(node, stop_cond=None, skip_names=None):
+        if skip_names is None:
+            skip_names = tuple()
         nl_count = 0
         over = False
         prev_node = node.prev
@@ -329,10 +331,10 @@ def blank_line(document, reports):
             nl_count, stop = count_trailnl(prev_node, nl_count)
 
             if stop:
-                if skip_names and prev_node.node_name in skip_names:
-                    if stop_cond is not None and nl_count >= stop_cond and not over:
-                        return nl_count, prev_node, True
-
+                for typ in skip_names:
+                    if rst_walker.is_of(prev_node, *typ):
+                        if stop_cond is not None and nl_count >= stop_cond and not over:
+                            return nl_count, prev_node, True
                 else:
                     return nl_count, prev_node, False
 
@@ -344,7 +346,7 @@ def blank_line(document, reports):
         return nl_count, prev_node, False
 
 
-    pos_over_heading = ("target", "comment", "substdef", "highlight")
+    pos_over_heading = (("target",), ("comment",), ("substdef",), ("dir", "highlight"))
     for node in rst_walker.iter_node(document.body):
         if node.node_name == "sect" or rst_walker.is_of(node, "dir", "rubric"):
             display_name = "heading" if node.node_name == "sect" else "rubric"

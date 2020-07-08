@@ -493,8 +493,7 @@ def repeated_words(document, reports, config):
                 buf.clear()
                 continue
 
-            part_str = str(part.code)
-            for sen in Segmenter.iter_sentence(part.code):
+            for sen, is_open in Segmenter.iter_sentence(part.code, output_openess=True):
                 for word in Segmenter.iter_word(sen):
                     word_lower = str(word).lower()
                     word_stem = porter_stemmer_patch(word_lower)
@@ -521,10 +520,11 @@ def repeated_words(document, reports, config):
 
                     buf.append(word_stem)
 
-                if sen.end_pos != part.code.end_pos:
+                if not is_open:
                     buf.clear()
 
-            if len(part_str) > 1 and part_str[-1] == '\n' and part_str[-2] == '\n':
+            if (rst_walker.is_of(part, "text") and
+                    not rst_walker.is_of(part.parent_node.parent_node, "text")):
                 buf.clear()
 
         else:
