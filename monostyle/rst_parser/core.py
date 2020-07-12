@@ -79,7 +79,7 @@ class RSTParser:
         pattern_str = (ind, r"(\|", space_end, r")")
         re_lib["line"] = re.compile(''.join(pattern_str))
 
-        pattern_str = (ind, r"(\:)([^:].*?)((?<!\\)\:", space_end, r")")
+        pattern_str = (ind, r"(\:(?!", name_any, r"\:`))([^:].*?)((?<!\\)\:", space_end, r")")
         re_lib["field"] = re.compile(''.join(pattern_str))
 
         option_arg = r"(?:[-/]\w|\-\-[\w-]+(?:[ =][\w.;:\\/\"'-]+)?)"

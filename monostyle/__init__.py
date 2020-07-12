@@ -251,7 +251,7 @@ def main():
             return 2
 
         reports = get_reports_version(False, True,
-                                      monostylestd.replace_windows_path_sep(args.filename))
+                                      monostylestd.replace_windows_path_sep(args.patch))
         for report in reports:# custom root
             report.out.fn = monostylestd.path_to_abs(report.out.fn)
     else:

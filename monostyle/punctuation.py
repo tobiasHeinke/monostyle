@@ -148,8 +148,8 @@ def number(document, reports, re_lib):
             pattern = value[0]
             for m in re.finditer(pattern, part_str):
                 if (key == "lowdigit" and
-                        (rst_walker.is_of("role", {"math", "sub", "sup"}) or
-                         rst_walker.is_of("dir", "math"))):
+                        (rst_walker.is_of(part, "role", {"math", "sub", "sup"}) or
+                         rst_walker.is_of(part, "dir", "math"))):
                     continue
 
                 out = part.code.slice_match_obj(m, 0, True)

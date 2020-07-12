@@ -15,39 +15,29 @@ import subprocess
 from monostyle.util.fragment import Fragment
 
 
-def added_files(is_internal, path):
-    rev_max = 0
-    for line in status(is_internal, path):
+def get_revision(path):
+    for line in info(path):
+        line = line.decode("utf-8")
+        if m := re.match(r"Revision\:\s(\d+)", line):
+            return m.group(1)
+
+    return "Unknown"
+
+
+def unversioned_files(path, binary_ext):
+    for line in status(True, path):
         line = line.decode('utf-8')
-        if line.startswith("Status "):
-            continue
+        if line.startswith('?'):
+            fn = replace_windows_path_sep(line[8:].strip())
+            if fn.startswith('.') or os.path.isdir(fn):
+                continue
+            if binary_ext is not None and os.path.splitext(fn)[1] in binary_ext:
+                continue
 
-        add_mod = bool(not line[0] in ('D', 'R')) #," "
-
-        if is_internal:
-            new = bool(line[0] in ('?', 'A'))
-
-            fn = line[8:].rstrip()
-            rev_file = "BASE"
-        else:
-            new = bool(line[8] != '*')
-
-            fn = line[21:].rstrip()
-            rev_file = line[12:18].lstrip()
-            if rev_file.isdigit():
-                rev_max = max(rev_max, int(rev_file))
-
-        fn = replace_windows_path_sep(fn)
-        if fn.startswith('.'):
-            continue
-
-        yield fn, new, add_mod, rev_file
-
-    if not is_internal:
-        print("Highest revision is", rev_max)
+            yield fn
 
 
-def difference(from_vsn, is_internal, fn_source, rev, changed_files):
+def difference(from_vsn, is_internal, fn_source, rev, binary_ext):
     op = diff if from_vsn else file_diff
 
     is_change = False
@@ -105,7 +95,7 @@ def difference(from_vsn, is_internal, fn_source, rev, changed_files):
             fn = line[len("Index: "):]
             fn = replace_windows_path_sep(fn)
             # skip whole file
-            skip = bool(not(changed_files is None or fn in changed_files))
+            skip = bool(binary_ext is not None and os.path.splitext(fn)[1] in binary_ext)
             body = False
 
         elif line.startswith("Property changes on: "):
@@ -168,11 +158,12 @@ def update_files(path, rev=None):
                 yield fn, conflict, rev_up
 
 
-def status(is_internal, path):
-    if path == "":
-        print("svn status empty parameter")
-        return None
+def info(path):
+    cmd = ["info", path]
+    return exec_command(cmd)
 
+
+def status(is_internal, path):
     cmd = ["status"]
     if not is_internal:
         cmd.append("-u")# --show-updates
@@ -279,7 +270,7 @@ def exec_command(cmd_args):
     cmd = ["svn"]
     cmd.extend(cmd_args)
 
-    silent = bool(cmd_args[0] in ("propget", "proplist"))
+    silent = bool(cmd_args[0] in ("info", "propget", "proplist"))
     try:
         if not silent:
             print("fetching" if cmd_args[0] in ("status", "diff", "update") else "applying",
@@ -317,31 +308,18 @@ def replace_windows_path_sep(fn):
 
 
 def run_diff(from_vsn, is_internal, path, rev):
-    def read_file(fn):
-        try:
-            with open(fn, "r", encoding="utf-8") as f:
-                text = f.read()
-
-            return text
-
-        except (IOError, OSError) as err:
-            print("{0}: cannot open: {1}".format(fn, err))
-
-
     if from_vsn:
-        changed_files = []
-        binary_ext = (".png", ".jpg", ".jpeg", ".gif", ".pyc")
-        for fn, new, add_mod, rev_file in added_files(is_internal, path):
-            if add_mod and not os.path.isdir(fn):
-                if os.path.splitext(fn)[1] not in binary_ext:
-                    if new and is_internal:
-                        # unversioned
-                        text = read_file(fn)
-                        fg = Fragment(fn, text)
-                        yield fg, None, None
-                    else:
-                        changed_files.append(fn)
-    else:
-        changed_files = None
+        print("Current revision: ", get_revision(path))
 
-    yield from difference(from_vsn, is_internal, path, rev, changed_files)
+    binary_ext = (".png", ".jpg", ".jpeg", ".gif", ".pyc")
+    if from_vsn and is_internal:
+        for fn in unversioned_files(path, binary_ext):
+            try:
+                with open(fn, "r", encoding="utf-8") as f:
+                    text = f.read()
+            except (IOError, OSError) as err:
+                print("{0}: cannot open: {1}".format(fn, err))
+            else:
+                yield Fragment(fn, text), None, None
+
+    yield from difference(from_vsn, is_internal, path, rev, binary_ext)

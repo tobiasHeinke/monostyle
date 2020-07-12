@@ -335,6 +335,7 @@ def blank_line(document, reports):
                     if rst_walker.is_of(prev_node, *typ):
                         if stop_cond is not None and nl_count >= stop_cond and not over:
                             return nl_count, prev_node, True
+                        break
                 else:
                     return nl_count, prev_node, False
 
