@@ -99,6 +99,7 @@ template_override = {
 
 
 import os
+from monostyle.util.monostylestd import override_typecheck
 
 def setup_config(root):
     """Create user config file or overide config."""
@@ -125,11 +126,7 @@ def setup_config(root):
                           "console_options", "config_override", "template_override")
         for key, val in namespace.items():
             if key in config_options and val is not None:
-                try:
-                   globals()[key] = type(globals()[key])(val)
-                except (TypeError, ValueError):
-                    print("Config wrong type {0} expected {1}".format(
-                              key, type(globals()[key]).__name__))
+                globals()[key] = override_typecheck(val, globals()[key], "monostyle config")
 
     return True
 

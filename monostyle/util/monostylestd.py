@@ -171,17 +171,74 @@ def get_branch(data, path, index=0, silent=False):
         return data
 
 
+def override_typecheck(obj, ref, op_name, key_name=None):
+    """Check if an object matches the reference object's types.
+    Sequence entries are not deep checked.
+    Empty reference sequences/dicts are not checked.
+    Sequence entries with mixed types must exactly match one of these types.
+    No callables.
+    """
+    def print_error(obj, typs, op_name, key_name):
+        print("{0} unvalid type {1} expected {2}".format(op_name,
+              type(obj).__name__, ", ".join(t.__name__ for t in typs)),
+              "in " + key_name if key_name else "")
+
+    if type(obj) == dict:
+        ref_keys = ref.keys()
+        invalid_keys = []
+        for key in obj.keys():
+            if key not in ref_keys:
+                if len(ref_keys) != 0:
+                    print("{0} unvalid key {1}".format(op_name, key),
+                          "in " + key_name if key_name else "")
+                    invalid_keys.append(key)
+                continue
+
+            obj[key] = override_typecheck(obj[key], ref[key], op_name, key)
+
+        for key in invalid_keys:
+            del obj[key]
+    elif hasattr(obj, "__iter__") and type(obj) != str:
+        typs = list(set(type(ent) for ent in ref))
+        new = []
+        for ent in obj:
+            if len(typs) != 0 and type(ent) not in typs:
+                print_error(ent, typs, op_name, key_name)
+                continue
+            if len(typs) == 1:
+                try:
+                    ent = typs[0](ent)
+                except (TypeError, ValueError):
+                    print_error(ent, (typs[0],), op_name, key_name)
+                    continue
+
+            new.append(ent)
+
+        try:
+            obj = type(ref)(new)
+        except (TypeError, ValueError):
+            print_error(new, (type(ref),), op_name, key_name)
+            obj = ref
+    elif hasattr(obj, "__call__"):
+        print_error(obj, (type(ref),), op_name, key_name)
+        obj = ref
+    else:
+        try:
+            obj = type(ref)(obj)
+        except (TypeError, ValueError):
+            print_error(obj, (type(ref),), op_name, key_name)
+            obj = ref
+
+    return obj
+
+
 def get_override(file, toolname, varname, default):
     """Override configuration variables."""
     file = os.path.splitext(os.path.basename(file))[0]
 
     if ((seg := get_branch(config.config_override, (file, toolname, varname), silent=True))
             is not None):
-        try:
-           return type(default)(seg)
-        except (TypeError, ValueError):
-            print("Config override wrong type {0} expected {1}".format(
-                      ":".join((file, toolname, varname)), type(default).__name__))
+        return override_typecheck(seg, default, "tool config override")
 
     return default
 

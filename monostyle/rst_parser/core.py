@@ -10,7 +10,6 @@ import re
 from monostyle.util.fragment import Fragment
 from monostyle.util.nodes import LinkedList
 from monostyle.rst_parser.rst_node import NodeRST, NodePartRST
-import monostyle.rst_parser.walker as rst_walker
 
 class RSTParser:
 
