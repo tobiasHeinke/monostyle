@@ -353,7 +353,7 @@ def metric(document, reports):
         },
         "def": {"*": ["head"]},
         "substdef": {"*": ["head"], "unicode": "*", "replace": "*"},
-        "target": "*",
+        "target": "*", "comment": "*",
         "role": {
             "kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"
         },

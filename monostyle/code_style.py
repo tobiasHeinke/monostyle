@@ -208,7 +208,7 @@ def long_line(document, reports):
     }
     instr_neg = {
         "dir": {
-            "figure": ["head"], "parsed-literal": "*"
+            "figure": ["head"], "include": ["head"], "parsed-literal": "*"
         },
         "substdef": {"image": ["head"]},
     }

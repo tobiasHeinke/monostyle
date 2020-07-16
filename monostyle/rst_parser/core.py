@@ -296,15 +296,15 @@ class RSTParser:
             elif node.active.node_name == "trans":
                 node = self.transition(line, line_info, node)
                 if node.active:
-                    node = self.section(line, line_info, node)
+                    node = self.section(line, line_info, on, node)
             elif node.active.node_name == "sect":
-                node = self.section(line, line_info, node)
+                node = self.section(line, line_info, on, node)
             elif node.active.node_name == "doctest":
                 node = self.doctest(line, line_info, node)
             elif node.active.node_name == "block-quote":
                 node = self.block_quote(line, line_info, on, node)
             else:
-                node = self.section(line, line_info, node)
+                node = self.section(line, line_info, on, node)
                 if (node.active and node.active.node_name != "sect") or sub:
                     node, sub = self.def_list(line, line_info, on, node, sub)
                     if node.active and node.active.node_name == "text":
@@ -339,49 +339,40 @@ class RSTParser:
         return on, ind_start, node, sub
 
 
-    def parse_inline(self, node, name=None, recursive=False):
-        if not recursive:
-            newnode = NodeRST("text", node.code)
-            newnode.append_part("body", node.code)
-            node.child_nodes.append(newnode)
-
-        recorder = (
-            "literal", "strong", "emphasis",
-            "int-target", "role-ft", "role-bk", "hyperlink", "dftrole",
-            "subst", "foot", "cit",
-            "standalone", "mail", "int-target-sw", "hyperlink-sw"
-        )
+    def parse_inline(self, node, name=None):
+        newnode = NodeRST("text", node.code)
+        newnode.append_part("body", node.code)
+        node.child_nodes.append(newnode)
 
         if not name:
-            name = recorder[0]
-            name_next = recorder[1]
-        elif name in recorder:
-            n = recorder.index(name) + 1
-            name_next = recorder[n] if n < len(recorder) else None
+            recorder = (
+                "literal", "strong", "emphasis",
+                "int-target", "role-ft", "role-bk", "hyperlink", "dftrole",
+                "subst", "foot", "cit",
+                "standalone", "mail", "int-target-sw", "hyperlink-sw"
+            )
         else:
-            name_next = None
+            recorder = (name,)
 
-        node.is_parsing = True
-        node.active = node.child_nodes.first()
-        while node.active:
-            split = False
-            if not node.active.is_parsed and node.active.body:
-                if name in {"role-ft", "role-bk"}:
-                    node, split = self.role(node.active.body.code, name, node)
-                elif name in {"int-target-sw", "hyperlink-sw", "standalone", "mail"}:
-                    node, split = self.single(node.active.body.code, name, node)
-                else:
-                    node, split = self.inline(node.active.body.code, name, node)
+        for name in recorder:
+            node.is_parsing = True
+            node.active = node.child_nodes.first()
+            while node.active:
+                split = False
+                if not node.active.is_parsed and node.active.body:
+                    if name in {"role-ft", "role-bk"}:
+                        node, split = self.role(node.active.body.code, name, node)
+                    elif name in {"int-target-sw", "hyperlink-sw", "standalone", "mail"}:
+                        node, split = self.single(node.active.body.code, name, node)
+                    else:
+                        node, split = self.inline(node.active.body.code, name, node)
 
-            if not split or node.active.is_parsed:
-                if name == node.active.node_name:
-                    print("{0}:{1}: unclosed inline (within paragraph)".format(node.active.code.fn,
-                              node.active.code.start_lincol[0]))
+                if not split or node.active.is_parsed:
+                    if name == node.active.node_name:
+                        print("{0}:{1}: unclosed inline (within paragraph)".format(node.active.code.fn,
+                                  node.active.code.start_lincol[0]))
 
-                node.active = node.active.next
-
-        if name_next:
-            node = self.parse_inline(node, name_next, True)
+                    node.active = node.active.next
 
         return node
 
@@ -485,7 +476,7 @@ class RSTParser:
         return node
 
 
-    def section(self, line, line_info, node):
+    def section(self, line, line_info, on, node):
         if node.active:
             if node.active.node_name == "trans":
                 if line_info["is_block_end"]:
@@ -497,7 +488,7 @@ class RSTParser:
                 node.active.node_name = "sect"
 
             elif node.active.node_name in {"text", "sect"}:
-                if re.match(self.re_lib["trans"], line_info["line_str"]):
+                if not on and re.match(self.re_lib["trans"], line_info["line_str"]):
                     node.active.node_name = "sect"
                     if node.active.body:
                         # move inside node
