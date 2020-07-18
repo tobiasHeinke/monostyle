@@ -37,6 +37,7 @@ class Editor:
                     text = f.read()
 
             except (IOError, OSError) as err:
+                self._status = False
                 print("{0}: cannot read: {1}".format(self.fg.fn, err))
                 return None
 
@@ -70,7 +71,7 @@ class Editor:
         """
 
         text_src = self._read()
-        if len(self._changes) == 0:
+        if len(self._changes) == 0 or text_src is None:
             return text_src
 
         self._remove_doubles()

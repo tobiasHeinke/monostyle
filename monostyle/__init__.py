@@ -26,7 +26,7 @@ from .rst_parser import hunk_post_parser
 from . import autofix
 from .util import file_opener
 
-__version__ = "0.0.1rc2"
+__version__ = "0.1.0"
 
 RSTParser = RSTParser()
 

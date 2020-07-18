@@ -86,14 +86,14 @@ def resolve_subst(document, gobal_substdef):
         id_str = str(node.id.code).strip() if node.id else ""
         if node.node_name == "subst":
             if id_str not in refs.keys():
-                refs[id_str] = []
+                refs.setdefault(id_str, [])
             refs[id_str].append(node)
         else:
             deps = set()
             for node_subst in rst_walker.iter_node(node.head, ("subst",)):
                 sub_id_str = str(node_subst.id.code).strip() if node.id else ""
                 if sub_id_str not in refs.keys():
-                    refs[sub_id_str] = []
+                    refs.setdefault(sub_id_str, [])
                 refs[sub_id_str].append(node_subst)
                 deps.add(sub_id_str)
 

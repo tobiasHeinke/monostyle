@@ -204,7 +204,7 @@ class RSTParser:
                     if is_first_not_empty:
                         # first defines the base indent
                         # block-quote at start will be a text node if not doc start
-                        if node.code.start_lincol[0] != 0:
+                        if node.code.start_lincol != (0, 0):
                             ind_start[0] = ind_cur
                         is_first_not_empty = False
 

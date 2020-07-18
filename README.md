@@ -37,7 +37,7 @@ Monostyle has four modes:
 
 <dl>
   <dt>internal -i</dt>
-  <dd>To check your own changes.</dd>
+  <dd>To check your own changes (the default).</dd>
   <dt>external -e</dt>
   <dd>
       To check changes made to the repository by others.
@@ -60,7 +60,7 @@ Post processing:
   <dt>update -u</dt>
   <dd>Update the working copy.</dd>
   <dt>autofix -a</dt>
-  <dd>Apply autofixes. This also does an update if the changes are from external.</dd>
+  <dd>Apply autofixes. This also does an update if the changes are external.</dd>
   <dt>open -o</dt>
   <dd>Open a file in a text editor if the report has a severity higher than specified.
       Please check if your editor of choice is available (else please make a I/PR to add it).
@@ -69,9 +69,10 @@ Post processing:
 
 For more info on command line arguments use the `--help` command.
 The tools can be applied individually by executing the script files. Then the tools will loop over the whole project.
+
 Running Monostyle does not replace building the project with Sphinx.
 Markup errors can lead to false negatives, so Monostyle has to be run again or
-the section has to be checked manually.
+the affected section has to be checked manually.
 
 
 ### Advanced
