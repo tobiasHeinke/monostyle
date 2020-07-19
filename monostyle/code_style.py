@@ -201,8 +201,6 @@ def long_line(document, reports):
     toolname = "long-line"
     limit = 118
 
-    found_lineno = -1
-
     instr_pos = {
         "*": "*"
     }
@@ -212,28 +210,30 @@ def long_line(document, reports):
         },
         "substdef": {"image": ["head"]},
     }
-
+    line = None
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        for line in part.code.splitlines():
-            if line.end_lincol[1] > limit:
-                if part.parent_node.node_name == "text" and len(str(part.code).strip()) == 0:
-                    continue
+        is_last = bool(not part.parent_node.next and not part.parent_node.next_leaf())
+        for buf in part.code.splitlines(buffered=True):
+            if (line and ((buf and buf.end_lincol[0] != line.end_lincol[0]) or
+                          (not buf and is_last))):
+                if line.end_lincol[1] > limit:
+                    if rst_walker.is_of(part, "text") and re.match(r".?\n", str(line)):
+                        prev_node = part.parent_node.prev
 
-                if part.parent_node.node_name in ("hyperlink", "standalone"):
-                    if (part.parent_node.id and
-                            part.parent_node.id.code.span_len() + 4 > limit):
-                        continue
-                    if (part.parent_node.body and
-                            part.parent_node.body.code.span_len() + 4 > limit):
-                        continue
+                        if prev_node.code.end_lincol[0] == part.code.start_lincol[0]:
+                            if prev_node.node_name in ("hyperlink", "standalone", "role"):
+                                if (prev_node.id and
+                                        prev_node.id.code.span_len() + 4 > limit):
+                                    continue
+                                if (prev_node.body and
+                                        prev_node.body.code.span_len() + 4 > limit):
+                                    continue
 
-                if line.end_lincol[0] == found_lineno:
-                    continue
+                    out = line.copy().clear(False)
+                    msg = "long line"
+                    reports.append(Report('W', toolname, out, msg, line, "reflow"))
 
-                out = line.copy().clear(False)
-                msg = "long line"
-                reports.append(Report('W', toolname, out, msg, line, "reflow"))
-                found_lineno = line.end_lincol[0]
+            line = buf
 
     return reports
 
