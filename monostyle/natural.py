@@ -70,7 +70,12 @@ def heading_cap(document, reports, re_lib):
                 where = "at the end of a heading"
             msg = Report.misformatted(what="lowercase" if word_str[0].islower() else "uppercase",
                                       where=where)
-            reports.append(Report('W', toolname, word, msg, node.name.code))
+
+            fg_repl = None
+            if not path or path[0] != "preposition":
+                fg_repl = word.slice(word.start_pos, word.start_pos + 1, True)
+                fg_repl.content[0] = fg_repl.content[0].swapcase()
+            reports.append(Report('W', toolname, word, msg, node.name.code, fg_repl))
         return reports
 
 
@@ -86,6 +91,7 @@ def heading_cap(document, reports, re_lib):
 
     for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
         is_first_word = True
+        is_faq = bool(re.search(r"\?\n", str(node.name.child_nodes.last().code)))
         for part in rst_walker.iter_nodeparts_instr(node.name, instr_pos, instr_neg, False):
             if is_first_word and part.parent_node.prev is not None:
                 is_first_word = False
@@ -94,10 +100,12 @@ def heading_cap(document, reports, re_lib):
             for word in Segmenter.iter_word(part.code):
                 if buf:
                     reports = word_cap(reports, buf, is_first_word, False)
+                    if is_faq:
+                        break
                     is_first_word = False
                 buf = word
 
-            if buf:
+            if buf and not is_faq:
                 # ignore part.next, one part per node
                 is_last_word = bool(part.parent_node.next is None)
                 reports = word_cap(reports, buf, is_first_word, is_last_word)
@@ -532,7 +540,6 @@ def repeated_words(document, reports, config):
                 buf.clear()
 
     return reports
-
 
 
 def init(op_names):

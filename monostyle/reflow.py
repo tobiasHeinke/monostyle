@@ -111,22 +111,25 @@ def reflow_trial(boxes, optimum, maximum, options):
 def fix(root_rst, reports):
     """Search for the reports location in the full document."""
     changes = []
+    unlocated = reports.copy()
     for node in rst_walker.iter_node(root_rst, ("text"), False):
+        # if (node.parent_node.parent_node.node_name != "text" and node.body.code):
         if node.body.code:
             is_first_report = True
             reports_pro = []
-            for report in reports:
+            for report in unlocated:
                 if node.body.code.is_in_span(report.out.start_lincol):
                     reports_pro.append(report)
                     if is_first_report:
                         changes_para = reflow(node)
+                        report.fix = changes_para
                         changes.extend(changes_para)
                         is_first_report = False
 
             for report in reports_pro:
-                reports.remove(report)
+                unlocated.remove(report)
 
-    return changes, reports
+    return changes, unlocated
 
 
 def reflow(node):

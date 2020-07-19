@@ -121,9 +121,9 @@ class Fragment():
         return self
 
 
-    def combine(self, fg):
+    def combine(self, fg, check_align=True):
         """Combines two aligned fragments into one."""
-        if not self.is_aligned(fg, True):
+        if check_align and not self.is_aligned(fg, True):
             return self
 
         if not self.end_lincol or not fg.end_lincol:
@@ -131,7 +131,7 @@ class Fragment():
         else:
             if fg.start_lincol == fg.end_lincol:
                 return self
-            if self.is_aligned(fg, False):
+            if not check_align or self.is_aligned(fg, False):
                 if self.end_lincol == fg.start_lincol:
                     if len(self.content) != 0:
                         self.content[-1] += fg.content[0]
@@ -406,7 +406,11 @@ class Fragment():
 
         for prop in self.__slots__:
             if getattr(self, prop) != getattr(other, prop):
-                return False
+                # one of the content is same list or str then compare the effective
+                if (prop != "content" or
+                        type(self.content) != type(other.content) or
+                        ''.join(self.content) != ''.join(other.content)):
+                    return False
 
         return True
 

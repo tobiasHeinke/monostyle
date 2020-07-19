@@ -245,51 +245,69 @@ def heading_lines(document, reports):
 
     for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
         heading_char = node.name_end.code.content[0][0]
-        if node.name.code.content[0][-2] == ' ':
-            out = node.name.code.copy()
-            out.clear(True)
-            msg = Report.existing(what="spaces", where="at heading end")
-            reports.append(Report('W', toolname, out, msg))
+        title_len = len(node.name.code.content[0].strip())
 
         if heading_char in ('%', '#', '*'):
             if not node.name_start:
                 out = node.name_end.code.copy()
                 out.content = out.content[0][0]
                 msg = Report.missing(what="overline")
-                reports.append(Report('W', toolname, out, msg))
+                fg_repl = node.name.code.copy().clear(True)
+                fg_repl.content = [heading_char * (title_len + 4) + "\n"]
+                reports.append(Report('W', toolname, out, msg, fix=fg_repl))
 
         if heading_char in ('%', '#'):
-            if len(node.name_end.code.content[0]) - 2 != len(node.name.code.content[0]):
+            if len(node.name_end.code.content[0].strip()) != (title_len + 4):
                 out = node.name_end.code.copy()
                 out.content = out.content[0][0]
                 msg = Report.quantity(what="wrong underline length",
                                       how=": {:+}".format(
-                                          (len(node.name.code.content[0]) + 2) -
-                                          len(node.name_end.code.content[0])))
-                reports.append(Report('W', toolname, out, msg))
-            if (node.name.code.content[0][0] != ' ' or node.name.code.content[0][1] != ' '
-                    or node.name.code.content[0][3] == ' '):
+                                          title_len + 4 - len(node.name_end.code.content[0])))
+
+                fixes = []
+                if node.name_start:
+                    lineno = node.name_start.code.start_lincol[0]
+                    fg_repl_over = node.name_start.code.slice((lineno, 0), (lineno + 1, 0), True)
+                    fg_repl_over.content = [heading_char * (title_len + 4) + "\n"]
+                    fixes.append(fg_repl_over)
+                lineno = node.name_end.code.start_lincol[0]
+                fg_repl_under = node.name_end.code.slice((lineno, 0), (lineno + 1, 0), True)
+                fg_repl_under.content = [heading_char * (title_len + 4) + "\n"]
+                fixes.append(fg_repl_under)
+                reports.append(Report('W', toolname, out, msg, fix=fixes))
+
+            titel_ind_m = re.match(r" *", node.name.code.content[0])
+            if titel_ind_m and len(titel_ind_m.group(0)) != 2:
                 out = node.name.code.copy()
                 out.clear(True)
-                msg = Report.quantity(what="wrong title indent")
+                msg = Report.quantity(what="wrong title indent",
+                                      how=": {:+}".format(2 - len(titel_ind_m.group(0))))
 
-                reports.append(Report('W', toolname, out, msg))
+                fg_repl = node.name.code.slice_match_obj(titel_ind_m, 0, True)
+                fg_repl.content = [" " * 2]
+                reports.append(Report('W', toolname, out, msg, fix=fg_repl))
 
         else:
-            if len(node.name_end.code.content[0]) != len(node.name.code.content[0]):
+            if len(node.name_end.code.content[0].strip()) != title_len:
                 out = node.name_end.code.copy()
                 out.content = out.content[0][0]
                 msg = Report.quantity(what="wrong underline length",
                                       how=": {:+}".format(
-                                          len(node.name.code.content[0]) -
-                                          len(node.name_end.code.content[0])))
-                reports.append(Report('W', toolname, out, msg))
+                                          title_len - len(node.name_end.code.content[0])))
 
-            if node.name.code.content[0][0] == ' ':
+                lineno = node.name_end.code.start_lincol[0]
+                fg_repl = node.name_end.code.slice((lineno, 0), (lineno + 1, 0), True)
+                fg_repl.content = [heading_char * title_len + "\n"]
+                reports.append(Report('W', toolname, out, msg, fix=fg_repl))
+
+            titel_ind_m = re.match(r" *", node.name.code.content[0])
+            if titel_ind_m and len(titel_ind_m.group(0)) != 0:
                 out = node.name.code.copy()
                 out.clear(True)
                 msg = Report.over(what="indent")
-                reports.append(Report('W', toolname, out, msg))
+                fg_repl = node.name.code.slice_match_obj(titel_ind_m, 0, True)
+                fg_repl.content = [""]
+                reports.append(Report('W', toolname, out, msg, fix=fg_repl))
 
     return reports
 
@@ -470,7 +488,9 @@ def style_add(document, reports):
             if (re.match(proto_re, str(node.id.code)) and
                     not re.match(r"`__", str(node.body_end.code))):
                 msg = Report.missing(what="underscore", where="after external link (same tab)")
-                reports.append(Report('W', toolname, node.id.code, msg))
+                fg_repl = node.body_end.code.copy().clear(True)
+                fg_repl.content = ["_"]
+                reports.append(Report('W', toolname, node.id.code, msg, fix=fg_repl))
 
         if node.node_name == "target":
             next_node = node.next

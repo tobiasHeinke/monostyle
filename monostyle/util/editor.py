@@ -64,7 +64,7 @@ class Editor:
         self._changes.append(fg)
 
 
-    def apply(self, virtual=False, pos_lc=True):
+    def apply(self, virtual=False, pos_lc=True, use_conflict_handling=False):
         """Apply the edits to the input text.
 
         virtual -- return the output text or write it to the file.
@@ -75,9 +75,14 @@ class Editor:
             return text_src
 
         self._remove_doubles()
-        self._changes.sort(key=lambda ent: ent.get_start(pos_lc))
+        self._changes.sort(key=lambda ent: (ent.get_start(pos_lc), ent.get_end(pos_lc)))
+        conflicted = []
         if not self._check_integrity(pos_lc):
-            return None
+            if not use_conflict_handling:
+                return None
+
+            conflicted = self.handle_conflicts(pos_lc)
+            self._changes.sort(key=lambda ent: (ent.get_start(pos_lc), ent.get_end(pos_lc)))
 
         text_dst = text_src.copy().clear(True)
         after = text_src
@@ -86,18 +91,24 @@ class Editor:
                                            output_zero=True)
 
             if before:
-                text_dst.combine(before)
+                text_dst.combine(before, False)
 
-            text_dst.combine(ent)
+            text_dst.combine(ent, False)
 
         if after:
-            text_dst.combine(after)
+            text_dst.combine(after, False)
 
         self._changes.clear()
         if virtual:
-            return text_dst
+            if not use_conflict_handling:
+                return text_dst
 
-        return self._write(text_dst)
+            return text_dst, conflicted
+
+        if not use_conflict_handling:
+            return self._write(text_dst)
+
+        return self._write(text_dst), conflicted
 
 
     def _remove_doubles(self):
@@ -127,14 +138,46 @@ class Editor:
         return self._status
 
 
-    # Adapted from:
-    # https://developer.blender.org/diffusion/BM/browse/trunk/blender_docs/tools_rst/rst_helpers/__init__.py
+    def handle_conflicts(self, pos_lc):
+        """Interval Scheduling: activity selection problem.
+        With multiple zero-length the order is undefined.
+
+        Adapted from:
+        https://www.techiedelight.com/activity-selection-problem-using-dynamic-programming/
+        """
+        groups = [[] for _ in range(0, len(self._changes))]
+        for index, pair in enumerate(sorted(self._changes, key=lambda ent: ent.get_end(pos_lc))):
+            for index_sub, pair_sub in enumerate(self._changes[:index]):
+                if ((pair_sub.get_end(pos_lc) < pair.get_start(pos_lc) or
+                        pair_sub.get_start(pos_lc) == pair.get_end(pos_lc)) and
+                        len(groups[index]) < len(groups[index_sub])):
+                    groups[index] = groups[index_sub].copy()
+
+            groups[index].append(pair)
+
+        group_max = []
+        for pair in groups:
+            if len(group_max) < len(pair):
+                group_max = pair
+
+        conflicted = []
+        for change in self._changes:
+            if change not in group_max:
+                conflicted.append(change)
+                self._status = False
+
+        self._changes = group_max
+        return conflicted
+
 
     def iter_edit(self, find_re):
         """Iterate over the text with a reg exp.
         Alteration to the yielded content of the list container is detected within the for-loop.
 
         find_re -- a reg exp pattern.
+
+        Adapted from:
+        https://developer.blender.org/diffusion/BM/browse/trunk/blender_docs/tools_rst/rst_helpers/__init__.py
         """
         import re
 
