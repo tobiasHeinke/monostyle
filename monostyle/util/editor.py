@@ -210,10 +210,13 @@ class Editor:
 class FNEditor(Editor):
     """File renaming with SVN."""
 
-    def __init__(self, fg):
+    def __init__(self, fg, use_git=True):
         super().__init__(fg)
-        global monostyle
-        import monostyle.svn_inter
+        global vsn_inter
+        if use_git:
+            import monostyle.git_inter as vsn_inter
+        else:
+            import monostyle.svn_inter as vsn_inter
 
 
     def from_file(fn):
@@ -244,7 +247,7 @@ class FNEditor(Editor):
             print("FNEditor error: file already exists", str(text_dst))
             return None
 
-        monostyle.svn_inter.move(self.fg.fn, str(text_dst))
+        vsn_inter.move(self.fg.fn, str(text_dst))
         return text_dst
 
 

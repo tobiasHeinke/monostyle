@@ -307,7 +307,7 @@ def replace_windows_path_sep(fn):
     return re.sub(r"\\", "/", fn)
 
 
-def run_diff(from_vsn, is_internal, path, rev):
+def run_diff(from_vsn, is_internal, path, rev, cached=None):
     if from_vsn:
         print("Current revision: ", get_revision(path))
 

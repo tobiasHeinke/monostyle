@@ -59,13 +59,13 @@ def import_module(name, dst=None):
         print("module import: can't find the {0} module".format(name))
 
 
-def get_reports_version(from_vsn, is_internal, path, rev=None):
+def get_reports_version(from_vsn, is_internal, path, rev=None, cached=False):
     """Gets text snippets (hunk) from SVN."""
     mods = init_tools()
 
     reports = []
     show_current = True
-    for fg, context, msg in svn_inter.run_diff(from_vsn, is_internal, path, rev):
+    for fg, context, msg in vsn_inter.run_diff(from_vsn, is_internal, path, rev, cached):
         if msg is not None:
             reports.append(Report('W', "svn diff", fg, msg))
             continue
@@ -148,22 +148,47 @@ def filter_reports(reports_hunk, context, reports):
 
 def update(path, rev=None):
     """Update the working copy."""
-    for fn, conflict, rev_up in svn_inter.update_files(path, rev):
+    for fn, conflict, rev_up in vsn_inter.update_files(path, rev):
         # A conflict will be resolvable with SVN's command interface.
         pass
 
 
 #------------------------
 
+def patch_flavor(fn):
+    """Detect whether the patch is Git flavor."""
+    try:
+        with open(fn, "r") as f:
+            text = f.read()
 
-def setup(root):
+    except (IOError, OSError) as err:
+        print("{0}: cannot open: {1}".format(fn, err))
+        return None
+    
+    for line in text.splitlines():
+        if line.startswith("Index: "):
+            return False
+        if line.startswith("diff --git "):
+            return True
+
+
+def setup(root, patch):
     """Setup user config and file storage."""
     is_repo = False
-    if os.path.isdir(os.path.normpath(os.path.join(root, ".svn"))):
-        is_repo = True
+    is_git = False
+    if not patch:
+        if os.path.isdir(os.path.normpath(os.path.join(root, ".svn"))):
+            is_repo = True
+        elif os.path.isdir(os.path.normpath(os.path.join(root, ".git"))):
+            is_repo = True
+            is_git = True
+    else:
+        is_git = patch_flavor(patch)
+        if is_git is None:
+            return False
 
-    global svn_inter
-    svn_inter = import_module("svn_inter")
+    global vsn_inter
+    vsn_inter = import_module("git_inter" if is_git else "svn_inter", "vsn_inter")
 
     config_dir = os.path.normpath(os.path.join(root, "monostyle"))
     if not os.path.isdir(config_dir):
@@ -205,7 +230,11 @@ def main():
 
     parser.add_argument("-r", "--root",
                         dest="root", nargs='?', const="",
-                        help="defines the ROOT directory of the projekt")
+                        help="defines the ROOT directory of the project")
+
+    parser.add_argument("--cached", "--staged",
+                        action='store_true', dest="cached", default=False,
+                        help="set diff cached option (Git only)")
 
     parser.add_argument("-u", "--update",
                         dest="up", nargs='?', const=None, metavar='REV',
@@ -232,7 +261,7 @@ def main():
     root_dir = monostylestd.replace_windows_path_sep(root_dir)
     monostylestd.ROOT_DIR = root_dir
 
-    setup_sucess = setup(root_dir)
+    setup_sucess = setup(root_dir, args.patch)
     if not setup_sucess:
         return 2
 
@@ -243,7 +272,7 @@ def main():
         else:
             rev = args.external if len(args.external.strip()) != 0 else None
 
-        reports = get_reports_version(True, is_internal, root_dir, rev)
+        reports = get_reports_version(True, is_internal, root_dir, rev, args.cached)
 
     elif args.patch:
         if not os.path.exists(args.patch):

@@ -10,6 +10,7 @@ Its tools are applied on new or changed content
 which makes it fast and it allows a wider range of tools,
 because they can have false positives. 
 For example style guide rules that have exceptions which can't be filtered out.
+Supported for versioning are SVN and Git (experimental).
 
 Monostyle is build as a framework and not as a ready-made tool
 because the tools require customization like markup filtering or you might not want to use Chicago style title case. 
@@ -19,7 +20,7 @@ Its utilities can also be used for text editing with scripts.
 
 ## Setup
 
-Requirements: The SVN command line client tools need to be installed.
+Requirements: When using SVN the command line client tools need to be installed.
 
 For spell checking a dictionary has to build.
 On first run you have to confirm to start this (or also if the dictionary file is not found).
@@ -41,7 +42,7 @@ Monostyle has four modes:
   <dt>external -e</dt>
   <dd>
       To check changes made to the repository by others.
-      Run this before you update your working copy with SVN.
+      Run this before you update your working copy with Git or SVN.
    </dd>
   <dt>patch -p</dt>
   <dd>To check changes in a patch-file.</dd>
@@ -51,6 +52,10 @@ Monostyle has four modes:
   <dd>
       The root is the absolute path to the project directory or where the patch file was created.
       If not set the directory where Monostyle is run from is used as the root.
+  </dd>
+  <dt>cached, staged</dt>
+  <dd>
+      Set the diff cached option (Git only).
   </dd>
 </dl>
 
@@ -77,8 +82,9 @@ the affected section has to be checked manually.
 
 ### Advanced
 
-You can set a revision for internal, external and update.
-It can be colon separated or dash separated for the "change" syntax.
-When a side is kept empty e.g. ":ARG" it will default to BASE (your working copy) on the left and
+You can set a commit/revision for internal, external and update (SVN only).
+With Git these are passed unaltered to diff.
+However, with SVN these can be colon separated or dash separated for the "change" syntax.
+When a side is omitted e.g. ":ARG" it will default to BASE (your working copy) on the left and
 on the right to HEAD (the latest revision in the repository).
-External revision uses the "change" syntax for single arguments "ARG".
+External revision it uses the "change" syntax for single arguments "ARG".
