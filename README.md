@@ -87,4 +87,4 @@ With Git these are passed unaltered to diff.
 However, with SVN these can be colon separated or dash separated for the "change" syntax.
 When a side is omitted e.g. ":ARG" it will default to BASE (your working copy) on the left and
 on the right to HEAD (the latest revision in the repository).
-External revision it uses the "change" syntax for single arguments "ARG".
+For external revisions the "change" syntax is used for single arguments "ARG".

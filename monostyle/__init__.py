@@ -172,7 +172,7 @@ def patch_flavor(fn):
             return True
 
 
-def setup(root, patch):
+def setup(root, patch=None):
     """Setup user config and file storage."""
     is_repo = False
     is_git = False

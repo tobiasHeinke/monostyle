@@ -103,7 +103,7 @@ def indention(document, reports):
     skip_linenos = []
     for node in rst_walker.iter_node(document.body):
         if rst_walker.is_of(node, "dir", ("code-block", "default")):
-            if node.body.code.start_lincol[0] != node.body.code.end_lincol[0]:
+            if node.body and node.body.code.start_lincol[0] != node.body.code.end_lincol[0]:
                 start = node.body.code.start_lincol[0]
                 if node.code.start_lincol[0] == start:
                     start += 1
