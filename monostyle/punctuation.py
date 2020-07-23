@@ -41,8 +41,8 @@ def number_pre():
     msg = Report.existing(what="space", where="between digits")
     re_lib["digitspace"] = (pattern, msg)
 
-    spelled_out = r"\b" + r"\b|\b".join(POS.data["determiner"]["quantifier"]["number"])
-    spelled_out += r"\b|" + r"\b|\b".join(POS.data["determiner"]["quantifier"]["ordinal"])
+    spelled_out = r"\b" + r"\b|\b".join(POS.data["determiner"]["numeral"]["cardinal"])
+    spelled_out += r"\b|" + r"\b|\b".join(POS.data["determiner"]["numeral"]["ordinal"])
     spelled_out += r"\b|" + r"\b|\b".join(("half", "halves", "thirds?"))
     pattern_str = r"(?:" + spelled_out + r") (?:" + spelled_out + r")"
     pattern = re.compile(pattern_str)

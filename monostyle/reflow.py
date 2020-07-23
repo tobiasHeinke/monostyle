@@ -373,8 +373,9 @@ def pos_weight(word):
             "article": [2, -5],
             "demonstrative": [0, 0],
             "possessive": [0, 0],
-            "quantifier": {
-                "number": [-1, -3],
+            "quantifier": [0, -3],
+            "numeral": {
+                "cardinal": [-1, -3],
                 "ordinal": [-1, -3],
                 "nonspecific": [-1, -2],
             },

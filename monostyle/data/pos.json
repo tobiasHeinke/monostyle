@@ -13,8 +13,17 @@
 		"my", "mine", "your", "yours", "his", "her", "hers", "its",
 		"our", "ours", "their", "theirs"
 	],
-	"quantifier": {
-		"number": [
+	"quantifier": [
+		"a bit", "a few", "a little", "a lot", "all", "almost", "another", "any",
+		"both", "certain", "couple", "each", "either", "enough", "especially",
+		"ever", "every", "few", "fewer", "fewest", "huge", "least", "less", "little",
+		"many", "more", "most", "much", "neither", "none", "often", "other",
+		"overmuch", "partially", "partly", "plenty", "quite", "rare", "rarely",
+		"several", "some", "something", "somewhat", "sufficient", "tiny", "totally",
+		"various", "very"
+	],
+	"numeral": {
+		"cardinal": [
 			"null", "zero", "one", "two", "three", "four", "five",
 			"six", "seven", "eight", "nine",
 			"ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
@@ -110,7 +119,7 @@
 		"Aug", "Sep", "Sept", "Oct", "Nov", "Dec"
 	],
 	"phrase": [
-		"e.g", "i.e", "iz", "n.b", "etc", "a.k.a", "viz", "vs", "nbr", "co"
+		"e.g", "i.e", "iz", "n.b", "etc", "a.k.a", "i.a", "viz", "vs", "nbr", "co"
 	],
 	"doc": [
 		"Fig", "Tab", "al"
