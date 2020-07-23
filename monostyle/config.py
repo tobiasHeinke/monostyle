@@ -19,6 +19,10 @@ tool_selection = {
         "tools": ("search"),
         "ext": ".rst"
     },
+    "capitalization": {
+        "tools": ("heading", "pos", "ui"),
+        "ext": ".rst"
+    },
     "punctuation": {
         "tools": ("number", "pairs", "mark", "whitespace"),
         "ext": ".rst"
@@ -28,7 +32,7 @@ tool_selection = {
         "ext": ".rst"
     },
     "natural": {
-        "tools": ("article", "grammar", "heading-cap", "metric", "repeated"),
+        "tools": ("article", "grammar", "metric", "repeated"),
         "ext": ".rst"
     },
     "code_style": {

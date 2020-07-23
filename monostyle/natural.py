@@ -21,111 +21,11 @@ PorterStemmer = Porterstemmer()
 Segmenter = Segmenter()
 POS = PartofSpeech()
 
-def heading_cap_pre():
-    re_lib = dict()
-
-    pattern_str = r"\-[a-z]"
-    pattern = re.compile(pattern_str)
-    msg = Report.misformatted(what="lowercase", where="in heading after hyphen")
-    re_lib["hypen"] = (pattern, msg)
-
-    pattern_str = r"[^\w \-&/()'\"\\?!:,\n]"
-    pattern = re.compile(pattern_str)
-    msg = Report.existing(what="not allowed punctuation", where="in heading")
-    re_lib["nonchar"] = (pattern, msg)
-
-    pattern_str = r"\band\b"
-    pattern = re.compile(pattern_str, re.IGNORECASE)
-    msg = Report.substitution(what="and", where="in heading", with_what="ampersand")
-    re_lib["and"] = (pattern, msg)
-
-    pattern_str = r"\bor\b"
-    pattern = re.compile(pattern_str, re.IGNORECASE)
-    msg = Report.substitution(what="or", where="in heading", with_what="slash")
-    re_lib["or"] = (pattern, msg)
-
-    return {"re_lib": re_lib}
-
-
-def heading_cap(document, reports, re_lib):
-    """Check the heading title capitalization."""
-    toolname = "heading-capitalization"
-
-    def word_cap(reports, word, is_first_word, is_last_word):
-        word_str = str(word)
-        if word_str[0].isupper() and (is_first_word or is_last_word):
-            return reports
-
-        path = POS.classify(word_str.lower())
-        if (not (is_first_word or is_last_word) and
-                (word_str[0].islower() !=
-                 (len(path) != 0 and
-                  (path[0] in ("preposition", "conjunction", "pronoun", "auxiliary") or
-                   path[0] == "determiner" and path[1] == "article")))):
-
-            where = "in heading"
-            if is_first_word:
-                where = "at the start of a heading"
-            elif is_last_word:
-                where = "at the end of a heading"
-            msg = Report.misformatted(what="lowercase" if word_str[0].islower() else "uppercase",
-                                      where=where)
-
-            fg_repl = None
-            if not path or path[0] != "preposition":
-                fg_repl = word.slice(word.start_pos, word.start_pos + 1, True)
-                fg_repl.content[0] = fg_repl.content[0].swapcase()
-            reports.append(Report('W', toolname, word, msg, node.name.code, fg_repl))
-        return reports
-
-
-    instr_pos = {
-        "*": {"*": ["head", "body"]}
-    }
-    instr_neg = {
-        "role": {
-            "kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"
-        },
-        "literal": "*", "standalone": "*"
-    }
-
-    for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
-        is_first_word = True
-        is_faq = bool(re.search(r"\?\n", str(node.name.child_nodes.last().code)))
-        for part in rst_walker.iter_nodeparts_instr(node.name, instr_pos, instr_neg, False):
-            if is_first_word and part.parent_node.prev is not None:
-                is_first_word = False
-
-            buf = None
-            for word in Segmenter.iter_word(part.code):
-                if buf:
-                    reports = word_cap(reports, buf, is_first_word, False)
-                    if is_faq:
-                        break
-                    is_first_word = False
-                buf = word
-
-            if buf and not is_faq:
-                # ignore part.next, one part per node
-                is_last_word = bool(part.parent_node.next is None)
-                reports = word_cap(reports, buf, is_first_word, is_last_word)
-                is_first_word = False
-
-            part_str = str(part.code)
-            for pattern, msg in re_lib.values():
-                for m in re.finditer(pattern, part_str):
-                    out = part.code.slice_match_obj(m, 0, True)
-                    reports.append(Report('W', toolname, out, msg, node.name.code))
-
-    return reports
-
-
 def indefinite_article_pre():
     args = dict()
     args["data"] = monostylestd.get_data_file("indefinite_article")
 
     re_lib = dict()
-    re_lib["iaword"] = re.compile(r"\ba(n)?\s+?(\w+?)\b", re.DOTALL | re.IGNORECASE)
     re_lib["vowel"] = re.compile(r"[aeiouAEIOU]")
     re_lib["digit"] = re.compile(r"\d")
 
@@ -371,12 +271,7 @@ def metric(document, reports):
     node_prev = None
     is_open = False
     sen = None
-    counter = {
-        "sect": 0,
-        "sen": 0,
-        "para": 0,
-        "para_short": 0,
-    }
+    counter = dict.fromkeys({"sect", "sen", "para", "para_short"}, 0)
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
         if node_cur is None or part.code.end_pos > node_cur.code.end_pos:
@@ -579,7 +474,6 @@ def hub(op_names):
 
 OPS = (
     ("article", indefinite_article, indefinite_article_pre),
-    ("heading-cap", heading_cap, heading_cap_pre),
     ("grammar", search_pure, grammar_pre),
     ("metric", metric, None),
     ("repeated", repeated_words, repeated_words_pre),
