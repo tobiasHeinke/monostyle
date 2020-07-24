@@ -296,7 +296,7 @@ def texts_recursive(path=None, ext_pos=()):
         print("\rread {}-file".format(ext_names), end='', flush=True)
         yield single_text(path)
     else:
-        file_count_total = sum(map(lambda _: 1, files_recursive(path, ext_pos)))
+        file_count_total = sum(1 for _ in files_recursive(path, ext_pos))
         counter = 0
         for fn in files_recursive(path, ext_pos):
             print("\rread {}-files: [{:4.0%}]".format(ext_names, counter / file_count_total),

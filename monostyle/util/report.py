@@ -106,19 +106,42 @@ class Report():
     log = 'L'
     severities = (error, warning, info, log)
 
-    severity_long = {
-        'E': "Error",
-        'W': "Warning",
-        'I': "Info",
-        'L': "Log",
-        'U': "Unset"
-    }
-    severity_icons = {
-        'E': "<e>",
-        'W': "/!\\",
-        'I': "(i)",
-        'L': "[=]",
-        'U': "[ ]"
+    severity_maps = {
+        "letter": {
+            'E': error,
+            'W': warning,
+            'I': info,
+            'L': log,
+            'U': 'U'
+        },
+        "long": {
+            'E': "Error",
+            'W': "Warning",
+            'I': "Info",
+            'L': "Log",
+            'U': "Unset"
+        },
+        "ascii": {
+            'E': "<e>",
+            'W': "/!\\",
+            'I': "(i)",
+            'L': "[=]",
+            'U': "[ ]"
+        },
+        "icon": {
+            'E': "\u274C\uFE0E",
+            'W': "\u26A0\uFE0E",
+            'I': "\u2139\uFE0E",
+            'L': "\u1F4C3\uFE0E",
+            'U': "\u2754\uFE0E"
+        },
+        "emoji": {
+            'E': "\u274C",
+            'W': "\u26A0",
+            'I': "\u2139\uFE0F",
+            'L': "\u1F4C3",
+            'U': "\u2754"
+        }
     }
 
 
@@ -162,7 +185,7 @@ class Report():
             "absolute_path": False,
             "show_end": False,
 
-            "severity_display": "char",
+            "severity_display": "letter",
 
             "out_sep_start": "'",
             "out_sep_end": "'",
@@ -189,13 +212,9 @@ class Report():
                 output["fn"] = self.out.fn + ":"
             else:
                 output["fn"] = path_to_rel(self.out.fn) + ":"
-
-        if options["severity_display"] == "char":
-            output["severity"] = self.severity
-        elif options["severity_display"] == "icon":
-            output["severity"] = self.severity_icons.get(self.severity, self.severity_icons["U"])
-        else:
-            output["severity"] = self.severity_long.get(self.severity, self.severity_long["U"])
+        
+        sev_map = self.severity_maps.get(options["severity_display"], self.severity_maps["letter"])
+        output["severity"] = sev_map.get(self.severity, sev_map["U"])
 
         output["tool"] = self.tool
 
@@ -271,22 +290,17 @@ def print_reports(reports, options=None):
 
     if options["show_summary"]:
         # Show the count of each severity after the reports output.
-        levels = Report.severity_icons.copy()
-        for key in levels.keys():
-            levels[key] = 0
+        levels = dict.fromkeys(Report.severities, 0)
         for report in reports:
-            levels[report.severity] += 1
+            if report.severity in levels.keys():
+                levels[report.severity] += 1
 
         summary = []
         for key, val in levels.items():
             if key != 'L' and (key != 'U' or val != 0):
-                sev = key
-                if options["severity_display"] == "icon":
-                    sev = Report.severity_icons.get(key, Report.severity_icons["U"])
-                elif options["severity_display"] == "long":
-                    sev = Report.severity_long.get(key, Report.severity_long["U"])
-
-                summary.append(sev + ": " + str(val))
+                sev_map = Report.severity_maps.get(options["severity_display"],
+                                                   Report.severity_maps["letter"])
+                summary.append(sev_map.get(key, sev_map["U"]) + ": " + str(val))
 
         summary.append("total" + ": " + str(len(reports)))
 

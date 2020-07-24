@@ -65,7 +65,7 @@ console_options = {
     "absolute_path": True,
     "show_end": False,
 
-    # options: 'long', 'char', 'icon',
+    # options: 'long', 'letter', 'ascii', 'icon', 'emoji'
     "severity_display": "long",
 
     "out_sep_start": "´",

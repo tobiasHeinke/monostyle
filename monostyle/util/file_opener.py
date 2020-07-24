@@ -26,7 +26,7 @@ def run(path, lincol):
 
 
 def open_reports_files(reports, min_severity=None):
-    levels = list(Report.severity_icons.keys())
+    levels = list(Report.severities)
     if min_severity is not None:
         levels = levels[:levels.index(min_severity.upper()) +1]
 
