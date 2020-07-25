@@ -438,7 +438,7 @@ def repeated_words(document, reports, config):
 OPS = (
     ("article", indefinite_article, indefinite_article_pre),
     ("grammar", search_pure, grammar_pre),
-    ("metric", metric),
+    ("metric", metric, None),
     ("repeated", repeated_words, repeated_words_pre),
 )
 

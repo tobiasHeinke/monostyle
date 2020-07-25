@@ -47,11 +47,10 @@ def char_search(document, reports):
     return reports
 
 
-def file_encoding():
+def file_encoding(reports):
     """Check text encoding."""
     toolname = "file-encoding"
 
-    reports = []
     # standard Unicode replace char <?>
     repchar_re = re.compile("\uFFFD")
     # for fn in monostylestd.po_files():
@@ -81,10 +80,10 @@ def file_encoding():
 
 
 OPS = (
-    ("char-search", char_search),
-    ("encoding", file_encoding)
+    ("char-search", char_search, None),
+    ("encoding", file_encoding, None, False),
 )
 
 if __name__ == "__main__":
     from monostyle.cmd import main
-    main(OPS, __doc__, __file__)
+    main(OPS, __doc__, __file__, do_parse=False)

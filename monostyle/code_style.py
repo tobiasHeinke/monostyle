@@ -525,12 +525,12 @@ def style_add(document, reports):
 
 OPS = (
     ("EOF", search_code, eol_pre),
-    ("flavor", flavor),
-    ("heading-char-count", heading_lines),
+    ("flavor", flavor, None),
+    ("heading-char-count", heading_lines, None),
     ("line-style", line_style, line_style_pre),
-    ("long-line", long_line),
-    ("blank-line", blank_line),
-    ("style-add", style_add)
+    ("long-line", long_line, None),
+    ("blank-line", blank_line, None),
+    ("style-add", style_add, None)
 )
 
 

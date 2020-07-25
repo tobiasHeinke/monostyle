@@ -219,7 +219,7 @@ def search_pre(op):
             elif isinstance(value, list):
                 yield key, value
 
-    config = parse_config(op[3])
+    config = parse_config(op[4])
     if not op[0].endswith("/*"):
         data_src = monostylestd.get_data_file(op[0])
         # last path segment as default message.
@@ -252,15 +252,15 @@ def search(document, reports, data, config):
 
 
 OPS = (
-    ("test", search, search_pre, "BIS"),
-    ("be_eng/Be", search, search_pre, "BIS"),
-    ("be_eng/Rules", search, search_pre, "IS"),
-    ("confuse/Div", search, search_pre, "BIS"),
-    ("blender/UI", search, search_pre, "I"),
-    ("blender/Editors", search, search_pre, ""),
-    ("blender/Modes", search, search_pre, ""),
-    ("avoid/*", search, search_pre, "BI"),
-    ("simplify", search, search_pre, "BI")
+    ("test", search, search_pre, True, "BIS"),
+    ("be_eng/Be", search, search_pre, True, "BIS"),
+    ("be_eng/Rules", search, search_pre, True, "IS"),
+    ("confuse/Div", search, search_pre, True, "BIS"),
+    ("blender/UI", search, search_pre, True, "I"),
+    ("blender/Editors", search, search_pre, True, ""),
+    ("blender/Modes", search, search_pre, True, ""),
+    ("avoid/*", search, search_pre, True, "BI"),
+    ("simplify", search, search_pre, True, "BI")
 )
 
 if __name__ == "__main__":

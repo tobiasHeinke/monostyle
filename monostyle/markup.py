@@ -516,9 +516,9 @@ def search_directive(document, reports):
 
 
 OPS = (
-    ("directive", search_directive),
-    ("heading-level", heading_level),
-    ("indent", indention),
+    ("directive", search_directive, None),
+    ("heading-level", heading_level, None),
+    ("indent", indention, None),
     ("kbd", role_kbd, role_kbd_pre),
     ("leak", search_code, leak_pre)
 )

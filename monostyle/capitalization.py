@@ -425,12 +425,12 @@ def ui_case(document, reports):
 
 
 OPS = (
-    ("admonition-title", admonition_title),
+    ("admonition-title", admonition_title, None),
     ("heading", heading_cap, heading_cap_pre),
-    ("pos", pos_case),
+    ("pos", pos_case, None),
     ("property", property_noun, property_noun_pre),
     ("type", typ_caps, typ_caps_pre),
-    ("ui", ui_case),
+    ("ui", ui_case, None),
 )
 
 
