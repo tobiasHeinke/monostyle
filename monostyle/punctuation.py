@@ -6,13 +6,11 @@ punctuation
 Punctuation style checks and number formatting.
 """
 
-import os
 import re
 
 import monostyle.util.monostylestd as monostylestd
-from monostyle.util.report import Report, print_reports
+from monostyle.util.report import Report
 from monostyle.util.fragment import Fragment
-from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.pos import PartofSpeech
 from monostyle.util.char_catalog import CharCatalog
@@ -21,7 +19,7 @@ POS = PartofSpeech()
 CharCatalog = CharCatalog()
 
 
-def number_pre():
+def number_pre(_):
 
     re_lib = dict()
     # FP: code, literal, Years
@@ -161,7 +159,7 @@ def number(document, reports, re_lib):
     return reports
 
 
-def pairs_pre():
+def pairs_pre(_):
     toolname = "pairs"
 
     args = dict()
@@ -269,7 +267,7 @@ def pairs(document, reports, re_lib, config):
     return reports
 
 
-def mark_pre():
+def mark_pre(_):
 
     re_lib = dict()
     punc = CharCatalog.data["terminal"]["final"] + CharCatalog.data["secondary"]["final"]
@@ -497,7 +495,7 @@ def mark(document, reports, re_lib):
     return reports
 
 
-def whitespace_pre():
+def whitespace_pre(_):
 
     re_lib = dict()
     pattern_str = r"(\t)"
@@ -587,7 +585,6 @@ def whitespace(document, reports, re_lib):
 
 
 
-
 OPS = (
     ("number", number, number_pre),
     ("pairs", pairs, pairs_pre),
@@ -596,82 +593,6 @@ OPS = (
 )
 
 
-def init(op_names):
-    if isinstance(op_names, str):
-        op_names = [op_names]
-
-    ops = []
-    for op_name in op_names:
-        for op in OPS:
-            if op_name == op[0]:
-                args = {}
-                if len(op) > 2:
-                    # evaluate pre
-                    args = op[2]()
-
-                ops.append((op[1], args))
-                break
-        else:
-            print("punctuation: unknown operation: " + op_name)
-
-    return ops
-
-
-def hub(op_names):
-    rst_parser = RSTParser()
-    ops = init(op_names)
-    reports = []
-
-    for fn, text in monostylestd.rst_texts():
-        document = rst_parser.parse_full(rst_parser.document(fn, text))
-
-        for op in ops:
-            reports = op[0](document, reports, **op[1])
-
-    return reports
-
-
-def main():
-
-    import argparse
-    from monostyle import setup
-
-    descr = __doc__.replace('~', '')
-    parser = argparse.ArgumentParser(description=descr)
-    for op in OPS:
-        doc_str = ''
-        if op[1].__doc__ is not None:
-            # first char to lowercase
-            doc_str = op[1].__doc__[0].lower() + op[1].__doc__[1:]
-        parser.add_argument("--" + op[0], dest="op_names",
-                            action='store_const', const=op[0], metavar="",
-                            help=doc_str)
-
-    parser.add_argument("-r", "--root",
-                        dest="root", nargs='?', const="",
-                        help="defines the ROOT directory of the project")
-
-    args = parser.parse_args()
-
-    if args.root is None:
-        root_dir = os.getcwd()
-    else:
-        root_dir = os.path.normpath(args.root)
-
-        if not os.path.exists(root_dir):
-            print('Error: root {0} does not exists'.format(args.root))
-            return 2
-
-    root_dir = monostylestd.replace_windows_path_sep(root_dir)
-    monostylestd.ROOT_DIR = root_dir
-
-    setup_sucess = setup(root_dir)
-    if not setup_sucess:
-        return 2
-
-    reports = hub(args.op_names)
-    print_reports(reports)
-
-
 if __name__ == "__main__":
-    main()
+    from monostyle.cmd import main
+    main(OPS, __doc__, __file__)

@@ -229,7 +229,7 @@ def compile_lib():
     return re_lib
 
 
-def pre():
+def search_pre(_):
     config_dir = os.path.normpath(os.path.join(monostylestd.ROOT_DIR, "monostyle"))
     if not os.path.isdir(config_dir):
         print("No user config found skipping spell checking")
@@ -257,28 +257,8 @@ def pre():
 
 
 OPS = (
-    ("search", search, pre),
+    ("search", search, search_pre),
 )
-
-
-def init(op_names):
-    ops = []
-    if isinstance(op_names, str):
-        op_names = [op_names]
-
-    for op_name in op_names:
-        for op in OPS:
-            if op_name == op[0]:
-                args = {}
-                if len(op) > 2:
-                    # evaluate pre
-                    args = op[2]()
-                ops.append((op[1], args))
-                break
-        else:
-            print("spelling: unknown operation: " + op_name)
-
-    return ops
 
 
 def main():

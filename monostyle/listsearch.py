@@ -6,12 +6,10 @@ listsearch
 List based search tools.
 """
 
-import os
 import re
 
 import monostyle.util.monostylestd as monostylestd
-from monostyle.util.report import Report, print_reports
-from monostyle.rst_parser.core import RSTParser
+from monostyle.util.report import Report
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.segmenter import Segmenter
 from monostyle.util.porter_stemmer import Porterstemmer
@@ -265,74 +263,6 @@ OPS = (
     ("simplify", search, search_pre, "BI")
 )
 
-def init(op_names):
-    ops = []
-    if isinstance(op_names, str):
-        op_names = [op_names]
-
-    for op_name in op_names:
-        for op in OPS:
-            if op_name == op[0]:
-                args = {}
-                if len(op) > 2:
-                    # evaluate pre
-                    args = op[2](op)
-                ops.append((op[1], args))
-                break
-        else:
-            print("listsearch: unknown operation: " + op_name)
-            return None
-
-    return ops
-
-
-def hub(op_names):
-    rst_parser = RSTParser()
-    ops = init(op_names)
-
-    reports = []
-    for fn, text in monostylestd.rst_texts():
-        document = rst_parser.parse_full(rst_parser.document(fn, text))
-
-        for op, arg in ops:
-            reports = op(document, reports, **arg)
-
-    return reports
-
-
-def main():
-    import argparse
-    from monostyle import setup
-
-    descr = __doc__.replace('~', '')
-    parser = argparse.ArgumentParser(description=descr)
-    parser.add_argument("ops", nargs='+', help="")
-
-    parser.add_argument("-r", "--root",
-                        dest="root", nargs='?', const="",
-                        help="defines the ROOT directory of the project")
-
-    args = parser.parse_args()
-
-    if args.root is None:
-        root_dir = os.getcwd()
-    else:
-        root_dir = os.path.normpath(args.root)
-
-        if not os.path.exists(root_dir):
-            print('Error: root {0} does not exists'.format(args.root))
-            return 2
-
-    root_dir = monostylestd.replace_windows_path_sep(root_dir)
-    monostylestd.ROOT_DIR = root_dir
-
-    setup_sucess = setup(root_dir)
-    if not setup_sucess:
-        return 2
-
-    reports = hub(args.ops)
-    print_reports(reports)
-
-
 if __name__ == "__main__":
-    main()
+    from monostyle.cmd import main
+    main(OPS, __doc__, __file__)

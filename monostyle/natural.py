@@ -6,12 +6,10 @@ natural
 Tools for natural language and style.
 """
 
-import os
 import re
 
 import monostyle.util.monostylestd as monostylestd
-from monostyle.util.report import Report, print_reports
-from monostyle.rst_parser.core import RSTParser
+from monostyle.util.report import Report
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.segmenter import Segmenter
 from monostyle.util.pos import PartofSpeech
@@ -21,7 +19,7 @@ PorterStemmer = Porterstemmer()
 Segmenter = Segmenter()
 POS = PartofSpeech()
 
-def indefinite_article_pre():
+def indefinite_article_pre(_):
     args = dict()
     args["data"] = monostylestd.get_data_file("indefinite_article")
 
@@ -132,7 +130,7 @@ def indefinite_article(document, reports, re_lib, data):
     return reports
 
 
-def grammar_pre():
+def grammar_pre(_):
     toolname = "grammar"
 
     re_lib = dict()
@@ -339,7 +337,7 @@ def metric(document, reports):
     return reports
 
 
-def repeated_words_pre():
+def repeated_words_pre(_):
     config = dict()
     # Number of the word within to run the detection.
     config["buf_size"] = monostylestd.get_override(__file__, "repeated", "buf_size", 4)
@@ -437,89 +435,14 @@ def repeated_words(document, reports, config):
     return reports
 
 
-def init(op_names):
-    ops = []
-    if isinstance(op_names, str):
-        op_names = [op_names]
-
-    for op_name in op_names:
-        for op in OPS:
-            if op_name == op[0]:
-                args = {}
-                if op[2] is not None:
-                    # evaluate pre
-                    args = op[2]()
-                ops.append((op[1], args))
-                break
-        else:
-            print("natural: unknown operation: " + op_name)
-            return None
-
-    return ops
-
-
-def hub(op_names):
-    rst_parser = RSTParser()
-    ops = init(op_names)
-    reports = []
-
-    for fn, text in monostylestd.rst_texts():
-        document = rst_parser.parse_full(rst_parser.document(fn, text))
-
-        for op in ops:
-            reports = op[0](document, reports, **op[1])
-
-    return reports
-
-
 OPS = (
     ("article", indefinite_article, indefinite_article_pre),
     ("grammar", search_pure, grammar_pre),
-    ("metric", metric, None),
+    ("metric", metric),
     ("repeated", repeated_words, repeated_words_pre),
 )
 
 
-def main():
-    import argparse
-    from monostyle import setup
-
-    descr = __doc__.replace('~', '')
-    parser = argparse.ArgumentParser(description=descr)
-    for op in OPS:
-        doc_str = ''
-        if op[1].__doc__ is not None:
-            # first char to lowercase.
-            doc_str = op[1].__doc__[0].lower() + op[1].__doc__[1:]
-        parser.add_argument("--" + op[0], dest="op_names",
-                            action='store_const', const=op[0], metavar="",
-                            help=doc_str)
-
-    parser.add_argument("-r", "--root",
-                        dest="root", nargs='?', const="",
-                        help="defines the ROOT directory of the project")
-
-    args = parser.parse_args()
-
-    if args.root is None:
-        root_dir = os.getcwd()
-    else:
-        root_dir = os.path.normpath(args.root)
-
-        if not os.path.exists(root_dir):
-            print('Error: root {0} does not exists'.format(args.root))
-            return 2
-
-    root_dir = monostylestd.replace_windows_path_sep(root_dir)
-    monostylestd.ROOT_DIR = root_dir
-
-    setup_sucess = setup(root_dir)
-    if not setup_sucess:
-        return 2
-
-    reports = hub(args.op_names)
-    print_reports(reports)
-
-
 if __name__ == "__main__":
-    main()
+    from monostyle.cmd import main
+    main(OPS, __doc__, __file__)

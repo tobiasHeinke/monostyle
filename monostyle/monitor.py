@@ -10,7 +10,7 @@ import re
 import monostyle.util.monostylestd as monostylestd
 from monostyle.util.report import Report
 
-def check_pre():
+def check_pre(_):
     args = dict()
     args["data"] = monostylestd.get_override(__file__, "check", "fns", [])
     return args

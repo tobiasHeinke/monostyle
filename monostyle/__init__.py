@@ -25,6 +25,7 @@ from .rst_parser.core import RSTParser
 from .rst_parser import hunk_post_parser
 from . import autofix
 from .util import file_opener
+from .cmd import init
 
 __version__ = "0.2.0"
 
@@ -36,7 +37,7 @@ def init_tools():
     mods = []
     for module_name, val in config.tool_selection.items():
         if module := import_module(module_name):
-            ops = module.init(val["tools"])
+            ops = init(module.OPS, val["tools"], module_name)
             if ops is not None and len(ops) != 0:
                 mods.append((ops, val["ext"]))
 

@@ -6,13 +6,11 @@ char
 Tools on char level and encoding.
 """
 
-import os
 import re
 
 import monostyle.util.monostylestd as monostylestd
-from monostyle.util.report import Report, print_reports
+from monostyle.util.report import Report
 from monostyle.util.fragment import Fragment
-from monostyle.rst_parser.core import RSTParser
 from monostyle.util.char_catalog import CharCatalog
 
 CharCatalog = CharCatalog()
@@ -82,79 +80,11 @@ def file_encoding():
     return reports
 
 
-def init(op_names):
-    ops = []
-    for op in OPS:
-        if op[0] in op_names:
-            ops.append((op[1], {}))
-
-    return ops
-
-
-def hub(op_names):
-    rst_parser = RSTParser()
-    reports = []
-    ops = init(op_names)
-
-    for fn, text in monostylestd.rst_texts():
-        document = rst_parser.document(fn, text)
-
-        for op in ops:
-            reports = op[0](document, reports)
-
-    return reports
-
-
 OPS = (
     ("char-search", char_search),
     ("encoding", file_encoding)
 )
 
-def main():
-    import argparse
-    from monostyle import setup
-
-    descr = __doc__.replace('~', '')
-    parser = argparse.ArgumentParser(description=descr)
-    for op in OPS:
-        doc_str = ''
-        if op[1].__doc__ is not None:
-            # first char to lowercase
-            doc_str = op[1].__doc__[0].lower() + op[1].__doc__[1:]
-        parser.add_argument("--" + op[0], dest="op_names",
-                            action='store_const', const=op[0], metavar="",
-                            help=doc_str)
-
-    parser.add_argument("-r", "--root",
-                        dest="root", nargs='?', const="",
-                        help="defines the ROOT directory of the project")
-
-    args = parser.parse_args()
-
-    if args.root is None:
-        root_dir = os.getcwd()
-    else:
-        root_dir = os.path.normpath(args.root)
-
-        if not os.path.exists(root_dir):
-            print('Error: root {0} does not exists'.format(args.root))
-            return 2
-
-    root_dir = monostylestd.replace_windows_path_sep(root_dir)
-    monostylestd.ROOT_DIR = root_dir
-
-    setup_sucess = setup(root_dir)
-    if not setup_sucess:
-        return 2
-
-    if args.op_names == "encoding":
-        for op in OPS:
-            if op[0] == args.op_names:
-                reports = op[1]()
-    else:
-        reports = hub(args.op_names)
-
-    print_reports(reports)
-
 if __name__ == "__main__":
-    main()
+    from monostyle.cmd import main
+    main(OPS, __doc__, __file__)
