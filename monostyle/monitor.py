@@ -10,9 +10,10 @@ import re
 import monostyle.util.monostylestd as monostylestd
 from monostyle.util.report import Report
 
-def init(_):
-    fns = monostylestd.get_override(__file__, "init", "fns", [])
-    return ((check, {"data": fns}),)
+def check_pre():
+    args = dict()
+    args["data"] = monostylestd.get_override(__file__, "check", "fns", [])
+    return args
 
 
 def check(document, reports, data):
@@ -53,3 +54,5 @@ def check(document, reports, data):
     return reports
 
 check.reg = []
+
+OPS = (("check", check, check_pre),)

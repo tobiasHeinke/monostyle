@@ -213,6 +213,36 @@ def search_word(document, reports, comlist, config):
     return reports
 
 
+def search_pre(op):
+    def wildcard_leaf(data_src):
+        for key, value in data_src.items():
+            if isinstance(value, dict):
+                yield from wildcard_leaf(value)
+            elif isinstance(value, list):
+                yield key, value
+
+    config = parse_config(op[3])
+    if not op[0].endswith("/*"):
+        data_src = monostylestd.get_data_file(op[0])
+        # last path segment as default message.
+        config["msg"] = op[0].split('/')[-1]
+        data_comp = compile_searchlist(data_src, config)
+    else:
+        data_src = monostylestd.get_data_file(op[0][:-2])
+        data_comp = []
+        for key, value in wildcard_leaf(data_src):
+            # key as default message.
+            config["msg"] = key
+            data_comp.extend(compile_searchlist(value, config))
+
+    args = dict()
+    args["data"] = data_comp
+    args["config"] = config
+
+    return args
+
+
+
 def search(document, reports, data, config):
     """Switch between free and with boundary."""
     if not config["word"]:
@@ -224,25 +254,18 @@ def search(document, reports, data, config):
 
 
 OPS = (
-    ("test", search, "BIS"),
-    ("be_eng/Be", search, "BIS"),
-    ("be_eng/Rules", search, "IS"),
-    ("confuse/Div", search, "BIS"),
-    ("blender/UI", search, "I"),
-    ("blender/Editors", search, ""),
-    ("blender/Modes", search, ""),
-    ("avoid/*", search, "BI"),
-    ("simplify", search, "BI")
+    ("test", search, search_pre, "BIS"),
+    ("be_eng/Be", search, search_pre, "BIS"),
+    ("be_eng/Rules", search, search_pre, "IS"),
+    ("confuse/Div", search, search_pre, "BIS"),
+    ("blender/UI", search, search_pre, "I"),
+    ("blender/Editors", search, search_pre, ""),
+    ("blender/Modes", search, search_pre, ""),
+    ("avoid/*", search, search_pre, "BI"),
+    ("simplify", search, search_pre, "BI")
 )
 
 def init(op_names):
-    def wildcard_leaf(data_src):
-        for key, value in data_src.items():
-            if isinstance(value, dict):
-                yield from wildcard_leaf(value)
-            elif isinstance(value, list):
-                yield key, value
-
     ops = []
     if isinstance(op_names, str):
         op_names = [op_names]
@@ -250,21 +273,11 @@ def init(op_names):
     for op_name in op_names:
         for op in OPS:
             if op_name == op[0]:
-                config = parse_config(op[2])
-                if not op[0].endswith("/*"):
-                    data_src = monostylestd.get_data_file(op[0])
-                    # last path segment as default message.
-                    config["msg"] = op[0].split('/')[-1]
-                    data_comp = compile_searchlist(data_src, config)
-                else:
-                    data_src = monostylestd.get_data_file(op[0][:-2])
-                    data_comp = []
-                    for key, value in wildcard_leaf(data_src):
-                        # key as default message.
-                        config["msg"] = key
-                        data_comp.extend(compile_searchlist(value, config))
-
-                ops.append((op[1], {"data": data_comp, "config": config}))
+                args = {}
+                if len(op) > 2:
+                    # evaluate pre
+                    args = op[2](op)
+                ops.append((op[1], args))
                 break
         else:
             print("listsearch: unknown operation: " + op_name)

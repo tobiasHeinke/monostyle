@@ -222,20 +222,21 @@ def difference(lex_stored, lex_new):
 
 
 def compile_lib():
-    char_catalog = CharCatalog()
     re_lib = dict()
+    char_catalog = CharCatalog()
     re_lib["hypen"] = re.compile(r"[" + char_catalog.data["connector"]["hyphen"] + r"]")
     re_lib["apostrophe"] = re.compile(r"[" + char_catalog.data["connector"]["apostrophe"] + r"]")
     return re_lib
 
 
-def init(_):
+def pre():
     config_dir = os.path.normpath(os.path.join(monostylestd.ROOT_DIR, "monostyle"))
     if not os.path.isdir(config_dir):
         print("No user config found skipping spell checking")
         return None
 
     re_lib = compile_lib()
+
     data = read_csv_lexicon()
     if data is None:
         if monostylestd.ask_user(("The lexicon does not exist in the user config folder ",
@@ -247,8 +248,37 @@ def init(_):
             return None
 
     threshold = monostylestd.get_override(__file__, "search", "threshold", 3)
+    args = dict()
+    args["re_lib"] = re_lib
+    args["data"] = data
+    args["config"] = {"threshold": threshold}
 
-    return ((search, {"re_lib": re_lib, "data": data, "config":{"threshold": threshold}}),)
+    return args
+
+
+OPS = (
+    ("search", search, pre),
+)
+
+
+def init(op_names):
+    ops = []
+    if isinstance(op_names, str):
+        op_names = [op_names]
+
+    for op_name in op_names:
+        for op in OPS:
+            if op_name == op[0]:
+                args = {}
+                if len(op) > 2:
+                    # evaluate pre
+                    args = op[2]()
+                ops.append((op[1], args))
+                break
+        else:
+            print("spelling: unknown operation: " + op_name)
+
+    return ops
 
 
 def main():
@@ -286,8 +316,7 @@ def main():
     if not setup_sucess:
         return 2
 
-    re_lib = compile_lib()
-    lex_new = build_lexicon(re_lib)
+    lex_new = build_lexicon(compile_lib())
     if not args.diff:
         write_csv_lexicon(lex_new)
     else:
