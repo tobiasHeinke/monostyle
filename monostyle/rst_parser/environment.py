@@ -39,7 +39,6 @@ def get_link_titles(rst_parser):
                         targeted = node_next.body
                     targets[str(node.id.code).strip()] = targeted
                     break
-        break
 
     return titles, targets
 
@@ -53,11 +52,11 @@ def resolve_link_title(document, titles, targets):
             link_content = str(node.id.code).strip()
             found = False
             if name in {"doc", "any"} and link_content in titles.keys():
-                node.insert_part("head", titles[link_content].code)
+                node.insert_part("head", titles[link_content].code, node.body_start)
                 node.head.child_nodes = titles[link_content].child_nodes
                 found = True
             if not found and name in {"ref", "any"} and link_content in targets.keys():
-                node.insert_part("head", targets[link_content].code)
+                node.insert_part("head", targets[link_content].code, node.body_start)
                 node.head.child_nodes = targets[link_content].child_nodes
                 found = True
 

@@ -12,6 +12,8 @@ import argparse
 import monostyle.util.monostylestd as monostylestd
 from monostyle.util.report import Report, print_reports
 from monostyle.rst_parser.core import RSTParser
+import monostyle.rst_parser.environment as env
+from .util import file_opener
 
 
 def init(ops, op_names, mod_name):
@@ -35,7 +37,7 @@ def init(ops, op_names, mod_name):
     return ops_sel
 
 
-def hub(ops_sel, do_parse=True):
+def hub(ops_sel, do_parse=True, do_resolve=False):
     reports = []
     ops_loop = []
     for op in ops_sel:
@@ -48,10 +50,16 @@ def hub(ops_sel, do_parse=True):
         return reports
 
     rst_parser = RSTParser()
+    if do_resolve:
+        titles, targets = env.get_link_titles(rst_parser)
+
     for fn, text in monostylestd.rst_texts():
         document = rst_parser.document(fn, text)
         if do_parse:
             document = rst_parser.parse_full(document)
+            if do_resolve:
+                document = env.resolve_link_title(document, titles, targets)
+                document = env.resolve_subst(document, rst_parser.substitution)
 
         for op in ops_loop:
             reports = op[0](document, reports, **op[1])
@@ -78,6 +86,14 @@ def main(ops, mod_doc, mod_file, do_parse=True):
                         dest="root", nargs='?', const="",
                         help="defines the ROOT directory of the project")
 
+    parser.add_argument("-s", "--resolve",
+                        action='store_true', dest="do_resolve", default=False,
+                        help="resolve links and substitutions")
+
+    parser.add_argument("-o", "--open",
+                        dest='min_severity', choices=Report.severities,
+                        help="open files with report severity above")
+
     args = parser.parse_args()
 
     if args.root is None:
@@ -96,5 +112,8 @@ def main(ops, mod_doc, mod_file, do_parse=True):
     if not setup_sucess:
         return 2
 
-    reports = hub(init(ops, args.op_names, mod_file), do_parse)
+    reports = hub(init(ops, args.op_names, mod_file), do_parse, args.do_resolve)
     print_reports(reports)
+
+    if args.min_severity:
+        file_opener.open_reports_files(reports, args.min_severity)
