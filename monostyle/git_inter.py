@@ -103,7 +103,7 @@ def difference(from_vsn, is_internal, fn_source, rev, cached):
 def update_files(path, rev=None):
     rev_up = ""
     on_merge = False
-    for line in pull(path):
+    for line in update(path):
         line = line.decode('utf-8')
         if len(line) != 0:
             if line.startswith("Updating "):
@@ -117,8 +117,8 @@ def update_files(path, rev=None):
                 if line[0] == ' ':
                     if m := re.search(r" +?\| ", line):
                         fn = line[1: m.start(0)]
-                
-                        yield fn, conflict, rev_up
+
+                        yield fn, False, rev_up
 
 
 def update_remotes(path):
@@ -128,10 +128,10 @@ def update_remotes(path):
         if line.startswith(' '):
             line = line.strip().split(' ')[0]
             if m := re.search(r"\.{2,3}", line):
-                 remote_head = line[m.end(0):]
+                remote_head = line[m.end(0):]
 
     return remote_head
-            
+
 
 
 def info(path):
@@ -199,8 +199,8 @@ def exec_command(cmd_args, cwd=None):
     silent = bool(cmd_args[0] in ("show",))
     try:
         if not silent:
-            print("fetching" if cmd_args[0] in ("status", "diff", "update", "remote") else "applying",
-                 cmd_args[0] + ": ...", end="")
+            print("fetching" if cmd_args[0] in ("status", "diff", "update", "remote")
+                  else "applying", cmd_args[0] + ": ...", end="")
         output = subprocess.check_output(cmd, cwd=cwd)
     except OSError as err:
         print("git", cmd_args[0], "error:", err)

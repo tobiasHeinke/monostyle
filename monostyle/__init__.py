@@ -165,7 +165,7 @@ def patch_flavor(fn):
     except (IOError, OSError) as err:
         print("{0}: cannot open: {1}".format(fn, err))
         return None
-    
+
     for line in text.splitlines():
         if line.startswith("Index: "):
             return False

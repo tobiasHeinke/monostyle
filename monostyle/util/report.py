@@ -213,7 +213,7 @@ class Report():
                 output["fn"] = self.out.fn + ":"
             else:
                 output["fn"] = path_to_rel(self.out.fn) + ":"
-        
+
         sev_map = self.severity_maps.get(options["severity_display"], self.severity_maps["letter"])
         output["severity"] = sev_map.get(self.severity, sev_map["U"])
 

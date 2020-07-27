@@ -232,9 +232,10 @@ class RSTParser:
                     ind_start.clear()
                     ind_start.append(ind_cur)
 
-                line_info["is_block_end"] = bool(not buf_info or len(buf_info["line_strip"].strip()) == 0) # todo or ind < old
+                # todo or ind < old
+                line_info["is_block_end"] = bool(not buf_info or not buf_info["is_not_empty"])
                 on, ind_start, node, sub = self.process_line(line, line_info,
-                    on, ind_cur, ind_start, node, sub)
+                                                             on, ind_cur, ind_start, node, sub)
 
             line = buf
             line_info = buf_info
@@ -334,7 +335,7 @@ class RSTParser:
         if rematch:
             line_info["is_block_start"] = True
             on, ind_start, node, sub = self.process_line(line, line_info,
-                on, ind_cur, ind_start, node, sub)
+                                                         on, ind_cur, ind_start, node, sub)
 
         return on, ind_start, node, sub
 
@@ -369,8 +370,8 @@ class RSTParser:
 
                 if not split or node.active.is_parsed:
                     if name == node.active.node_name:
-                        print("{0}:{1}: unclosed inline (within paragraph)".format(node.active.code.fn,
-                                  node.active.code.start_lincol[0]))
+                        print("{0}:{1}: unclosed inline (within paragraph)".format(
+                                  node.active.code.fn, node.active.code.start_lincol[0]))
 
                     node.active = node.active.next
 
@@ -705,7 +706,8 @@ class RSTParser:
                 newnode.append_part("name_start", fg)
                 newnode.append_part("body", after_name)
 
-                if line_info["is_block_start"] and (not sub or node.parent_node.node_name != "line-list"):
+                if (line_info["is_block_start"] and
+                        (not sub or node.parent_node.node_name != "line-list")):
                     prime = NodeRST(newnode.node_name + "-list", None)
                     prime.append_part("body", None)
                     node.append_child(prime)
@@ -741,7 +743,8 @@ class RSTParser:
                 newnode.append_part("name_end", fg)
                 newnode.append_part("body", after_name)
 
-                if line_info["is_block_start"] and (not sub or node.parent_node.node_name != "field-list"):
+                if (line_info["is_block_start"] and
+                        (not sub or node.parent_node.node_name != "field-list")):
                     prime = NodeRST(newnode.node_name + "-list", None)
                     prime.append_part("body", None)
 
@@ -783,11 +786,14 @@ class RSTParser:
 
                 if m.group(3).startswith(" "):
                     newnode.append_part("name_end", line.slice_match_obj(m, 3, True))
-                    newnode.append_part("body", line.slice(line.loc_to_abs(m.end(3)), right_inner=True))
+                    newnode.append_part("body", line.slice(line.loc_to_abs(m.end(3)),
+                                                           right_inner=True))
                 else:
-                    newnode.append_part("body", line.slice(line.loc_to_abs(m.end(2)), right_inner=True))
+                    newnode.append_part("body", line.slice(line.loc_to_abs(m.end(2)),
+                                                           right_inner=True))
 
-                if line_info["is_block_start"] and (not sub or node.parent_node.node_name != "option-list"):
+                if (line_info["is_block_start"] and
+                        (not sub or node.parent_node.node_name != "option-list")):
                     prime = NodeRST(newnode.node_name + "-list", None)
                     prime.append_part("body", None)
                     node.append_child(prime)
@@ -905,7 +911,8 @@ class RSTParser:
 
 
         def quoted(line, line_info, node):
-            if line_info["is_not_empty"] and re.match(self.re_lib["quoted"], line_info["line_str"]):
+            if (line_info["is_not_empty"] and
+                    re.match(self.re_lib["quoted"], line_info["line_str"])):
                 node.active.body.append_code(line)
             else:
                 node.append_child(node.active)
@@ -973,7 +980,8 @@ class RSTParser:
                 if line_info["is_not_empty"]:
                     attr_part = NodePartRST("attr", None)
                     attr_part.parent_node = node.active
-                    attr_node, sub = self.field(line, {"is_block_start": True, **line_info}, False, attr_part, sub)
+                    attr_node, sub = self.field(line, {"is_block_start": True, **line_info},
+                                                False, attr_part, sub)
                     if sub:
                         node.active.attr = attr_part
                         node.active.child_nodes.append(attr_part)
