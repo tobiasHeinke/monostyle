@@ -7,7 +7,6 @@ Common utility for Monostyle.
 """
 
 import os
-from math import ceil
 import re
 import json
 
@@ -48,55 +47,6 @@ def ask_user(question):
             ip = input("input: ")
         else:
             return ip in pos
-
-
-#------------------------
-# Context
-
-
-def getline_lineno(fg, lineno):
-    """Extracts single line selected by its line number."""
-    return fg.slice((lineno, 0), (lineno+1, 0), True)
-
-
-def getline_newline(fg, loc, n):
-    """Extracts line including lines around it.
-
-    loc -- position within the line.
-    n -- number of lines to include around the line (odds below).
-    """
-    start = (loc[0] - ceil(n / 2), 0)
-    end = (loc[0] + (n // 2) + 1, 0)
-    return fg.slice(start, end, True)
-
-
-def getline_punc(fg, pos, match_len, min_chars, margin):
-    """Extracts line limited by punctuation.
-
-    pos -- position within the line.
-    match_len -- length of the output.
-    min_chars -- minimal amount of chars to extract on both sides.
-    margin -- length of the outer margin within to search for punctuation marks.
-    """
-    start = pos - min_chars - margin
-    end = pos + match_len + min_chars + margin
-    buf = fg.slice(start, end, True)
-
-    margin_start, _, margin_end = buf.slice(start + margin, end - margin)
-
-    if margin_start and len(margin_start) != 0:
-        margin_start_str = str(margin_start)
-        start_m = None
-        for start_m in re.finditer(r"[.?!:,;]", margin_start_str):
-            pass
-        if start_m:
-            start = margin_start.loc_to_abs(start_m.end(0))
-
-    if margin_end and len(margin_end) != 0:
-        if end_m := re.search(r"[.?!:,;]", str(margin_end)):
-            end = margin_end.loc_to_abs(end_m.end(0))
-
-    return buf.slice(start, end, True)
 
 
 #------------------------

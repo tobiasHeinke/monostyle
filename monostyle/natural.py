@@ -9,7 +9,7 @@ Tools for natural language and style.
 import re
 
 import monostyle.util.monostylestd as monostylestd
-from monostyle.util.report import Report
+from monostyle.util.report import Report, getline_punc
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.segmenter import Segmenter
 from monostyle.util.pos import PartofSpeech
@@ -86,36 +86,34 @@ def indefinite_article(document, reports, re_lib, data):
                         if re.match(vowel_re, word_str):
                             if is_fp(word, word_str, data["an"]):
                                 msg = Report.existing(what="a", where="before vowel")
-                                line = monostylestd.getline_punc(document.body.code, word.start_pos,
-                                                                 len(word_str), 50, 30)
+                                line = getline_punc(document.body.code, word.start_pos,
+                                                    len(word_str), 50, 30)
                                 reports.append(Report('E', toolname, word, msg, line))
                         else:
                             if not is_fp(word, word_str, data["a"]):
                                 msg = Report.existing(what="a", where="before vowel sound")
-                                line = monostylestd.getline_punc(document.body.code, word.start_pos,
-                                                                 len(word_str), 50, 30)
+                                line = getline_punc(document.body.code, word.start_pos,
+                                                    len(word_str), 50, 30)
                                 reports.append(Report('E', toolname, word, msg, line))
 
                     elif buf in ("an", "An"):
                         if re.match(digit_re, word_str):
                             msg = Report.existing(what="an", where="before digit")
-                            line = monostylestd.getline_punc(document.body.code, word.start_pos,
-                                                             len(word_str), 50, 30)
+                            line = getline_punc(document.body.code, word.start_pos,
+                                                len(word_str), 50, 30)
                             reports.append(Report('E', toolname, word, msg, line))
                         else:
                             if re.match(vowel_re, word_str):
                                 if not is_fp(word, word_str, data["an"]):
                                     msg = Report.existing(what="an", where="before consonant sound")
-                                    line = monostylestd.getline_punc(document.body.code,
-                                                                     word.start_pos,
-                                                                     len(word_str), 50, 30)
+                                    line = getline_punc(document.body.code, word.start_pos,
+                                                        len(word_str), 50, 30)
                                     reports.append(Report('E', toolname, word, msg, line))
                             else:
                                 if is_fp(word, word_str, data["a"]):
                                     msg = Report.existing(what="an", where="before consonant")
-                                    line = monostylestd.getline_punc(document.body.code,
-                                                                     word.start_pos,
-                                                                     len(word_str), 50, 30)
+                                    line = getline_punc(document.body.code, word.start_pos,
+                                                        len(word_str), 50, 30)
                                     reports.append(Report('E', toolname, word, msg, line))
 
                     buf = None
@@ -184,9 +182,7 @@ def search_pure(document, reports, re_lib, config):
             part_str = str(part.code)
             for m in re.finditer(pattern, part_str):
                 out = part.code.slice_match_obj(m, 0, True)
-                line = monostylestd.getline_punc(document.body.code,
-                                                 part.code.start_pos + m.start(),
-                                                 len(m.group(0)), 50, 0)
+                line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
                 reports.append(Report(config.get("severity"), config.get("toolname"),
                                       out, msg, line))
 
@@ -411,8 +407,8 @@ def repeated_words(document, reports, config):
                             sev = 'W' if distance == 0 else 'I'
                             msg = Report.quantity(what="repeated words",
                                                   how=str(distance) + " words in between")
-                            line = monostylestd.getline_punc(document.body.code, word.start_pos,
-                                                             word.span_len(), 50, 30)
+                            line = getline_punc(document.body.code, word.start_pos,
+                                                word.span_len(), 50, 30)
                             reports.append(Report(sev, toolname, word, msg, line))
                             break
 

@@ -8,8 +8,7 @@ RST markup tools.
 
 import re
 
-import monostyle.util.monostylestd as monostylestd
-from monostyle.util.report import Report
+from monostyle.util.report import Report, getline_punc
 from monostyle.util.fragment import Fragment
 import monostyle.rst_parser.walker as rst_walker
 
@@ -452,9 +451,7 @@ def search_code(document, reports, re_lib, config):
     for pattern, msg in re_lib.values():
         for m in re.finditer(pattern, text):
             out = document.body.code.slice_match_obj(m, 0, True)
-            line = monostylestd.getline_punc(document.body.code, m.start(),
-                                             len(m.group(0)), 50, 0)
-
+            line = getline_punc(document.body.code, m.start(), len(m.group(0)), 50, 0)
             reports.append(Report(config.get("severity"), config.get("toolname"),
                                   out, msg, line))
 

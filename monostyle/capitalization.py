@@ -9,7 +9,7 @@ Capitalization tools.
 import re
 
 import monostyle.util.monostylestd as monostylestd
-from monostyle.util.report import Report
+from monostyle.util.report import Report, getline_punc
 from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.pos import PartofSpeech
@@ -288,8 +288,7 @@ def property_noun(document, reports, data, config):
             for ent in data[first_letter]:
                 if ent[0] == word_str:
                     msg = "property noun: {:4.0%}".format(ent[1])
-                    line = monostylestd.getline_punc(document.code, word.start_pos,
-                                                     word.span_len(), 50, 30)
+                    line = getline_punc(document.code, word.start_pos, word.span_len(), 50, 30)
                     reports.append(Report('W', toolname, word, msg, line))
                     break
 

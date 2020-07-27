@@ -9,7 +9,7 @@ Punctuation style checks and number formatting.
 import re
 
 import monostyle.util.monostylestd as monostylestd
-from monostyle.util.report import Report
+from monostyle.util.report import Report, getline_punc
 from monostyle.util.fragment import Fragment
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.pos import PartofSpeech
@@ -151,9 +151,7 @@ def number(document, reports, re_lib):
                     continue
 
                 out = part.code.slice_match_obj(m, 0, True)
-                line = monostylestd.getline_punc(document.body.code,
-                                                 part.code.start_pos + m.start(),
-                                                 len(m.group(0)), 50, 0)
+                line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
                 reports.append(Report('W', toolname, out, value[1], line))
 
     return reports
@@ -409,14 +407,13 @@ def mark(document, reports, re_lib):
         if part.parent_node.node_name == "text":
             part_str = str(part.code)
             for key, value in re_lib.items():
-                if key not in ("lowerpara", "nopuncend", "commaend"):
-                    pattern = value[0]
-                    for m in re.finditer(pattern, part_str):
-                        out = part.code.slice_match_obj(m, 0, True)
-                        line = monostylestd.getline_punc(document.body.code,
-                                                         part.code.start_pos + m.start(),
-                                                         len(m.group(0)), 50, 0)
-                        reports.append(Report('W', toolname, out, value[1], line))
+                if key in {"lowerpara", "nopuncend", "commaend"}:
+                    continue
+                pattern = value[0]
+                for m in re.finditer(pattern, part_str):
+                    out = part.code.slice_match_obj(m, 0, True)
+                    line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
+                    reports.append(Report('W', toolname, out, value[1], line))
 
 
     instr_pos = {
@@ -448,8 +445,7 @@ def mark(document, reports, re_lib):
                 if re.match(start_re, str(part.code)):
                     out = part.code.copy()
                     out.clear(True)
-                    line = monostylestd.getline_punc(document.body.code, part.code.start_pos,
-                                                     0, 50, 0)
+                    line = getline_punc(document.body.code, out.start_pos, 0, 50, 0)
                     reports.append(Report('W', toolname, out, re_lib["lowerpara"][1], line))
 
                 was_empty = bool(len(part.code) == 0)
@@ -470,12 +466,12 @@ def mark(document, reports, re_lib):
                     if (not rst_walker.is_of(par_node, "field",
                                              ("Hotkey", "Menu", "Panel", "Mode",
                                               "Tool", "Editor", "Header", "Type")) and
-                            (not rst_walker.is_of(part.next_leaf(), "dir", "default") or part_str.endswith(" "))):
+                            (not rst_walker.is_of(part.next_leaf(), "dir", "default") or
+                             part_str.endswith(" "))):
 
                         out = part.code.copy().clear(False)
                         msg = re_lib["nopuncend"][1].format("paragraph")
-                        line = monostylestd.getline_punc(document.body.code, part.code.end_pos,
-                                                         0, 50, 0)
+                        line = getline_punc(document.body.code, part.code.end_pos, 0, 50, 0)
                         reports.append(Report('W', toolname, out, msg, line))
 
                 else:
@@ -537,15 +533,15 @@ def whitespace(document, reports, re_lib):
 
     text = str(document.code)
     for key, value in re_lib.items():
-        if key not in ("multispace", "multispacestart"):
-            pattern = value[0]
-            for m in re.finditer(pattern, text):
-                out = document.body.code.slice_match_obj(m, 0, True)
-                line = monostylestd.getline_punc(document.body.code, m.start(),
-                                                 len(m.group(0)), 50, 0)
-                fg_repl = document.body.code.slice_match_obj(m, 1, True)
-                fg_repl.content = [value[2]]
-                reports.append(Report('W', toolname, out, value[1], line, fg_repl))
+        if key in {"multispace", "multispacestart"}:
+            continue
+        pattern = value[0]
+        for m in re.finditer(pattern, text):
+            out = document.body.code.slice_match_obj(m, 0, True)
+            line = getline_punc(document.body.code, m.start(), len(m.group(0)), 50, 0)
+            fg_repl = document.body.code.slice_match_obj(m, 1, True)
+            fg_repl.content = [value[2]]
+            reports.append(Report('W', toolname, out, value[1], line, fg_repl))
 
     instr_pos = {
         "field": {"*": ["name", "body"]},
@@ -565,18 +561,15 @@ def whitespace(document, reports, re_lib):
             if part.code.start_lincol[1] != 0:
                 if multi_start_m := re.match(multi_start_re, part_str):
                     out = part.code.slice_match_obj(multi_start_m, 1, True)
-                    line = monostylestd.getline_punc(document.body.code,
-                                                     part.code.start_pos + multi_start_m.start(),
-                                                     len(multi_start_m.group(1)), 50, 0)
+                    line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
                     fg_repl = out.copy()
                     fg_repl.content = [value[2]]
-                    reports.append(Report('W', toolname, out, re_lib["multispacestart"][1], line, fg_repl))
+                    reports.append(Report('W', toolname, out, re_lib["multispacestart"][1],
+                                          line, fg_repl))
 
             for multi_m in re.finditer(multi_re, part_str):
                 out = part.code.slice_match_obj(multi_m, 1, True)
-                line = monostylestd.getline_punc(document.body.code,
-                                                 part.code.start_pos + multi_m.start(),
-                                                 len(multi_m.group(1)), 50, 0)
+                line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
                 fg_repl = out.copy()
                 fg_repl.content = [value[2]]
                 reports.append(Report('W', toolname, out, re_lib["multispace"][1], line, fg_repl))
