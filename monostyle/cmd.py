@@ -42,7 +42,7 @@ def hub(ops_sel, do_parse=True, do_resolve=False):
     ops_loop = []
     for op in ops_sel:
         if not op[2]:
-            reports = op[0](reports)
+            reports = op[0](reports, **op[1])
         else:
             ops_loop.append(op)
 
