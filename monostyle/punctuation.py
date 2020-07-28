@@ -274,13 +274,6 @@ def mark_pre(_):
     pare_close = CharCatalog.data["bracket"]["right"]["normal"]
 
     # limitation: not nested parenthesis
-    # not match abbr
-    pattern_str = r"(?<!\w\.\w)[" + punc_sent + r"]\s+?" + r"[" + pare_open + r"]?[a-z]"
-    pattern = re.compile(pattern_str, re.MULTILINE | re.DOTALL)
-    msg = Report.misformatted(what="lowercase", where="after punctuation mark")
-    re_lib["punclower"] = (pattern, msg)
-
-    # limitation: not nested parenthesis
     # FN: inline markup
     pattern_str = (
         r"[", punc_sent, r"]\s*?",
@@ -292,23 +285,11 @@ def mark_pre(_):
                            to_where="before")
     re_lib["bracketpunc"] = (pattern, msg)
 
-    # FP: code, container
-    pattern_str = r"[" + pare_open + r"]?[a-z]"
-    pattern = re.compile(pattern_str)
-    msg = Report.misformatted(what="lowercase", where="at paragraph start")
-    re_lib["lowerpara"] = (pattern, msg)
-
     # FP: code, literal
     pattern_str = r"([" + pare_open + r"]\s)|(\s[" + pare_close + r"])"
     pattern = re.compile(pattern_str, re.MULTILINE)
     msg = Report.existing(what="space", where="after/before opening/closing bracket")
     re_lib["spacebracket"] = (pattern, msg)
-
-    # FP: abbr, menu, heading, code
-    pattern_str = r"[^.\s]\s*?[" + pare_open + r"][A-Z][a-z ]"
-    pattern = re.compile(pattern_str, re.MULTILINE)
-    msg = Report.misformatted(what="uppercase", where="at bracket start")
-    re_lib["upperbracket"] = (pattern, msg)
 
     pattern_str = r"[" + punc + r"][" + pare_close + r"]?\s*\Z"
     pattern = re.compile(pattern_str)
@@ -407,7 +388,7 @@ def mark(document, reports, re_lib):
         if part.parent_node.node_name == "text":
             part_str = str(part.code)
             for key, value in re_lib.items():
-                if key in {"lowerpara", "nopuncend", "commaend"}:
+                if key in {"nopuncend", "commaend"}:
                     continue
                 pattern = value[0]
                 for m in re.finditer(pattern, part_str):
@@ -433,23 +414,10 @@ def mark(document, reports, re_lib):
         "standalone": "*"
     }
 
-    start_re = re_lib["lowerpara"][0]
     noend_re = re_lib["nopuncend"][0]
     comma_re = re_lib["commaend"][0]
     was_empty = False
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        if not part.parent_node.prev or was_empty:
-            if (part.parent_node.node_name == "text" or
-                    part.parent_node.parent_node.parent_node.node_name == "text"):
-
-                if re.match(start_re, str(part.code)):
-                    out = part.code.copy()
-                    out.clear(True)
-                    line = getline_punc(document.body.code, out.start_pos, 0, 50, 0)
-                    reports.append(Report('W', toolname, out, re_lib["lowerpara"][1], line))
-
-                was_empty = bool(len(part.code) == 0)
-
         if not part.parent_node.next:
             if part.parent_node.node_name == "text":
                 part_str = str(part.code)

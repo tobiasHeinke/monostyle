@@ -12,12 +12,14 @@ import monostyle.util.monostylestd as monostylestd
 from monostyle.util.report import Report, getline_punc
 from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.walker as rst_walker
+from monostyle.util.char_catalog import CharCatalog
 from monostyle.util.pos import PartofSpeech
 from monostyle.util.segmenter import Segmenter
 
 
 Segmenter = Segmenter()
 POS = PartofSpeech()
+CharCatalog = CharCatalog()
 
 
 def titlecase(word, is_first_word, is_last_word, name):
@@ -200,6 +202,83 @@ def pos_case(document, reports):
 
     return reports
 
+
+def starting_pre(_):
+
+    re_lib = dict()
+    punc_sent = CharCatalog.data["terminal"]["final"] + ':'
+    pare_open = CharCatalog.data["bracket"]["left"]["normal"]
+
+    # FP: code, container
+    pattern_str = r"[" + pare_open + r"]?[a-z]"
+    pattern = re.compile(pattern_str)
+    msg = Report.misformatted(what="lowercase", where="at paragraph start")
+    re_lib["lowerpara"] = (pattern, msg)
+
+    # todo? split sentence
+    # limitation: not nested parenthesis
+    # not match abbr
+    pattern_str = r"(?<!\w\.\w)[" + punc_sent + r"]\s+?" + r"[" + pare_open + r"]?[a-z]"
+    pattern = re.compile(pattern_str, re.MULTILINE | re.DOTALL)
+    msg = Report.misformatted(what="lowercase", where="after sentence start")
+    re_lib["punclower"] = (pattern, msg)
+
+    # FP: abbr, menu, heading, code
+    pattern_str = r"[^.\s]\s*?[" + pare_open + r"][A-Z][a-z ]"
+    pattern = re.compile(pattern_str, re.MULTILINE)
+    msg = Report.misformatted(what="uppercase", where="at bracket start")
+    re_lib["upperbracket"] = (pattern, msg)
+
+    args = dict()
+    args["re_lib"] = re_lib
+
+    return args
+
+
+def starting(document, reports, re_lib):
+    """Check case at the start of paragraphs, sentences and parenthesis."""
+    toolname = "starting"
+
+    instr_pos = {
+        "field": {"*": ["name", "body"]},
+        "*": {"*": ["head", "body"]}
+    }
+    instr_neg = {
+        "dir": {
+            "figure": ["head"], "toctree": "*", "include": "*",
+            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
+        },
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
+        "literal": "*", "standalone": "*"
+    }
+
+    start_re = re_lib["lowerpara"][0]
+    was_empty = False
+    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
+        if not part.parent_node.prev or was_empty:
+            if (part.parent_node.node_name == "text" or
+                    part.parent_node.parent_node.parent_node.node_name == "text"):
+
+                if re.match(start_re, str(part.code)):
+                    out = part.code.copy()
+                    out.clear(True)
+                    line = getline_punc(document.body.code, out.start_pos, 0, 50, 0)
+                    reports.append(Report('W', toolname, out, re_lib["lowerpara"][1], line))
+
+                was_empty = bool(len(part.code) == 0)
+
+        if part.parent_node.node_name == "text":
+            part_str = str(part.code)
+            for key, value in re_lib.items():
+                if key == "lowerpara":
+                    continue
+                pattern = value[0]
+                for m in re.finditer(pattern, part_str):
+                    out = part.code.slice_match_obj(m, 0, True)
+                    line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
+                    reports.append(Report('W', toolname, out, value[1], line))
+
+    return reports
 
 def property_noun_pre(_):
     """Build lexicon with lower/uppercase counts."""
@@ -428,6 +507,7 @@ OPS = (
     ("heading", heading_cap, heading_cap_pre),
     ("pos", pos_case, None),
     ("property", property_noun, property_noun_pre),
+    ("starting", starting, starting_pre),
     ("type", typ_caps, typ_caps_pre),
     ("ui", ui_case, None),
 )

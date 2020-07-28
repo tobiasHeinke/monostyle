@@ -20,7 +20,7 @@ tool_selection = {
         "ext": ".rst"
     },
     "capitalization": {
-        "tools": ("heading", "pos", "ui"),
+        "tools": ("heading", "starting", "pos", "ui"),
         "ext": ".rst"
     },
     "punctuation": {
