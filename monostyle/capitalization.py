@@ -77,8 +77,7 @@ def admonition_title(document, reports):
                         if word_str[0].islower():
                             word_low += 1
                 if word_all > 1 and word_low/ word_all >= threshold:
-                    msg = "admonition caption titlecase"
-                    msg += ":" + str(round((word_low/ word_all) *100))
+                    msg = "admonition caption titlecase: {:4.0%}".format(word_low/ word_all)
                     out = node.head.code.copy()
                     out.content = []
                     reports.append(Report('W', toolname, out, msg, node.head.code))

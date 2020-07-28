@@ -23,7 +23,6 @@ def char_search(document, reports):
     text = str(document.code)
     chars = (
         (r"\uFFFD", "replace char"),
-        (r"\t", "tab"),
         (CharCatalog.data["quote"]["initial"], "initial quote"),
         (CharCatalog.data["quote"]["final"], "final quote"),
         (r"–", "en-dash"),

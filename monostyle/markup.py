@@ -304,17 +304,23 @@ def leak_pre(_):
 
     re_lib = dict()
 
-    # BODY
+    # BLOCK
     # Directive
     pattern_str = r"\:\:[A-Za-z\d_-]"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="space", where="after directive")
     re_lib["dirend"] = (pattern, msg)
 
-    pattern_str = r"\s\.\.[A-Za-z]"
+    pattern_str = r"(?:^|(?<=\s))\.\.[A-Za-z]"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="space", where="in middle of directive")
     re_lib["dirmid"] = (pattern, msg)
+
+    # Target
+    pattern_str = r"^ *\.\. +[^_]\S*?(?<!\:)\: *?$"
+    pattern = re.compile(pattern_str, re.MULTILINE)
+    msg = Report.missing(what="underscore", where="before target")
+    re_lib["targetstart"] = (pattern, msg)
 
     # List
     pattern_str = r"^ *\-[A-Za-z]"
