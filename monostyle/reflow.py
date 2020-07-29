@@ -113,7 +113,6 @@ def fix(root_rst, reports):
     changes = []
     unlocated = reports.copy()
     for node in rst_walker.iter_node(root_rst, ("text"), False):
-        # if (node.parent_node.parent_node.node_name != "text" and node.body.code):
         if node.body.code:
             is_first_report = True
             reports_pro = []

@@ -465,3 +465,10 @@ class Fragment():
         return Fragment(self.fn, self.content.copy(), self.start_pos,
                         self.end_pos, self.start_lincol, self.end_lincol,
                         bool(self.start_lincol is not None))
+
+
+    def copy_replace(self, new_content):
+        """Returns a copy with new content."""
+        return Fragment(self.fn, new_content, self.start_pos,
+                        self.end_pos, self.start_lincol, self.end_lincol,
+                        bool(self.start_lincol is not None))

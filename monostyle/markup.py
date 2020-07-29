@@ -30,48 +30,40 @@ def heading_level(document, reports):
             level_cur = levels[heading_char]
 
         if level_cur == -1:
-            out = node.name_end.code.copy()
-            out.content = node.name_end.code.content[0]
-            msg = Report.existing(what="unknown level: " + heading_char)
+            out = node.name_end.code.copy_replace(heading_char)
+            msg = Report.existing(what="unknown level")
             reports.append(Report('W', toolname, out, msg))
 
         elif level_cur <= 2:
             if level_cur == 0:
 
                 if not document.code.fn.endswith("manual/index.rst"):
-                    out = node.name_end.code.copy()
-                    out.content = node.name_end.code.content[0]
-                    msg = Report.existing(what="main index title: " + heading_char,
-                                          where="not on main")
+                    out = node.name_end.code.copy_replace(heading_char)
+                    msg = Report.existing(what="main index title", where="not on main")
                     reports.append(Report('W', toolname, out, msg))
 
             elif level_cur == 1:
                 if not document.code.fn.endswith("index.rst"):
-                    out = node.name_end.code.copy()
-                    out.content = node.name_end.code.content[0]
-                    msg = Report.existing(what="index title: " + heading_char,
-                                          where="on page")
+                    out = node.name_end.code.copy_replace(heading_char)
+                    msg = Report.existing(what="index title", where="on page")
                     reports.append(Report('W', toolname, out, msg))
 
             elif document.code.fn.endswith("index.rst"):
-                out = node.name_end.code.copy()
-                out.content = heading_char
+                out = node.name_end.code.copy_replace(heading_char)
                 msg = Report.existing(what="page title", where="on index")
                 reports.append(Report('W', toolname, out, msg))
 
             title_count += 1
             if title_count > 1:
                 msg = Report.over(what="title headings: " + str(title_count))
-                out = node.name_end.code.copy()
-                out.content = heading_char
+                out = node.name_end.code.copy_replace(heading_char)
                 reports.append(Report('W', toolname, out, msg))
 
             level_prev = 2
         else:
             if title_count == 0:
                 if document.body.code.start_lincol[0] == 0:
-                    out = node.name_end.code.copy()
-                    out.content = heading_char
+                    out = node.name_end.code.copy_replace(heading_char)
                     msg = Report.missing(what="title heading")
                     reports.append(Report('W', toolname, out, msg))
                     # report only once
@@ -82,8 +74,7 @@ def heading_level(document, reports):
                                           level_chars[level_prev], heading_char),
                                           with_what=level_chars[level_prev + 1])
 
-                out = node.name_end.code.copy()
-                out.content = node.name_end.code.content[0]
+                out = node.name_end.code.copy_replace(heading_char)
                 reports.append(Report('W', toolname, out, msg))
 
             level_prev = level_cur
@@ -317,10 +308,15 @@ def leak_pre(_):
     re_lib["dirmid"] = (pattern, msg)
 
     # Target
-    pattern_str = r"^ *\.\. +[^_]\S*?(?<!\:)\: *?$"
+    pattern_str = r"^ *\.\. +[^_ ]\S*?(?<!\:)\: *?$"
     pattern = re.compile(pattern_str, re.MULTILINE)
     msg = Report.missing(what="underscore", where="before target")
     re_lib["targetstart"] = (pattern, msg)
+
+    pattern_str = r"^ *\.\. +_\S*?[^: ] *?$"
+    pattern = re.compile(pattern_str, re.MULTILINE)
+    msg = Report.missing(what="colon", where="after target")
+    re_lib["targetend"] = (pattern, msg)
 
     # List
     pattern_str = r"^ *\-[A-Za-z]"
@@ -443,6 +439,15 @@ def leak_pre(_):
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="space", where="before/after dash")
     re_lib["dash"] = (pattern, msg)
+
+
+    # Merge Conflict
+    # = nl to not match heading underline
+    # FP = transition
+    pattern_str = r"(?:[<>|]{7} \.(?:r\d+?|mine))|(?:\n{2}={7}\n{2})"
+    pattern = re.compile(pattern_str, re.MULTILINE)
+    msg = Report.existing(what="merge conflict")
+    re_lib["mc"] = (pattern, msg)
 
     args = dict()
     args["re_lib"] = re_lib

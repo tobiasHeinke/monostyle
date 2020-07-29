@@ -22,19 +22,22 @@ def char_search(document, reports):
 
     text = str(document.code)
     chars = (
-        (r"\uFFFD", "replace char"),
-        (CharCatalog.data["quote"]["initial"], "initial quote"),
-        (CharCatalog.data["quote"]["final"], "final quote"),
-        (r"–", "en-dash"),
-        (r"—", "em-dash"),
+        (r"\uFFFD", "replace char", None),
+        (CharCatalog.data["quote"]["initial"]["single"], "initial quote", "'"),
+        (CharCatalog.data["quote"]["initial"]["double"], "initial quote", "\""),
+        (CharCatalog.data["quote"]["final"]["single"], "final quote", "'"),
+        (CharCatalog.data["quote"]["final"]["double"], "final quote", "\""),
+        (r"–", "en-dash", "--"),
+        (r"—", "em-dash", "--"),
     )
     explicits = ""
-    for pattern, msg in chars:
+    for pattern, msg, repl in chars:
         char_re = re.compile(r"[" + pattern + r"]")
         explicits += pattern
         for char_m in re.finditer(char_re, text):
             out = document.code.slice_match_obj(char_m, 0, True)
-            reports.append(Report('E', toolname, out, msg))
+            fg_repl = out.copy_replace(repl)
+            reports.append(Report('E', toolname, out, msg, fix=fg_repl))
 
     parttern_str = r"[^\n -~À-ʨ" + ''.join(('©', '®', '°', '±', '€', '™')) + explicits +  r"]"
     char_re = re.compile(parttern_str)

@@ -243,17 +243,15 @@ def heading_lines(document, reports):
 
         if heading_char in ('%', '#', '*'):
             if not node.name_start:
-                out = node.name_end.code.copy()
-                out.content = out.content[0][0]
+                out = node.name_end.code.copy_replace(heading_char)
                 msg = Report.missing(what="overline")
-                fg_repl = node.name.code.copy().clear(True)
-                fg_repl.content = [heading_char * (title_len + 4) + "\n"]
+                fg_repl = node.name.code.copy_replace(heading_char * (title_len + 4) + "\n")
+                fg_repl = fg_repl.clear(True)
                 reports.append(Report('W', toolname, out, msg, fix=fg_repl))
 
         if heading_char in ('%', '#'):
             if len(node.name_end.code.content[0].strip()) != (title_len + 4):
-                out = node.name_end.code.copy()
-                out.content = out.content[0][0]
+                out = node.name_end.code.copy_replace(heading_char)
                 msg = Report.quantity(what="wrong underline length",
                                       how=": {:+}".format(
                                           title_len + 4 - len(node.name_end.code.content[0])))
@@ -283,8 +281,7 @@ def heading_lines(document, reports):
 
         else:
             if len(node.name_end.code.content[0].strip()) != title_len:
-                out = node.name_end.code.copy()
-                out.content = out.content[0][0]
+                out = node.name_end.code.copy_replace(heading_char)
                 msg = Report.quantity(what="wrong underline length",
                                       how=": {:+}".format(
                                           title_len - len(node.name_end.code.content[0])))
@@ -482,8 +479,7 @@ def style_add(document, reports):
             if (re.match(proto_re, str(node.id.code)) and
                     not re.match(r"`__", str(node.body_end.code))):
                 msg = Report.missing(what="underscore", where="after external link (same tab)")
-                fg_repl = node.body_end.code.copy().clear(True)
-                fg_repl.content = ["_"]
+                fg_repl = node.body_end.code.copy_replace("_").clear(True)
                 reports.append(Report('W', toolname, node.id.code, msg, fix=fg_repl))
 
         if node.node_name == "target":

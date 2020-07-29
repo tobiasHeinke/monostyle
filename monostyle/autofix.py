@@ -28,6 +28,7 @@ def run(reports, rst_parser):
             group_fix.append(report)
 
     if len(group_fix) == 0:
+        print("\b" * 3 + "done")
         return None
 
     group_fn = {}

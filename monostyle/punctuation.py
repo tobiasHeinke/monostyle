@@ -530,16 +530,14 @@ def whitespace(document, reports, re_lib):
                 if multi_start_m := re.match(multi_start_re, part_str):
                     out = part.code.slice_match_obj(multi_start_m, 1, True)
                     line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
-                    fg_repl = out.copy()
-                    fg_repl.content = [value[2]]
+                    fg_repl = out.copy_replace(value[2])
                     reports.append(Report('W', toolname, out, re_lib["multispacestart"][1],
                                           line, fg_repl))
 
             for multi_m in re.finditer(multi_re, part_str):
                 out = part.code.slice_match_obj(multi_m, 1, True)
                 line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
-                fg_repl = out.copy()
-                fg_repl.content = [value[2]]
+                fg_repl = out.copy_replace(value[2])
                 reports.append(Report('W', toolname, out, re_lib["multispace"][1], line, fg_repl))
 
     return reports

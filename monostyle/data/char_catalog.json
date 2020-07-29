@@ -49,9 +49,18 @@
 	"bottom": "⎶⎵"
 },
 "quote": {
-	"neutral": "'\"",
-	"initial": "«‹‘“",
-	"final": "»›’”"
+	"neutral": {
+		"single": "'",
+		"double": "\""
+	},
+	"initial": {
+		"single": "‹‘",
+		"double": "«“"
+	},
+	"final": {
+		"single": "›’",
+		"double": "»”"
+	}
 },
 "omission":{
 	"apostrophe": "’'",
