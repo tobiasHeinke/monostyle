@@ -202,9 +202,10 @@ class RSTParser:
                 if line_info["is_not_empty"]:
                     ind_cur = line.start_lincol[1] + len(line_info["line_str"]) - len(line_info["line_strip"])
                     if is_first_not_empty:
-                        # first defines the base indent
-                        # block-quote at start will be a text node if not doc start
-                        if node.code.start_lincol != (0, 0):
+                        # first defines the base indent if nested
+                        if ((node.parent_node.parent_node and
+                                node.code.start_lincol != (0, 0)) or
+                                node.parent_node.node_name == "block-quote"):
                             ind_start[0] = ind_cur
                         is_first_not_empty = False
 
@@ -392,7 +393,7 @@ class RSTParser:
             if (node.node_name != "text" and
                     (node.node_name != "dir" or not(not node.name or
                      str(node.name.code).rstrip() == "code-block")) and
-                    node.node_name not in {"block-quote", "comment", "doctest"}):
+                    node.node_name not in {"comment", "doctest"}):
                 if node.head:
                     if not node.head.child_nodes.is_empty():
                         self.parse_node(node.head)
@@ -423,7 +424,7 @@ class RSTParser:
         for node in root.child_nodes:
             if ((node.node_name != "dir" or not(not node.name or
                     str(node.name.code).rstrip() == "code-block")) and
-                    node.node_name not in {"block-quote", "comment", "doctest"}):
+                    node.node_name not in {"comment", "doctest"}):
 
                 if node.node_name in {"sect", "field"} and node.name:
                     node.name = self.parse_inline(node.name)

@@ -198,7 +198,6 @@ No Recognition: Def. list: term: classifier, bibliographic fields and RCS keywor
 Lists at block start only.
 Default directive requires a blank line between start and body.
 Default directive no multi line head.
-Block-quote in a snippet (not starting at line 1) at the first line or preceded by only blank lines will be a text node.
 Options lists option name itself and aliases are not split.
 Options lists args limited allowed chars.
 

@@ -116,8 +116,7 @@ def apply_tools(mods, fg):
 
     if fg.fn.endswith(".rst"):
         document = RSTParser.parse_full(RSTParser.snippet(fg))
-        if fg.fn.endswith("index.rst"):
-            document = hunk_post_parser.parse(RSTParser, document)
+        document = hunk_post_parser.parse(RSTParser, document)
     else:
         document = RSTParser.snippet(fg)
 

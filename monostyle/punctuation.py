@@ -430,12 +430,10 @@ def mark(document, reports, re_lib):
                     while par_node.node_name == "text":
                         par_node = par_node.parent_node.parent_node
 
-                    # refbox parts
-                    if (not rst_walker.is_of(par_node, "field",
-                                             ("Hotkey", "Menu", "Panel", "Mode",
-                                              "Tool", "Editor", "Header", "Type")) and
-                            (not rst_walker.is_of(part.next_leaf(), "dir", "default") or
-                             part_str.endswith(" "))):
+                    if ((not rst_walker.is_of(part, "dir", "admonition") or
+                         str(rst_walker.get_attr(part.parent_node, "class")).strip() != "refbox") and
+                         (not rst_walker.is_of(part.next_leaf(), "dir", "default") or
+                            part_str.endswith(" "))):
 
                         out = part.code.copy().clear(False)
                         msg = re_lib["nopuncend"][1].format("paragraph")
