@@ -313,7 +313,7 @@ def leak_pre(_):
     msg = Report.missing(what="underscore", where="before target")
     re_lib["targetstart"] = (pattern, msg)
 
-    pattern_str = r"^ *\.\. +_\S*?[^: ] *?$"
+    pattern_str = r"^ *\.\. +_\S*?[^: \n] *?$"
     pattern = re.compile(pattern_str, re.MULTILINE)
     msg = Report.missing(what="colon", where="after target")
     re_lib["targetend"] = (pattern, msg)

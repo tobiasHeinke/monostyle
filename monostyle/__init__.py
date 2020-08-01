@@ -137,7 +137,7 @@ def filter_reports(reports_hunk, context, reports):
     for report in reports_hunk:
         if (report.tool in
                 ("mark", "blank-line", "indention", "heading-level",
-                 "heading-char-count", "flavor") and # "search-word",
+                 "heading-char-count", "starting", "flavor") and # "search-word",
                 report.out.start_lincol is not None and report.out.start_lincol[0] in context):
             continue
 

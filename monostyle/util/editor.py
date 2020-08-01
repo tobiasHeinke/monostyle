@@ -148,8 +148,9 @@ class Editor:
         groups = [[] for _ in range(0, len(self._changes))]
         for index, pair in enumerate(sorted(self._changes, key=lambda ent: ent.get_end(pos_lc))):
             for index_sub, pair_sub in enumerate(self._changes[:index]):
-                if ((pair_sub.get_end(pos_lc) < pair.get_start(pos_lc) or
-                        pair_sub.get_start(pos_lc) == pair.get_end(pos_lc)) and
+                if (pair_sub.get_end(pos_lc) < pair.get_start(pos_lc) or
+                        (pair_sub.get_end(pos_lc) == pair.get_start(pos_lc) and
+                        (pair_sub.get_start(pos_lc) != pair.get_end(pos_lc))) and
                         len(groups[index]) < len(groups[index_sub])):
                     groups[index] = groups[index_sub].copy()
 

@@ -194,13 +194,11 @@ class Fragment():
             end_rel = self.loc_to_rel(self.pos_to_lincol(self.end_pos, True))
 
         cuts = []
+        if not right_inner:
+            cuts.append((start_rel, at_start_rel, self.start_pos, self.start_lincol))
         if at_end is None:
-            if not right_inner:
-                cuts.append((start_rel, at_start_rel, self.start_pos, self.start_lincol))
             cuts.append((at_start_rel, end_rel, start_pos_abs, at_start))
         else:
-            if not right_inner:
-                cuts.append((start_rel, at_start_rel, self.start_pos, self.start_lincol))
             cuts.append((at_start_rel, at_end_rel, start_pos_abs, at_start))
             if not right_inner:
                 cuts.append((at_end_rel, end_rel, None, at_end))

@@ -36,10 +36,10 @@ def char_search(document, reports):
         explicits += pattern
         for char_m in re.finditer(char_re, text):
             out = document.code.slice_match_obj(char_m, 0, True)
-            fg_repl = out.copy_replace(repl)
+            fg_repl = out.copy_replace(repl) if repl else None
             reports.append(Report('E', toolname, out, msg, fix=fg_repl))
 
-    parttern_str = r"[^\n -~À-ʨ" + ''.join(('©', '®', '°', '±', '€', '™')) + explicits +  r"]"
+    parttern_str = r"[^\n -~À-ʨ" + ''.join(('©', '®', '°', '±', '€', '™', "\t")) + explicits +  r"]"
     char_re = re.compile(parttern_str)
     for char_m in re.finditer(char_re, text):
         msg = "uncommon char: {0}, 0x{0:04x}".format(ord(char_m.group(0)))
