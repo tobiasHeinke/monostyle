@@ -9,9 +9,11 @@ Create or compare words against a lexicon.
 import os
 import re
 import csv
+from difflib import SequenceMatcher
 
 import monostyle.util.monostylestd as monostylestd
 from monostyle.util.report import Report
+from monostyle.util.fragment import Fragment
 
 from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.walker as rst_walker
@@ -45,12 +47,13 @@ def search(document, reports, re_lib, data, config):
     # compare words against the lexicon.
     for word, word_cont, hunk_count in text_words:
         found_count = -1
-        for stored_word, count in data:
+        for stored_word, count, _ in data[word_cont[0]]:
             if word_cont == str(stored_word):
                 found_count = int(count)
                 break
 
         if found_count < threshold:
+            line = None
             if found_count != -1:
                 severity = 'I'
                 msg = "rare word: hunk: {0} lex: {1}".format(str(hunk_count + 1),
@@ -58,10 +61,57 @@ def search(document, reports, re_lib, data, config):
             else:
                 severity = 'W'
                 msg = "new word: hunk: " + str(hunk_count + 1)
+                line = Fragment(word.fn, ", ".join(find_similar(norm_punc(str(word), re_lib),
+                                                                word_cont,data, 5, 0.6)))
 
-            reports.append(Report(severity, toolname, word, msg))
+            reports.append(Report(severity, toolname, word, msg, line))
 
     return reports
+
+
+def find_similar(word_str, word_cont, lexicon, count, sim_threshold):
+    """Find similar words within a lexicon with adaptive filtering."""
+    def iter_lexicon(word_cont, lexicon):
+        first_char = word_cont[0]
+        value = lexicon[first_char]
+        yield from reversed(value)
+        for key, value in lexicon.items():
+            if key != first_char:
+                yield from reversed(value)
+
+    similars = []
+    word_chars = set(ord(c) for c in word_cont)
+    for stored_word, _, stored_chars in iter_lexicon(word_cont, lexicon):
+        len_deviation = abs(len(word_cont) - len(stored_word)) / len(word_cont)
+        if len_deviation >= 2:
+            continue
+        sim_rough = len(word_chars.intersection(stored_chars)) / len(word_chars) - len_deviation
+        is_not_full = bool(len(similars) < count)
+        if is_not_full or sim_rough >= min_rough:
+            matcher = SequenceMatcher(None, word_cont, stored_word)
+            sim_quick = matcher.quick_ratio()
+            if is_not_full or sim_quick >= min_quick:
+                sim_slow = matcher.ratio()
+                if sim_slow == 1 and word_cont == stored_word:
+                    continue
+                if is_not_full:
+                    similars.append((stored_word, sim_slow, sim_quick, sim_rough))
+                else:
+                    min_value = None
+                    min_index = 0
+                    for index, ent in enumerate(similars):
+                        if min_value is None or ent[1] <= min_value:
+                            min_index = index
+                            min_value = ent[1]
+
+                    similars[min_index] = (stored_word, sim_slow, sim_quick, sim_rough)
+
+                min_quick = min(s[2] for s in similars)
+                min_rough = min(s[3] for s in similars)
+
+    similars.sort(key=lambda key: key[1], reverse=True)
+    return tuple(lower_first_reverse(ent[0], word_str) for ent in similars
+                 if ent[1] >= sim_threshold)
 
 
 def build_lexicon(re_lib):
@@ -72,9 +122,14 @@ def build_lexicon(re_lib):
         document = rst_parser.parse_full(rst_parser.document(fn, text))
         lexicon = populate_lexicon(document, lexicon, re_lib)
 
-    lexicon = join_sort(lexicon)
+    # Flatten tree to list.
+    lexicon_flat = []
+    for val in lexicon.values():
+        lexicon_flat.extend(val)
 
-    return lexicon
+    # Sort list by highest occurrence.
+    lexicon_flat.sort(key=lambda word: word[1], reverse=True)
+    return lexicon_flat
 
 
 def populate_lexicon(document, lexicon, re_lib):
@@ -101,15 +156,16 @@ def populate_lexicon(document, lexicon, re_lib):
     return lexicon
 
 
-def join_sort(lexicon):
-    # Flatten tree to list.
-    lexicon_flat = []
-    for val in lexicon.values():
-        lexicon_flat.extend(val)
+def split_lexicon(lexicon_flat):
+    """Split lexicon by first char."""
+    lexicon = dict()
+    for ent in lexicon_flat:
+        first_char = ent[0][0]
+        if first_char not in lexicon.keys():
+            lexicon.setdefault(first_char, [])
+        lexicon[first_char].append(ent)
 
-    # Sort list by highest occurrence.
-    lexicon_flat.sort(key=lambda word: word[1], reverse=True)
-    return lexicon_flat
+    return lexicon
 
 
 def word_filtered(document):
@@ -157,19 +213,33 @@ def word_filtered(document):
 
 
 def norm_punc(word_cont, re_lib):
-    """Iterate over words in the filtered text."""
+    """Normalize the word's punctuation."""
     word_cont = re.sub(re_lib["hypen"], '-', word_cont)
     word_cont = re.sub(re_lib["apostrophe"], '\'', word_cont)
     return word_cont
 
 
 def lower_first(word):
+    """Lower case of first char in hypened compound."""
     new_word = []
     for compound in word.split('-'):
         if len(compound) != 0:
             new_word.append(compound[0].lower() + compound[1:])
         else:
             new_word.append(compound)
+
+    return '-'.join(new_word)
+
+
+def lower_first_reverse(word, ref):
+    """Upper case of first char in hypened compound based on a reference word."""
+    new_word = []
+    for compound_word, compound_ref in zip(word.split('-'), ref.split('-')):
+        if (len(compound_word) != 0 and len(compound_ref) != 0 and
+                compound_ref[0].isupper()):
+            new_word.append(compound_word[0].upper() + compound_word[1:])
+        else:
+            new_word.append(compound_word)
 
     return '-'.join(new_word)
 
@@ -230,6 +300,11 @@ def compile_lib():
 
 
 def search_pre(_):
+    def add_charset(lexicon):
+        for ent in lexicon:
+            ent.append(set(ord(c) for c in ent[0].lower()))
+        return lexicon
+
     config_dir = os.path.normpath(os.path.join(monostylestd.ROOT_DIR, "monostyle"))
     if not os.path.isdir(config_dir):
         print("No user config found skipping spell checking")
@@ -250,7 +325,7 @@ def search_pre(_):
     threshold = monostylestd.get_override(__file__, "search", "threshold", 3)
     args = dict()
     args["re_lib"] = re_lib
-    args["data"] = data
+    args["data"] = split_lexicon(add_charset(data))
     args["config"] = {"threshold": threshold}
 
     return args
