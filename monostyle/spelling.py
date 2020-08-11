@@ -119,7 +119,7 @@ def build_lexicon(re_lib):
     rst_parser = RSTParser()
     lexicon = dict()
     for fn, text in monostylestd.rst_texts():
-        document = rst_parser.parse_full(rst_parser.document(fn, text))
+        document = rst_parser.parse(rst_parser.document(fn, text))
         lexicon = populate_lexicon(document, lexicon, re_lib)
 
     # Flatten tree to list.

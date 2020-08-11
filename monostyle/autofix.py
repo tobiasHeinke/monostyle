@@ -75,7 +75,7 @@ def apply(fn, tools, reports_unfixed, rst_parser):
     fg = None
     for tool, reports in tools.items():
         if tool == "reflow":
-            document = rst_parser.parse_full(rst_parser.document(fn, text))
+            document = rst_parser.parse(rst_parser.document(fn, text))
             fg = document.code
             changes, unlocated = monostyle.reflow.fix(document.body, reports)
 

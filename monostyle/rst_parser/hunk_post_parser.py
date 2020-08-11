@@ -52,7 +52,7 @@ def toctree(rst_parser, document):
             if not is_empty:
                 node.node_name = "dir"
                 fg = Fragment(document.code.fn, [".. toctree::\n"], -1, -1, (-1, 0), (-1, 0))
-                doc = rst_parser.parse_full(rst_parser.snippet(fg))
+                doc = rst_parser.parse(rst_parser.snippet(fg))
                 part_transfer(node, doc.body.child_nodes.first())
                 # the field-list is not made attr
 
@@ -66,7 +66,7 @@ def refbox(rst_parser, document):
                       [".. admonition:: Reference\n"
                        "   :class: refbox\n" if add_class else ""],
                       -1, -1, (-1, 0), (-1, 0))
-        doc = rst_parser.parse_full(rst_parser.snippet(fg))
+        doc = rst_parser.parse(rst_parser.snippet(fg))
         part_transfer(node, doc.body.child_nodes.first())
 
     node = document.body.child_nodes.first()

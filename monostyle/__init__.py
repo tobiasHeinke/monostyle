@@ -115,7 +115,7 @@ def apply_tools(mods, fg):
     reports_hunk = []
 
     if fg.fn.endswith(".rst"):
-        document = RSTParser.parse_full(RSTParser.snippet(fg))
+        document = RSTParser.parse(RSTParser.snippet(fg))
         document = hunk_post_parser.parse(RSTParser, document)
     else:
         document = RSTParser.snippet(fg)

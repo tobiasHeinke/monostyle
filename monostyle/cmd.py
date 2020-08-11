@@ -56,7 +56,7 @@ def hub(ops_sel, do_parse=True, do_resolve=False):
     for fn, text in monostylestd.rst_texts():
         document = rst_parser.document(fn, text)
         if do_parse:
-            document = rst_parser.parse_full(document)
+            document = rst_parser.parse(document)
             if do_resolve:
                 document = env.resolve_link_title(document, titles, targets)
                 document = env.resolve_subst(document, rst_parser.substitution)

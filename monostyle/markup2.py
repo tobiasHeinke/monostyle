@@ -95,7 +95,7 @@ def unused_targets_pre(_):
     rst_parser = RSTParser()
 
     for fn, text in monostylestd.rst_texts():
-        document = rst_parser.parse_full(rst_parser.document(fn, text))
+        document = rst_parser.parse(rst_parser.document(fn, text))
         for node in rst_walker.iter_node(document.body, ("target", "role", "subst")):
             if node.node_name == "target":
                 if (document.code.fn.endswith("index.rst") or
@@ -130,7 +130,7 @@ def local_targets_pre(_):
     rst_parser = RSTParser()
 
     for fn, text in monostylestd.rst_texts():
-        document = rst_parser.parse_full(rst_parser.document(fn, text))
+        document = rst_parser.parse(rst_parser.document(fn, text))
         for node in rst_walker.iter_node(document.body, ("target", "role")):
             if node.node_name == "target":
                 if (document.code.fn.endswith("index.rst") or
@@ -201,7 +201,7 @@ def glossary_pre(_):
     glossary_code = None
     glossary_fns = []
     for fn, text in monostylestd.rst_texts():
-        document = rst_parser.parse_full(rst_parser.document(fn, text))
+        document = rst_parser.parse(rst_parser.document(fn, text))
 
         for node in rst_walker.iter_node(document.body, ("dir", "role",)):
             if rst_walker.is_of(node, "*", "glossary"):

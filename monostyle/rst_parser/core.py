@@ -56,6 +56,7 @@ class RSTParser:
         # Block
 
         ind = r"( *)"
+        re_lib["ind"] = re.compile(ind + r"\S")
         space_end = r"(?: +|(?=\n)|\Z)"
 
         name_any = r"[A-Za-z0-9\-_.+]+?"
@@ -81,7 +82,7 @@ class RSTParser:
         pattern_str = (ind, r"(\:(?!", name_any, r"\:`))([^:].*?)((?<!\\)\:", space_end, r")")
         re_lib["field"] = re.compile(''.join(pattern_str))
 
-        option_arg = r"(?:[-/]\w|\-\-[\w-]+(?:[ =][\w.;:\\/\"'-]+)?)"
+        option_arg = r"(?:[-/]\w|\-\-\w[\w-]+(?:[ =][\w.;:\\/\"'-]+)?)"
         pattern_str = (ind, r"(", option_arg, r"(?:, ", option_arg, r")*)(  +|(?=\n)|\Z)")
         re_lib["option"] = re.compile(''.join(pattern_str))
 
@@ -174,9 +175,27 @@ class RSTParser:
 
 
     def parse_block(self, node, ind_first_unkown=False):
-        # indention
-        ind_start = [0]
-        ind_cur = 0
+        inds = []
+        block_ind = None
+        ind_re = self.re_lib["ind"]
+        is_first = True
+        for line_str in node.code.content:
+            if m := re.match(ind_re, line_str):
+                if block_ind is None:
+                    if not is_first or not ind_first_unkown:
+                        block_ind = m.end(1)
+                    else:
+                        block_ind = node.code.start_lincol[1]
+                else:
+                    block_ind = min(block_ind, m.end(1))
+                inds.append((m.end(1), True))
+            else:
+                inds.append((0, False))
+            is_first = False
+        # buffer
+        inds.append((0, False))
+
+        ind_start = [0 if block_ind is None or not node.parent_node.parent_node else block_ind]
         on = False
         sub = False
         root = node
@@ -188,27 +207,19 @@ class RSTParser:
         node.is_parsing = True
         line = None
         buf_info = {"is_not_empty": False}
-        for buf in node.code.splitlines(True):
+        for buf, ind_info in zip(node.code.splitlines(True), inds):
             if buf:
                 buf_info = {"is_block_start": not buf_info["is_not_empty"]}
                 buf_info["line_str"] = str(buf)
-                buf_info["line_strip"] = buf_info["line_str"].lstrip(' ')
-                buf_info["is_not_empty"] = bool(len(buf_info["line_strip"].strip()) != 0)
+                buf_info["ind_cur"] = buf.start_lincol[1] + ind_info[0]
+                buf_info["is_not_empty"] =  ind_info[1]
             else:
                 buf_info = None
 
             if line:
-                was_on = on
                 if line_info["is_not_empty"]:
-                    ind_cur = line.start_lincol[1] + len(line_info["line_str"]) - len(line_info["line_strip"])
-                    if is_first_not_empty:
-                        # first defines the base indent if nested
-                        if ((node.parent_node.parent_node and
-                                node.code.start_lincol != (0, 0)) or
-                                node.parent_node.node_name == "block-quote"):
-                            ind_start[0] = ind_cur
-                        is_first_not_empty = False
-
+                    ind_cur = line_info["ind_cur"]
+                    was_on = on
                     if ind_cur == ind_start[-1]:
                         on = False
                     elif ind_cur > ind_start[-1]:
@@ -218,25 +229,20 @@ class RSTParser:
                         on = False
                         line_info["is_block_start"] = True
 
-                if is_sec and not is_first:
-                    # alternative when head first indent as unknown
-                    if ind_first_unkown: # only if text node x
-                        if not was_on and not sub:
+                    if is_first and line.start_lincol[1] != 0:
+                        on = False
+                    if is_sec and not is_first:
+                        # alternative when head first indent as unknown
+                        if ind_first_unkown and not was_on and not sub:
+                            ind_start = [ind_cur]
                             on = False
-
-                            ind_start[0] = ind_cur
-                    is_sec = False
-                is_first = False
-
-
-                if ind_start[-1] > ind_cur:
-                    ind_start.clear()
-                    ind_start.append(ind_cur)
+                        is_sec = False
+                    is_first = False
 
                 # todo or ind < old
                 line_info["is_block_end"] = bool(not buf_info or not buf_info["is_not_empty"])
                 on, ind_start, node, sub = self.process_line(line, line_info,
-                                                             on, ind_cur, ind_start, node, sub)
+                                                             on, ind_start, node, sub)
 
             line = buf
             line_info = buf_info
@@ -254,7 +260,7 @@ class RSTParser:
         return root
 
 
-    def process_line(self, line, line_info, on, ind_cur, ind_start, node, sub):
+    def process_line(self, line, line_info, on, ind_start, node, sub):
 
         was_sub = sub
         free = True
@@ -317,14 +323,15 @@ class RSTParser:
 
         rematch = False
         if node.active:
-            on = True
+            if node.active.node_name != "text":
+                on = True
         elif not free and line_info["is_not_empty"]:
             rematch = True
 
         if sub != was_sub:
             if sub and not was_sub:
                 if node.active.node_name not in ("def", "block-quote"):
-                    ind_start.append(ind_cur)
+                    ind_start.append(line_info["ind_cur"])
                 else:
                     ind_start.append(ind_start[-1])
             else:
@@ -336,7 +343,7 @@ class RSTParser:
         if rematch:
             line_info["is_block_start"] = True
             on, ind_start, node, sub = self.process_line(line, line_info,
-                                                         on, ind_cur, ind_start, node, sub)
+                                                         on, ind_start, node, sub)
 
         return on, ind_start, node, sub
 
@@ -379,7 +386,7 @@ class RSTParser:
         return node
 
 
-    def parse_full(self, doc):
+    def parse(self, doc):
         doc.is_parsing = True
         doc.body = self.parse_block(doc.body)
         doc.body = self.parse_node(doc.body)
@@ -398,8 +405,9 @@ class RSTParser:
                     if not node.head.child_nodes.is_empty():
                         self.parse_node(node.head)
                     else:
-                        ind_first_unkown = bool(node.child_nodes.first().code.start_lincol[1] !=
-                                                node.head.code.start_lincol[1])
+                        ind_first_unkown = (lambda f, c: f[0] == c[0] and f[1] != c[1])(
+                                                node.child_nodes.first().code.start_lincol,
+                                                node.head.code.start_lincol)
                         node.head = self.parse_block(node.head, ind_first_unkown)
                         node.head.is_parsed = True
                         if not node.head.child_nodes.is_empty():
@@ -409,8 +417,9 @@ class RSTParser:
                     if not node.body.child_nodes.is_empty():
                         self.parse_node(node.body)
                     else:
-                        ind_first_unkown = bool(node.child_nodes.first().code.start_lincol[1] !=
-                                                node.body.code.start_lincol[1])
+                        ind_first_unkown = (lambda f, c: f[0] == c[0] and f[1] != c[1])(
+                                                node.child_nodes.first().code.start_lincol,
+                                                node.body.code.start_lincol)
                         node.body = self.parse_block(node.body, ind_first_unkown)
                         node.body.is_parsed = True
                         if not node.body.child_nodes.is_empty():
