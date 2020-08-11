@@ -514,7 +514,7 @@ def search_directive(document, reports):
 
         else:
             # not at diff hunk can be cut off def list
-            if node.code.start_pos != document.code.start_pos:
+            if node.code.start_lincol[0] != document.code.start_lincol[0]:
                 out = node.code.copy()
                 out.clear(True)
                 msg = "block quote"

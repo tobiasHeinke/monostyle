@@ -361,7 +361,7 @@ def repeated_words(document, reports, config):
         return reports
 
     instr_pos = {
-        "sect": {"*": ["name", "name_end"]},
+        "sect": {"*": ["name"]},
         "field": {"*": ["name", "body"]},
         "*": {"*": ["head", "body"]}
     }
@@ -386,10 +386,6 @@ def repeated_words(document, reports, config):
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
         if part.child_nodes.is_empty():
-            if rst_walker.is_of(part, "sect", "*", "name_end"):
-                buf.clear()
-                continue
-
             for sen, is_open in Segmenter.iter_sentence(part.code, output_openess=True):
                 for word in Segmenter.iter_word(sen):
                     word_lower = str(word).lower()
@@ -425,7 +421,7 @@ def repeated_words(document, reports, config):
                 buf.clear()
 
         else:
-            if rst_walker.is_of(part, ("bullet", "enum", "line", "def", "field")):
+            if rst_walker.is_of(part, ("sect", "bullet", "enum", "line", "def", "field")):
                 buf.clear()
 
     return reports
