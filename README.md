@@ -25,7 +25,7 @@ Requirements: When using SVN the command line client tools need to be installed.
 For spell checking a dictionary has to build.
 On first run you have to confirm to start this (or also if the dictionary file is not found).
 
-The dictionary has to be updated from time to time or after a bigger portion of content has been added
+The dictionary has to be updated from time to time or after a new topic has been added
 to include new words (of cause the whole project has to be spell-checked).
 To do this run the `spelling` script:
 ```sh
@@ -37,23 +37,23 @@ python -m monostyle.spelling
 Monostyle has four modes:
 
 <dl>
-  <dt>internal -i</dt>
+  <dt>-i, --internal</dt>
   <dd>To check your own changes (the default).</dd>
-  <dt>external -e</dt>
+  <dt>-e, --external</dt>
   <dd>
       To check changes made to the repository by others.
       Run this before you update your working copy with Git or SVN.
    </dd>
-  <dt>patch -p</dt>
+  <dt>-p, --patch</dt>
   <dd>To check changes in a patch-file.</dd>
-  <dt>file -f</dt>
+  <dt>-f, --file</dt>
   <dd>To check a file or directory.</dd>
-  <dt>root -r</dt>
+  <dt>-r, --root</dt>
   <dd>
       The root is the absolute path to the project directory or where the patch file was created.
       If not set the directory where Monostyle is run from is used as the root.
   </dd>
-  <dt>cached, staged</dt>
+  <dt>--cached, --staged</dt>
   <dd>
       Set the diff cached option (Git only).
   </dd>
@@ -62,11 +62,11 @@ Monostyle has four modes:
 Post processing:
 
 <dl>
-  <dt>update -u</dt>
+  <dt>-u, --update</dt>
   <dd>Update the working copy.</dd>
-  <dt>autofix -a</dt>
+  <dt>-a, --autofix </dt>
   <dd>Apply autofixes. This also does an update if the changes are external.</dd>
-  <dt>open -o</dt>
+  <dt>-o, --open</dt>
   <dd>Open a file in a text editor if the report has a severity higher than specified.
       Please check if your editor of choice is available (else please make a I/PR to add it).
   </dd>
