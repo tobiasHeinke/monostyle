@@ -259,8 +259,6 @@ def main():
             return 2
 
     root_dir = monostylestd.replace_windows_path_sep(root_dir)
-    monostylestd.ROOT_DIR = root_dir
-
     setup_sucess = setup(root_dir, args.patch)
     if not setup_sucess:
         return 2

@@ -246,7 +246,7 @@ def lower_first_reverse(word, ref):
 
 def read_csv_lexicon():
     lexicon = []
-    lex_fn = os.path.normpath(os.path.join(monostylestd.ROOT_DIR, "monostyle", "lexicon.csv"))
+    lex_fn = monostylestd.path_to_abs("monostyle/lexicon.csv")
     try:
         with open(lex_fn, newline='', encoding='utf-8') as csvfile:
             csv_reader = csv.reader(csvfile)
@@ -261,7 +261,7 @@ def read_csv_lexicon():
 
 
 def write_csv_lexicon(lexicon):
-    lex_fn = os.path.normpath(os.path.join(monostylestd.ROOT_DIR, "monostyle", "lexicon.csv"))
+    lex_fn = monostylestd.path_to_abs("monostyle/lexicon.csv")
     count = 0
     try:
         with open(lex_fn, 'w', newline='', encoding='utf-8') as csvfile:
@@ -305,7 +305,7 @@ def search_pre(_):
             ent.append(set(ord(c) for c in ent[0].lower()))
         return lexicon
 
-    config_dir = os.path.normpath(os.path.join(monostylestd.ROOT_DIR, "monostyle"))
+    config_dir = monostylestd.path_to_abs("monostyle")
     if not os.path.isdir(config_dir):
         print("No user config found skipping spell checking")
         return None
@@ -365,8 +365,6 @@ def main():
             return 2
 
     root_dir = monostylestd.replace_windows_path_sep(root_dir)
-    monostylestd.ROOT_DIR = root_dir
-
     setup_sucess = setup(root_dir)
     if not setup_sucess:
         return 2

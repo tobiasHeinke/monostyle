@@ -6,150 +6,71 @@ config
 Project configuration.
 """
 
-tool_selection = {
-    "markup": {
-        "tools": ("directive", "heading-level", "indent", "kbd", "leak"),
-        "ext": ".rst"
-    },
-    "listsearch": {
-        "tools": ("simplify", "blender/UI", "blender/Editors", "blender/Modes", "avoid/*"),
-        "ext": ".rst"
-    },
-    "spelling": {
-        "tools": ("search"),
-        "ext": ".rst"
-    },
-    "capitalization": {
-        "tools": ("heading", "starting", "pos", "ui"),
-        "ext": ".rst"
-    },
-    "punctuation": {
-        "tools": ("number", "pairs", "mark", "whitespace"),
-        "ext": ".rst"
-    },
-    "char": {
-        "tools": ("char-search"),
-        "ext": ".rst"
-    },
-    "natural": {
-        "tools": ("article", "grammar", "metric", "repeated"),
-        "ext": ".rst"
-    },
-    "code_style": {
-        "tools": ("heading-char-count", "flavor", "line-style", "long-line", "blank-line", "style-add"),
-        "ext": ".rst"
-    },
-    "monitor": {
-        "tools": ("check"),
-        "ext": ""
-    }
-}
-
-# Project Directories
-# -------------------
-
-rst_dir = "manual"
-po_dir = "locale"
-build_dir = "build"
-img_dir = '/'.join((rst_dir, "images"))
-
-
-# Console Output
-# --------------
-
-console_options = {
-
-    "file_title": True,
-    "file_title_underline": '-',
-    "show_summary": True,
-    "summary_overline": "_",
-
-    "format_str": "{fn}{loc} {severity} {out} {msg} {fix}{line}",
-    "show_filename": True,
-    "absolute_path": True,
-    "show_end": False,
-
-    # options: 'long', 'letter', 'ascii', 'icon', 'emoji'
-    "severity_display": "long",
-
-    "out_sep_start": "´",
-    "out_sep_end": "´",
-    "out_max_len": 100,
-    "out_ellipse": "…",
-
-    "show_line": True,
-    "line_max_len": 200,
-    "line_indent": ">>>",
-    "line_ellipse": "…",
-
-    "show_autofix": True,
-    "autofix_mark": "/autofixed/"
-}
-
-# Tool Config Override
-# --------------------
-
-# module name : {function name : {variable name: variable value}}
-config_override = {
-}
-
-# Message Template Override
-# -------------------------
-
-# template name : string
-template_override = {
-}
-# --- END ---
-
-
 import os
+import json
 from monostyle.util.monostylestd import override_typecheck
+
 
 def setup_config(root):
     """Create user config file or overide config."""
-    config_fn = os.path.normpath(os.path.join(root, "monostyle", "config.py"))
-    if not os.path.isfile(config_fn):
-        text = read_config_file(__file__)
-        text = text[:text.find("# --- END ---")]
-        write_config_file(config_fn, text)
+    global root_dir
+    root_dir = root
+    fn_default = os.path.normpath(os.path.join(os.path.dirname(__file__), "data", "config.json"))
+    config_default, source_default = load_config(fn_default)
+    for key, val in config_default.items():
+        globals()[key] = val
+
+    fn_user = os.path.normpath(os.path.join(root, "monostyle", "config.json"))
+    if not os.path.isfile(fn_user):
+        write_config_file(fn_user, source_default)
     else:
-        text = read_config_file(config_fn)
-        if text is None:
+        config_user, _ = load_config(fn_user)
+        if config_user is None:
             return False
 
-        try:
-            code = compile(text, config_fn, 'exec')
-        except SyntaxError:
-            print("Syntax error in config.py")
-            return False
-
-        namespace = {"__file__": config_fn}
-        exec(code, namespace)
-
-        config_options = ("tool_selection", "rst_dir", "po_dir", "build_dir", "img_dir",
-                          "console_options", "config_override", "template_override")
-        for key, val in namespace.items():
-            if key in config_options and val is not None:
+        for key, val in config_user.items():
+            if key in config_default.keys() and val is not None:
                 globals()[key] = override_typecheck(val, globals()[key], "monostyle config")
 
     return True
 
 
-def read_config_file(config_fn):
-    try:
-        with open(config_fn, 'r', encoding='utf-8') as config_file:
-            text = config_file.read()
+def load_config(fn):
+    """Load default/user config file."""
+    def remove_comments(text):
+        lines = []
+        for line in text.splitlines():
+            if not line.lstrip().startswith("//"):
+                lines.append(line)
+            else:
+                lines.append("")
+        return '\n'.join(lines)
 
-        return text
+    try:
+        text = read_config_file(fn)
+        if text is not None:
+            return json.loads(remove_comments(text)), text
+
+    except json.JSONDecodeError as err:
+        print("{0}: cannot decode user config: {1}".format(fn, err))
+
+    return None, None
+
+
+def read_config_file(fn):
+    try:
+        with open(fn, 'r', encoding='utf-8') as config_file:
+            text = config_file.read()
+            return text
 
     except IOError:
-        print("config.py not found:", config_fn)
+        print("config.json not found:", fn)
 
 
-def write_config_file(config_fn, text):
+def write_config_file(fn, text):
     try:
-        with open(config_fn, 'w', encoding='utf-8') as config_file:
+        with open(fn, 'w', encoding='utf-8') as config_file:
             config_file.write(text)
 
     except (IOError, OSError) as err:
-        print("{0}: cannot write: {1}".format(config_fn, err))
+        print("{0}: cannot write: {1}".format(fn, err))

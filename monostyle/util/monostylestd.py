@@ -12,11 +12,6 @@ import json
 
 import monostyle.config as config
 
-ROOT_DIR = None
-RST_DIR = config.rst_dir
-PO_DIR = config.po_dir
-IMG_DIR = config.img_dir
-
 
 def print_title(title, to_upper=False, underline='='):
     """Print a title in the command line."""
@@ -55,9 +50,9 @@ def ask_user(question):
 
 def path_to_rel(fn, base=None):
     """Make path relative."""
-    rel = ROOT_DIR
+    rel = config.root_dir
     if base is not None:
-        bases = {"root": rel, "rst": RST_DIR, "po": PO_DIR, "img": IMG_DIR}
+        bases = {"root": rel, "rst": config.rst_dir, "po": config.po_dir, "img": config.img_dir}
         if base in bases:
             rel = rel + '/' + bases[base]
 
@@ -69,9 +64,9 @@ def path_to_rel(fn, base=None):
 
 def path_to_abs(fn, base=None):
     """Make path absolute."""
-    root = ROOT_DIR
+    root = config.root_dir
     if not fn.startswith(root):
-        bases = {"root": root, "rst": RST_DIR, "po": PO_DIR, "img": IMG_DIR}
+        bases = {"root": root, "rst": config.rst_dir, "po": config.po_dir, "img": config.img_dir}
         if base is not None and base in bases and not fn.startswith(bases[base] + '/'):
             fn = '/'.join((root, bases[base], fn))
         else:
@@ -196,7 +191,7 @@ def get_override(file, toolname, varname, default):
 def rst_files(path=None):
     """Yields the filename of RST files."""
     if path is None:
-        path = '/'.join((ROOT_DIR, RST_DIR))
+        path = '/'.join((config.root_dir, config.rst_dir))
 
     return files_recursive(path, ext_pos=(".rst",))
 
@@ -204,7 +199,7 @@ def rst_files(path=None):
 def rst_texts(path=None):
     """Yields the filename and text of RST files."""
     if path is None:
-        path = '/'.join((ROOT_DIR, RST_DIR))
+        path = '/'.join((config.root_dir, config.rst_dir))
 
     return texts_recursive(path, ext_pos=(".rst",))
 
@@ -212,7 +207,7 @@ def rst_texts(path=None):
 def po_files(path=None):
     """Yields the filename of PO files."""
     if path is None:
-        path = '/'.join((ROOT_DIR, PO_DIR))
+        path = '/'.join((config.root_dir, config.po_dir))
 
     return files_recursive(path, ext_pos=(".po",))
 
@@ -220,7 +215,7 @@ def po_files(path=None):
 def po_texts(path=None):
     """Yields the filename and text of PO files."""
     if path is None:
-        path = '/'.join((ROOT_DIR, PO_DIR))
+        path = '/'.join((config.root_dir, config.po_dir))
 
     return texts_recursive(path, ext_pos=(".po",))
 
@@ -228,7 +223,7 @@ def po_texts(path=None):
 def img_files(path=None):
     """Yields the filename and extension of files in (by default) the image directory."""
     if path is None:
-        path = '/'.join((ROOT_DIR, IMG_DIR))
+        path = '/'.join((config.root_dir, config.img_dir))
 
     return files_recursive(path, ext_pos=(), split_output=True)
 
@@ -236,7 +231,7 @@ def img_files(path=None):
 def texts_recursive(path=None, ext_pos=()):
     """Yields the filename and text of files."""
     if path is None:
-        path = ROOT_DIR
+        path = config.root_dir
 
     ext_names = '/'.join(ext[1:] for ext in ext_pos) # strip dot
     if not os.path.isdir(path):
@@ -273,7 +268,7 @@ def single_text(fn):
 def files_recursive(path=None, ext_pos=(), split_output=False):
     """Yield files in the sub-/directories."""
     if path is None:
-        path = ROOT_DIR
+        path = config.root_dir
     path = replace_windows_path_sep(path)
 
     if isinstance(ext_pos, str):
