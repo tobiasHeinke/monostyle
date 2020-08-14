@@ -191,12 +191,12 @@ class Report():
             "out_sep_start": "'",
             "out_sep_end": "'",
             "out_max_len": 100,
-            "out_ellipse": "…",
+            "out_ellipsis": "…",
 
             "show_line": True,
             "line_max_len": 200,
             "line_indent": ">>>",
-            "line_ellipse": "…",
+            "line_ellipsis": "…",
 
             "show_autofix": False,
             "autofix_mark": "@",
@@ -236,7 +236,7 @@ class Report():
         if len(self.out) != 0:
             output["out"] = str(self.out).replace("\n", "")
             if len(output["out"]) > options["out_max_len"]:
-                output["out"] = output["out"][:options["out_max_len"]] + options["out_ellipse"]
+                output["out"] = output["out"][:options["out_max_len"]] + options["out_ellipsis"]
             output["out"] = options["out_sep_start"] + output["out"] + options["out_sep_end"]
 
         output["msg"] = self.msg
@@ -244,7 +244,7 @@ class Report():
         if options["show_line"] and self.line:
             output["line"] = str(self.line).replace('\n', '¶')
             if len(output["line"]) > options["line_max_len"]:
-                output["line"] = output["line"][:options["line_max_len"]] + options["line_ellipse"]
+                output["line"] = output["line"][:options["line_max_len"]] + options["line_ellipsis"]
             output["line"] = "\n" + options["line_indent"] + output["line"]
 
         if options["show_autofix"] and self.fix is not None:

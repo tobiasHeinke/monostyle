@@ -11,8 +11,8 @@ import re
 from monostyle.util.fragment import Fragment
 from monostyle.rst_parser.rst_node import NodeRST
 
-def parse(rst_parser, document):
 
+def parse(rst_parser, document):
     document = toctree(rst_parser, document)
     document = refbox(rst_parser, document)
 

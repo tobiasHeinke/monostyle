@@ -45,7 +45,6 @@ def get_link_titles(rst_parser):
 
 def resolve_link_title(document, titles, targets):
     """Insert the link title if it is not set in the role."""
-
     for node in rst_walker.iter_node(document.body, ("role",)):
         name = str(node.name.code).strip() if node.name else ""
         if name in {"doc", "ref", "any"} and  not node.head:

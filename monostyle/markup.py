@@ -207,7 +207,6 @@ def indention(document, reports):
 
 
 def role_kbd_pre(_):
-
     re_lib = dict()
     # config: allow "Regular key pressed as a modifier"
     regular_as_mod = True

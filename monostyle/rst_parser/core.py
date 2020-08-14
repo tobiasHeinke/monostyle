@@ -200,7 +200,6 @@ class RSTParser:
         sub = False
         root = node
 
-        is_first_not_empty = True
         is_first = True
         is_sec = True
 
@@ -212,7 +211,7 @@ class RSTParser:
                 buf_info = {"is_block_start": not buf_info["is_not_empty"]}
                 buf_info["line_str"] = str(buf)
                 buf_info["ind_cur"] = buf.start_lincol[1] + ind_info[0]
-                buf_info["is_not_empty"] =  ind_info[1]
+                buf_info["is_not_empty"] = ind_info[1]
             else:
                 buf_info = None
 
@@ -261,7 +260,6 @@ class RSTParser:
 
 
     def process_line(self, line, line_info, on, ind_start, node, sub):
-
         was_sub = sub
         free = True
         if not node.active:
@@ -567,7 +565,6 @@ class RSTParser:
                 if node.active and node.active.node_name != "def":
                     if (sub and node.parent_node and
                             node.parent_node.node_name == "def-list"):
-
                         active = node.active
                         node = node.parent_node.parent_node
                         if node.active:

@@ -33,12 +33,11 @@ import monostyle.rst_parser.walker as rst_walker
 
 POS = PartofSpeech()
 
+
 def reflow_trial(boxes, optimum, maximum, options):
     """Find best breaks."""
-
     best = options["penaltylimit"] * 21
     for opt in range(optimum[0], optimum[1], optimum[2]):
-
         # Optimize preceding break.
         for active_box in boxes:
             interval = 0

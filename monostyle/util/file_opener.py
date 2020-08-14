@@ -13,6 +13,7 @@ import subprocess
 from monostyle.util.monostylestd import path_to_rel
 from monostyle.util.report import Report
 
+
 # For other text editors see:
 # https://developer.blender.org/diffusion/BM/browse/trunk/blender_docs/tools/open_quickfix_in_editor.py
 
@@ -20,9 +21,14 @@ def run(path, lincol):
     cmd = ("notepad++",
            "-n" + str(lincol[0] + 1),
            "-c" + str(lincol[1] + 1), path)
-    proc = subprocess.Popen(cmd, shell=False)
-    proc.wait()
-    return proc.returncode
+    try:
+        proc = subprocess.Popen(cmd, shell=False)
+        proc.wait()
+        return proc.returncode
+    except OSError:
+        print("text editor to open not found")
+    except ValueError as err:
+        print("open text editor:", err)
 
 
 def open_reports_files(reports, min_severity=None):
@@ -50,8 +56,9 @@ def open_files(files, show_current=False):
 
         # avoid all files in folder and "want to create file" dialog
         if os.path.isfile(fn):
-            run(fn, lincol)
-            # sleep(0.05)
+            exitcode = run(fn, lincol)
+            if exitcode is None:
+                break
         else:
             nonexistents.append(fn + ":" + str(lincol[0] + 1) + ":" + str(lincol[1] + 1))
 
@@ -65,7 +72,6 @@ def open_files(files, show_current=False):
 
 
 def main(argv=None):
-
     if argv is None:
         argv = sys.argv[1:]
 

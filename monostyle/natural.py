@@ -19,6 +19,7 @@ PorterStemmer = Porterstemmer()
 Segmenter = Segmenter()
 POS = PartofSpeech()
 
+
 def indefinite_article_pre(_):
     args = dict()
     args["data"] = monostylestd.get_data_file("indefinite_article")

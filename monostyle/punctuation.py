@@ -20,7 +20,6 @@ CharCatalog = CharCatalog()
 
 
 def number_pre(_):
-
     re_lib = dict()
     # FP: code, literal, Years
     start = r"(?:(?<=[^\d,.])|\A)"
@@ -266,7 +265,6 @@ def pairs(document, reports, re_lib, config):
 
 
 def mark_pre(_):
-
     re_lib = dict()
     punc = CharCatalog.data["terminal"]["final"] + CharCatalog.data["secondary"]["final"]
     punc_sent = CharCatalog.data["terminal"]["final"] + ':'
@@ -416,7 +414,6 @@ def mark(document, reports, re_lib):
 
     noend_re = re_lib["nopuncend"][0]
     comma_re = re_lib["commaend"][0]
-    was_empty = False
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
         if not part.parent_node.next:
             if part.parent_node.node_name == "text":
@@ -425,7 +422,6 @@ def mark(document, reports, re_lib):
                         (len(part_str.strip()) != 0 or
                          (part.parent_node.prev and
                           part.parent_node.prev.code.end_lincol[0] == part.code.start_lincol[0]))):
-
                     par_node = part.parent_node
                     while par_node.node_name == "text":
                         par_node = par_node.parent_node.parent_node
@@ -436,7 +432,6 @@ def mark(document, reports, re_lib):
                                               "Tool", "Editor", "Header", "Type")) and
                             (not rst_walker.is_of(part.next_leaf(), "dir", "default") or
                              part_str.endswith(" "))):
-
                         out = part.code.copy().clear(False)
                         msg = re_lib["nopuncend"][1].format("paragraph")
                         line = getline_punc(document.body.code, part.code.end_pos, 0, 50, 0)
@@ -460,7 +455,6 @@ def mark(document, reports, re_lib):
 
 
 def whitespace_pre(_):
-
     re_lib = dict()
     pattern_str = r"(\t)"
     pattern = re.compile(pattern_str)

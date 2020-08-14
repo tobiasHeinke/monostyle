@@ -62,7 +62,7 @@ def search(document, reports, re_lib, data, config):
                 severity = 'W'
                 msg = "new word: hunk: " + str(hunk_count + 1)
                 line = Fragment(word.fn, ", ".join(find_similar(norm_punc(str(word), re_lib),
-                                                                word_cont,data, 5, 0.6)))
+                                                                word_cont, data, 5, 0.6)))
 
             reports.append(Report(severity, toolname, word, msg, line))
 
@@ -134,7 +134,6 @@ def build_lexicon(re_lib):
 
 def populate_lexicon(document, lexicon, re_lib):
     """Populate lexicon with transformed words."""
-
     for word in word_filtered(document):
         word_cont = str(word)
         word_cont = norm_punc(word_cont, re_lib)
@@ -170,7 +169,6 @@ def split_lexicon(lexicon_flat):
 
 def word_filtered(document):
     """Iterate over words in the filtered text."""
-
     dev_re = re.compile(r"^(rBM|t)\d+?$", re.IGNORECASE)
 
     instr_pos = {
@@ -193,7 +191,6 @@ def word_filtered(document):
     }
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-
         par_node = part.parent_node
         while par_node.node_name == "text":
             par_node = par_node.parent_node.parent_node
@@ -202,7 +199,6 @@ def word_filtered(document):
         if (par_node.node_name != "field" or
                 not(str(par_node.name.code) in ("File", "Maintainer") or
                     re.match(r"Author(?:[\(/]?s\)?)?", str(par_node.name.code)))):
-
             for line in part.code.splitlines():
                 for word in Segmenter.iter_word(line):
                     word_cont = str(word)
@@ -278,7 +274,6 @@ def write_csv_lexicon(lexicon):
 
 def difference(lex_stored, lex_new):
     """Show a differential between the current texts and the stored lexicon."""
-
     lex_stored = set(ent[0] for ent in lex_stored)
     lex_new = set(ent[0] for ent in lex_new)
 
@@ -289,6 +284,7 @@ def difference(lex_stored, lex_new):
     monostylestd.print_title("Removed", True)
     for word in sorted(lex_stored.difference(lex_new)):
         print(word + ', ', end="")
+
 
 
 def compile_lib():
@@ -337,7 +333,6 @@ OPS = (
 
 
 def main():
-
     import argparse
     from monostyle import setup
 

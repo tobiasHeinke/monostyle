@@ -100,7 +100,6 @@ def flavor(document, reports):
             first_node = node.body.child_nodes.first()
             if (str(first_node.name.code).strip() != "#" and
                     not rst_walker.is_of(node.parent_node, "dir", ("figure", "image"), "body")):
-
                 out = first_node.name.code.copy()
                 out.clear(True)
                 msg = Report.misformatted(what="not auto-named", where="enumerated list")
@@ -230,7 +229,6 @@ def long_line(document, reports):
             line = buf
 
     return reports
-
 
 
 def heading_lines(document, reports):

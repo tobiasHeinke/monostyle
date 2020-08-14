@@ -52,7 +52,6 @@
 	// --------------
 
 	"console_options": {
-
 		"file_title": true,
 		"file_title_underline": "-",
 		"show_summary": true,
@@ -69,12 +68,12 @@
 		"out_sep_start": "´",
 		"out_sep_end": "´",
 		"out_max_len": 100,
-		"out_ellipse": "…",
+		"out_ellipsis": "…",
 
 		"show_line": true,
 		"line_max_len": 200,
 		"line_indent": ">>>",
-		"line_ellipse": "…",
+		"line_ellipsis": "…",
 
 		"show_autofix": true,
 		"autofix_mark": "/autofixed/"

@@ -17,6 +17,7 @@ from monostyle.util.porter_stemmer import Porterstemmer
 PorterStemmer = Porterstemmer()
 Segmenter = Segmenter()
 
+
 def compile_searchlist(searchlist, re_conf):
     """Make search list one dimensional.
 
@@ -122,7 +123,6 @@ def parse_config(re_conf_str):
         re_conf[key] = bool(re_conf[key] in re_conf_str)
 
     return re_conf
-
 
 
 def search_free(document, reports, comlist):
@@ -235,7 +235,6 @@ def search_pre(op):
     args["config"] = config
 
     return args
-
 
 
 def search(document, reports, data, config):

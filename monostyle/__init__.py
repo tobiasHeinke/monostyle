@@ -155,6 +155,7 @@ def update(path, rev=None):
 
 #------------------------
 
+
 def patch_flavor(fn):
     """Detect whether the patch is Git flavor."""
     try:

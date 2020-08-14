@@ -24,7 +24,6 @@ CharCatalog = CharCatalog()
 
 def titlecase(word, is_first_word, is_last_word, name):
     """Cicago style titlecase."""
-
     word_str = str(word)
     if is_first_word or is_last_word:
         if word_str[0].islower():
@@ -46,7 +45,6 @@ def titlecase(word, is_first_word, is_last_word, name):
             (len(path) != 0 and
              (path[0] in ("preposition", "conjunction", "pronoun", "auxiliary") or
               path[0] == "determiner" and path[1] == "article"))):
-
         msg = Report.misformatted(what="lowercase" if word_str[0].islower() else "uppercase",
                                   where="in " + name)
 
@@ -202,7 +200,6 @@ def pos_case(document, reports):
 
 
 def starting_pre(_):
-
     re_lib = dict()
     punc_sent = CharCatalog.data["terminal"]["final"] + ':'
     pare_open = CharCatalog.data["bracket"]["left"]["normal"]
@@ -277,6 +274,7 @@ def starting(document, reports, re_lib):
                     reports.append(Report('W', toolname, out, value[1], line))
 
     return reports
+
 
 def property_noun_pre(_):
     """Build lexicon with lower/uppercase counts."""

@@ -63,7 +63,6 @@ class Fragment():
 
     def add_offset(self, offset_pos=None, offset_lincol=None):
         """Adds an offset to the location."""
-
         if offset_pos:
             self.start_pos += offset_pos
             self.end_pos += offset_pos
@@ -175,7 +174,6 @@ class Fragment():
 
     def slice(self, at_start, at_end=None, right_inner=False, output_zero=True):
         """Cut span."""
-
         start_pos_abs = None
         if isinstance(at_start, int):
             start_pos_abs = at_start
@@ -276,7 +274,6 @@ class Fragment():
 
     def loc_to_abs(self, loc_rel):
         """Convert a location relative to the start to an absolute location."""
-
         if isinstance(loc_rel, int):
             return self.start_pos + loc_rel
 
@@ -292,7 +289,6 @@ class Fragment():
 
     def loc_to_rel(self, loc_abs):
         """Convert an absolute location to a location relative to the start."""
-
         if isinstance(loc_abs, int):
             return loc_abs - self.start_pos
 
@@ -308,7 +304,6 @@ class Fragment():
 
     def lincol_to_pos(self, lincol, keep_bounds=False):
         """Convert a lincol location to a pos location."""
-
         lincol = self.loc_to_rel(lincol)
         if lincol < (0, 0):
             if keep_bounds:
@@ -328,7 +323,6 @@ class Fragment():
 
     def pos_to_lincol(self, pos, keep_bounds=False):
         """Convert a pos location to a lincol location."""
-
         pos = self.loc_to_rel(pos)
         if pos < 0:
             if keep_bounds:
@@ -352,7 +346,6 @@ class Fragment():
 
     def is_in_span(self, loc, include_start=True, include_end=True):
         """Check if the location is between start and end."""
-
         pos_lc = bool(isinstance(loc, int))
         self_start = self.get_start(pos_lc)
         self_end = self.get_end(pos_lc)
