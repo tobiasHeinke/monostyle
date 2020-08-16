@@ -199,34 +199,37 @@ def long_line(document, reports):
     }
     instr_neg = {
         "dir": {
-            "figure": ["head"], "include": ["head"], "parsed-literal": "*"
+            "figure": ["head"], "include": ["head"], "parsed-literal": "*",
+            "code-block": "*", "default": "*",
         },
         "substdef": {"image": ["head"]},
     }
     line = None
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        is_last = bool(not part.parent_node.next and not part.parent_node.next_leaf())
+        is_last = bool(not part.parent_node.next and not part.next_leaf())
         for buf in part.code.splitlines(buffered=True):
             if (line and ((buf and buf.end_lincol[0] != line.end_lincol[0]) or
                           (not buf and is_last))):
                 if line.end_lincol[1] > limit:
                     if rst_walker.is_of(part, "text") and re.match(r".?\n", str(line)):
                         prev_node = part.parent_node.prev
-
-                        if prev_node.code.end_lincol[0] == part.code.start_lincol[0]:
+                        if prev_node and prev_node.code.end_lincol[0] == part.code.start_lincol[0]:
                             if prev_node.node_name in ("hyperlink", "standalone", "role"):
                                 if (prev_node.id and
                                         prev_node.id.code.span_len() + 4 > limit):
+                                    line = None
                                     continue
                                 if (prev_node.body and
                                         prev_node.body.code.span_len() + 4 > limit):
+                                    line = None
                                     continue
 
                     out = line.copy().clear(False)
                     msg = "long line"
                     reports.append(Report('W', toolname, out, msg, line, "reflow"))
 
-            line = buf
+            if buf or is_last:
+                line = buf
 
     return reports
 

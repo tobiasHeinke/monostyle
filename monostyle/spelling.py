@@ -230,12 +230,17 @@ def lower_first(word):
 def lower_first_reverse(word, ref):
     """Upper case of first char in hypened compound based on a reference word."""
     new_word = []
-    for compound_word, compound_ref in zip(word.split('-'), ref.split('-')):
+    word_spit = word.split('-')
+    ref_split = ref.split('-')
+    for compound_word, compound_ref in zip(word_spit, ref_split):
         if (len(compound_word) != 0 and len(compound_ref) != 0 and
                 compound_ref[0].isupper()):
             new_word.append(compound_word[0].upper() + compound_word[1:])
         else:
             new_word.append(compound_word)
+
+    if len(word_spit) > len(ref_split):
+        new_word.extend(word_spit[len(ref_split):])
 
     return '-'.join(new_word)
 
