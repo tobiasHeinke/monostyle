@@ -148,10 +148,12 @@ def filter_reports(reports_hunk, context, reports):
 
 def update(path, rev=None):
     """Update the working copy."""
+    fns_conflicted = []
     for fn, conflict, rev_up in vsn_inter.update_files(path, rev):
         # A conflict will be resolvable with SVN's command interface.
-        pass
-
+        if conflict and fn not in fns_conflicted:
+            fns_conflicted.append(fn)
+    return fns_conflicted
 
 #------------------------
 
@@ -289,11 +291,15 @@ def main():
         config.console_options["show_autofix"] = False
     print_reports(reports)
 
+    fns_conflicted = None
     if args.up or (args.auto and args.external is not None):
-        update(root_dir, args.up)
+        fns_conflicted = update(root_dir, args.up)
 
     if args.auto:
-        autofix.run(reports, RSTParser)
+        if (not ((args.external and rev) or args.patch) or
+                monostylestd.ask_user(("Apply autofix on possibly altered sources"))):
+
+            autofix.run(reports, RSTParser, fns_conflicted)
     if args.min_severity:
         file_opener.open_reports_files(reports, args.min_severity)
 
