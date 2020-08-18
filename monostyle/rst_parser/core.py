@@ -175,11 +175,18 @@ class RSTParser:
 
 
     def parse_block(self, node, ind_first_unkown=False):
-        inds = []
+        lines = []
         block_ind = None
         ind_re = self.re_lib["ind"]
         is_first = True
-        for line_str in node.code.content:
+        line_info_prev = None
+        line_info = {"is_not_empty": False}
+        for line in node.code.splitlines():
+            line_str = str(line)
+            line_info = {"is_block_start": not line_info["is_not_empty"],
+                         "line_str": line_str,
+                         "is_block_end": False}
+
             if m := re.match(ind_re, line_str):
                 if block_ind is None:
                     if not is_first or not ind_first_unkown:
@@ -188,12 +195,20 @@ class RSTParser:
                         block_ind = node.code.start_lincol[1]
                 else:
                     block_ind = min(block_ind, m.end(1))
-                inds.append((m.end(1), True))
+
+                line_info["ind_cur"] = line.start_lincol[1] + m.end(1)
+                line_info["is_not_empty"] = True
             else:
-                inds.append((0, False))
+                line_info["ind_cur"] = 0
+                line_info["is_not_empty"] = False
+                if line_info_prev:
+                    line_info_prev["is_block_end"] = True
+
+            lines.append((line, line_info))
+            line_info_prev = line_info
             is_first = False
-        # buffer
-        inds.append((0, False))
+
+        line_info["is_block_end"] = True
 
         ind_start = [0 if block_ind is None or not node.parent_node.parent_node else block_ind]
         on = False
@@ -205,46 +220,32 @@ class RSTParser:
 
         node.is_parsing = True
         line = None
-        buf_info = {"is_not_empty": False}
-        for buf, ind_info in zip(node.code.splitlines(True), inds):
-            if buf:
-                buf_info = {"is_block_start": not buf_info["is_not_empty"]}
-                buf_info["line_str"] = str(buf)
-                buf_info["ind_cur"] = buf.start_lincol[1] + ind_info[0]
-                buf_info["is_not_empty"] = ind_info[1]
-            else:
-                buf_info = None
+        info_next = None
+        for line, line_info in lines:
+            if line_info["is_not_empty"]:
+                ind_cur = line_info["ind_cur"]
+                was_on = on
+                if ind_cur == ind_start[-1]:
+                    on = False
+                elif ind_cur > ind_start[-1]:
+                    on = True
+                    line_info["is_block_start"] = True
+                else:
+                    on = False
+                    line_info["is_block_start"] = True
 
-            if line:
-                if line_info["is_not_empty"]:
-                    ind_cur = line_info["ind_cur"]
-                    was_on = on
-                    if ind_cur == ind_start[-1]:
+                if is_first and line.start_lincol[1] != 0:
+                    on = False
+                if is_sec and not is_first:
+                    # alternative when head first indent as unknown
+                    if ind_first_unkown and not was_on and not sub:
+                        ind_start = [ind_cur]
                         on = False
-                    elif ind_cur > ind_start[-1]:
-                        on = True
-                        line_info["is_block_start"] = True
-                    else:
-                        on = False
-                        line_info["is_block_start"] = True
+                    is_sec = False
+                is_first = False
 
-                    if is_first and line.start_lincol[1] != 0:
-                        on = False
-                    if is_sec and not is_first:
-                        # alternative when head first indent as unknown
-                        if ind_first_unkown and not was_on and not sub:
-                            ind_start = [ind_cur]
-                            on = False
-                        is_sec = False
-                    is_first = False
-
-                # todo or ind < old
-                line_info["is_block_end"] = bool(not buf_info or not buf_info["is_not_empty"])
-                on, ind_start, node, sub = self.process_line(line, line_info,
-                                                             on, ind_start, node, sub)
-
-            line = buf
-            line_info = buf_info
+            on, ind_start, node, sub = self.process_line(line, line_info,
+                                                         on, ind_start, node, sub)
 
         if node.active:
             if (node.child_nodes.last() and
