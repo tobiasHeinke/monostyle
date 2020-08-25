@@ -423,13 +423,13 @@ class Fragment():
             return self.end_pos - self.start_pos
 
         line_span = self.end_lincol[0] - self.start_lincol[0]
-        if line_span == 0 and len(self.content) != 0: 
+        if line_span == 0 and len(self.content) != 0:
             line_span = 1
         return (line_span, self.end_lincol[1] - self.start_lincol[1])
 
 
     def size(self, pos_lincol):
-        """Returns the dimensions either the char length or the size of the bounding box."""
+        """Returns the dimensions either the char length or the size of the bounding rectangle."""
         if pos_lincol:
             return len(self)
 
@@ -486,3 +486,514 @@ class Fragment():
         return Fragment(self.fn, new_content, self.start_pos,
                         self.end_pos, self.start_lincol, self.end_lincol,
                         bool(self.start_lincol is not None))
+
+
+class FragmentBundle():
+    """A list of Fragments. sorted, non overlapping."""
+
+    __slots__ = ('bundle')
+
+
+    def __init__(self, bundle):
+        """bundle -- a list of Fragments."""
+        if bundle is None:
+            bundle = []
+
+        self.bundle = bundle
+
+
+    def get_fn(self):
+        return self.bundle[0].fn if self else None
+
+    def set_fn(self, value):
+        for fg in self:
+            fg.fn = value
+
+    fn = property(get_fn, set_fn)
+
+
+    def get_start_pos(self):
+        return self.bundle[0].start_pos if self else None
+
+    def set_start_pos(self, value):
+        if not self:
+            return
+        self.bundle[0].start_pos = value
+
+    start_pos = property(get_start_pos, set_start_pos)
+
+
+    def get_end_pos(self):
+        return self.bundle[-1].end_pos if self else None
+
+    def set_end_pos(self, value):
+        if not self:
+            return
+        self.bundle[-1].end_pos = value
+
+    end_pos = property(get_end_pos, set_end_pos)
+
+
+    def get_start_lincol(self):
+        return self.bundle[0].start_lincol if self else None
+
+    def set_start_lincol(self, value):
+        if not self:
+            return
+        self.bundle[0].start_lincol = value
+
+    start_lincol = property(get_start_lincol, set_start_lincol)
+
+
+    def get_end_lincol(self):
+        return self.bundle[-1].end_lincol if self else None
+
+    def set_end_lincol(self, value):
+        if not self:
+            return
+        self.bundle[-1].end_lincol = value
+
+    end_lincol = property(get_end_lincol, set_end_lincol)
+
+
+    def to_fragment(filler=None):
+        if not self:
+            return None
+
+        return Fragment(self.bundle[0].fn, self.join(filler),
+                        self.bundle[0].start_pos, self.bundle[-1].end_pos,
+                        self.bundle[0].start_lincol, self.bundle[-1].end_lincol,
+                        bool(self.bundle[0].start_lincol is not None))
+
+
+    def join(self, filler=None):
+        if not self:
+            return ''
+
+        if not filler:
+            return str(self)
+
+        last = self.bundle[0].start_pos
+        content = []
+        for fg in self:
+            if last != fg.start_pos:
+                content.append(filler * ((fg.start_pos - last) // len(filler)))
+                if len(filler) != 1:
+                    content.append(filler[:(fg.start_pos - last) % len(filler)])
+            content.append(str(fg))
+            last = fg.end_pos
+
+        return ''.join(content)
+
+
+    def add_offset(self, offset_pos=None, offset_lincol=None):
+        for fg in self:
+            fg.add_offset(offset_pos, offset_lincol)
+        return self
+
+
+    def get_start(self, pos_lincol):
+        return self.start_pos if pos_lincol else self.start_lincol
+
+
+    def get_end(self, pos_lincol):
+        return self.end_pos if pos_lincol else self.end_lincol
+
+
+    def extend(self, new_content):
+        if not self:
+            return self
+        self.bundle[-1].extend(new_content)
+        return self
+
+
+    def rermove_zero_len_end(self):
+        if not self:
+            return self
+        if len(self.bundle[-1]) == 0:
+            self.bundle = self.bundle[0:-1]
+        return self
+
+
+    def combine(self, bd, pos_lincol=True, merge=False):
+        """Merge -- combine last and first if aligned."""
+        if merge and self and bd:
+            if self.is_aligned(bd, pos_lincol):
+                self.bundle[-1].combine(bd.bundle[0])
+                self.bundle.extend(bd.bundle[1:])
+        else:
+            self.bundle.extend(bd.bundle)
+        return self
+
+
+    def merge_inner(self, pos_lincol=True):
+        """Combine aligning Fragments within bundle."""
+        prev = None
+        new_bundle = []
+        for fg in self:
+            print(type(fg))
+            if prev and prev.is_aligned(fg, pos_lincol):
+                prev.combine(fg)
+            else:
+                new_bundle.append(fg)
+                prev = fg
+        self.bundle = new_bundle
+        return self
+
+
+    def is_aligned(self, bd, pos_lincol):
+        if not self or not bd:
+            return True
+
+        return self.bundle[-1].is_aligned(bd.bundle[0], pos_lincol)
+
+
+    def slice_match_obj(self, match_obj, groupno, right_inner=False, output_zero=True):
+        """relative to first."""
+        if not self:
+            return self
+        if len(match_obj.groups()) >= groupno and match_obj.group(groupno) is not None:
+            at_start = self.loc_to_abs(match_obj.start(groupno))
+            at_end = self.loc_to_abs(match_obj.end(groupno))
+
+            return self.slice(at_start, at_end, right_inner, output_zero)
+
+
+    def slice(self, at_start, at_end=None, right_inner=False, output_zero=True):
+        if at_end is not None and at_end < at_start:
+            at_end = at_start
+
+        pos_lincol = bool(isinstance(at_start, int))
+        cuts = []
+        at_start_index = self.index_clip(at_start, False)
+        if not right_inner:
+            cuts.append(((0, True), self.bundle[0].get_start(pos_lincol),
+                         at_start_index, at_start))
+        if not at_end:
+            cuts.append((at_start_index, at_start,
+                         (max(0, len(self.bundle) - 1), True),
+                         self.bundle[-1].get_end(pos_lincol)))
+        else:
+            at_end_index = self.index_clip(at_end, True)
+            cuts.append((at_start_index, at_start, at_end_index, at_end))
+            if not right_inner:
+                cuts.append((at_end_index, at_end,
+                             (max(0, len(self.bundle) - 1), True),
+                             self.bundle[-1].get_end(pos_lincol)))
+
+        out = []
+        for index_start, start, index_end, end in cuts:
+            bd = FragmentBundle([])
+            if index_start[1]:
+                if index_start[0] == index_end[0]:
+                    fg_first = self.bundle[index_start[0]].slice(start, end, True)
+                else:
+                    fg_first = self.bundle[index_start[0]].slice(start, right_inner=True)
+
+                if fg_first:
+                    bd.bundle.append(fg_first)
+            if index_start[0] == index_end[0] and not index_start[1] and not index_end[1]:
+                fgs_inner = self.bundle[index_start[0]]
+                bd.bundle.append(fgs_inner)
+            elif index_start[0] != index_end[0]:
+                if not index_start[1] and not index_end[1]:
+                    fgs_inner = self.bundle[index_start[0]]
+                    bd.bundle.append(fgs_inner)
+                else:
+                    for fg in self.bundle[min(len(self.bundle), index_start[0] + 1):index_end[0]]:
+                        bd.bundle.append(fg.copy())
+                if index_end[1]:
+                    fg_last = self.bundle[index_end[0]].slice(self.bundle[index_end[0]]
+                                                              .get_start(pos_lincol), end, True)
+                    if fg_last:
+                        bd.bundle.append(fg_last)
+
+            out.append(bd)
+
+        return out[0] if len(out) == 1 else tuple(out)
+
+
+    def splitlines(self, buffered=False):
+        for fg in self:
+            yield from fg.splitlines(buffered=False)
+        if buffered:
+            yield None
+
+
+    def isspace(self):
+        if not self:
+            return True
+
+        for fg in self:
+            if not fg.isspace():
+                return False
+
+        return True
+
+
+    def loc_to_abs(self, loc_rel, filled=False):
+        if not self:
+            return None
+
+        if isinstance(loc_rel, int):
+            cursor = 0
+            prev = None
+            for fg in self:
+                if filled and prev is not None:
+                    if loc_rel <= cursor + fg.start_pos - prev:
+                        return prev + loc_rel - cursor
+                    cursor += fg.start_pos - prev
+                if loc_rel <= cursor + fg.span_len(True):
+                    return fg.loc_to_abs(loc_rel - cursor)
+                cursor += fg.span_len(True)
+                prev = fg.end_pos
+
+        else:
+            cursor = 1
+            prev = None
+            for fg in self:
+                if filled and prev is not None:
+                    cursor += fg.start_lincol[0] - prev
+                if loc_rel[0] <= cursor + len(fg.content):
+                    if cursor + self.start_lincol[0] == fg.start_lincol[0]:
+                        return fg.loc_to_abs((loc_rel[0] - cursor - 1, loc_rel[1] - fg.start_lincol[1]))
+                    else:
+                       return fg.loc_to_abs((loc_rel[0] - cursor - 1, loc_rel[1]))
+                cursor += len(fg.content)
+                prev = fg.end_lincol[0]
+
+        return None
+
+
+    def loc_to_rel(self, loc_abs, filled=False):
+        if not self:
+            return None
+
+        if isinstance(loc_abs, int):
+            for fg in self:
+                if fg.is_in_span(loc_abs):
+                    if filled:
+                        return self.bundle[0].loc_to_rel(loc_abs)
+                    else:
+                        cursor = 0
+                        for rec in self:
+                            if rec is not fg:
+                                cursor += rec.span_len(True)
+                            else:
+                                break
+                        return cursor + loc_abs - fg.start_pos
+        else:
+            for fg in self:
+                if fg.is_in_span(loc_abs):
+                    if filled:
+                        return self.bundle[0].loc_to_rel(loc_abs)
+                    else:
+                        cursor = 0
+                        for rec in self:
+                            if rec is not fg:
+                                cursor += len(rec.content)
+                            else:
+                                break
+                        rel = fg.loc_to_rel(loc_abs)
+                        return (rel[0] + cursor, rel[1])
+
+
+    def lincol_to_pos(self, lincol, keep_bounds=False):
+        if not self:
+            return None
+
+        if lincol < self.start_lincol:
+            if keep_bounds:
+                return self.start_pos
+            return None
+
+        for fg in self:
+            if fg.is_in_span(lincol):
+                return fg.lincol_to_pos(lincol, keep_bounds)
+
+        if keep_bounds:
+            return self.end_pos
+
+
+    def pos_to_lincol(self, pos, keep_bounds=False):
+        if not self:
+            return None
+
+        if pos < self.start_pos:
+            if keep_bounds:
+                return self.start_lincol
+            return None
+
+        for fg in self:
+            if fg.is_in_span(pos):
+                return fg.pos_to_lincol(pos, keep_bounds)
+
+        if keep_bounds:
+            return self.end_lincol
+
+
+    def is_in_span(self, loc, include_start=True, include_end=True):
+        """include for each."""
+        if not self:
+            return False
+
+        for fg in self:
+            if fg.is_in_span(loc, include_start, include_end):
+                return True
+
+        return False
+
+
+    def index_at(self, loc, include_start=True, include_end=True):
+        """Return index of the first Fragment which has the loc within it's span."""
+        for index, fg in enumerate(self):
+            if fg.is_in_span(loc, include_start, include_end):
+                return index
+
+
+    def index_clip(self, loc, prev_next):
+        """Return index of the Fragment which has the loc within it's span or
+           when in between the previous or next Fragment."""
+        pos_lincol = bool(isinstance(loc, int))
+        for index, fg in enumerate(self):
+            if loc < fg.get_start(pos_lincol):
+                return max(0, index - 1) if prev_next else index, False
+            if fg.is_in_span(loc):
+                return index, True
+
+        return index, False
+
+
+    def clear(self, start_end):
+        if not self:
+            return self
+        if start_end:
+            self.bundle = [self.bundle[0]]
+        else:
+            self.bundle = [self.bundle[-1]]
+
+        return self
+
+
+    def is_empty(self):
+        """Return if the Bundle list is empty."""
+        return len(self.bundle) == 0
+
+
+    def __contains__(self, term):
+        if not self:
+            return False
+
+        for fg in self:
+            if term in fg:
+                return True
+
+        return False
+
+
+    def __bool__(self):
+        return bool(self.bundle)
+
+
+    def __eq__(self, other):
+        """Returns if the Bundle are the same."""
+        if type(other) != FragmentBundle:
+            return False
+
+        if self is other:
+            return True
+
+        index = 0
+        for fg in self:
+            # skip
+            if len(fg) == 0:
+                continue
+            while len(other.bundle[index]) == 0:
+                index += 1
+                if index >= len(other.bundle):
+                    return False
+
+            if fg != other.bundle[index]:
+                return False
+            index += 1
+
+        return True
+
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+    def __len__(self):
+        if not self:
+            return 0
+
+        return sum(len(fg for fg in self))
+
+
+    def span_len(self, pos_lincol):
+        if not self:
+            return 0 if pos_lincol else (0, 0)
+
+        if pos_lincol:
+            return self.bundle[-1].end_pos - self.bundle[0].start_pos
+
+        line_span = self.bundle[-1].end_lincol[0] - self.bundle[0].start_lincol[0]
+        if line_span == 0 and len(self.bundle[0].content) != 0:
+            line_span = 1
+        return (line_span, self.bundle[-1].end_lincol[1] - self.bundle[0].start_lincol[1])
+
+
+    def size(self, pos_lincol):
+        if not self:
+            return 0 if pos_lincol else (0, 0)
+
+        if pos_lincol:
+            return len(self)
+
+        if len(self.bundle) == 1:
+            return self.bundle[0].size(pos_lincol)
+
+        line_len = 0
+        col_len = 0
+        col_min = None
+        for fg in self:
+            if len(fg.content) == 0:
+                continue
+            fg_size = self.bundle[0].size(pos_lincol)
+            line_len += fg_size[0]
+            if col_min is None:
+                col_min = fg.start_lincol[1]
+            if len(fg.content) == 1:
+                col_min = min(col_min, fg.start_lincol[1])
+                col_len = max(col_len, fg_size[1] + fg.start_lincol[1])
+            else:
+                col_min = min(col_min, 0)
+                col_len = max(col_len, fg_size[1])
+
+        return (line_len, col_len - col_min)
+
+
+    def __iter__(self):
+        """Iterate over bundle list."""
+        yield from self.bundle
+
+
+    def __str__(self):
+        return str(''.join([str(fg) for fg in self]))
+
+
+    def __repr__(self):
+        return self.repr(bool(not(not self or self.bundle[0].end_lincol)), True, False)
+
+
+    def repr(self, show_pos, show_fn=False, show_content=True):
+        return str(', '.join([fg.repr(show_pos, show_fn, show_content) for fg in self]))
+
+
+    def copy(self):
+        return FragmentBundle(self.bundle.copy())
+
+
+    def copy_replace(self, new_content):
+        return FragmentBundle(new_content)
