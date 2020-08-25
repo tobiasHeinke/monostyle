@@ -150,7 +150,8 @@ def number(document, reports, re_lib):
                     continue
 
                 out = part.code.slice_match_obj(m, 0, True)
-                line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
+                line = getline_punc(document.body.code, out.start_pos,
+                                    out.span_len(True), 50, 0)
                 reports.append(Report('W', toolname, out, value[1], line))
 
     return reports
@@ -391,7 +392,8 @@ def mark(document, reports, re_lib):
                 pattern = value[0]
                 for m in re.finditer(pattern, part_str):
                     out = part.code.slice_match_obj(m, 0, True)
-                    line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
+                    line = getline_punc(document.body.code, out.start_pos,
+                                        out.span_len(True), 50, 0)
                     reports.append(Report('W', toolname, out, value[1], line))
 
 
@@ -523,14 +525,16 @@ def whitespace(document, reports, re_lib):
             if part.code.start_lincol[1] != 0:
                 if multi_start_m := re.match(multi_start_re, part_str):
                     out = part.code.slice_match_obj(multi_start_m, 1, True)
-                    line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
+                    line = getline_punc(document.body.code, out.start_pos,
+                                        out.span_len(True), 50, 0)
                     fg_repl = out.copy_replace(value[2])
                     reports.append(Report('W', toolname, out, re_lib["multispacestart"][1],
                                           line, fg_repl))
 
             for multi_m in re.finditer(multi_re, part_str):
                 out = part.code.slice_match_obj(multi_m, 1, True)
-                line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
+                line = getline_punc(document.body.code, out.start_pos,
+                                    out.span_len(True), 50, 0)
                 fg_repl = out.copy_replace(value[2])
                 reports.append(Report('W', toolname, out, re_lib["multispace"][1], line, fg_repl))
 

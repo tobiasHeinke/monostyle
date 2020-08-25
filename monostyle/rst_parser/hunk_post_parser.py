@@ -9,7 +9,7 @@ to derive cut off node_name from the nodes body.
 
 import re
 from monostyle.util.fragment import Fragment
-from monostyle.rst_parser.rst_node import NodeRST
+from monostyle.rst_parser.rst_node import NodeRST, NodePartRST
 
 
 def parse(rst_parser, document):
@@ -27,7 +27,9 @@ def toctree(rst_parser, document):
     if node and node.node_name == "block-quote":
         node = node.body.child_nodes.first()
 
+    field_node = None
     if node and node.node_name == "field-list":
+        field_node = node
         if first_field := node.body.child_nodes.first():
             if first_field.indent.code.end_pos == 0:
                 return document
@@ -51,10 +53,15 @@ def toctree(rst_parser, document):
         else:
             if not is_empty:
                 node.node_name = "dir"
+                if field_node:
+                    field_node.parent_node.child_nodes.remove(field_node)
+                    node.attr = NodePartRST("attr", field_node.code)
+                    node.attr.append_child(field_node, False)
+                    node.child_nodes.prepend(node.attr)
+
                 fg = Fragment(document.code.fn, [".. toctree::\n"], -1, -1, (-1, 0), (-1, 0))
                 doc = rst_parser.parse(rst_parser.snippet(fg))
                 part_transfer(node, doc.body.child_nodes.first())
-                # the field-list is not made attr
 
     return document
 

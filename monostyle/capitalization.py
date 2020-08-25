@@ -270,7 +270,8 @@ def starting(document, reports, re_lib):
                 pattern = value[0]
                 for m in re.finditer(pattern, part_str):
                     out = part.code.slice_match_obj(m, 0, True)
-                    line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
+                    line = getline_punc(document.body.code, out.start_pos,
+                                        out.span_len(True), 50, 0)
                     reports.append(Report('W', toolname, out, value[1], line))
 
     return reports
@@ -363,7 +364,8 @@ def property_noun(document, reports, data, config):
             for ent in data[first_letter]:
                 if ent[0] == word_str:
                     msg = "property noun: {:4.0%}".format(ent[1])
-                    line = getline_punc(document.code, word.start_pos, word.span_len(), 50, 30)
+                    line = getline_punc(document.code, word.start_pos,
+                                        word.span_len(True), 50, 30)
                     reports.append(Report('W', toolname, word, msg, line))
                     break
 

@@ -183,7 +183,8 @@ def search_pure(document, reports, re_lib, config):
             part_str = str(part.code)
             for m in re.finditer(pattern, part_str):
                 out = part.code.slice_match_obj(m, 0, True)
-                line = getline_punc(document.body.code, out.start_pos, out.span_len(), 50, 0)
+                line = getline_punc(document.body.code, out.start_pos,
+                                    out.span_len(True), 50, 0)
                 reports.append(Report(config.get("severity"), config.get("toolname"),
                                       out, msg, line))
 
@@ -405,7 +406,7 @@ def repeated_words(document, reports, config):
                             msg = Report.quantity(what="repeated words",
                                                   how=str(distance) + " words in between")
                             line = getline_punc(document.body.code, word.start_pos,
-                                                word.span_len(), 50, 30)
+                                                word.span_len(True), 50, 30)
                             reports.append(Report(sev, toolname, word, msg, line))
                             break
 

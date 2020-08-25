@@ -160,7 +160,7 @@ class Fragment():
                     self.end_lincol[0] + 1 == fg.start_lincol[0] and fg.start_lincol[1] == 0):
                 return True
 
-        return self
+        return False
 
 
     def slice_match_obj(self, match_obj, groupno, right_inner=False, output_zero=True):
@@ -346,9 +346,9 @@ class Fragment():
 
     def is_in_span(self, loc, include_start=True, include_end=True):
         """Check if the location is between start and end."""
-        pos_lc = bool(isinstance(loc, int))
-        self_start = self.get_start(pos_lc)
-        self_end = self.get_end(pos_lc)
+        pos_lincol = bool(isinstance(loc, int))
+        self_start = self.get_start(pos_lincol)
+        self_end = self.get_end(pos_lincol)
 
         if self_start == self_end:
             if include_start and include_end and loc == self_start:
@@ -416,9 +416,32 @@ class Fragment():
         return sum(map(len, self.content))
 
 
-    def span_len(self):
-        """Returns the span char length."""
-        return self.end_pos - self.start_pos
+    def span_len(self, pos_lincol):
+        """Returns either the span char length or
+           the line span and column span of the first and last line."""
+        if pos_lincol:
+            return self.end_pos - self.start_pos
+
+        line_span = self.end_lincol[0] - self.start_lincol[0]
+        if line_span == 0 and len(self.content) != 0: 
+            line_span = 1
+        return (line_span, self.end_lincol[1] - self.start_lincol[1])
+
+
+    def size(self, pos_lincol):
+        """Returns the dimensions either the char length or the size of the bounding box."""
+        if pos_lincol:
+            return len(self)
+
+        if len(self.content) == 0:
+            return (0, 0)
+        if len(self.content) == 1:
+            return (len(self.content), len(self.content[0]))
+
+        max_len = self.start_lincol[1] + len(self.content[0])
+        for line_str in self.content:
+            max_len = max(max_len, len(line_str))
+        return (len(self.content), max_len)
 
 
     def __iter__(self):

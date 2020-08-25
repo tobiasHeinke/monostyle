@@ -182,7 +182,8 @@ def line_style(document, reports, re_lib, config):
                     continue
 
                 out = node.code.slice_match_obj(m, 0, True)
-                line = getline_punc(node.code, out.start_pos, out.span_len(), 50, 0)
+                line = getline_punc(node.code, out.start_pos,
+                                    out.span_len(True), 50, 0)
                 reports.append(Report(config.get("severity"), config.get("toolname"), out,
                                       msg, line, "reflow"))
 
@@ -216,11 +217,11 @@ def long_line(document, reports):
                         if prev_node and prev_node.code.end_lincol[0] == part.code.start_lincol[0]:
                             if prev_node.node_name in ("hyperlink", "standalone", "role"):
                                 if (prev_node.id and
-                                        prev_node.id.code.span_len() + 4 > limit):
+                                        prev_node.id.code.span_len(True) + 4 > limit):
                                     line = None
                                     continue
                                 if (prev_node.body and
-                                        prev_node.body.code.span_len() + 4 > limit):
+                                        prev_node.body.code.span_len(True) + 4 > limit):
                                     line = None
                                     continue
 
@@ -411,7 +412,7 @@ def blank_line(document, reports):
 
         elif node.node_name in ("target", "comment"):
             cond_plain = 2
-            msg = Report.under(what="blank lines", where="over " + node.node_name)
+            msg = Report.quantity(what="one blank line", where="over " + node.node_name)
             nl_count, _, __ = count_nl(node, cond_plain)
 
             if nl_count > cond_plain:
