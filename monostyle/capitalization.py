@@ -35,7 +35,7 @@ def titlecase(word, is_first_word, is_last_word, name):
 
             fg_repl = None
             fg_repl = word.slice(word.start_pos, word.start_pos + 1, True)
-            fg_repl.content[0] = fg_repl.content[0].swapcase()
+            fg_repl.replace(str(fg_repl).swapcase())
 
             return msg, fg_repl
         return None
@@ -51,7 +51,7 @@ def titlecase(word, is_first_word, is_last_word, name):
         fg_repl = None
         if not path or path[0] != "preposition":
             fg_repl = word.slice(word.start_pos, word.start_pos + 1, True)
-            fg_repl.content[0] = fg_repl.content[0].swapcase()
+            fg_repl.replace(str(fg_repl).swapcase())
 
         return msg, fg_repl
 
@@ -76,7 +76,7 @@ def admonition_title(document, reports):
                             word_low += 1
                 if word_all > 1 and word_low/ word_all >= threshold:
                     msg = "admonition caption titlecase: {:4.0%}".format(word_low/ word_all)
-                    out = node.head.code.copy_replace([])
+                    out = node.head.code.copy().clear(True)
                     reports.append(Report('W', toolname, out, msg, node.head.code))
 
     return reports
@@ -255,8 +255,7 @@ def starting(document, reports, re_lib):
                     part.parent_node.parent_node.parent_node.node_name == "text"):
 
                 if re.match(start_re, str(part.code)):
-                    out = part.code.copy()
-                    out.clear(True)
+                    out = part.code.copy().clear(True)
                     line = getline_punc(document.body.code, out.start_pos, 0, 50, 0)
                     reports.append(Report('W', toolname, out, re_lib["lowerpara"][1], line))
 

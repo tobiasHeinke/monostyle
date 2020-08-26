@@ -36,7 +36,7 @@ def char_search(document, reports):
         explicits += pattern
         for char_m in re.finditer(char_re, text):
             out = document.code.slice_match_obj(char_m, 0, True)
-            fg_repl = out.copy_replace(repl) if repl else None
+            fg_repl = out.copy().replace_fill(repl) if repl else None
             reports.append(Report('E', toolname, out, msg, fix=fg_repl))
 
     parttern_str = r"[^\n -~À-ʨ" + ''.join(('©', '®', '°', '±', '€', '™', "\t")) + explicits +  r"]"

@@ -9,6 +9,7 @@ RST code style.
 import re
 
 from monostyle.util.report import Report, getline_punc
+from monostyle.util.fragment import FragmentBundle
 from monostyle.util.pos import PartofSpeech
 from monostyle.util.char_catalog import CharCatalog
 import monostyle.rst_parser.walker as rst_walker
@@ -63,8 +64,7 @@ def flavor(document, reports):
         if node.node_name == "trans":
             trans_len = len(str(node.name_start.code).strip())
             if trans_len < 12 and trans_len > 30:
-                out = node.name_start.code.copy()
-                out.clear(True)
+                out = node.name_start.code.copy().clear(True)
                 if trans_len < 12:
                     msg = Report.under(what="dashes", where="in horizontal line")
                 else:
@@ -72,27 +72,24 @@ def flavor(document, reports):
 
                 reports.append(Report('W', toolname, out, msg))
 
-            if node.name_start.code.content[0][0] != '-':
-                out = node.name_start.code.copy()
-                out.clear(True)
+            if not str(node.name_start.code).startswith('-'):
+                out = node.name_start.code.copy().clear(True)
                 msg = Report.misformatted(what="wrong char", where="horizontal line")
                 reports.append(Report('W', toolname, out, msg))
 
         if node.node_name in ("bullet", "enum"):
             if node.node_name == "bullet":
-                if node.name_start.code.content[0][0] != '-':
+                if not str(node.name_start.code).startswith('-'):
                     par_node = node.parent_node.parent_node.parent_node.parent_node
                     if not rst_walker.is_of(par_node, "dir", "list-table"):
-                        out = node.name_start.code.copy()
-                        out.clear(True)
+                        out = node.name_start.code.copy().clear(True)
                         msg = Report.misformatted(what="wrong char", where="bullet list")
                         reports.append(Report('W', toolname, out, msg))
 
             if (len(node.body.code) == 1 and
                     node.body.child_nodes.first().node_name == "text" and
                     is_blank_node(node.body.child_nodes.first())):
-                out = node.name_start.code.copy()
-                out.clear(True)
+                out = node.name_start.code.copy().clear(True)
                 msg = Report.missing(what="empty comment", where="in empty list item")
                 reports.append(Report('W', toolname, out, msg))
 
@@ -100,8 +97,7 @@ def flavor(document, reports):
             first_node = node.body.child_nodes.first()
             if (str(first_node.name.code).strip() != "#" and
                     not rst_walker.is_of(node.parent_node, "dir", ("figure", "image"), "body")):
-                out = first_node.name.code.copy()
-                out.clear(True)
+                out = first_node.name.code.copy().clear(True)
                 msg = Report.misformatted(what="not auto-named", where="enumerated list")
                 reports.append(Report('W', toolname, out, msg))
 
@@ -240,67 +236,53 @@ def heading_lines(document, reports):
     toolname = "heading-char-count"
 
     for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
-        heading_char = node.name_end.code.content[0][0]
-        title_len = len(node.name.code.content[0].strip())
+        heading_char = str(node.name_end.code)[0]
+        ind = 0 if heading_char not in {'%', '#'} else 2
+        title_len = len(str(node.name.code).strip()) + ind * 2
 
-        if heading_char in ('%', '#', '*'):
-            if not node.name_start:
-                out = node.name_end.code.copy_replace(heading_char)
-                msg = Report.missing(what="overline")
-                fg_repl = node.name.code.copy_replace(heading_char * (title_len + 4) + "\n")
-                fg_repl = fg_repl.clear(True)
-                reports.append(Report('W', toolname, out, msg, fix=fg_repl))
+        if heading_char in {'%', '#', '*'} and not node.name_start:
+            out = node.name_end.code.copy().replace_fill(heading_char)
+            msg = Report.missing(what="overline")
+            fg_repl = node.name.code.copy().replace_fill([heading_char * title_len + "\n"])
+            fg_repl = fg_repl.clear(True)
+            reports.append(Report('W', toolname, out, msg, fix=fg_repl))
 
-        if heading_char in ('%', '#'):
-            if len(node.name_end.code.content[0].strip()) != (title_len + 4):
-                out = node.name_end.code.copy_replace(heading_char)
+        if (len(str(node.name_end.code).strip()) != title_len or
+                (node.name_start and
+                 len(str(node.name_start.code).strip()) != title_len)):
+            out = node.name_end.code.copy().replace_fill(heading_char)
+            if len(str(node.name_end.code).strip()) != title_len:
                 msg = Report.quantity(what="wrong underline length",
                                       how=": {:+}".format(
-                                          title_len + 4 - len(node.name_end.code.content[0])))
-
-                fixes = []
-                if node.name_start:
-                    lineno = node.name_start.code.start_lincol[0]
-                    fg_repl_over = node.name_start.code.slice((lineno, 0), (lineno + 1, 0), True)
-                    fg_repl_over.content = [heading_char * (title_len + 4) + "\n"]
-                    fixes.append(fg_repl_over)
-                lineno = node.name_end.code.start_lincol[0]
-                fg_repl_under = node.name_end.code.slice((lineno, 0), (lineno + 1, 0), True)
-                fg_repl_under.content = [heading_char * (title_len + 4) + "\n"]
-                fixes.append(fg_repl_under)
-                reports.append(Report('W', toolname, out, msg, fix=fixes))
-
-            titel_ind_m = re.match(r" *", node.name.code.content[0])
-            if titel_ind_m and len(titel_ind_m.group(0)) != 2:
-                out = node.name.code.copy()
-                out.clear(True)
-                msg = Report.quantity(what="wrong title indent",
-                                      how=": {:+}".format(2 - len(titel_ind_m.group(0))))
-
-                fg_repl = node.name.code.slice_match_obj(titel_ind_m, 0, True)
-                fg_repl.content = [" " * 2]
-                reports.append(Report('W', toolname, out, msg, fix=fg_repl))
-
-        else:
-            if len(node.name_end.code.content[0].strip()) != title_len:
-                out = node.name_end.code.copy_replace(heading_char)
-                msg = Report.quantity(what="wrong underline length",
+                                          title_len - len(str(node.name_end.code).strip())))
+            else:
+                msg = Report.quantity(what="wrong overline length",
                                       how=": {:+}".format(
-                                          title_len - len(node.name_end.code.content[0])))
+                                          title_len - len(str(node.name_start.code).strip())))
 
-                lineno = node.name_end.code.start_lincol[0]
-                fg_repl = node.name_end.code.slice((lineno, 0), (lineno + 1, 0), True)
-                fg_repl.content = [heading_char * title_len + "\n"]
-                reports.append(Report('W', toolname, out, msg, fix=fg_repl))
+            bd = FragmentBundle()
+            if node.name_start:
+                lineno = node.name_start.code.start_lincol[0]
+                fg_repl_over = node.name_start.code.slice((lineno, 0), (lineno + 1, 0), True)
+                fg_repl_over = fg_repl_over.to_fragment()
+                fg_repl_over.replace_fill([heading_char * title_len + "\n"])
+                bd.bundle.append(fg_repl_over)
+            lineno = node.name_end.code.start_lincol[0]
+            fg_repl_under = node.name_end.code.slice((lineno, 0), (lineno + 1, 0), True)
+            fg_repl_under = fg_repl_under.to_fragment()
+            fg_repl_under.replace_fill([heading_char * title_len + "\n"])
+            bd.bundle.append(fg_repl_under)
+            reports.append(Report('W', toolname, out, msg, fix=bd))
 
-            titel_ind_m = re.match(r" *", node.name.code.content[0])
-            if titel_ind_m and len(titel_ind_m.group(0)) != 0:
-                out = node.name.code.copy()
-                out.clear(True)
-                msg = Report.over(what="indent")
-                fg_repl = node.name.code.slice_match_obj(titel_ind_m, 0, True)
-                fg_repl.content = [""]
-                reports.append(Report('W', toolname, out, msg, fix=fg_repl))
+        titel_ind_m = re.match(r" *", str(node.name.code))
+        if titel_ind_m and len(titel_ind_m.group(0)) != ind:
+            out = node.name.code.copy().clear(True)
+            msg = Report.quantity(what="wrong title indent",
+                                  how=": {:+}".format(ind - len(titel_ind_m.group(0))))
+
+            fg_repl = node.name.code.slice_match_obj(titel_ind_m, 0, True)
+            fg_repl.replace_fill([" " * ind])
+            reports.append(Report('W', toolname, out, msg, fix=fg_repl))
 
     return reports
 
@@ -318,10 +300,10 @@ def blank_line(document, reports):
 
     def count_trailnl(node, nl_count):
         newline_re = re.compile(r"\s*\Z", re.DOTALL)
-        for line_str in reversed(node.code.content):
-            if len(line_str) == 0:
+        for line in reversed(node.code.splitlines()):
+            if line.span_len(True) == 0:
                 continue
-            if newline_m := re.search(newline_re, line_str):
+            if newline_m := re.search(newline_re, str(line)):
                 nl_count += str(newline_m.group(0)).count('\n')
 
                 if newline_m.start(0) != 0:
@@ -363,7 +345,7 @@ def blank_line(document, reports):
         if node.node_name == "sect" or rst_walker.is_of(node, "dir", "rubric"):
             display_name = "heading" if node.node_name == "sect" else "rubric"
             if (node.node_name == "sect" and
-                    node.name_end.code.content[0][0] in ('%', '#', '*')):
+                    str(node.name_end.code)[0] in {'%', '#', '*'}):
                 cond_plain = 1
                 msg_plain = Report.quantity(what="one blank line", where="over title heading")
                 cond_between = 2
@@ -424,8 +406,7 @@ def blank_line(document, reports):
 
                 if not next_node or next_node.node_name not in ("sect", "rubric"):
                     msg += ": {:+}".format(cond_plain - nl_count)
-                    out = node.code.copy()
-                    out.clear(True)
+                    out = node.code.copy().clear(True)
                     reports.append(Report('W', toolname, out, msg, node.code))
 
         elif node.prev and not is_blank_node(node):
@@ -434,8 +415,7 @@ def blank_line(document, reports):
                                  "warning", "seealso", "code-block")):
 
                 if node.head is not None and re.match(r"\n ", str(node.head.code)):
-                    out = node.head.code.copy()
-                    out.clear(True)
+                    out = node.head.code.copy().clear(True)
                     msg = Report.missing(what="blank line",
                                          where="after head " + node.node_name +
                                                " " + str(node.name.code))
@@ -451,8 +431,7 @@ def blank_line(document, reports):
                     naming += " " + str(node.name.code).strip()
                 msg = Report.quantity(what="one blank line", where="over " + naming,
                                       how=": {:+}".format(cond_plain - nl_count))
-                out = node.code.copy()
-                out.clear(True)
+                out = node.code.copy().clear(True)
                 reports.append(Report('W', toolname, out, msg))
 
     if is_blank_node(node):
@@ -464,8 +443,7 @@ def blank_line(document, reports):
         nl_count, _, __ = count_nl(node, cond_plain)
 
         if nl_count >= cond_plain:
-            out = node.code.copy()
-            out.clear(True)
+            out = node.code.copy().clear(True)
             reports.append(Report('W', toolname, out, msg))
 
     return reports
@@ -481,7 +459,7 @@ def style_add(document, reports):
             if (re.match(proto_re, str(node.id.code)) and
                     not re.match(r"`__", str(node.body_end.code))):
                 msg = Report.missing(what="underscore", where="after external link (same tab)")
-                fg_repl = node.body_end.code.copy_replace("_").clear(True)
+                fg_repl = node.body_end.code.copy().clear(True).replace("_")
                 reports.append(Report('W', toolname, node.id.code, msg, fix=fg_repl))
 
         if node.node_name == "target":

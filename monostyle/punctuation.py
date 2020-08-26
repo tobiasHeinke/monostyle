@@ -504,7 +504,7 @@ def whitespace(document, reports, re_lib):
             out = document.body.code.slice_match_obj(m, 0, True)
             line = getline_punc(document.body.code, m.start(), len(m.group(0)), 50, 0)
             fg_repl = document.body.code.slice_match_obj(m, 1, True)
-            fg_repl.content = [value[2]]
+            fg_repl.replace_fill(value[2])
             reports.append(Report('W', toolname, out, value[1], line, fg_repl))
 
     instr_pos = {
@@ -527,7 +527,7 @@ def whitespace(document, reports, re_lib):
                     out = part.code.slice_match_obj(multi_start_m, 1, True)
                     line = getline_punc(document.body.code, out.start_pos,
                                         out.span_len(True), 50, 0)
-                    fg_repl = out.copy_replace(value[2])
+                    fg_repl = out.copy().replace_fill(value[2])
                     reports.append(Report('W', toolname, out, re_lib["multispacestart"][1],
                                           line, fg_repl))
 
@@ -535,7 +535,7 @@ def whitespace(document, reports, re_lib):
                 out = part.code.slice_match_obj(multi_m, 1, True)
                 line = getline_punc(document.body.code, out.start_pos,
                                     out.span_len(True), 50, 0)
-                fg_repl = out.copy_replace(value[2])
+                fg_repl = out.copy().replace_fill(value[2])
                 reports.append(Report('W', toolname, out, re_lib["multispace"][1], line, fg_repl))
 
     return reports

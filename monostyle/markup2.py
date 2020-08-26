@@ -34,7 +34,7 @@ def page_name(document, reports):
         page_split.append(simple_stem(ent))
 
     for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
-        head = node.name.code.content[0].lower().strip()
+        head = str(node.name.code).lower().strip()
         head = re.sub(r"\b(\w)\-", r"\1", head)
         head = re.sub(r"[&/,-]", " ", head)
         head_split = []
@@ -231,12 +231,13 @@ def glossary(document, reports, data):
     for node in rst_walker.iter_node(document.body, ("dir",), enter_pos=False):
         if rst_walker.is_of(node, "*", "glossary"):
             for def_node in rst_walker.iter_node(node.body, ("def",), enter_pos=False):
-                for line_str in def_node.head.code.content:
-                    if line_str.strip() in data["terms_glossary"]:
+                for line in def_node.head.code.splitlines():
+                    line_strip = str(line).strip()
+                    if line_strip in data["terms_glossary"]:
                         msg = "term used only within glossary"
                         reports.append(Report('I', toolname, def_node.head.code, msg))
                         break
-                    if line_str.strip() in data["terms"]:
+                    if line_strip in data["terms"]:
                         break
                 else:
                     msg = "unused term"

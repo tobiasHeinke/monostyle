@@ -419,11 +419,11 @@ def stringify_space(boxes, lastbreak):
                         new_content = []
                         for _ in range(max(1, nl_count)):
                             new_content.append('\n')
-                        box.space.content = new_content
+                        box.space.replace_fill(new_content)
                         changes_para.append(box.space)
                 is_last = False
             elif len(space_str) != 0 and (len(space_str) != 1 or space_str == '\n'):
-                box.space.content = ' '
+                box.space.replace_fill(' ')
                 changes_para.append(box.space)
             box = box.prev
 
@@ -458,7 +458,8 @@ def stringify_word(boxes, lastbreak):
 def show_limes(node, optimum, maximum):
     """Visualize optimum and maximum."""
     lines_alt = []
-    for line in node.code.content:
+    for line in node.code.splitlines():
+        line = str(line)
         line = line[:-1] + ' ' * ((maximum - len(line)) + 1) + '\n'
         line = line[:optimum[0]] + '¦' + line[optimum[0]:optimum[1]]
         line += '¦' + line[optimum[1]:maximum] + '|' + line[maximum:]
@@ -484,24 +485,23 @@ def show_demerits(boxes):
 
 def measure_indent(node):
     """Measure the indent."""
-    is_first = True
     ind_re = re.compile(r"\A +")
     ind_first = 0
     ind_cur = 0
     ind_prev = None
-    for line in node.code.content:
-        if len(line.strip()) == 0:
-            is_first = False
+    for line in node.code.splitlines():
+        line_str = str(line)
+        if len(line_str.strip()) == 0:
             continue
 
         ind_cur = 0
-        if ind_m := re.match(ind_re, line):
+        if ind_m := re.match(ind_re, line_str):
             ind_cur = ind_m.end(0)
 
         if ind_prev and ind_prev != ind_cur:
             print("reflow: paragraph uneven indent")
 
-        if is_first:
+        if line.start_lincol[0] == node.code.start_lincol[0]:
             ind_first = ind_cur
             if not ind_m:
                 par_node = node.parent_node
@@ -517,8 +517,6 @@ def measure_indent(node):
         else:
             ind_prev = ind_cur
 
-        is_first = False
-
     return ind_first, ind_cur
 
 
@@ -527,7 +525,7 @@ def add_indent(changes_para, ind_block):
     ind_block_str = ' ' * ind_block
     for change in changes_para:
         if str(change) == '\n':
-            change.content.append(ind_block_str)
+            change.extend([ind_block_str])
 
     return changes_para
 

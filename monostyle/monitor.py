@@ -47,8 +47,7 @@ def check(document, reports, data):
                     msg = "changed in " + ent
 
         if msg != "" and fn not in check.reg:
-            out = document.body.code.copy()
-            out.clear(True)
+            out = document.body.code.copy().clear(True)
             reports.append(Report('I', toolname, out, msg))
             check.reg.append(fn)
 

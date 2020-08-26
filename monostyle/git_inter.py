@@ -92,8 +92,7 @@ def difference(from_vsn, is_internal, fn_source, rev, cached):
 
             elif line.startswith('\\'):
                 msg = line[2:] # backslash + space
-                out = fg.copy()
-                out.clear(False)
+                out = fg.copy().clear(False)
                 yield out, None, msg
 
     if fg and len(fg.content) != len(context):

@@ -6,7 +6,7 @@ util.editor
 Text editing utilities.
 """
 
-from monostyle.util.fragment import Fragment
+from monostyle.util.fragment import Fragment, FragmentBundle
 
 
 class Editor:
@@ -61,7 +61,10 @@ class Editor:
 
     def add(self, fg):
         """Add replacement."""
-        self._changes.append(fg)
+        if isinstance(fg, FragmentBundle):
+            self._changes.extend(fg.bundle)
+        else:
+            self._changes.append(fg)
 
 
     def apply(self, virtual=False, pos_lc=True, use_conflict_handling=False):

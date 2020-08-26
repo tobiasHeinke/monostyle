@@ -61,6 +61,10 @@ class Fragment():
         self.end_lincol = end_lincol
 
 
+    def to_fragment(self, filler=None):
+        return self
+
+
     def add_offset(self, offset_pos=None, offset_lincol=None):
         """Adds an offset to the location."""
         if offset_pos:
@@ -364,6 +368,32 @@ class Fragment():
         return False
 
 
+    def replace(self, new_content):
+        if isinstance(new_content, str):
+            new_content = new_content.splitlines(keepends=True)
+        else:
+            if len(new_content) != 0 and isinstance(new_content[0], list):
+                if len(new_content) != 1:
+                    print("Fragment replace: unsuspected container")
+                new_content = new_content[0]
+
+        self.content = new_content
+        return self
+
+
+    def replace_fill(self, new_content, open_end=True):
+        if isinstance(new_content, str):
+            if not open_end:
+                new_content = new_content[:len(self)]
+            new_content = new_content.splitlines(keepends=True)
+        else:
+            if not open_end:
+                new_content = new_content[:len(self.content)]
+
+        self.content = new_content
+        return self
+
+
     def clear(self, start_end):
         """Remove content. Turn into zero-length Fragment at start or end."""
         self.content.clear()
@@ -481,20 +511,13 @@ class Fragment():
                         bool(self.start_lincol is not None))
 
 
-    def copy_replace(self, new_content):
-        """Returns a copy with new content."""
-        return Fragment(self.fn, new_content, self.start_pos,
-                        self.end_pos, self.start_lincol, self.end_lincol,
-                        bool(self.start_lincol is not None))
-
-
 class FragmentBundle():
     """A list of Fragments. sorted, non overlapping."""
 
-    __slots__ = ('bundle')
+    __slots__ = ('bundle',)
 
 
-    def __init__(self, bundle):
+    def __init__(self, bundle=None):
         """bundle -- a list of Fragments."""
         if bundle is None:
             bundle = []
@@ -556,14 +579,29 @@ class FragmentBundle():
     end_lincol = property(get_end_lincol, set_end_lincol)
 
 
-    def to_fragment(filler=None):
+    def to_fragment(self, pos_lincol=True, filler=None):
         if not self:
             return None
 
-        return Fragment(self.bundle[0].fn, self.join(filler),
-                        self.bundle[0].start_pos, self.bundle[-1].end_pos,
-                        self.bundle[0].start_lincol, self.bundle[-1].end_lincol,
-                        bool(self.bundle[0].start_lincol is not None))
+        if filler is not None:
+            return Fragment(self.bundle[0].fn, self.join(filler),
+                            self.bundle[0].start_pos, self.bundle[-1].end_pos,
+                            self.bundle[0].start_lincol, self.bundle[-1].end_lincol,
+                            bool(self.bundle[0].start_lincol is not None))
+
+        if len(self.bundle) == 1:
+            return self.bundle[0]
+
+        out = None
+        for fg in self:
+            if not out:
+                out = fg
+                continue
+            if not out.is_aligned(fg, pos_lincol):
+                return None
+            out.combine(fg, check_align=False)
+
+        return out
 
 
     def join(self, filler=None):
@@ -756,13 +794,12 @@ class FragmentBundle():
                     cursor += fg.start_lincol[0] - prev
                 if loc_rel[0] <= cursor + len(fg.content):
                     if cursor + self.start_lincol[0] == fg.start_lincol[0]:
-                        return fg.loc_to_abs((loc_rel[0] - cursor - 1, loc_rel[1] - fg.start_lincol[1]))
+                        return fg.loc_to_abs((loc_rel[0] - cursor - 1,
+                                              loc_rel[1] - fg.start_lincol[1]))
                     else:
-                       return fg.loc_to_abs((loc_rel[0] - cursor - 1, loc_rel[1]))
+                        return fg.loc_to_abs((loc_rel[0] - cursor - 1, loc_rel[1]))
                 cursor += len(fg.content)
                 prev = fg.end_lincol[0]
-
-        return None
 
 
     def loc_to_rel(self, loc_abs, filled=False):
@@ -864,13 +901,39 @@ class FragmentBundle():
         return index, False
 
 
+    def replace(self, new_content):
+        """Map list entry to entry in bundle."""
+        for fg, content in zip(self, new_content):
+            fg.replace(content)
+
+        # warn length difference? open_end, empty rest
+        return self
+
+
+    def replace_fill(self, new_content, open_end=True):
+        """Replace chars or lines distributed by current content length."""
+        pos_lincol = bool(isinstance(new_content, str))
+        prev_end = 0
+        for index, fg in enumerate(self):
+            if prev_end < len(new_content):
+                l = len(fg) if pos_lincol else len(fg.content)
+                if open_end and index == len(self.bundle) - 1:
+                    fg.replace_fill(new_content[prev_end:], open_end=True)
+                else:
+                    fg.replace_fill(new_content[prev_end:prev_end + l])
+                    prev_end += l
+            else:
+                fg.replace_fill("")
+        return self
+
+
     def clear(self, start_end):
         if not self:
             return self
         if start_end:
-            self.bundle = [self.bundle[0]]
+            self.bundle = [self.bundle[0].clear(start_end)]
         else:
-            self.bundle = [self.bundle[-1]]
+            self.bundle = [self.bundle[-1].clear(start_end)]
 
         return self
 
@@ -928,7 +991,7 @@ class FragmentBundle():
         if not self:
             return 0
 
-        return sum(len(fg for fg in self))
+        return sum(len(fg) for fg in self)
 
 
     def span_len(self, pos_lincol):
@@ -993,7 +1056,3 @@ class FragmentBundle():
 
     def copy(self):
         return FragmentBundle(self.bundle.copy())
-
-
-    def copy_replace(self, new_content):
-        return FragmentBundle(new_content)

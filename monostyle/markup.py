@@ -22,7 +22,7 @@ def heading_level(document, reports):
     title_count = 0
     level_prev = 0
     for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
-        heading_char = node.name_end.code.content[0][0]
+        heading_char = str(node.name_end.code)[0]
 
         level_cur = -1
         # get list index
@@ -30,7 +30,7 @@ def heading_level(document, reports):
             level_cur = levels[heading_char]
 
         if level_cur == -1:
-            out = node.name_end.code.copy_replace(heading_char)
+            out = node.name_end.code.copy().replace_fill(heading_char)
             msg = Report.existing(what="unknown level")
             reports.append(Report('W', toolname, out, msg))
 
@@ -38,32 +38,32 @@ def heading_level(document, reports):
             if level_cur == 0:
 
                 if not document.code.fn.endswith("manual/index.rst"):
-                    out = node.name_end.code.copy_replace(heading_char)
+                    out = node.name_end.code.copy().replace_fill(heading_char)
                     msg = Report.existing(what="main index title", where="not on main")
                     reports.append(Report('W', toolname, out, msg))
 
             elif level_cur == 1:
                 if not document.code.fn.endswith("index.rst"):
-                    out = node.name_end.code.copy_replace(heading_char)
+                    out = node.name_end.code.copy().replace_fill(heading_char)
                     msg = Report.existing(what="index title", where="on page")
                     reports.append(Report('W', toolname, out, msg))
 
             elif document.code.fn.endswith("index.rst"):
-                out = node.name_end.code.copy_replace(heading_char)
+                out = node.name_end.code.copy().replace_fill(heading_char)
                 msg = Report.existing(what="page title", where="on index")
                 reports.append(Report('W', toolname, out, msg))
 
             title_count += 1
             if title_count > 1:
                 msg = Report.over(what="title headings: " + str(title_count))
-                out = node.name_end.code.copy_replace(heading_char)
+                out = node.name_end.code.copy().replace_fill(heading_char)
                 reports.append(Report('W', toolname, out, msg))
 
             level_prev = 2
         else:
             if title_count == 0:
                 if document.body.code.start_lincol[0] == 0:
-                    out = node.name_end.code.copy_replace(heading_char)
+                    out = node.name_end.code.copy().replace_fill(heading_char)
                     msg = Report.missing(what="title heading")
                     reports.append(Report('W', toolname, out, msg))
                     # report only once
@@ -74,7 +74,7 @@ def heading_level(document, reports):
                                           level_chars[level_prev], heading_char),
                                           with_what=level_chars[level_prev + 1])
 
-                out = node.name_end.code.copy_replace(heading_char)
+                out = node.name_end.code.copy().replace_fill(heading_char)
                 reports.append(Report('W', toolname, out, msg))
 
             level_prev = level_cur
@@ -184,7 +184,8 @@ def indention(document, reports):
                         if next_child:
                             ind_trg_next = next_child.code.start_lincol[1]
                     else:
-                        ind_trg_next = len(re.match(r" *", next_child.code.content[0]).group(0))
+                        # todo first line only
+                        ind_trg_next = len(re.match(r" *", str(next_child.code)).group(0))
 
                 if (ind_trg_next is not None and
                         node.name_start.code.start_lincol[1] != ind_trg_next):
@@ -199,8 +200,7 @@ def indention(document, reports):
                                               with_what="{:+} chars".format(
                                               refbox_col - node_field.name_end.code.end_lincol[1]))
 
-                    out = node_field.name_end.code.copy()
-                    out.clear(False)
+                    out = node_field.name_end.code.copy().clear(False)
                     reports.append(Report('E', toolname, out, msg, line))
 
     return reports
@@ -514,8 +514,7 @@ def search_directive(document, reports):
         else:
             # not at diff hunk can be cut off def list
             if node.code.start_lincol[0] != document.code.start_lincol[0]:
-                out = node.code.copy()
-                out.clear(True)
+                out = node.code.copy().clear(True)
                 msg = "block quote"
                 reports.append(Report('W', toolname, out, msg))
 

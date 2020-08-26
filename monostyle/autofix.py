@@ -7,14 +7,14 @@ Apply autofixes to the working copy.
 
 report.fix
 Str name of the fixing tool or
-Fragment or List of as replacements.
+Fragment or FragmentBundle.
 """
 
 import monostyle.reflow
 
 import monostyle.util.monostylestd as monostylestd
 from monostyle.util.editor import Editor
-from monostyle.util.fragment import Fragment
+from monostyle.util.fragment import Fragment, FragmentBundle
 from monostyle.util.report import print_reports
 
 
@@ -62,7 +62,7 @@ def apply(fn, tools, reports_unfixed, rst_parser):
     def search_conflicted(fg_conflict, tools):
         for reports in tools.values():
             for report in reports:
-                if isinstance(report.fix, list):
+                if isinstance(report.fix, FragmentBundle):
                     for change in report.fix:
                         if change is fg_conflict:
                             return report
@@ -87,10 +87,7 @@ def apply(fn, tools, reports_unfixed, rst_parser):
             reports_unfixed.extend(unlocated)
         else:
             for report in reports:
-                if isinstance(report.fix, list):
-                    changes_file.extend(report.fix)
-                else:
-                    changes_file.append(report.fix)
+                changes_file.append(report.fix)
 
     if len(changes_file) == 0:
         return reports_unfixed
