@@ -368,14 +368,18 @@ class Fragment():
         return False
 
 
-    def replace(self, new_content):
+    def replace(self, new_content, open_end=True):
         if isinstance(new_content, str):
             new_content = new_content.splitlines(keepends=True)
         else:
             if len(new_content) != 0 and isinstance(new_content[0], list):
-                if len(new_content) != 1:
-                    print("Fragment replace: unsuspected container")
-                new_content = new_content[0]
+                if not open_end:
+                    new_content = new_content[0]
+                else:
+                    new = []
+                    for content in new_content:
+                        new.extend(content)
+                    new_content = new
 
         self.content = new_content
         return self
@@ -405,6 +409,10 @@ class Fragment():
             self.start_lincol = self.end_lincol
 
         return self
+
+
+    def is_empty(self):
+        return False
 
 
     def __contains__(self, term):
@@ -698,6 +706,13 @@ class FragmentBundle():
 
 
     def slice(self, at_start, at_end=None, right_inner=False, output_zero=True):
+        if not self:
+            if right_inner:
+                return None
+            if not at_end:
+                return None, None
+            return None, None, None
+
         if at_end is not None and at_end < at_start:
             at_end = at_start
 
@@ -721,30 +736,40 @@ class FragmentBundle():
 
         out = []
         for index_start, start, index_end, end in cuts:
-            bd = FragmentBundle([])
-            if index_start[1]:
-                if index_start[0] == index_end[0]:
-                    fg_first = self.bundle[index_start[0]].slice(start, end, True)
-                else:
-                    fg_first = self.bundle[index_start[0]].slice(start, right_inner=True)
+            if start <= self.get_start(pos_lincol) and end <= self.get_start(pos_lincol):
+                bd = self.bundle[0].clear(True) if output_zero else None
+            elif end >= self.get_end(pos_lincol) and start <= self.get_start(pos_lincol):
+                bd = self.copy()
+            elif start >= self.get_end(pos_lincol) :
+                bd = self.bundle[-1].clear(False) if output_zero else None
+            elif start == end and not output_zero:
+                bd = None
+            else:
+                bd = FragmentBundle()
+                if index_start[1]:
+                    if index_start[0] == index_end[0]:
+                        fg_first = self.bundle[index_start[0]].slice(start, end, True)
+                    else:
+                        fg_first = self.bundle[index_start[0]].slice(start, right_inner=True)
 
-                if fg_first:
-                    bd.bundle.append(fg_first)
-            if index_start[0] == index_end[0] and not index_start[1] and not index_end[1]:
-                fgs_inner = self.bundle[index_start[0]]
-                bd.bundle.append(fgs_inner)
-            elif index_start[0] != index_end[0]:
-                if not index_start[1] and not index_end[1]:
+                    if fg_first:
+                        bd.bundle.append(fg_first)
+                if index_start[0] == index_end[0] and not index_start[1] and not index_end[1]:
                     fgs_inner = self.bundle[index_start[0]]
-                    bd.bundle.append(fgs_inner)
-                else:
-                    for fg in self.bundle[min(len(self.bundle), index_start[0] + 1):index_end[0]]:
-                        bd.bundle.append(fg.copy())
-                if index_end[1]:
-                    fg_last = self.bundle[index_end[0]].slice(self.bundle[index_end[0]]
-                                                              .get_start(pos_lincol), end, True)
-                    if fg_last:
-                        bd.bundle.append(fg_last)
+                    bd.bundle.append(fgs_inner.copy())
+                elif index_start[0] != index_end[0]:
+                    if not index_start[1] and not index_end[1]:
+                        fgs_inner = self.bundle[index_start[0]]
+                        bd.bundle.append(fgs_inner.copy())
+                    else:
+                        for fg in self.bundle[min(len(self.bundle), index_start[0] + 1):index_end[0]]:
+                            bd.bundle.append(fg.copy())
+                    if index_end[1]:
+                        fg_last = self.bundle[index_end[0]].slice(self.bundle[index_end[0]]
+                                                                  .get_start(pos_lincol), end, True)
+                        if fg_last:
+                            bd.bundle.append(fg_last)
+
 
             out.append(bd)
 
@@ -901,12 +926,19 @@ class FragmentBundle():
         return index, False
 
 
-    def replace(self, new_content):
+    def replace(self, new_content, open_end=True):
         """Map list entry to entry in bundle."""
+
         for fg, content in zip(self, new_content):
             fg.replace(content)
 
-        # warn length difference? open_end, empty rest
+        for fg in self.bundle[len(new_content):]:
+            fg.replace("")
+
+        if open_end:
+            for content in new_content[len(self.bundle):]:
+                self.bundle[-1].extend(content)
+
         return self
 
 
