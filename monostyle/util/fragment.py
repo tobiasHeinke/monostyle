@@ -264,6 +264,26 @@ class Fragment():
             yield None
 
 
+    def reversed_splitlines(self, buffered=False):
+        """Split lines in reversed order."""
+        start_pos = self.end_pos
+        for index, line_str in enumerate(reversed(self.content)):
+            start_pos -= len(line_str)
+            if self.start_lincol:
+                lineno = self.end_lincol[0] - index
+                if index == len(self.content) - 1:
+                    start_lincol = (lineno, self.start_lincol[1])
+                else:
+                    start_lincol = (lineno, 0)
+            else:
+                start_lincol = None
+            line = Fragment(self.fn, line_str, start_pos, start_lincol=start_lincol)
+            yield line
+
+        if buffered:
+            yield None
+
+
     def isspace(self):
         """The content is empty or contains only whitespaces."""
         if len(self.content) == 0:
@@ -740,7 +760,7 @@ class FragmentBundle():
                 bd = self.bundle[0].clear(True) if output_zero else None
             elif end >= self.get_end(pos_lincol) and start <= self.get_start(pos_lincol):
                 bd = self.copy()
-            elif start >= self.get_end(pos_lincol) :
+            elif start >= self.get_end(pos_lincol):
                 bd = self.bundle[-1].clear(False) if output_zero else None
             elif start == end and not output_zero:
                 bd = None
@@ -770,7 +790,6 @@ class FragmentBundle():
                         if fg_last:
                             bd.bundle.append(fg_last)
 
-
             out.append(bd)
 
         return out[0] if len(out) == 1 else tuple(out)
@@ -778,7 +797,14 @@ class FragmentBundle():
 
     def splitlines(self, buffered=False):
         for fg in self:
-            yield from fg.splitlines(buffered=False)
+            yield from fg.splitlines()
+        if buffered:
+            yield None
+
+
+    def reversed_splitlines(self, buffered=False):
+        for fg in self:
+            yield from fg.reversed_splitlines()
         if buffered:
             yield None
 
@@ -821,8 +847,8 @@ class FragmentBundle():
                     if cursor + self.start_lincol[0] == fg.start_lincol[0]:
                         return fg.loc_to_abs((loc_rel[0] - cursor - 1,
                                               loc_rel[1] - fg.start_lincol[1]))
-                    else:
-                        return fg.loc_to_abs((loc_rel[0] - cursor - 1, loc_rel[1]))
+
+                    return fg.loc_to_abs((loc_rel[0] - cursor - 1, loc_rel[1]))
                 cursor += len(fg.content)
                 prev = fg.end_lincol[0]
 
@@ -849,15 +875,15 @@ class FragmentBundle():
                 if fg.is_in_span(loc_abs):
                     if filled:
                         return self.bundle[0].loc_to_rel(loc_abs)
-                    else:
-                        cursor = 0
-                        for rec in self:
-                            if rec is not fg:
-                                cursor += len(rec.content)
-                            else:
-                                break
-                        rel = fg.loc_to_rel(loc_abs)
-                        return (rel[0] + cursor, rel[1])
+
+                    cursor = 0
+                    for rec in self:
+                        if rec is not fg:
+                            cursor += len(rec.content)
+                        else:
+                            break
+                    rel = fg.loc_to_rel(loc_abs)
+                    return (rel[0] + cursor, rel[1])
 
 
     def lincol_to_pos(self, lincol, keep_bounds=False):
@@ -928,6 +954,8 @@ class FragmentBundle():
 
     def replace(self, new_content, open_end=True):
         """Map list entry to entry in bundle."""
+        if not self:
+            return self
 
         for fg, content in zip(self, new_content):
             fg.replace(content)
@@ -944,6 +972,9 @@ class FragmentBundle():
 
     def replace_fill(self, new_content, open_end=True):
         """Replace chars or lines distributed by current content length."""
+        if not self:
+            return self
+
         pos_lincol = bool(isinstance(new_content, str))
         prev_end = 0
         for index, fg in enumerate(self):

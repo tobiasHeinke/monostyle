@@ -220,7 +220,6 @@ class RSTParser:
 
         node.is_parsing = True
         line = None
-        info_next = None
         for line, line_info in lines:
             if line_info["is_not_empty"]:
                 ind_cur = line_info["ind_cur"]

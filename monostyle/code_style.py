@@ -300,7 +300,7 @@ def blank_line(document, reports):
 
     def count_trailnl(node, nl_count):
         newline_re = re.compile(r"\s*\Z", re.DOTALL)
-        for line in reversed(node.code.splitlines()):
+        for line in node.code.reversed_splitlines():
             if line.span_len(True) == 0:
                 continue
             if newline_m := re.search(newline_re, str(line)):
