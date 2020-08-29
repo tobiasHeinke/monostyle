@@ -10,7 +10,7 @@ import re
 from math import ceil
 
 import monostyle.config as config
-from monostyle.util.monostylestd import path_to_rel, print_title
+from monostyle.util.monostylestd import print_over, print_title, path_to_rel
 
 
 class MsgTemplate():
@@ -261,12 +261,10 @@ class Report():
                           self.line.copy(), self.fix.copy())
 
 
-def print_reports(reports, options=None):
-    """Print the reports in the command line."""
-    if reports is None:
-        return None
+def options_overide(options=None):
+    """Override the default print options."""
     if options is None:
-        options = config.console_options
+        options = options_overide(config.console_options)
 
     options = {
         "file_title": True,
@@ -276,38 +274,67 @@ def print_reports(reports, options=None):
         "summary_overline": '_',
         **options
     }
+    return options
 
-    fn_prev = None
+
+def print_reports(reports, options=None):
+    """Print the reports in the command line."""
+    if reports is None:
+        return None
+
+    options = options_overide()
+    summary = None
     for report in reports:
         if report is not None:
-            if options["file_title"]:
-                if fn_prev != report.out.fn:
-                    fn = report.out.fn if options["absolute_path"] else path_to_rel(report.out.fn)
-                    print_title(fn, underline=options["file_title_underline"])
+            print_report(report, options)
 
-                fn_prev = report.out.fn
-
-            print(report.repr(options))
+            if options["show_summary"]:
+                summary = update_summary(summary, report)
 
     if options["show_summary"]:
-        # Show the count of each severity after the reports output.
-        levels = dict.fromkeys(Report.severities, 0)
-        for report in reports:
-            if report.severity in levels.keys():
-                levels[report.severity] += 1
+        print_summary(summary, options)
 
-        summary = []
-        for key, val in levels.items():
-            if key != 'L' and (key != 'U' or val != 0):
-                sev_map = Report.severity_maps.get(options["severity_display"],
-                                                   Report.severity_maps["letter"])
-                summary.append(sev_map.get(key, sev_map["U"]) + ": " + str(val))
 
-        summary.append("total" + ": " + str(len(reports)))
+def print_report(report, options=None, fn_prev=None):
+    """Print a single report. Returns the fillename of the report for storage."""
+    if report is None:
+        return
+    if options and options["file_title"]:
+        if fn_prev is None or fn_prev != report.out.fn:
+            fn = report.out.fn if options["absolute_path"] else path_to_rel(report.out.fn)
+            print_title(fn, underline=options["file_title_underline"])
 
-        if options["summary_overline"]:
-            print(options["summary_overline"] * len(", ".join(summary)))
-        print(", ".join(summary))
+    print_over(report.repr(options))
+    return report.out.fn
+
+
+def update_summary(summary, report):
+    """Update the count of each severity of the reports."""
+    if summary is None:
+        summary = dict.fromkeys(Report.severities, 0)
+        summary.setdefault("total", 0)
+
+    if report.severity in summary.keys():
+        summary[report.severity] += 1
+    summary["total"] += 1
+
+    return summary
+
+
+def print_summary(summary, options):
+    """Show the count of each s."""
+    summary_text = []
+    for key, val in summary.items():
+        if key not in {'L', "total"} and (key != 'U' or val != 0):
+            sev_map = Report.severity_maps.get(options["severity_display"],
+                                               Report.severity_maps["letter"])
+            summary_text.append(sev_map.get(key, sev_map["U"]) + ": " + str(val))
+
+    summary_text.append("total" + ": " + str(summary["total"]))
+
+    if options["summary_overline"]:
+        print_over(options["summary_overline"] * len(", ".join(summary_text)))
+    print_over(", ".join(summary_text))
 
 
 #------------------------

@@ -10,6 +10,7 @@ import os
 import re
 import subprocess
 
+from monostyle.util.monostylestd import print_over
 from monostyle.util.fragment import Fragment
 
 
@@ -198,8 +199,8 @@ def exec_command(cmd_args, cwd=None):
     silent = bool(cmd_args[0] in ("show",))
     try:
         if not silent:
-            print("fetching" if cmd_args[0] in ("status", "diff", "update", "remote")
-                  else "applying", cmd_args[0] + ": ...", end="")
+            print_over("fetching" if cmd_args[0] in ("status", "diff", "update", "remote")
+                       else "applying", cmd_args[0], elipsis="...")
         output = subprocess.check_output(cmd, cwd=cwd)
     except OSError as err:
         print("git", cmd_args[0], "error:", err)
@@ -209,7 +210,7 @@ def exec_command(cmd_args, cwd=None):
         print("git", cmd_args[0], "unexpected error", err)
     else:
         if not silent:
-            print("\b" * 3 + "done")
+            print_over("done")
         return output.splitlines()
 
 

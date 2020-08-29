@@ -13,6 +13,31 @@ import json
 import monostyle.config as config
 
 
+def print_over(*text, is_temp=False, ellipsis=None):
+    """Print line overriding a previous temporary line."""
+    if not text:
+        return
+
+    text = " ".join(text)
+    if ellipsis:
+        text += ": " + ellipsis
+        is_temp = True
+
+    if (prev_len := getattr(print_over, "prev_len", None)) is not None:
+        if not getattr(print_over, "was_ellipsis", False):
+            print("\r{0: <{1}}".format(text, prev_len), end='' if is_temp else '\n')
+        else:
+            print('\b' * prev_len + text)
+    else:
+        print(text, end='' if is_temp else '\n')
+
+    if not ellipsis:
+        print_over.prev_len = len(text.splitlines()[-1]) if is_temp else None
+    else:
+        print_over.prev_len = len(ellipsis)
+    print_over.was_ellipsis = bool(ellipsis)
+
+
 def print_title(title, to_upper=False, underline='='):
     """Print a title in the command line."""
     if isinstance(title, str):
@@ -25,9 +50,10 @@ def print_title(title, to_upper=False, underline='='):
     if not title[-1].endswith(':'):
         title[-1] += ':'
 
-    print('', *title, sep='\n')
+    print_over('')
+    print_over('\n'.join(title))
     if underline is not None:
-        print(underline * max(len(l) for l in title))
+        print_over(underline * max(len(l) for l in title))
 
 
 def ask_user(question):
@@ -238,14 +264,14 @@ def texts_recursive(path=None, ext_pos=()):
         ext = os.path.splitext(path)[1]
         if len(ext_pos) != 0 and ext.lower() not in ext_pos:
             return None
-        print("\rread {}-file".format(ext_names), end='', flush=True)
+        print_over("read {}-file".format(ext_names), is_temp=True)
         yield single_text(path)
     else:
         file_count_total = sum(1 for _ in files_recursive(path, ext_pos))
         counter = 0
         for fn in files_recursive(path, ext_pos):
-            print("\rread {}-files: [{:4.0%}]".format(ext_names, counter / file_count_total),
-                  end='', flush=True)
+            print_over("read {}-files: [{:4.0%}]".format(ext_names, counter / file_count_total),
+                       is_temp=True)
             counter += 1
 
             yield single_text(fn)

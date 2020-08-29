@@ -12,6 +12,7 @@ import os
 import re
 import subprocess
 
+from monostyle.util.monostylestd import print_over
 from monostyle.util.fragment import Fragment
 
 
@@ -272,8 +273,8 @@ def exec_command(cmd_args):
     silent = bool(cmd_args[0] in ("info", "propget", "proplist"))
     try:
         if not silent:
-            print("fetching" if cmd_args[0] in ("status", "diff", "update") else "applying",
-                  cmd_args[0] + ": ...", end="")
+            print_over("fetching" if cmd_args[0] in ("status", "diff", "update")
+                       else "applying", cmd_args[0], ellipsis="...")
         output = subprocess.check_output(cmd)
     except OSError as err:
         print("svn", cmd_args[0], "error:", err)
@@ -283,7 +284,7 @@ def exec_command(cmd_args):
         print("svn", cmd_args[0], "unexpected error", err)
     else:
         if not silent:
-            print("\b" * 3 + "done")
+            print_over("done")
         return output.splitlines()
 
 

@@ -20,7 +20,7 @@ from monostyle.util.report import print_reports
 
 def run(reports, rst_parser, fns_conflicted=None):
     """Sort reports into groups for each fix tool."""
-    print("autofix: ...", end="")
+    monostylestd.print_over("autofix", ellipsis="...")
 
     group_fix = []
     for report in reports:
@@ -28,7 +28,7 @@ def run(reports, rst_parser, fns_conflicted=None):
             group_fix.append(report)
 
     if len(group_fix) == 0:
-        print("\b" * 3 + "done")
+        monostylestd.print_over("done")
         return None
 
     group_fn = {}
@@ -51,7 +51,7 @@ def run(reports, rst_parser, fns_conflicted=None):
             for reports_tool in tools.values():
                 reports_unfixed.extend(reports_tool)
 
-    print("\b" * 3 + "done")
+    monostylestd.print_over("done")
     if len(reports_unfixed) != 0:
         monostylestd.print_title("Conflicted/Unlocated Reports", underline='-')
         print_reports(reports_unfixed)

@@ -10,7 +10,7 @@ import os
 import sys
 import subprocess
 
-from monostyle.util.monostylestd import path_to_rel
+from monostyle.util.monostylestd import print_over, path_to_rel
 from monostyle.util.report import Report
 
 
@@ -52,7 +52,7 @@ def open_files(files, show_current=False):
     nonexistents = []
     for fn, lincol in files:
         if show_current:
-            print("\ropening: {0}".format(path_to_rel(fn)), end='', flush=True)
+            print_over("opening: {0}".format(path_to_rel(fn)), is_temp=True)
 
         # avoid all files in folder and "want to create file" dialog
         if os.path.isfile(fn):
@@ -63,7 +63,7 @@ def open_files(files, show_current=False):
             nonexistents.append(fn + ":" + str(lincol[0] + 1) + ":" + str(lincol[1] + 1))
 
     if show_current:
-        print("\ropening: done")
+        print_over("opening: done")
 
     if len(nonexistents) != 0:
         print("Failed to open {0} of {1} files.".format(len(nonexistents), len(files)))
