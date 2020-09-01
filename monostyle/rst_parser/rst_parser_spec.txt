@@ -125,6 +125,32 @@ Explicit Block:
 	{body}
 
 
+grid-table
+
+	+--------+
+	| {head} |
+	+========+
+	| {body} |
+	+--------+
+
+	{row}
+		+---------------------+ {body_start}
+		| {name_start} {body} | {name_end, last}
+		+---------------------+ {body_end, last}
+
+
+simple-table
+
+	========== {body_start, head last cell}
+	␣ cell 1 ␣
+	 -------- {body_end, cell 1}
+	␣ cell 2 ␣
+	========== {body_end, head last cell}
+	␣ {body} ␣
+	==========
+
+
+
 INLINE
 
 literal, strong, emphasis, int-target, hyperlink, foot, cit, standalone

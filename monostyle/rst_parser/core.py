@@ -119,6 +119,27 @@ class RSTParser:
         pattern_str = (ind, r">>>\s")
         re_lib["doctest"] = re.compile(''.join(pattern_str))
 
+        pattern_str = (ind, r">>>\s")
+        re_lib["doctest"] = re.compile(''.join(pattern_str))
+
+        pattern_str = (ind, r"((?:\+\-+?)*\+\-+\+)", space_end)
+        re_lib["grid_border"] =  re.compile(''.join(pattern_str))
+
+        pattern_str = (ind, r"[+|].+[+|]", space_end)
+        re_lib["grid_row_frame"] =  re.compile(''.join(pattern_str))
+
+        pattern_str = r"[\+-]\Z"
+        re_lib["grid_cell_border"] =  re.compile(pattern_str)
+
+        pattern_str = (ind, r"((?:\+=+?)*\+=+\+)", space_end)
+        re_lib["grid_head_border"] =  re.compile(''.join(pattern_str))
+
+        pattern_str = (ind, r"(=+?\s+)*=+", space_end)
+        re_lib["simple_row_border"] =  re.compile(''.join(pattern_str))
+
+        pattern_str = (ind, r"(\-+?\s+)*\-+", space_end)
+        re_lib["simple_column_span"] = re.compile(''.join(pattern_str))
+
         # Inline
 
         before_a = r"(?:(?<=[^\w\\"
@@ -278,6 +299,10 @@ class RSTParser:
                 if not node.active:
                     node = self.doctest(line, line_info, node)
                 if not node.active:
+                    node = self.grid_table(line, line_info, node)
+                if not node.active:
+                    node = self.simple_table(line, line_info, node)
+                if not node.active:
                     node = self.block_quote(line, line_info, on, node)
 
             if not node.active or (node.active and node.active.node_name == "text"):
@@ -307,6 +332,10 @@ class RSTParser:
                 node = self.section(line, line_info, on, node)
             elif node.active.node_name == "doctest":
                 node = self.doctest(line, line_info, node)
+            elif node.active.node_name == "grid-table":
+                node = self.grid_table(line, line_info, node)
+            elif node.active.node_name == "simple-table":
+                node = self.simple_table(line, line_info, node)
             elif node.active.node_name == "block-quote":
                 node = self.block_quote(line, line_info, on, node)
             else:
@@ -1026,6 +1055,255 @@ class RSTParser:
 
         return node, sub
 
+
+    def grid_table(self, line, line_info, node):
+        def row_sep(active, line, top_bottom):
+            row = active.active.child_nodes.last()
+            last = row.body.code.start_lincol[1]
+            for index, split_m in enumerate(re.finditer(r"(\+)([-=])?", line_info["line_str"])):
+                if index == 0:
+                    last = split_m.start(1)
+                    continue
+                border = line.slice(line.loc_to_abs(last),
+                                    line.loc_to_abs(split_m.start(1)), True)
+                if not split_m.group(2):
+                    after = line.slice(line.loc_to_abs(split_m.start(1)), right_inner=True)
+                    border.combine(after)
+                if index == 1:
+                    before, _ = line.slice(line.loc_to_abs(split_m.start(1)))
+                    border = before.combine(border)
+
+                if top_bottom:
+                    cell_node = NodeRST("cell", None)
+                else:
+                    cell_node = row.body.child_nodes[index - 1]
+
+                last = split_m.start(1)
+                # double sep
+                if top_bottom:
+                    cell_node.append_part("body_start", border, True)
+                    row.body.append_child(cell_node)
+                else:
+                    cell_node.append_part("body_end", border, True)
+
+
+        def cell(active, line):
+            table_def = active.head.child_nodes.last()
+            row = active.active.child_nodes.last()
+            if (not row or (not row.body.child_nodes.is_empty() and
+                            row.body.child_nodes.first().body_end)):
+                row = NodeRST("row", line)
+                row.append_part("body", line)
+                active.active.append_child(row)
+                is_new = True
+            else:
+                is_new = False
+
+            for index, cell_def_node in enumerate(table_def.body.child_nodes):
+                cols = (line.loc_to_abs(cell_def_node.body_start.code.start_lincol[1]),
+                        line.loc_to_abs(cell_def_node.body_start.code.end_lincol[1]))
+                is_last = bool(not cell_def_node.next)
+                if index == 0:
+                    first_m = re.search(r"(\s|\A)\+", str(cell_def_node.body_start.code))
+                    cols = (line.loc_to_abs(cell_def_node.body_start.code
+                                            .loc_to_abs((0, first_m.end(0)))[1]), cols[1])
+                if is_last:
+                    last_m = re.search(r"\+(\s|\Z)", str(cell_def_node.body_start.code))
+                    cols = (cols[0], line.loc_to_abs(cell_def_node.body_start.code
+                                                     .loc_to_abs((0, last_m.start(0)))[1]))
+
+                border_right = line.slice(cols[1], cols[1] + 1, True)
+                if str(border_right) in {"", "+", "|", "\n"}:
+                    code = line.slice(cols[0] + 1, cols[1], True)
+                    trim_m = re.match(r"\s*(.*?)\s*\Z", str(code))
+                    left, inner, right = code.slice_match_obj(trim_m, 1)
+                    if is_new:
+                        new_cell = NodeRST("cell", code)
+                        row.body.append_child(new_cell)
+                    else:
+                        new_cell = row.body.child_nodes[index]
+
+                    if is_last:
+                        after = line.slice(border_right.end_pos, right_inner=True)
+                        border_right.combine(after)
+                    if not new_cell.body:
+                        new_cell.append_part("name_start", left)
+                        new_cell.append_part("body", inner)
+                        new_cell.append_part("name_end", right.combine(border_right))
+                    else:
+                        new_cell.name_start.code.combine(left)
+                        new_cell.body.code.combine(inner)
+                        new_cell.name_end.code.combine(right.combine(border_right))
+
+                else:
+                    print("{0}:{1}: grid table colums not conforming".format(
+                              line.fn, line.start_lincol[0]))
+
+        if not node.active or node.active.node_name != "grid-table":
+            if m := re.match(self.re_lib["grid_border"], line_info["line_str"]):
+                prime = NodeRST("grid-table", None)
+                prime.append_part("head", None)
+
+                newnode = NodeRST("row", line)
+                _, ind, after = line.slice_match_obj(m, 1)
+                newnode.append_part("indent", ind)
+                newnode.append_part("body", after)
+
+                prime.head.append_child(newnode)
+
+                if node.active:
+                    node.append_child(node.active)
+                node.active = prime
+                node.active.active = prime.head
+
+                row_sep(node.active, line, True)
+        else:
+            if node.active.active.node_name == "head":
+                if re.match(self.re_lib["grid_head_border"], line_info["line_str"]):
+                    row_sep(node.active, line, False)
+                    node.active.append_part("body", None)
+                    node.active.active = node.active.body
+                elif re.match(self.re_lib["grid_border"], line_info["line_str"]):
+                    row_sep(node.active, line, False)
+                    if line_info["is_block_end"]:
+                        # body only
+                        node.active.body = node.active.head
+                        node.active.head.node_name = "body"
+                        node.active.body = None
+                        line_info["is_not_empty"] = False
+                        node.append_child(node.active)
+                        node.active = None
+                else:
+                    cell(node.active, line)
+            elif node.active.active.node_name == "body":
+                if not re.match(self.re_lib["grid_border"], line_info["line_str"]):
+                    cell(node.active, line)
+                else:
+                    row_sep(node.active, line, False)
+                    if line_info["is_block_end"]:
+                        line_info["is_not_empty"] = False
+                        node.append_child(node.active)
+                        node.active = None
+
+        return node
+
+
+    def simple_table(self, line, line_info, node):
+        def row_sep(active, line, top_bottom):
+            row = active.active.child_nodes.last()
+            last = row.body.code.start_lincol[1]
+            index_offset = 0
+            for index, split_m in enumerate(re.finditer(r"\s+", line_info["line_str"])):
+                if index == 0 and last == 0 and split_m.start() == 0:
+                    index_offset = -1
+                    continue
+                border = line.slice(line.loc_to_abs(last),
+                                    line.loc_to_abs(split_m.start(0)), True)
+                if top_bottom:
+                    cell_node = NodeRST("cell", None)
+                else:
+                    cell_node = row.body.child_nodes[index + index_offset]
+                last = split_m.end(0)
+                # double sep
+                if top_bottom:
+                    cell_node.append_part("body_start", border, True)
+                    row.body.append_child(cell_node)
+                else:
+                    cell_node.append_part("body_end", border, True)
+
+
+        def cell(active, line):
+            table_def = active.head.child_nodes.last()
+            row = active.active.child_nodes.last()
+            if (not row or (not row.body.child_nodes.is_empty() and
+                            row.body.child_nodes.first().body)):
+                row = NodeRST("row", line)
+                row.append_part("body", line)
+                active.active.append_child(row)
+                is_new = True
+            else:
+                is_new = False
+
+            for index, cell_def_node in enumerate(table_def.body.child_nodes):
+                cols = (line.loc_to_abs(cell_def_node.body_start.code.start_lincol[1]),
+                        line.loc_to_abs(cell_def_node.body_start.code.end_lincol[1]))
+                is_last = bool(not cell_def_node.next)
+                if not is_last:
+                    border_right = line.slice(cols[1], cols[1] + 1, True)
+                else:
+                    border_right = line.copy().clear(False)
+                if str(border_right) in {"", " ", "\n"}:
+                    if not is_last:
+                        code = line.slice(cols[0], cols[1], True)
+                    else:
+                        code = line.slice(cols[0], right_inner=True)
+                    trim_m = re.match(r"\s*(.*?)\s*\Z", str(code))
+                    left, inner, right = code.slice_match_obj(trim_m, 1)
+                    if is_new:
+                        new_cell = NodeRST("cell", code)
+                        row.body.append_child(new_cell)
+                    else:
+                        new_cell = row.body.child_nodes[index]
+
+                    if not new_cell.body:
+                        new_cell.append_part("name_start", left)
+                        new_cell.append_part("body", inner)
+                        new_cell.append_part("name_end", right.combine(border_right))
+                    else:
+                        new_cell.name_start.code.combine(left)
+                        new_cell.body.code.combine(inner)
+                        new_cell.name_end.code.combine(right.combine(border_right))
+
+                else:
+                    print("{0}:{1}: simple table colums not conforming".format(
+                              line.fn, line.start_lincol[0]))
+
+        if not node.active or node.active.node_name != "simple-table":
+            if m := re.match(self.re_lib["simple_row_border"], line_info["line_str"]):
+                prime = NodeRST("simple-table", None)
+                prime.append_part("head", None)
+
+                newnode = NodeRST("row", line)
+                _, ind, after = line.slice_match_obj(m, 1)
+                newnode.append_part("indent", ind)
+                newnode.append_part("body", after)
+
+                prime.head.append_child(newnode)
+
+                if node.active:
+                    node.append_child(node.active)
+                node.active = prime
+                node.active.active = prime.head
+
+                row_sep(node.active, line, True)
+        else:
+            if node.active.active.node_name == "head":
+                if re.match(self.re_lib["simple_row_border"], line_info["line_str"]):
+                    row_sep(node.active, line, False)
+                    if not line_info["is_block_end"]:
+                        node.active.append_part("body", None)
+                        node.active.active = node.active.body
+                    else:
+                        # body only
+                        node.active.body = node.active.head
+                        node.active.head.node_name = "body"
+                        node.active.body = None
+                        line_info["is_not_empty"] = False
+                        node.append_child(node.active)
+                        node.active = None
+
+                elif not re.match(self.re_lib["simple_column_span"], line_info["line_str"]):
+                    cell(node.active, line)
+            elif node.active.active.node_name == "body":
+                if not re.match(self.re_lib["simple_row_border"], line_info["line_str"]):
+                    cell(node.active, line)
+                else:
+                    row_sep(node.active, line, False)
+                    line_info["is_not_empty"] = False
+                    node.append_child(node.active)
+                    node.active = None
+
+        return node
 
 
     # -----------------------------------------------------------------------------

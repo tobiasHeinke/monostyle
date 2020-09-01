@@ -147,7 +147,8 @@ class NodePartRST(Node):
                 self.append_code(newnode.code)
 
             if (newnode.code is not None and
-                    self.parent_node.node_name.endswith("-list") and
+                    (self.parent_node.node_name.endswith("-list") or
+                     self.parent_node.node_name.endswith("-table")) and
                     self.parent_node.parent_node is not None and not self.parent_node.is_parsing and
                     not self.parent_node.parent_node.is_parsing):
                 self.parent_node.parent_node.append_code(newnode.code)
