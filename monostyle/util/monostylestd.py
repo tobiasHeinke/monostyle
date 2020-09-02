@@ -6,6 +6,7 @@ util.monostylestd
 Common utility for Monostyle.
 """
 
+import sys
 import os
 import re
 import json
@@ -15,24 +16,23 @@ import monostyle.config as config
 
 def print_over(*text, is_temp=False, ellipsis=None):
     """Print line overriding a previous temporary line."""
-    if not text:
-        return
-
     text = " ".join(text)
     if ellipsis:
         text += ": " + ellipsis
         is_temp = True
 
-    if (prev_len := getattr(print_over, "prev_len", None)) is not None:
-        if not getattr(print_over, "was_ellipsis", False):
-            print("\r{0: <{1}}".format(text, prev_len), end='' if is_temp else '\n')
-        else:
-            print('\b' * prev_len + text)
+    prev_len = getattr(print_over, "prev_len", 0)
+    cur_len = len(text.splitlines()[-1]) if is_temp else 0
+    if not getattr(print_over, "was_ellipsis", False):
+        if cur_len < prev_len:
+            sys.__stdout__.write("\033[2K\r")
+        sys.__stdout__.write(text + (is_temp and '\r' or '\n'))
+        sys.__stdout__.flush()
     else:
-        print(text, end='' if is_temp else '\n')
+        sys.__stdout__.write('\b' * prev_len + "{0: <{1}}".format(text, prev_len))
 
     if not ellipsis:
-        print_over.prev_len = len(text.splitlines()[-1]) if is_temp else None
+        print_over.prev_len = cur_len
     else:
         print_over.prev_len = len(ellipsis)
     print_over.was_ellipsis = bool(ellipsis)

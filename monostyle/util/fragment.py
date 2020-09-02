@@ -267,10 +267,13 @@ class Fragment():
     def reversed_splitlines(self, buffered=False):
         """Split lines in reversed order."""
         start_pos = self.end_pos
+        lineno_offset = self.end_lincol[0] if self.start_lincol else 0
         for index, line_str in enumerate(reversed(self.content)):
             start_pos -= len(line_str)
             if self.start_lincol:
-                lineno = self.end_lincol[0] - index
+                if index == 0 and self.end_lincol[1] == 0 and len(line_str) != 0:
+                    lineno_offset -= 1
+                lineno = lineno_offset - index
                 if index == len(self.content) - 1:
                     start_lincol = (lineno, self.start_lincol[1])
                 else:

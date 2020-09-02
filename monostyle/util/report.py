@@ -296,7 +296,7 @@ def print_reports(reports, options=None):
 
 
 def print_report(report, options=None, fn_prev=None):
-    """Print a single report. Returns the fillename of the report for storage."""
+    """Print a single report. Returns the filename of the report for storage."""
     if report is None:
         return
     if options and options["file_title"]:
@@ -322,7 +322,7 @@ def update_summary(summary, report):
 
 
 def print_summary(summary, options):
-    """Show the count of each s."""
+    """Stringify summary and print."""
     summary_text = []
     for key, val in summary.items():
         if key not in {'L', "total"} and (key != 'U' or val != 0):

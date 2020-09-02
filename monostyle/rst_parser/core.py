@@ -119,9 +119,6 @@ class RSTParser:
         pattern_str = (ind, r">>>\s")
         re_lib["doctest"] = re.compile(''.join(pattern_str))
 
-        pattern_str = (ind, r">>>\s")
-        re_lib["doctest"] = re.compile(''.join(pattern_str))
-
         pattern_str = (ind, r"((?:\+\-+?)*\+\-+\+)", space_end)
         re_lib["grid_border"] =  re.compile(''.join(pattern_str))
 
@@ -1081,17 +1078,17 @@ class RSTParser:
                 last = split_m.start(1)
                 # double sep
                 if top_bottom:
-                    cell_node.append_part("body_start", border, True)
+                    cell_node.append_part("name_start", border, True)
                     row.body.append_child(cell_node)
                 else:
-                    cell_node.append_part("body_end", border, True)
+                    cell_node.append_part("name_end", border, True)
 
 
         def cell(active, line):
             table_def = active.head.child_nodes.last()
             row = active.active.child_nodes.last()
             if (not row or (not row.body.child_nodes.is_empty() and
-                            row.body.child_nodes.first().body_end)):
+                            row.body.child_nodes.first().name_end)):
                 row = NodeRST("row", line)
                 row.append_part("body", line)
                 active.active.append_child(row)
@@ -1100,16 +1097,16 @@ class RSTParser:
                 is_new = False
 
             for index, cell_def_node in enumerate(table_def.body.child_nodes):
-                cols = (line.loc_to_abs(cell_def_node.body_start.code.start_lincol[1]),
-                        line.loc_to_abs(cell_def_node.body_start.code.end_lincol[1]))
+                cols = (line.loc_to_abs(cell_def_node.name_start.code.start_lincol[1]),
+                        line.loc_to_abs(cell_def_node.name_start.code.end_lincol[1]))
                 is_last = bool(not cell_def_node.next)
                 if index == 0:
-                    first_m = re.search(r"(\s|\A)\+", str(cell_def_node.body_start.code))
-                    cols = (line.loc_to_abs(cell_def_node.body_start.code
+                    first_m = re.search(r"(\s|\A)\+", str(cell_def_node.name_start.code))
+                    cols = (line.loc_to_abs(cell_def_node.name_start.code
                                             .loc_to_abs((0, first_m.end(0)))[1]), cols[1])
                 if is_last:
-                    last_m = re.search(r"\+(\s|\Z)", str(cell_def_node.body_start.code))
-                    cols = (cols[0], line.loc_to_abs(cell_def_node.body_start.code
+                    last_m = re.search(r"\+(\s|\Z)", str(cell_def_node.name_start.code))
+                    cols = (cols[0], line.loc_to_abs(cell_def_node.name_start.code
                                                      .loc_to_abs((0, last_m.start(0)))[1]))
 
                 border_right = line.slice(cols[1], cols[1] + 1, True)
@@ -1127,13 +1124,13 @@ class RSTParser:
                         after = line.slice(border_right.end_pos, right_inner=True)
                         border_right.combine(after)
                     if not new_cell.body:
-                        new_cell.append_part("name_start", left)
+                        new_cell.append_part("body_start", left)
                         new_cell.append_part("body", inner)
-                        new_cell.append_part("name_end", right.combine(border_right))
+                        new_cell.append_part("body_end", right.combine(border_right))
                     else:
-                        new_cell.name_start.code.combine(left)
+                        new_cell.body_start.code.combine(left)
                         new_cell.body.code.combine(inner)
-                        new_cell.name_end.code.combine(right.combine(border_right))
+                        new_cell.body_end.code.combine(right.combine(border_right))
 
                 else:
                     print("{0}:{1}: grid table colums not conforming".format(
@@ -1206,10 +1203,10 @@ class RSTParser:
                 last = split_m.end(0)
                 # double sep
                 if top_bottom:
-                    cell_node.append_part("body_start", border, True)
+                    cell_node.append_part("name_start", border, True)
                     row.body.append_child(cell_node)
                 else:
-                    cell_node.append_part("body_end", border, True)
+                    cell_node.append_part("name_end", border, True)
 
 
         def cell(active, line):
@@ -1225,8 +1222,8 @@ class RSTParser:
                 is_new = False
 
             for index, cell_def_node in enumerate(table_def.body.child_nodes):
-                cols = (line.loc_to_abs(cell_def_node.body_start.code.start_lincol[1]),
-                        line.loc_to_abs(cell_def_node.body_start.code.end_lincol[1]))
+                cols = (line.loc_to_abs(cell_def_node.name_start.code.start_lincol[1]),
+                        line.loc_to_abs(cell_def_node.name_start.code.end_lincol[1]))
                 is_last = bool(not cell_def_node.next)
                 if not is_last:
                     border_right = line.slice(cols[1], cols[1] + 1, True)
@@ -1246,13 +1243,13 @@ class RSTParser:
                         new_cell = row.body.child_nodes[index]
 
                     if not new_cell.body:
-                        new_cell.append_part("name_start", left)
+                        new_cell.append_part("body_start", left)
                         new_cell.append_part("body", inner)
-                        new_cell.append_part("name_end", right.combine(border_right))
+                        new_cell.append_part("body_end", right.combine(border_right))
                     else:
-                        new_cell.name_start.code.combine(left)
+                        new_cell.body_start.code.combine(left)
                         new_cell.body.code.combine(inner)
-                        new_cell.name_end.code.combine(right.combine(border_right))
+                        new_cell.body_end.code.combine(right.combine(border_right))
 
                 else:
                     print("{0}:{1}: simple table colums not conforming".format(

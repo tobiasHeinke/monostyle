@@ -134,20 +134,20 @@ grid-table
 	+--------+
 
 	{row}
-		+---------------------+ {body_start}
-		| {name_start} {body} | {name_end, last}
-		+---------------------+ {body_end, last}
+		+---------------------+ {name_start}
+		| {body_start} {body} | {body_end, last}
+		+---------------------+ {name_end, last}
 
 
 simple-table
 
-	========== {body_start, head last cell}
+	 ======== {name_start, head last cell}
 	␣ cell 1 ␣
-	 -------- {body_end, cell 1}
+	 -------- {name_end, cell 1}
 	␣ cell 2 ␣
-	========== {body_end, head last cell}
+	 ========  {name_end, head last cell}
 	␣ {body} ␣
-	==========
+	 ========
 
 
 
