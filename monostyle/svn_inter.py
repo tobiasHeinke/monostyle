@@ -29,13 +29,13 @@ def unversioned_files(path, binary_ext):
     for line in status(True, path):
         line = line.decode('utf-8')
         if line.startswith('?'):
-            fn = replace_windows_path_sep(line[8:].strip())
-            if fn.startswith('.') or os.path.isdir(fn):
+            filename = replace_windows_path_sep(line[8:].strip())
+            if filename.startswith('.') or os.path.isdir(filename):
                 continue
-            if binary_ext is not None and os.path.splitext(fn)[1] in binary_ext:
+            if binary_ext is not None and os.path.splitext(filename)[1] in binary_ext:
                 continue
 
-            yield fn
+            yield filename
 
 
 def difference(from_vsn, is_internal, fn_source, rev, binary_ext):
@@ -93,10 +93,10 @@ def difference(from_vsn, is_internal, fn_source, rev, binary_ext):
             continue
 
         if line.startswith("Index: "):
-            fn = line[len("Index: "):]
-            fn = replace_windows_path_sep(fn)
+            filename = line[len("Index: "):]
+            filename = replace_windows_path_sep(filename)
             # skip whole file
-            skip = bool(binary_ext is not None and os.path.splitext(fn)[1] in binary_ext)
+            skip = bool(binary_ext is not None and os.path.splitext(filename)[1] in binary_ext)
             body = False
 
         elif line.startswith("Property changes on: "):
@@ -115,7 +115,7 @@ def difference(from_vsn, is_internal, fn_source, rev, binary_ext):
 
             loc_m = re.match(loc_re, line)
             start_lincol = (int(loc_m.group(1)) - 1, 0)
-            fg = Fragment(fn, [], 0, 0, start_lincol, start_lincol)
+            fg = Fragment(filename, [], 0, 0, start_lincol, start_lincol)
             context = []
             lineno = start_lincol[0]
             body = True
@@ -152,10 +152,10 @@ def update_files(path, rev=None):
                 print(line)
             else:
                 conflict = bool(line[0] == 'C')
-                fn = line[5:].rstrip()
-                fn = replace_windows_path_sep(fn)
+                filename = line[5:].rstrip()
+                filename = replace_windows_path_sep(filename)
 
-                yield fn, conflict, rev_up
+                yield filename, conflict, rev_up
 
 
 def info(path):
@@ -288,23 +288,23 @@ def exec_command(cmd_args):
         return output.splitlines()
 
 
-def file_diff(fn, rev=None, is_change=False):
-    if not (fn.endswith(".diff") or fn.endswith(".patch")):
-        print("diff wrong file format:", fn)
+def file_diff(filename, rev=None, is_change=False):
+    if not (filename.endswith(".diff") or filename.endswith(".patch")):
+        print("diff wrong file format:", filename)
         return None
 
     try:
-        with open(fn, "rb") as f:
+        with open(filename, "rb") as f:
             text = f.read()
 
         return text.splitlines()
 
     except (IOError, OSError) as err:
-        print("{0}: cannot open: {1}".format(fn, err))
+        print("{0}: cannot open: {1}".format(filename, err))
 
 
-def replace_windows_path_sep(fn):
-    return re.sub(r"\\", "/", fn)
+def replace_windows_path_sep(filename):
+    return re.sub(r"\\", "/", filename)
 
 
 def run_diff(from_vsn, is_internal, path, rev, cached=None):
@@ -313,13 +313,13 @@ def run_diff(from_vsn, is_internal, path, rev, cached=None):
 
     binary_ext = (".png", ".jpg", ".jpeg", ".gif", ".pyc")
     if from_vsn and is_internal:
-        for fn in unversioned_files(path, binary_ext):
+        for filename in unversioned_files(path, binary_ext):
             try:
-                with open(fn, "r", encoding="utf-8") as f:
+                with open(filename, "r", encoding="utf-8") as f:
                     text = f.read()
             except (IOError, OSError) as err:
-                print("{0}: cannot open: {1}".format(fn, err))
+                print("{0}: cannot open: {1}".format(filename, err))
             else:
-                yield Fragment(fn, text), None, None
+                yield Fragment(filename, text), None, None
 
     yield from difference(from_vsn, is_internal, path, rev, binary_ext)

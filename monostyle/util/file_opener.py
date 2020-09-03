@@ -39,28 +39,28 @@ def open_reports_files(reports, min_severity=None):
     files = []
     for report in reports:
         if report.severity in levels:
-            for fn, _ in files:
-                if fn == report.out.fn:
+            for filename, _ in files:
+                if filename == report.out.filename:
                     break
             else:
-                files.append((report.out.fn, report.out.start_lincol))
+                files.append((report.out.filename, report.out.start_lincol))
 
     open_files(files, True)
 
 
 def open_files(files, show_current=False):
     nonexistents = []
-    for fn, lincol in files:
+    for filename, lincol in files:
         if show_current:
-            print_over("opening: {0}".format(path_to_rel(fn)), is_temp=True)
+            print_over("opening: {0}".format(path_to_rel(filename)), is_temp=True)
 
         # avoid all files in folder and "want to create file" dialog
-        if os.path.isfile(fn):
-            exitcode = run(fn, lincol)
+        if os.path.isfile(filename):
+            exitcode = run(filename, lincol)
             if exitcode is None:
                 break
         else:
-            nonexistents.append(fn + ":" + str(lincol[0] + 1) + ":" + str(lincol[1] + 1))
+            nonexistents.append(filename + ":" + str(lincol[0] + 1) + ":" + str(lincol[1] + 1))
 
     if show_current:
         print_over("opening: done")

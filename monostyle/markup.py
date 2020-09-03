@@ -37,18 +37,18 @@ def heading_level(document, reports):
         elif level_cur <= 2:
             if level_cur == 0:
 
-                if not document.code.fn.endswith("manual/index.rst"):
+                if not document.code.filename.endswith("manual/index.rst"):
                     out = node.name_end.code.copy().replace_fill(heading_char)
                     msg = Report.existing(what="main index title", where="not on main")
                     reports.append(Report('W', toolname, out, msg))
 
             elif level_cur == 1:
-                if not document.code.fn.endswith("index.rst"):
+                if not document.code.filename.endswith("index.rst"):
                     out = node.name_end.code.copy().replace_fill(heading_char)
                     msg = Report.existing(what="index title", where="on page")
                     reports.append(Report('W', toolname, out, msg))
 
-            elif document.code.fn.endswith("index.rst"):
+            elif document.code.filename.endswith("index.rst"):
                 out = node.name_end.code.copy().replace_fill(heading_char)
                 msg = Report.existing(what="page title", where="on index")
                 reports.append(Report('W', toolname, out, msg))
@@ -153,7 +153,7 @@ def indention(document, reports):
             if len(stack_prev) != 1:
                 with_what += " or " + str(stack_prev[-2]) + " chars"
             msg = Report.substitution(what="wrong indent", with_what=with_what)
-            out = Fragment(document.code.fn, "", -1,
+            out = Fragment(document.code.filename, "", -1,
                            start_lincol=(line.start_lincol[0], stack_cur[0]))
             reports.append(Report('E', toolname, out, msg, line))
 

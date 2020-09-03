@@ -55,24 +55,23 @@ def file_encoding(reports):
 
     # standard Unicode replace char <?>
     repchar_re = re.compile("\uFFFD")
-    # for fn in monostylestd.po_files():
-    for fn in monostylestd.rst_files():
-        with open(fn, "r", encoding="utf-8", errors="replace") as f:
+    for filename in monostylestd.rst_files():
+        with open(filename, "r", encoding="utf-8", errors="replace") as f:
             try:
                 text = f.read()
 
             except UnicodeEncodeError as err:
-                out = Fragment(fn, "")
+                out = Fragment(filename, "")
                 msg = "encode error: " + str(err)
                 reports.append(Report('E', toolname, out, msg))
 
             except:
-                out = Fragment(fn, "")
+                out = Fragment(filename, "")
                 msg = "unknown encode error"
                 reports.append(Report('E', toolname, out, msg))
 
             else:
-                document_fg = Fragment(fn, text)
+                document_fg = Fragment(filename, text)
                 for repchar_m in re.finditer(repchar_re, text):
                     out = document_fg.slice_match_obj(repchar_m, 0, True)
                     msg = "unsupported character"

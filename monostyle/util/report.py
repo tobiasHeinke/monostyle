@@ -181,7 +181,7 @@ class Report():
         if options is None:
             options = {}
         options = {
-            "format_str": "{fn}{loc} {severity} {out} {msg}{line}",
+            "format_str": "{filename}{loc} {severity} {out} {msg}{line}",
             "show_filename": True,
             "absolute_path": False,
             "show_end": False,
@@ -205,14 +205,14 @@ class Report():
         output = {}
         for slot in self.__slots__:
             output[slot] = ""
-        output["fn"] = ""
+        output["filename"] = ""
         output["loc"] = ""
 
         if not options.get("file_title", False) and options["show_filename"]:
             if options["absolute_path"]:
-                output["fn"] = self.out.fn + ":"
+                output["filename"] = self.out.filename + ":"
             else:
-                output["fn"] = path_to_rel(self.out.fn) + ":"
+                output["filename"] = path_to_rel(self.out.filename) + ":"
 
         sev_map = self.severity_maps.get(options["severity_display"], self.severity_maps["letter"])
         output["severity"] = sev_map.get(self.severity, sev_map["U"])
@@ -300,12 +300,13 @@ def print_report(report, options=None, fn_prev=None):
     if report is None:
         return
     if options and options["file_title"]:
-        if fn_prev is None or fn_prev != report.out.fn:
-            fn = report.out.fn if options["absolute_path"] else path_to_rel(report.out.fn)
-            print_title(fn, underline=options["file_title_underline"])
+        if fn_prev is None or fn_prev != report.out.filename:
+            print_title(report.out.filename if options["absolute_path"]
+                        else path_to_rel(report.out.filename),
+                        underline=options["file_title_underline"])
 
     print_over(report.repr(options))
-    return report.out.fn
+    return report.out.filename
 
 
 def update_summary(summary, report):

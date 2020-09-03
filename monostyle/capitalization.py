@@ -299,8 +299,8 @@ def property_noun_pre(_):
 
     lexicon = dict()
     rst_parser = RSTParser()
-    for fn, text in monostylestd.rst_texts():
-        document = rst_parser.parse(rst_parser.document(fn, text))
+    for filename, text in monostylestd.rst_texts():
+        document = rst_parser.parse(rst_parser.document(filename, text))
 
         first = True
         for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
@@ -433,12 +433,12 @@ def typ_caps_pre(_):
         ignore.append("index")
         ignore.append("introduction")
 
-        for fn, text in monostylestd.rst_texts(monostylestd.path_to_abs(path, "rst")):
-            for skip_fn in ignore:
-                if fn.endswith(skip_fn + ".rst"):
+        for filename, text in monostylestd.rst_texts(monostylestd.path_to_abs(path, "rst")):
+            for skip_filename in ignore:
+                if filename.endswith(skip_filename + ".rst"):
                     break
             else:
-                document = rst_parser.parse(rst_parser.document(fn, text))
+                document = rst_parser.parse(rst_parser.document(filename, text))
                 searchlist = typ_titles(document, kind, searchlist)
 
     args = dict()

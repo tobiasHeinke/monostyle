@@ -27,13 +27,13 @@ def unversioned_files(path, binary_ext):
     for line in status(path):
         line = line.decode('utf-8')
         if line.startswith('?'):
-            fn = replace_windows_path_sep(line[3:].strip())
-            if fn.startswith('.') or os.path.isdir(fn):
+            filename = replace_windows_path_sep(line[3:].strip())
+            if filename.startswith('.') or os.path.isdir(filename):
                 continue
-            if binary_ext is not None and os.path.splitext(fn)[1] in binary_ext:
+            if binary_ext is not None and os.path.splitext(filename)[1] in binary_ext:
                 continue
 
-            yield  path + "/" + fn
+            yield  path + "/" + filename
 
 
 def difference(from_vsn, is_internal, fn_source, rev, cached):
@@ -59,8 +59,8 @@ def difference(from_vsn, is_internal, fn_source, rev, cached):
             continue
 
         if line.startswith("+++"):
-            fn = line[len("+++ b/"):]
-            fn = replace_windows_path_sep(fn)
+            filename = line[len("+++ b/"):]
+            filename = replace_windows_path_sep(filename)
             # skip whole file
             skip = False
             body = False
@@ -77,7 +77,7 @@ def difference(from_vsn, is_internal, fn_source, rev, cached):
 
             loc_m = re.match(loc_re, line)
             start_lincol = (int(loc_m.group(1)) - 1, 0)
-            fg = Fragment(fn, [], 0, 0, start_lincol, start_lincol)
+            fg = Fragment(filename, [], 0, 0, start_lincol, start_lincol)
             context = []
             lineno = start_lincol[0]
             body = True
@@ -116,9 +116,9 @@ def update_files(path, rev=None):
             elif on_merge:
                 if line[0] == ' ':
                     if m := re.search(r" +?\| ", line):
-                        fn = line[1: m.start(0)]
+                        filename = line[1: m.start(0)]
 
-                        yield fn, False, rev_up
+                        yield filename, False, rev_up
 
 
 def update_remotes(path):
@@ -214,23 +214,23 @@ def exec_command(cmd_args, cwd=None):
         return output.splitlines()
 
 
-def file_diff(fn, rev=None, cached=False):
-    if not (fn.endswith(".diff") or fn.endswith(".patch")):
-        print("diff wrong file format:", fn)
+def file_diff(filename, rev=None, cached=False):
+    if not (filename.endswith(".diff") or filename.endswith(".patch")):
+        print("diff wrong file format:", filename)
         return None
 
     try:
-        with open(fn, "rb") as f:
+        with open(filename, "rb") as f:
             text = f.read()
 
         return text.splitlines()
 
     except (IOError, OSError) as err:
-        print("{0}: cannot open: {1}".format(fn, err))
+        print("{0}: cannot open: {1}".format(filename, err))
 
 
-def replace_windows_path_sep(fn):
-    return re.sub(r"\\", "/", fn)
+def replace_windows_path_sep(filename):
+    return re.sub(r"\\", "/", filename)
 
 
 def run_diff(from_vsn, is_internal, path, rev, cached):
@@ -240,13 +240,13 @@ def run_diff(from_vsn, is_internal, path, rev, cached):
 
     if from_vsn and is_internal:
         binary_ext = (".png", ".jpg", ".jpeg", ".gif", ".pyc")
-        for fn in unversioned_files(path, binary_ext):
+        for filename in unversioned_files(path, binary_ext):
             try:
-                with open(fn, "r", encoding="utf-8") as f:
+                with open(filename, "r", encoding="utf-8") as f:
                     text = f.read()
             except (IOError, OSError) as err:
-                print("{0}: cannot open: {1}".format(fn, err))
+                print("{0}: cannot open: {1}".format(filename, err))
             else:
-                yield Fragment(fn, text), None, None
+                yield Fragment(filename, text), None, None
 
     yield from difference(from_vsn, is_internal, path, rev, cached)

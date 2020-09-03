@@ -28,7 +28,7 @@ def page_name(document, reports):
     """Compare page title and file name."""
     toolname = "page-name"
 
-    page = re.search(r"/([\w\-_]+?)(?:/index)?\.rst$", document.code.fn).group(1)
+    page = re.search(r"/([\w\-_]+?)(?:/index)?\.rst$", document.code.filename).group(1)
     page_split = []
     for ent in re.split(r"[_-]", page):
         page_split.append(simple_stem(ent))
@@ -81,7 +81,7 @@ def page_name(document, reports):
 
             msg = "page title - filename mismatch {:4.0%}".format(sim)
             reports.append(Report(severity, toolname, node.name.code, msg,
-                                  Fragment(document.code.fn, page)))
+                                  Fragment(document.code.filename, page)))
 
         # break to only process only the first heading
         break
@@ -94,11 +94,11 @@ def unused_targets_pre(_):
     targets = []
     rst_parser = RSTParser()
 
-    for fn, text in monostylestd.rst_texts():
-        document = rst_parser.parse(rst_parser.document(fn, text))
+    for filename, text in monostylestd.rst_texts():
+        document = rst_parser.parse(rst_parser.document(filename, text))
         for node in rst_walker.iter_node(document.body, ("target", "role", "subst")):
             if node.node_name == "target":
-                if (document.code.fn.endswith("index.rst") or
+                if (document.code.filename.endswith("index.rst") or
                         str(node.id.code).startswith("bpy.")):
                     continue
                 targets.append(node)
@@ -129,11 +129,11 @@ def local_targets_pre(_):
     targets = []
     rst_parser = RSTParser()
 
-    for fn, text in monostylestd.rst_texts():
-        document = rst_parser.parse(rst_parser.document(fn, text))
+    for filename, text in monostylestd.rst_texts():
+        document = rst_parser.parse(rst_parser.document(filename, text))
         for node in rst_walker.iter_node(document.body, ("target", "role")):
             if node.node_name == "target":
-                if (document.code.fn.endswith("index.rst") or
+                if (document.code.filename.endswith("index.rst") or
                         str(node.id.code).startswith("bpy.")):
                     continue
                 targets.append(node)
@@ -155,7 +155,7 @@ def local_targets(reports, data):
         id_str = str(node.id.code).strip()
         for link_code in data["links"]:
             if id_str == str(link_code).strip():
-                if node.code.fn == link_code.fn:
+                if node.code.filename == link_code.filename:
                     is_same_file = True
                 else:
                     is_multi = True
@@ -200,13 +200,13 @@ def glossary_pre(_):
     terms_glossary = set()
     glossary_code = None
     glossary_fns = []
-    for fn, text in monostylestd.rst_texts():
-        document = rst_parser.parse(rst_parser.document(fn, text))
+    for filename, text in monostylestd.rst_texts():
+        document = rst_parser.parse(rst_parser.document(filename, text))
 
         for node in rst_walker.iter_node(document.body, ("dir", "role",)):
             if rst_walker.is_of(node, "*", "glossary"):
                 glossary_code = node.code
-                glossary_fns.append(glossary_code.fn)
+                glossary_fns.append(glossary_code.filename)
 
             elif rst_walker.is_of(node, "*", "term"):
                 if glossary_code and glossary_code.is_in_span(node.code.start_pos):
@@ -225,7 +225,7 @@ def glossary(document, reports, data):
     """Unused glossary terms or within glossary only."""
     toolname = "glossary"
 
-    if document.code.fn not in data["glossary_fns"]:
+    if document.code.filename not in data["glossary_fns"]:
         return reports
 
     for node in rst_walker.iter_node(document.body, ("dir",), enter_pos=False):

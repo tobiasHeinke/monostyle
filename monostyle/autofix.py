@@ -31,22 +31,22 @@ def run(reports, rst_parser, fns_conflicted=None):
         monostylestd.print_over("done")
         return None
 
-    group_fn = {}
+    group_file = {}
     for report in group_fix:
-        fn = report.out.fn
-        if fn not in group_fn.keys():
-            group_fn.setdefault(fn, {})
+        filename = report.out.filename
+        if filename not in group_file.keys():
+            group_file.setdefault(filename, {})
 
         tool = report.fix if isinstance(report.fix, str) else "generic"
-        if tool not in group_fn[fn].keys():
-            group_fn[fn].setdefault(tool, [])
+        if tool not in group_file[filename].keys():
+            group_file[filename].setdefault(tool, [])
 
-        group_fn[fn][tool].append(report)
+        group_file[filename][tool].append(report)
 
     reports_unfixed = []
-    for fn, tools in group_fn.items():
-        if not fns_conflicted or fn not in fns_conflicted:
-            reports_unfixed = apply(fn, tools, reports_unfixed, rst_parser)
+    for filename, tools in group_file.items():
+        if not fns_conflicted or filename not in fns_conflicted:
+            reports_unfixed = apply(filename, tools, reports_unfixed, rst_parser)
         else:
             for reports_tool in tools.values():
                 reports_unfixed.extend(reports_tool)
@@ -57,7 +57,7 @@ def run(reports, rst_parser, fns_conflicted=None):
         print_reports(reports_unfixed)
 
 
-def apply(fn, tools, reports_unfixed, rst_parser):
+def apply(filename, tools, reports_unfixed, rst_parser):
     """Run the fix tool and apply the changes to the file."""
     def search_conflicted(fg_conflict, tools):
         for reports in tools.values():
@@ -71,7 +71,7 @@ def apply(fn, tools, reports_unfixed, rst_parser):
                         return report
 
 
-    fn, text = monostylestd.single_text(fn)
+    filename, text = monostylestd.single_text(filename)
     if text is None:
         return reports_unfixed.extend(tools[1])
 
@@ -79,7 +79,7 @@ def apply(fn, tools, reports_unfixed, rst_parser):
     fg = None
     for tool, reports in tools.items():
         if tool == "reflow":
-            document = rst_parser.parse(rst_parser.document(fn, text))
+            document = rst_parser.parse(rst_parser.document(filename, text))
             fg = document.code
             changes, unlocated = monostyle.reflow.fix(document.body, reports)
 
@@ -106,7 +106,7 @@ def apply(fn, tools, reports_unfixed, rst_parser):
     changes_file = new_changes
 
     if fg is None:
-        fg = Fragment(fn, text)
+        fg = Fragment(filename, text)
     editor = Editor(fg)
     for change in changes_file:
         editor.add(change)

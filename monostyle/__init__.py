@@ -77,7 +77,7 @@ def get_reports_version(from_vsn, is_internal, path, rev=None, cached=False):
 
         if show_current:
             monostylestd.print_over("processing:",
-                                    "{0}[{1}-{2}]".format(monostylestd.path_to_rel(fg.fn),
+                                    "{0}[{1}-{2}]".format(monostylestd.path_to_rel(fg.filename),
                                                           fg.start_lincol[0], fg.end_lincol[0]),
                                     is_temp=True)
 
@@ -108,11 +108,11 @@ def get_reports_file(path):
     summary = None
     fn_prev = None
     options = options_overide()
-    for fn, text in monostylestd.rst_texts(path):
-        doc = RSTParser.document(fn, text)
+    for filename, text in monostylestd.rst_texts(path):
+        doc = RSTParser.document(filename, text)
         if show_current:
             monostylestd.print_over("processing:",
-                                    "{0}[{1}-{2}]".format(monostylestd.path_to_rel(fn),
+                                    "{0}[{1}-{2}]".format(monostylestd.path_to_rel(filename),
                                                           0, doc.code.end_lincol[0]),
                                     is_temp=True)
 
@@ -136,14 +136,14 @@ def apply_tools(mods, fg):
     """Parse the hunks and apply the tools."""
     reports_hunk = []
 
-    if fg.fn.endswith(".rst"):
+    if fg.filename.endswith(".rst"):
         document = RSTParser.parse(RSTParser.snippet(fg))
         document = hunk_post_parser.parse(RSTParser, document)
     else:
         document = RSTParser.snippet(fg)
 
     for ops, ext_test in mods:
-        if len(ext_test) != 0 and not fg.fn.endswith(ext_test):
+        if len(ext_test) != 0 and not fg.filename.endswith(ext_test):
             continue
 
         for op in ops:
@@ -166,23 +166,23 @@ def filter_reports(report, context):
 def update(path, rev=None):
     """Update the working copy."""
     fns_conflicted = []
-    for fn, conflict, rev_up in vsn_inter.update_files(path, rev):
+    for filename, conflict, rev_up in vsn_inter.update_files(path, rev):
         # A conflict will be resolvable with SVN's command interface.
-        if conflict and fn not in fns_conflicted:
-            fns_conflicted.append(fn)
+        if conflict and filename not in fns_conflicted:
+            fns_conflicted.append(filename)
     return fns_conflicted
 
 #------------------------
 
 
-def patch_flavor(fn):
+def patch_flavor(filename):
     """Detect whether the patch is Git flavor."""
     try:
-        with open(fn, "r") as f:
+        with open(filename, "r") as f:
             text = f.read()
 
     except (IOError, OSError) as err:
-        print("{0}: cannot open: {1}".format(fn, err))
+        print("{0}: cannot open: {1}".format(filename, err))
         return None
 
     for line in text.splitlines():
@@ -302,7 +302,7 @@ def main():
         reports = get_reports_version(False, True,
                                       monostylestd.replace_windows_path_sep(args.patch))
         for report in reports:# custom root
-            report.out.fn = monostylestd.path_to_abs(report.out.fn)
+            report.out.filename = monostylestd.path_to_abs(report.out.filename)
     else:
         reports = get_reports_file(monostylestd.replace_windows_path_sep(args.filename))
 

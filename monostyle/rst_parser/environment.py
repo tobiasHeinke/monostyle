@@ -15,14 +15,14 @@ def get_link_titles(rst_parser):
     targets = {}
     titles = {}
 
-    for fn, text in monostylestd.rst_texts():
-        doc = rst_parser.document(fn, text)
+    for filename, text in monostylestd.rst_texts():
+        doc = rst_parser.document(filename, text)
         doc.body = rst_parser.parse_block(doc.body)
         for node in rst_walker.iter_node(doc.body, ("sect",)):
-            fn = monostylestd.path_to_rel(fn, "rst")
-            fn = '/' + fn[:-4]
+            filename = monostylestd.path_to_rel(filename, "rst")
+            filename = '/' + filename[:-4]
 
-            titles[fn] = node.name
+            titles[filename] = node.name
             break
 
         for node in rst_walker.iter_node(doc.body, ("target",)):
@@ -60,8 +60,9 @@ def resolve_link_title(document, titles, targets):
                 found = True
 
             if not found:
-                print("{0}:{1}: resolve link titles: unknown {2}:\n{3}".format(
-                      node.id.code.fn, node.id.code.start_lincol[0], name, link_content))
+                print("{0}:{1}: resolve link titles: unknown {2}:\n{3}"
+                      .format(node.id.code.filename, node.id.code.start_lincol[0],
+                              name, link_content))
 
     return document
 
@@ -104,7 +105,7 @@ def resolve_subst(document, gobal_substdef):
     while graph:
         ready = dict((key, val) for key, val in graph.items() if not val["deps"])
         if not ready:
-            print("{0}: Circular dependencies in substitutions".format(document.code.fn))
+            print("{0}: Circular dependencies in substitutions".format(document.code.filename))
             break
 
         for key, ent in ready.items():

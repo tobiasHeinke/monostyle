@@ -57,7 +57,7 @@
 		"show_summary": true,
 		"summary_overline": "_",
 
-		"format_str": "{fn}{loc} {severity} {out} {msg} {fix}{line}",
+		"format_str": "{filename}{loc} {severity} {out} {msg} {fix}{line}",
 		"show_filename": true,
 		"absolute_path": true,
 		"show_end": false,

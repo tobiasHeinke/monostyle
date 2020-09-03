@@ -74,7 +74,7 @@ def ask_user(question):
 # IO & data
 
 
-def path_to_rel(fn, base=None):
+def path_to_rel(filename, base=None):
     """Make path relative."""
     rel = config.root_dir
     if base is not None:
@@ -82,27 +82,27 @@ def path_to_rel(fn, base=None):
         if base in bases:
             rel = rel + '/' + bases[base]
 
-    if fn.startswith(rel):
-        fn = fn[len(rel) + 1:]
+    if filename.startswith(rel):
+        filename = filename[len(rel) + 1:]
 
-    return fn
+    return filename
 
 
-def path_to_abs(fn, base=None):
+def path_to_abs(filename, base=None):
     """Make path absolute."""
     root = config.root_dir
-    if not fn.startswith(root):
+    if not filename.startswith(root):
         bases = {"root": root, "rst": config.rst_dir, "po": config.po_dir, "img": config.img_dir}
-        if base is not None and base in bases and not fn.startswith(bases[base] + '/'):
-            fn = '/'.join((root, bases[base], fn))
+        if base is not None and base in bases and not filename.startswith(bases[base] + '/'):
+            filename = '/'.join((root, bases[base], filename))
         else:
-            fn = '/'.join((root, fn))
-    return fn
+            filename = '/'.join((root, filename))
+    return filename
 
 
-def replace_windows_path_sep(fn):
+def replace_windows_path_sep(filename):
     """Replace backslash in Windows path."""
-    return re.sub(r"\\", "/", fn)
+    return re.sub(r"\\", "/", filename)
 
 
 def get_data_file(path):
@@ -112,9 +112,9 @@ def get_data_file(path):
     """
     data_path = re.split(r"[\\/]", path)
     data_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "data"))
-    fn = os.path.join(data_dir, data_path[0] + ".json")
+    filename = os.path.join(data_dir, data_path[0] + ".json")
     try:
-        with open(fn, "r", encoding="utf-8") as json_file:
+        with open(filename, "r", encoding="utf-8") as json_file:
             data = json.load(json_file)
 
     except (IOError, OSError) as err:
@@ -269,26 +269,26 @@ def texts_recursive(path=None, ext_pos=()):
     else:
         file_count_total = sum(1 for _ in files_recursive(path, ext_pos))
         counter = 0
-        for fn in files_recursive(path, ext_pos):
+        for filename in files_recursive(path, ext_pos):
             print_over("read {}-files: [{:4.0%}]".format(ext_names, counter / file_count_total),
                        is_temp=True)
             counter += 1
 
-            yield single_text(fn)
+            yield single_text(filename)
 
 
-def single_text(fn):
+def single_text(filename):
     """Returns the filename and text of a single file."""
     try:
-        with open(fn, "r", encoding="utf-8") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             text = f.read()
 
-        fn = replace_windows_path_sep(fn)
-        return fn, text
+        filename = replace_windows_path_sep(filename)
+        return filename, text
 
     except (IOError, OSError) as err:
-        print("{0}: cannot read: {1}".format(fn, err))
-        return fn, None
+        print("{0}: cannot read: {1}".format(filename, err))
+        return filename, None
 
 
 def files_recursive(path=None, ext_pos=(), split_output=False):

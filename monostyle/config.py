@@ -35,7 +35,7 @@ def setup_config(root):
     return True
 
 
-def load_config(fn):
+def load_config(filename):
     """Load default/user config file."""
     def remove_comments(text):
         lines = []
@@ -47,30 +47,30 @@ def load_config(fn):
         return '\n'.join(lines)
 
     try:
-        text = read_config_file(fn)
+        text = read_config_file(filename)
         if text is not None:
             return json.loads(remove_comments(text)), text
 
     except json.JSONDecodeError as err:
-        print("{0}: cannot decode user config: {1}".format(fn, err))
+        print("{0}: cannot decode user config: {1}".format(filename, err))
 
     return None, None
 
 
-def read_config_file(fn):
+def read_config_file(filename):
     try:
-        with open(fn, 'r', encoding='utf-8') as config_file:
+        with open(filename, 'r', encoding='utf-8') as config_file:
             text = config_file.read()
             return text
 
     except IOError:
-        print("config.json not found:", fn)
+        print("config.json not found:", filename)
 
 
-def write_config_file(fn, text):
+def write_config_file(filename, text):
     try:
-        with open(fn, 'w', encoding='utf-8') as config_file:
+        with open(filename, 'w', encoding='utf-8') as config_file:
             config_file.write(text)
 
     except (IOError, OSError) as err:
-        print("{0}: cannot write: {1}".format(fn, err))
+        print("{0}: cannot write: {1}".format(filename, err))

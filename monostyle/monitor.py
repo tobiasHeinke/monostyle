@@ -23,9 +23,9 @@ def check(document, reports, data):
     if len(data) == 0:
         return reports
 
-    fn = monostylestd.path_to_rel(document.code.fn)
-    if fn.startswith('/'):
-        fn = fn[1:]
+    filename = monostylestd.path_to_rel(document.code.filename)
+    if filename.startswith('/'):
+        filename = filename[1:]
 
     for ent in data:
         if ent.startswith('/'):
@@ -34,22 +34,22 @@ def check(document, reports, data):
         msg = ""
         # match all subfolders
         if ent.endswith('/'):
-            if re.match(ent, fn):
+            if re.match(ent, filename):
                 msg = "changed in " + ent
         else:
             # match file
             if re.match(r"\.[A-Za-z\d]*?$", ent):
-                if fn == ent:
+                if filename == ent:
                     msg = "changed"
             else:
                 # match folder
-                if re.match(ent + r"\/[^/]+?$", fn):
+                if re.match(ent + r"\/[^/]+?$", filename):
                     msg = "changed in " + ent
 
-        if msg != "" and fn not in check.reg:
+        if msg != "" and filename not in check.reg:
             out = document.body.code.copy().clear(True)
             reports.append(Report('I', toolname, out, msg))
-            check.reg.append(fn)
+            check.reg.append(filename)
 
     return reports
 

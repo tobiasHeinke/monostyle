@@ -9,22 +9,22 @@ Text line container.
 class Fragment():
     """A substring with positional information.
 
-    fn -- absolute file path and name.
+    filename -- absolute file path and name.
     content -- original text or replacement text as a list of strings.
     start_pos/_end -- start/end as absolute char position (to the start of the file).
     start_lincol/_end -- start/end as line/column number (0-based).
                          Each added content (list entry) is treated as a line.
     """
-    __slots__ = ('fn', 'content', 'start_pos', 'end_pos', 'start_lincol', 'end_lincol')
+    __slots__ = ('filename', 'content', 'start_pos', 'end_pos', 'start_lincol', 'end_lincol')
 
 
-    def __init__(self, fn, content, start_pos=None, end_pos=None,
+    def __init__(self, filename, content, start_pos=None, end_pos=None,
                  start_lincol=None, end_lincol=None, use_lincol=True):
         """content is split into lines if use_lincol.
         starts defaults to zero (because the start_lincol can not be measured).
         ends are measured/derived from content if None.
         """
-        self.fn = fn
+        self.filename = filename
 
         start_pos = int(start_pos) if start_pos is not None else 0
         end_pos = int(end_pos) if end_pos is not None else None
@@ -33,7 +33,7 @@ class Fragment():
             content = []
         elif isinstance(content, str):
             if use_lincol:
-                content = [l for l in content.splitlines(keepends=True)]
+                content = [line for line in content.splitlines(keepends=True)]
             else:
                 content = [content]
         else:
@@ -239,7 +239,7 @@ class Fragment():
                         pos_abs = self.lincol_to_pos(at_start, True)
 
                 lincol_abs = lincol_abs if self.start_lincol else None
-                fg = Fragment(self.fn, cont, pos_abs, start_lincol=lincol_abs)
+                fg = Fragment(self.filename, cont, pos_abs, start_lincol=lincol_abs)
                 start_pos_abs = fg.end_pos
 
             out.append(fg)
@@ -261,7 +261,7 @@ class Fragment():
                     start_lincol = (lineno, 0)
             else:
                 start_lincol = None
-            line = Fragment(self.fn, line_str, start_pos, start_lincol=start_lincol)
+            line = Fragment(self.filename, line_str, start_pos, start_lincol=start_lincol)
             yield line
             start_pos = line.end_pos
 
@@ -285,7 +285,7 @@ class Fragment():
                     start_lincol = (lineno, 0)
             else:
                 start_lincol = None
-            line = Fragment(self.fn, line_str, start_pos, start_lincol=start_lincol)
+            line = Fragment(self.filename, line_str, start_pos, start_lincol=start_lincol)
             yield line
 
         if buffered:
@@ -526,7 +526,7 @@ class Fragment():
 
     def repr(self, show_pos, show_fn=False, show_content=True):
         """Shows the content with the location at start and end."""
-        fn = self.fn + ":" if show_fn else ''
+        filename = self.filename + ":" if show_fn else ''
         if show_pos:
             start = str(self.get_start(show_pos))
             end = str(self.get_end(show_pos))
@@ -535,14 +535,14 @@ class Fragment():
             end = '{0},{1}'.format(*self.get_end(show_pos))
 
         if show_content:
-            return '(' + fn + start + ')' + str(self).replace('\n', '¶') + '(' + end + ')'
+            return '(' + filename + start + ')' + str(self).replace('\n', '¶') + '(' + end + ')'
 
-        return fn + start + '-' + end
+        return filename + start + '-' + end
 
 
     def copy(self):
         """Returns a deep copy."""
-        return Fragment(self.fn, self.content.copy(), self.start_pos,
+        return Fragment(self.filename, self.content.copy(), self.start_pos,
                         self.end_pos, self.start_lincol, self.end_lincol,
                         bool(self.start_lincol is not None))
 
@@ -562,13 +562,13 @@ class FragmentBundle():
 
 
     def get_fn(self):
-        return self.bundle[0].fn if self else None
+        return self.bundle[0].filename if self else None
 
     def set_fn(self, value):
         for fg in self:
-            fg.fn = value
+            fg.filename = value
 
-    fn = property(get_fn, set_fn)
+    filename = property(get_fn, set_fn)
 
 
     def get_start_pos(self):
@@ -620,7 +620,7 @@ class FragmentBundle():
             return None
 
         if filler is not None:
-            return Fragment(self.bundle[0].fn, self.join(filler),
+            return Fragment(self.bundle[0].filename, self.join(filler),
                             self.bundle[0].start_pos, self.bundle[-1].end_pos,
                             self.bundle[0].start_lincol, self.bundle[-1].end_lincol,
                             bool(self.bundle[0].start_lincol is not None))
@@ -790,11 +790,13 @@ class FragmentBundle():
                         fgs_inner = self.bundle[index_start[0]]
                         bd.bundle.append(fgs_inner.copy())
                     else:
-                        for fg in self.bundle[min(len(self.bundle), index_start[0] + 1):index_end[0]]:
+                        for fg in self.bundle[min(len(self.bundle), index_start[0] + 1):
+                                              index_end[0]]:
                             bd.bundle.append(fg.copy())
                     if index_end[1]:
                         fg_last = self.bundle[index_end[0]].slice(self.bundle[index_end[0]]
-                                                                  .get_start(pos_lincol), end, True)
+                                                                  .get_start(pos_lincol),
+                                                                  end, True)
                         if fg_last:
                             bd.bundle.append(fg_last)
 
@@ -987,12 +989,12 @@ class FragmentBundle():
         prev_end = 0
         for index, fg in enumerate(self):
             if prev_end < len(new_content):
-                l = len(fg) if pos_lincol else len(fg.content)
+                length = len(fg) if pos_lincol else len(fg.content)
                 if open_end and index == len(self.bundle) - 1:
                     fg.replace_fill(new_content[prev_end:], open_end=True)
                 else:
-                    fg.replace_fill(new_content[prev_end:prev_end + l])
-                    prev_end += l
+                    fg.replace_fill(new_content[prev_end:prev_end + length])
+                    prev_end += length
             else:
                 fg.replace_fill("")
         return self

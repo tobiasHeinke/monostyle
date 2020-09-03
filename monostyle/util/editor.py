@@ -21,8 +21,8 @@ class Editor:
         self._status = True
 
 
-    def from_file(fn):
-        return Editor(Fragment(fn, None))
+    def from_file(filename):
+        return Editor(Fragment(filename, None))
 
 
     def __bool__(self):
@@ -33,15 +33,15 @@ class Editor:
         """Return stored text or read it from the file."""
         if len(self.fg.content) == 0:
             try:
-                with open(self.fg.fn, "r", encoding="utf-8") as f:
+                with open(self.fg.filename, "r", encoding="utf-8") as f:
                     text = f.read()
 
             except (IOError, OSError) as err:
                 self._status = False
-                print("{0}: cannot read: {1}".format(self.fg.fn, err))
+                print("{0}: cannot read: {1}".format(self.fg.filename, err))
                 return None
 
-            return Fragment(self.fg.fn, text)
+            return Fragment(self.fg.filename, text)
 
         return self.fg
 
@@ -49,7 +49,7 @@ class Editor:
     def _write(self, text_dst):
         """Write output to the file."""
         try:
-            with open(self.fg.fn, "w", encoding="utf-8") as f:
+            with open(self.fg.filename, "w", encoding="utf-8") as f:
                 f.write(str(text_dst))
 
             return text_dst
@@ -199,7 +199,7 @@ class Editor:
             yield ls
             # detect alterations
             if ls != ls_orig:
-                self.add(Fragment(self.fg.fn, ''.join(ls), m.start(),
+                self.add(Fragment(self.fg.filename, ''.join(ls), m.start(),
                                   m.end()).add_offset(text_src.start_pos))
 
 
@@ -223,21 +223,21 @@ class FNEditor(Editor):
             import monostyle.svn_inter as vsn_inter
 
 
-    def from_file(fn):
-        return FNEditor(Fragment(fn, None))
+    def from_file(filename):
+        return FNEditor(Fragment(filename, None))
 
 
     def _read(self):
         """Check if the file exists and return source Fragment."""
         import os.path
 
-        if not os.path.isfile(self.fg.fn):
+        if not os.path.isfile(self.fg.filename):
             self._status = False
-            print("FNEditor error: file not found", self.fg.fn)
+            print("FNEditor error: file not found", self.fg.filename)
             return None
 
         if len(self.fg.content) == 0:
-            return Fragment(self.fg.fn, self.fg.fn)
+            return Fragment(self.fg.filename, self.fg.filename)
 
         return self.fg
 
@@ -251,7 +251,7 @@ class FNEditor(Editor):
             print("FNEditor error: file already exists", str(text_dst))
             return None
 
-        vsn_inter.move(self.fg.fn, str(text_dst))
+        vsn_inter.move(self.fg.filename, str(text_dst))
         return text_dst
 
 
@@ -262,20 +262,20 @@ class PropEditor(Editor):
     Non-binary property values only.
     """
 
-    def from_file(fn):
-        return PropEditor(Fragment(fn, None))
+    def from_file(filename):
+        return PropEditor(Fragment(filename, None))
 
 
-    def join_key(fn, key):
-        return ':'.join((fn, key))
+    def join_key(filename, key):
+        return ':'.join((filename, key))
 
 
-    def split_key(fn):
-        if (dot_idx := fn.rfind('.')) != -1:
-            if (colon_idx := fn.find(':', dot_idx)) != -1:
-                return fn[:colon_idx], fn[colon_idx + 1:]
+    def split_key(filename):
+        if (dot_idx := filename.rfind('.')) != -1:
+            if (colon_idx := filename.find(':', dot_idx)) != -1:
+                return filename[:colon_idx], filename[colon_idx + 1:]
 
-        return fn, None
+        return filename, None
 
 
     def _read(self):
@@ -283,22 +283,22 @@ class PropEditor(Editor):
         import os.path
         import monostyle.svn_inter
 
-        fn, key = PropEditor.split_key(self.fg.fn)
+        filename, key = PropEditor.split_key(self.fg.filename)
         if not key:
             self._status = False
-            print("PropEditor error: no key", fn)
+            print("PropEditor error: no key", filename)
             return None
 
-        if not os.path.isfile(fn):
+        if not os.path.isfile(filename):
             self._status = False
-            print("PropEditor error: file not found", fn)
+            print("PropEditor error: file not found", filename)
             return None
 
         if len(self.fg.content) == 0:
             content = []
-            for line in monostyle.svn_inter.prop_get(fn, key):
+            for line in monostyle.svn_inter.prop_get(filename, key):
                 content.append(line.decode("utf-8"))
-            return Fragment(self.fg.fn, content)
+            return Fragment(self.fg.filename, content)
 
         return self.fg
 
@@ -308,18 +308,18 @@ class PropEditor(Editor):
         import os.path
         import monostyle.svn_inter
 
-        fn, key = PropEditor.split_key(self.fg.fn)
+        filename, key = PropEditor.split_key(self.fg.filename)
         if not key:
             self._status = False
-            print("PropEditor error: no key", fn)
+            print("PropEditor error: no key", filename)
             return None
 
-        if not os.path.isfile(fn):
+        if not os.path.isfile(filename):
             self._status = False
-            print("PropEditor error: file not found", fn)
+            print("PropEditor error: file not found", filename)
             return None
 
-        monostyle.svn_inter.prop_set(fn, key, str(text_dst))
+        monostyle.svn_inter.prop_set(filename, key, str(text_dst))
         return text_dst
 
 
@@ -332,7 +332,7 @@ class EditorSession:
     def __init__(self, mode="text"):
         if mode == "text":
             self._editor_class = Editor
-        elif mode in ("fn", "filename"):
+        elif mode in ("filename", "filename"):
             self._editor_class = FNEditor
         elif mode in ("prop", "props", "property", "properties",
                       "conf", "config", "configuration"):
@@ -352,16 +352,16 @@ class EditorSession:
 
     def add(self, fg):
         if (self._last_index is not None and
-                self._editor_stack[self._last_index].fg.fn == fg.fn):
+                self._editor_stack[self._last_index].fg.filename == fg.filename):
             self._editor_stack[self._last_index].add(fg)
         else:
             for index, editor in enumerate(reversed(self._editor_stack)):
-                if editor.fg.fn == fg.fn:
+                if editor.fg.filename == fg.filename:
                     editor.add(fg)
                     self._last_index = len(self._editor_stack) - 1 - index
                     break
             else:
-                editor = self._editor_class.from_file(fg.fn)
+                editor = self._editor_class.from_file(fg.filename)
                 editor.add(fg)
                 self._editor_stack.append(editor)
                 self._last_index = len(self._editor_stack) - 1
@@ -376,7 +376,7 @@ class EditorSession:
                 result.append(out)
 
             if not editor:
-                print("Editor error: conflict in", editor.fg.fn)
+                print("Editor error: conflict in", editor.fg.filename)
                 self._status = False
                 if stop_on_conflict:
                     break

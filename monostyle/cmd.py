@@ -58,8 +58,8 @@ def hub(ops_sel, do_parse=True, do_resolve=False):
     summary = None
     fn_prev = None
     options = options_overide()
-    for fn, text in monostylestd.rst_texts():
-        document = rst_parser.document(fn, text)
+    for filename, text in monostylestd.rst_texts():
+        document = rst_parser.document(filename, text)
         if do_parse:
             document = rst_parser.parse(document)
             if do_resolve:

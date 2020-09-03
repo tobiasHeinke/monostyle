@@ -61,7 +61,7 @@ def search(document, reports, re_lib, data, config):
             else:
                 severity = 'W'
                 msg = "new word: hunk: " + str(hunk_count + 1)
-                line = Fragment(word.fn, ", ".join(find_similar(norm_punc(str(word), re_lib),
+                line = Fragment(word.filename, ", ".join(find_similar(norm_punc(str(word), re_lib),
                                                                 word_cont, data, 5, 0.6)))
 
             reports.append(Report(severity, toolname, word, msg, line))
@@ -118,8 +118,8 @@ def build_lexicon(re_lib):
     """Build lexicon by looping over files."""
     rst_parser = RSTParser()
     lexicon = dict()
-    for fn, text in monostylestd.rst_texts():
-        document = rst_parser.parse(rst_parser.document(fn, text))
+    for filename, text in monostylestd.rst_texts():
+        document = rst_parser.parse(rst_parser.document(filename, text))
         lexicon = populate_lexicon(document, lexicon, re_lib)
 
     # Flatten tree to list.
@@ -247,9 +247,9 @@ def lower_first_reverse(word, ref):
 
 def read_csv_lexicon():
     lexicon = []
-    lex_fn = monostylestd.path_to_abs("monostyle/lexicon.csv")
+    lex_filename = monostylestd.path_to_abs("monostyle/lexicon.csv")
     try:
-        with open(lex_fn, newline='', encoding='utf-8') as csvfile:
+        with open(lex_filename, newline='', encoding='utf-8') as csvfile:
             csv_reader = csv.reader(csvfile)
 
             for row in csv_reader:
@@ -262,10 +262,10 @@ def read_csv_lexicon():
 
 
 def write_csv_lexicon(lexicon):
-    lex_fn = monostylestd.path_to_abs("monostyle/lexicon.csv")
+    lex_filename = monostylestd.path_to_abs("monostyle/lexicon.csv")
     count = 0
     try:
-        with open(lex_fn, 'w', newline='', encoding='utf-8') as csvfile:
+        with open(lex_filename, 'w', newline='', encoding='utf-8') as csvfile:
             csv_writer = csv.writer(csvfile)
             for ent in lexicon:
                 csv_writer.writerow(ent)
@@ -274,7 +274,7 @@ def write_csv_lexicon(lexicon):
             print("wrote lexicon file with {0} words".format(count))
 
     except (IOError, OSError) as err:
-        print("{0}: cannot write: {1}".format(lex_fn, err))
+        print("{0}: cannot write: {1}".format(lex_filename, err))
 
 
 def difference(lex_stored, lex_new):

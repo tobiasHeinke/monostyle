@@ -221,7 +221,7 @@ def pairs(document, reports, re_lib, config):
                             msg = "long span"
                             msg += " - " + str(lincol_abs[0] + 1) + ","
                             msg += str(lincol_abs[1] + 1)
-                            out = Fragment(document.code.fn, ent[0], -1, start_lincol=ent[1])
+                            out = Fragment(document.code.filename, ent[0], -1, start_lincol=ent[1])
                             reports.append(Report('W', toolname, out, msg))
 
                         # invert index
@@ -239,7 +239,7 @@ def pairs(document, reports, re_lib, config):
     if len(stack) != 0:
         msg = "unclosed pairs"
         for ent in stack:
-            out = Fragment(document.code.fn, ent[0], -1, start_lincol=ent[1])
+            out = Fragment(document.code.filename, ent[0], -1, start_lincol=ent[1])
             reports.append(Report('W', toolname, out, msg))
 
     if max_line_span is not None:
