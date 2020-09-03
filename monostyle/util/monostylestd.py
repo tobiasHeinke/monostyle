@@ -26,10 +26,10 @@ def print_over(*text, is_temp=False, ellipsis=None):
     if not getattr(print_over, "was_ellipsis", False):
         if cur_len < prev_len:
             sys.__stdout__.write("\033[2K\r")
-        sys.__stdout__.write(text + (is_temp and '\r' or '\n'))
+        sys.__stdout__.write(text + ("" if ellipsis is not None else '\r' if is_temp else '\n'))
         sys.__stdout__.flush()
     else:
-        sys.__stdout__.write('\b' * prev_len + "{0: <{1}}".format(text, prev_len))
+        sys.__stdout__.write('\b' * prev_len + "{0: <{1}}\n".format(text, prev_len))
 
     if not ellipsis:
         print_over.prev_len = cur_len

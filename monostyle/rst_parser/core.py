@@ -120,19 +120,19 @@ class RSTParser:
         re_lib["doctest"] = re.compile(''.join(pattern_str))
 
         pattern_str = (ind, r"((?:\+\-+?)*\+\-+\+)", space_end)
-        re_lib["grid_border"] =  re.compile(''.join(pattern_str))
+        re_lib["grid_border"] = re.compile(''.join(pattern_str))
 
         pattern_str = (ind, r"[+|].+[+|]", space_end)
-        re_lib["grid_row_frame"] =  re.compile(''.join(pattern_str))
+        re_lib["grid_row_frame"] = re.compile(''.join(pattern_str))
 
         pattern_str = r"[\+-]\Z"
-        re_lib["grid_cell_border"] =  re.compile(pattern_str)
+        re_lib["grid_cell_border"] = re.compile(pattern_str)
 
         pattern_str = (ind, r"((?:\+=+?)*\+=+\+)", space_end)
-        re_lib["grid_head_border"] =  re.compile(''.join(pattern_str))
+        re_lib["grid_head_border"] = re.compile(''.join(pattern_str))
 
         pattern_str = (ind, r"(=+?\s+)*=+", space_end)
-        re_lib["simple_row_border"] =  re.compile(''.join(pattern_str))
+        re_lib["simple_row_border"] = re.compile(''.join(pattern_str))
 
         pattern_str = (ind, r"(\-+?\s+)*\-+", space_end)
         re_lib["simple_column_span"] = re.compile(''.join(pattern_str))

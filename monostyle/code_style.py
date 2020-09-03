@@ -19,7 +19,7 @@ CharCatalog = CharCatalog()
 
 
 def eol_pre(_):
-    """Note this tool can only be appplied on full files because the EOL is unknown in Diffs."""
+    """Note this tool can only be applied on full files because the EOL is unknown in Diffs."""
     toolname = "EOF"
 
     re_lib = dict()

@@ -525,7 +525,7 @@ def add_indent(changes_para, ind_block):
     ind_block_str = ' ' * ind_block
     for change in changes_para:
         if str(change) == '\n':
-            change.extend([ind_block_str])
+            change.extend([ind_block_str], keep_end=True)
 
     return changes_para
 

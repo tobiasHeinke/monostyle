@@ -91,22 +91,24 @@ class Fragment():
         return self.end_pos if pos_lincol else self.end_lincol
 
 
-    def extend(self, new_content):
+    def extend(self, new_content, keep_end=False):
         """Adds lines to the content."""
         self.rermove_zero_len_end()
 
         if isinstance(new_content, str):
             self.content.append(new_content)
-            self.end_pos += len(new_content)
-            if self.end_lincol:
-                self.end_lincol = (self.end_lincol[0] + 1, len(new_content))
+            if not keep_end:
+                self.end_pos += len(new_content)
+                if self.end_lincol:
+                    self.end_lincol = (self.end_lincol[0] + 1, len(new_content))
         else:
             self.content.extend(new_content)
-            self.end_pos += sum(map(len, new_content))
+            if not keep_end:
+                self.end_pos += sum(map(len, new_content))
 
-            if self.end_lincol:
-                self.end_lincol = (self.end_lincol[0] + max(0, len(new_content) - 1),
-                                   len(new_content[-1]) if len(new_content) != 0 else 0)
+                if self.end_lincol:
+                    self.end_lincol = (self.end_lincol[0] + len(new_content),
+                                       len(new_content[-1]) if len(new_content) != 0 else 0)
 
         return self
 
@@ -124,7 +126,7 @@ class Fragment():
         return self
 
 
-    def combine(self, fg, check_align=True):
+    def combine(self, fg, check_align=True, keep_end=False):
         """Combines two aligned fragments into one."""
         if check_align and not self.is_aligned(fg, True):
             return self
@@ -134,20 +136,23 @@ class Fragment():
         else:
             if fg.start_lincol == fg.end_lincol:
                 return self
-            if not check_align or self.is_aligned(fg, False):
-                if self.end_lincol == fg.start_lincol:
-                    if len(self.content) != 0:
-                        self.content[-1] += fg.content[0]
-                        if len(fg.content) != 1:
-                            self.content.extend(fg.content[1:])
-                    else:
-                        self.content.extend(fg.content)
+            if check_align and not self.is_aligned(fg, False):
+                return self
+
+            if self.end_lincol == fg.start_lincol:
+                if len(self.content) != 0:
+                    self.content[-1] += fg.content[0]
+                    if len(fg.content) != 1:
+                        self.content.extend(fg.content[1:])
                 else:
                     self.content.extend(fg.content)
+            else:
+                self.content.extend(fg.content)
 
-        self.end_pos = fg.end_pos
-        if fg.end_lincol:
-            self.end_lincol = fg.end_lincol
+        if not keep_end:
+            self.end_pos = fg.end_pos
+            if fg.end_lincol:
+                self.end_lincol = fg.end_lincol
 
         return self
 
@@ -669,10 +674,10 @@ class FragmentBundle():
         return self.end_pos if pos_lincol else self.end_lincol
 
 
-    def extend(self, new_content):
+    def extend(self, new_content, keep_end=False):
         if not self:
             return self
-        self.bundle[-1].extend(new_content)
+        self.bundle[-1].extend(new_content, keep_end)
         return self
 
 
@@ -684,14 +689,14 @@ class FragmentBundle():
         return self
 
 
-    def combine(self, bd, pos_lincol=True, merge=False):
+    def combine(self, bd, pos_lincol=True, keep_end=False, merge=False):
         """Merge -- combine last and first if aligned."""
         if merge and self and bd:
             if self.is_aligned(bd, pos_lincol):
                 self.bundle[-1].combine(bd.bundle[0])
-                self.bundle.extend(bd.bundle[1:])
+                self.bundle.extend(bd.bundle[1:], keep_end)
         else:
-            self.bundle.extend(bd.bundle)
+            self.bundle.extend(bd.bundle, keep_end)
         return self
 
 

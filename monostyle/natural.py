@@ -205,7 +205,7 @@ def metric(document, reports):
         "para_short": 2
     }
 
-    def compare(node_cur, sen, counter, reports, sub_para=False, is_last=False):
+    def compare(node_cur, sen_full, counter, reports, sub_para=False, is_last=False):
         if node_cur.node_name == "sect":
             if counter["sect"] > conf["sect_len"]:
                 out = node_cur.code.copy().clear(True)
@@ -216,11 +216,11 @@ def metric(document, reports):
 
         else:
             if counter["sen"] > conf["sen_len"]:
-                out = sen.copy().clear(True)
+                out = sen_full.copy().clear(True)
                 msg = Report.quantity(what="long sentence",
                                       how="{0}/{1} words".format(
                                           counter["sen"], conf["sen_len"]))
-                reports.append(Report('I', toolname, out, msg, sen))
+                reports.append(Report('I', toolname, out, msg, sen_full))
             if not sub_para:
                 if counter["para"] > conf["para_long"]:
                     out = node_cur.code.copy().clear(True)
@@ -266,19 +266,19 @@ def metric(document, reports):
     node_cur = None
     node_prev = None
     is_open = False
-    sen = None
+    sen_full = None
     counter = dict.fromkeys({"sect", "sen", "para", "para_short"}, 0)
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
         if node_cur is None or part.code.end_pos > node_cur.code.end_pos:
             if node_cur:
-                if is_open and sen and not sen.isspace():
+                if is_open and sen_full and not sen_full.isspace():
                     counter["para"] += 1
                 node_prev = node_cur
                 is_last = bool(rst_walker.is_of(node_cur.parent_node,
                                                 ("def", "dir", "enum", "bullet", "field")) and
                                node_cur.next is None)
-                reports = compare(node_cur, sen, counter, reports, is_last=is_last)
+                reports = compare(node_cur, sen_full, counter, reports, is_last=is_last)
                 if is_last:
                     counter["para_short"] = 0
                     node_prev = None
@@ -304,7 +304,7 @@ def metric(document, reports):
                      (rst_walker.is_of(node_cur.parent_node,
                                        ("def", "dir", "enum", "bullet", "field")) and
                       node_cur.prev is None))):
-                reports = compare(node_prev, sen, counter, reports, is_last=True)
+                reports = compare(node_prev, sen_full, counter, reports, is_last=True)
                 counter["para_short"] = 0
                 node_prev = None
 
@@ -323,14 +323,23 @@ def metric(document, reports):
                                 reports.append(Report('I', toolname, word, msg))
 
                         if not is_open:
-                            reports = compare(node_cur, sen, counter, reports, True)
+                            if not sen_full:
+                                sen_full = sen
+                            reports = compare(node_cur, sen_full, counter, reports, True)
                             counter["sen"] = 0
                             counter["para"] += 1
+                            sen_full = None
+                        else:
+                            if not sen_full:
+                                sen_full = sen
+                            else:
+                                sen_full = part.parent_node.parent_node.code.slice(
+                                            sen_full.start_lincol, sen.end_lincol, True)
 
     if node_cur:
-        if is_open and sen and not sen.isspace():
+        if is_open and sen_full and not sen_full.isspace():
             counter["para"] += 1
-        reports = compare(node_cur, sen, counter, reports, is_last=True)
+        reports = compare(node_cur, sen_full, counter, reports, is_last=True)
 
     return reports
 
