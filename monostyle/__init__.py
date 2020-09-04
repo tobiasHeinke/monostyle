@@ -7,7 +7,7 @@ Interface for applying tools on the differential of RST files.
 
 Pipeline Overview:
 [monostyle] -->
-[SVN diff] --text snippets--> [monostyle] --> [parser]
+[Versioning diff] --text snippets--> [monostyle] --> [parser]
 [parser] --nodes--> [monostyle] --> [tools]
 [tools] --reports--> [monostyle] --> console print
    '--> [monostyle] --reports--> [autofix] --> files
@@ -20,8 +20,8 @@ import importlib.util
 
 from . import config
 from .util import monostylestd
-from .util.report import (Report, print_report, options_overide,
-                          update_summary, print_summary)
+from .util.report import (Report, print_report,
+                          options_overide, reports_summary)
 from .rst_parser.core import RSTParser
 from .rst_parser import hunk_post_parser
 from . import autofix
@@ -62,17 +62,18 @@ def import_module(name, dst=None):
 
 
 def get_reports_version(from_vsn, is_internal, path, rev=None, cached=False):
-    """Gets text snippets (hunk) from SVN."""
+    """Gets text snippets (hunk) from versioning."""
     mods = init_tools()
 
     reports = []
     show_current = True
-    summary = None
-    fn_prev = None
+    filename_prev = None
     options = options_overide()
     for fg, context, msg in vsn_inter.run_diff(from_vsn, is_internal, path, rev, cached):
         if msg is not None:
-            reports.append(Report('W', "svn diff", fg, msg))
+            vsn_report = Report('W', "versioning-diff", fg, msg)
+            filename_prev = print_report(vsn_report, options, filename_prev)
+            reports.append(vsn_report)
             continue
 
         if show_current:
@@ -81,16 +82,11 @@ def get_reports_version(from_vsn, is_internal, path, rev=None, cached=False):
                                                           fg.start_lincol[0], fg.end_lincol[0]),
                                     is_temp=True)
 
-        reports_hunk = apply_tools(mods, fg)
-        for report in reports_hunk:
-            if not filter_reports(report, context):
-                fn_prev = print_report(report, options, fn_prev)
-                if options["show_summary"]:
-                    summary = update_summary(summary, report)
-                reports.append(report)
+        reports, filename_prev = apply_tools(mods, reports, fg, options, filename_prev,
+                                             filter_reports, context)
 
     if options["show_summary"]:
-        print_summary(summary, options)
+        reports_summary(reports, options)
 
     if show_current:
         monostylestd.print_over("processing: done")
@@ -105,8 +101,7 @@ def get_reports_file(path):
     path = monostylestd.path_to_abs(path, "rst")
     reports = []
     show_current = True
-    summary = None
-    fn_prev = None
+    filename_prev = None
     options = options_overide()
     for filename, text in monostylestd.rst_texts(path):
         doc = RSTParser.document(filename, text)
@@ -116,15 +111,10 @@ def get_reports_file(path):
                                                           0, doc.code.end_lincol[0]),
                                     is_temp=True)
 
-        reports_hunk = apply_tools(mods, doc.code)
-        for report in reports_hunk:
-            fn_prev = print_report(report, options, fn_prev)
-            if options["show_summary"]:
-                summary = update_summary(summary, report)
-            reports.append(report)
+        reports, filename_prev = apply_tools(mods, reports, doc.code, options, filename_prev)
 
     if options["show_summary"]:
-        print_summary(summary, options)
+        reports_summary(reports, options)
 
     if show_current:
         monostylestd.print_over("processing: done")
@@ -132,10 +122,8 @@ def get_reports_file(path):
     return reports
 
 
-def apply_tools(mods, fg):
+def apply_tools(mods, reports, fg, options, filename_prev, filter_func=None, context=None):
     """Parse the hunks and apply the tools."""
-    reports_hunk = []
-
     if fg.filename.endswith(".rst"):
         document = RSTParser.parse(RSTParser.snippet(fg))
         document = hunk_post_parser.parse(RSTParser, document)
@@ -147,15 +135,19 @@ def apply_tools(mods, fg):
             continue
 
         for op in ops:
-            if not isinstance(op, tuple):
-                print(op.__name__)
-            reports_hunk = op[0](document, reports_hunk, **op[1])
+            reports_tool = []
+            reports_tool = op[0](document, reports_tool, **op[1])
 
-    return reports_hunk
+            for report in reports_tool:
+                if filter_func is None or not filter_func(report, context):
+                    filename_prev = print_report(report, options, filename_prev)
+                    reports.append(report)
+
+    return reports, filename_prev
 
 
 def filter_reports(report, context):
-    """Filter out reports in the diff context else add to final reports."""
+    """Filter out reports in the diff context."""
     return bool(report.tool in
                 ("mark", "blank-line", "directive", "indention", "heading-level",
                  "heading-char-count", "starting", "flavor") and # "search-word",
@@ -167,7 +159,7 @@ def update(path, rev=None):
     """Update the working copy."""
     fns_conflicted = []
     for filename, conflict, rev_up in vsn_inter.update_files(path, rev):
-        # A conflict will be resolvable with SVN's command interface.
+        # A conflict will be resolvable with versioning's command interface.
         if conflict and filename not in fns_conflicted:
             fns_conflicted.append(filename)
     return fns_conflicted

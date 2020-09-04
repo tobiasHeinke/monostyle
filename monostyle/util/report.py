@@ -283,24 +283,20 @@ def print_reports(reports, options=None):
         return None
 
     options = options_overide()
-    summary = None
     for report in reports:
         if report is not None:
             print_report(report, options)
 
-            if options["show_summary"]:
-                summary = update_summary(summary, report)
-
     if options["show_summary"]:
-        print_summary(summary, options)
+        summary = reports_summary(reports, options)
 
 
-def print_report(report, options=None, fn_prev=None):
+def print_report(report, options=None, filename_prev=None):
     """Print a single report. Returns the filename of the report for storage."""
     if report is None:
         return
     if options and options["file_title"]:
-        if fn_prev is None or fn_prev != report.out.filename:
+        if filename_prev is None or filename_prev != report.out.filename:
             print_title(report.out.filename if options["absolute_path"]
                         else path_to_rel(report.out.filename),
                         underline=options["file_title_underline"])
@@ -309,21 +305,16 @@ def print_report(report, options=None, fn_prev=None):
     return report.out.filename
 
 
-def update_summary(summary, report):
-    """Update the count of each severity of the reports."""
-    if summary is None:
-        summary = dict.fromkeys(Report.severities, 0)
-        summary.setdefault("total", 0)
+def reports_summary(reports, options):
+    """Show the count of each severity of the reports."""
+    summary = dict.fromkeys(Report.severities, 0)
+    summary.setdefault("total", 0)
 
-    if report.severity in summary.keys():
-        summary[report.severity] += 1
-    summary["total"] += 1
+    for report in reports:
+        if report.severity in summary.keys():
+            summary[report.severity] += 1
+        summary["total"] += 1
 
-    return summary
-
-
-def print_summary(summary, options):
-    """Stringify summary and print."""
     summary_text = []
     for key, val in summary.items():
         if key not in {'L', "total"} and (key != 'U' or val != 0):

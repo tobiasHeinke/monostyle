@@ -38,7 +38,7 @@ def unversioned_files(path, binary_ext):
             yield filename
 
 
-def difference(from_vsn, is_internal, fn_source, rev, binary_ext):
+def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
     op = diff if from_vsn else file_diff
 
     is_change = False
@@ -85,7 +85,7 @@ def difference(from_vsn, is_internal, fn_source, rev, binary_ext):
     fg = None
     loc_re = re.compile(r"@@ \-\d+?(?:,\d+?)? \+(\d+?)(?:,\d+?)? @@")
     body = False
-    for line in op(fn_source, rev, is_change):
+    for line in op(filename_source, rev, is_change):
         try:
             line = line.decode("utf-8")
         except:

@@ -10,8 +10,8 @@ import os
 import argparse
 
 import monostyle.util.monostylestd as monostylestd
-from monostyle.util.report import (Report, print_reports, print_report, options_overide,
-                                   update_summary, print_summary)
+from monostyle.util.report import (Report, print_reports, print_report,
+                                   options_overide, reports_summary)
 from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.environment as env
 from .util import file_opener
@@ -55,8 +55,7 @@ def hub(ops_sel, do_parse=True, do_resolve=False):
     if do_resolve:
         titles, targets = env.get_link_titles(rst_parser)
 
-    summary = None
-    fn_prev = None
+    filename_prev = None
     options = options_overide()
     for filename, text in monostylestd.rst_texts():
         document = rst_parser.document(filename, text)
@@ -66,19 +65,16 @@ def hub(ops_sel, do_parse=True, do_resolve=False):
                 document = env.resolve_link_title(document, titles, targets)
                 document = env.resolve_subst(document, rst_parser.substitution)
 
-
-        reports_hunk = []
         for op in ops_loop:
-            reports_hunk = op[0](document, reports_hunk, **op[1])
+            reports_tool = []
+            reports_tool = op[0](document, reports_tool, **op[1])
 
-        for report in reports_hunk:
-            fn_prev = print_report(report, options, fn_prev)
-            if options["show_summary"]:
-                summary = update_summary(summary, report)
-            reports.append(report)
+            for report in reports_tool:
+                filename_prev = print_report(report, options, filename_prev)
+                reports.append(report)
 
     if options["show_summary"]:
-        print_summary(summary, options)
+        reports_summary(reports, options)
     return reports
 
 

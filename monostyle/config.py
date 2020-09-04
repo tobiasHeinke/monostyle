@@ -15,16 +15,16 @@ def setup_config(root):
     """Create user config file or overide config."""
     global root_dir
     root_dir = root
-    fn_default = os.path.normpath(os.path.join(os.path.dirname(__file__), "data", "config.json"))
-    config_default, source_default = load_config(fn_default)
+    filename_default = os.path.normpath(os.path.join(os.path.dirname(__file__), "data", "config.json"))
+    config_default, source_default = load_config(filename_default)
     for key, val in config_default.items():
         globals()[key] = val
 
-    fn_user = os.path.normpath(os.path.join(root, "monostyle", "config.json"))
-    if not os.path.isfile(fn_user):
-        write_config_file(fn_user, source_default)
+    filename_user = os.path.normpath(os.path.join(root, "monostyle", "config.json"))
+    if not os.path.isfile(filename_user):
+        write_config_file(filename_user, source_default)
     else:
-        config_user, _ = load_config(fn_user)
+        config_user, _ = load_config(filename_user)
         if config_user is None:
             return False
 
