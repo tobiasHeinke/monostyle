@@ -369,12 +369,12 @@ def leak_pre(_):
     msg = Report.existing(what="wrong mark", where="role body")
     re_lib["rolesep"] = (pattern, msg)
 
-    pattern_str = r"\:(?:doc|ref)\:`[\w\/ _&]+?[^ ]<[\w>\/ _]+?`"
+    pattern_str = r"\:(?:doc|ref)\:`[^`<]+?\S<[^`]+?>`"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="space", where="after link title")
     re_lib["linkaddr"] = (pattern, msg)
 
-    pattern_str = r"\:(?:abbr)\:`[\w\/ _&.]+?[^ ]\([\w _.]+?\)`"
+    pattern_str = r"\:(?:abbr)\:`[^`(]+?\S\([^`)]+?\)`"
     pattern = re.compile(pattern_str)
     msg = Report.missing(what="space", where="after abbreviation title")
     re_lib["abbr"] = (pattern, msg)

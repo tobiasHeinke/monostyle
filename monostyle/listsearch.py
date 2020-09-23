@@ -258,6 +258,7 @@ OPS = (
     ("blender/Editors", search, search_pre, True, ""),
     ("blender/Modes", search, search_pre, True, ""),
     ("avoid/*", search, search_pre, True, "BI"),
+    ("dev/*", search, search_pre, True, "BI"),
     ("simplify", search, search_pre, True, "BI")
 )
 

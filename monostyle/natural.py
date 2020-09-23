@@ -322,19 +322,16 @@ def metric(document, reports):
                                                           len(word), conf["word_len"]))
                                 reports.append(Report('I', toolname, word, msg))
 
+                        if not sen_full:
+                            sen_full = sen
+                        else:
+                            sen_full = document.body.code.slice(
+                                        sen_full.start_lincol, sen.end_lincol, True)
                         if not is_open:
-                            if not sen_full:
-                                sen_full = sen
                             reports = compare(node_cur, sen_full, counter, reports, True)
                             counter["sen"] = 0
                             counter["para"] += 1
                             sen_full = None
-                        else:
-                            if not sen_full:
-                                sen_full = sen
-                            else:
-                                sen_full = part.parent_node.parent_node.code.slice(
-                                            sen_full.start_lincol, sen.end_lincol, True)
 
     if node_cur:
         if is_open and sen_full and not sen_full.isspace():

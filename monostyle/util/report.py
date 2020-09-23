@@ -288,7 +288,7 @@ def print_reports(reports, options=None):
             print_report(report, options)
 
     if options["show_summary"]:
-        summary = reports_summary(reports, options)
+        reports_summary(reports, options)
 
 
 def print_report(report, options=None, filename_prev=None):

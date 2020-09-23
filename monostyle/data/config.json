@@ -6,7 +6,7 @@
 			"ext": ".rst"
 		},
 		"listsearch": {
-			"tools": ["simplify", "blender/UI", "blender/Editors", "blender/Modes", "avoid/*"],
+			"tools": ["simplify", "blender/UI", "blender/Editors", "blender/Modes", "avoid/*", "dev/*"],
 			"ext": ".rst"
 		},
 		"spelling": {

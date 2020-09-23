@@ -134,7 +134,7 @@ class Fragment():
         if not self.end_lincol or not fg.end_lincol:
             self.content.extend(fg.content)
         else:
-            if fg.start_lincol == fg.end_lincol:
+            if fg.start_lincol == fg.end_lincol or len(fg.content) == 0:
                 return self
             if check_align and not self.is_aligned(fg, False):
                 return self
