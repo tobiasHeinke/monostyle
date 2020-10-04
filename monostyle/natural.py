@@ -157,6 +157,28 @@ def grammar_pre(_):
     return args
 
 
+def passive_pre(_):
+    toolname = "passive"
+
+    re_lib = dict()
+    pattern_str = (r"(\b", r"\b|\b".join(("be", "being", "been", "am", "is",
+                                          "are", "was", "were")), r"\b|",
+                   r"\bg[eo]t(?:s|ten)?\b)", # get
+                   r"\s+",
+                   r"(\b[\w-]+e[dn]\b|\b",
+                   r"\b|\b".join(monostylestd.get_data_file("irregular_participle")), r"\b)")
+
+    pattern = re.compile(''.join(pattern_str), re.DOTALL)
+    msg = Report.existing(what="passive voice")
+    re_lib["passive"] = (pattern, msg)
+
+    args = dict()
+    args["re_lib"] = re_lib
+    args["config"] = {"severity": 'I', "toolname": toolname}
+
+    return args
+
+
 def search_pure(document, reports, re_lib, config):
     """Iterate regex tools."""
     instr_pos = {
@@ -439,6 +461,7 @@ OPS = (
     ("article", indefinite_article, indefinite_article_pre),
     ("grammar", search_pure, grammar_pre),
     ("metric", metric, None),
+    ("passive", search_pure, passive_pre),
     ("repeated", repeated_words, repeated_words_pre),
 )
 

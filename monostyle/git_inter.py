@@ -200,7 +200,7 @@ def exec_command(cmd_args, cwd=None):
     try:
         if not silent:
             print_over("fetching" if cmd_args[0] in ("status", "diff", "update", "remote")
-                       else "applying", cmd_args[0], elipsis="...")
+                       else "applying", cmd_args[0], ellipsis="...")
         output = subprocess.check_output(cmd, cwd=cwd)
     except OSError as err:
         print("git", cmd_args[0], "error:", err)

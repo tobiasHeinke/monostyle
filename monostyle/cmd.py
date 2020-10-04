@@ -14,6 +14,7 @@ from monostyle.util.report import (Report, print_reports, print_report,
                                    options_overide, reports_summary)
 from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.environment as env
+from .rst_parser import hunk_post_parser
 from .util import file_opener
 
 
@@ -38,6 +39,35 @@ def init(ops, op_names, mod_name):
     return ops_sel
 
 
+def apply(rst_parser, mods, reports, document, parse_options, print_options,
+          filename_prev, filter_func=None, context=None):
+    """Parse the hunks and apply the tools."""
+    if parse_options["parse"] and document.code.filename.endswith(".rst"):
+        document = rst_parser.parse(document)
+        if parse_options["post"]:
+            document = hunk_post_parser.parse(rst_parser, document)
+        if (parse_options["resolve"] and
+                "titles" in parse_options.keys() and "targets" in parse_options.keys()):
+            document = env.resolve_link_title(document, parse_options["titles"],
+                                              parse_options["targets"])
+            document = env.resolve_subst(document, rst_parser.substitution)
+
+    for ops, ext_test in mods:
+        if ext_test and not document.code.filename.endswith(ext_test):
+            continue
+
+        for op in ops:
+            reports_tool = []
+            reports_tool = op[0](document, reports_tool, **op[1])
+
+            for report in reports_tool:
+                if filter_func is None or not filter_func(report, context):
+                    filename_prev = print_report(report, print_options, filename_prev)
+                    reports.append(report)
+
+    return reports, filename_prev
+
+
 def hub(ops_sel, do_parse=True, do_resolve=False):
     reports = []
     ops_loop = []
@@ -52,29 +82,19 @@ def hub(ops_sel, do_parse=True, do_resolve=False):
         return reports
 
     rst_parser = RSTParser()
+    filename_prev = None
+    print_options = options_overide()
+    parse_options = {"parse": do_parse, "resolve": do_resolve, "post": False}
     if do_resolve:
         titles, targets = env.get_link_titles(rst_parser)
-
-    filename_prev = None
-    options = options_overide()
+        parse_options["titles"] = titles
+        parse_options["targets"] = targets
     for filename, text in monostylestd.rst_texts():
-        document = rst_parser.document(filename, text)
-        if do_parse:
-            document = rst_parser.parse(document)
-            if do_resolve:
-                document = env.resolve_link_title(document, titles, targets)
-                document = env.resolve_subst(document, rst_parser.substitution)
+        apply(rst_parser, ((ops_loop, None),), reports, rst_parser.document(filename, text),
+              parse_options, print_options, filename_prev)
 
-        for op in ops_loop:
-            reports_tool = []
-            reports_tool = op[0](document, reports_tool, **op[1])
-
-            for report in reports_tool:
-                filename_prev = print_report(report, options, filename_prev)
-                reports.append(report)
-
-    if options["show_summary"]:
-        reports_summary(reports, options)
+    if print_options["show_summary"]:
+        reports_summary(reports, print_options)
     return reports
 
 

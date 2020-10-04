@@ -23,10 +23,9 @@ from .util import monostylestd
 from .util.report import (Report, print_report,
                           options_overide, reports_summary)
 from .rst_parser.core import RSTParser
-from .rst_parser import hunk_post_parser
 from . import autofix
 from .util import file_opener
-from .cmd import init
+from .cmd import init, apply
 
 __version__ = "0.2.0"
 
@@ -68,11 +67,12 @@ def get_reports_version(from_vsn, is_internal, path, rev=None, cached=False):
     reports = []
     show_current = True
     filename_prev = None
-    options = options_overide()
+    print_options = options_overide()
+    parse_options = {"parse": True, "resolve": False, "post": True}
     for fg, context, msg in vsn_inter.run_diff(from_vsn, is_internal, path, rev, cached):
         if msg is not None:
             vsn_report = Report('W', "versioning-diff", fg, msg)
-            filename_prev = print_report(vsn_report, options, filename_prev)
+            filename_prev = print_report(vsn_report, print_options, filename_prev)
             reports.append(vsn_report)
             continue
 
@@ -82,11 +82,12 @@ def get_reports_version(from_vsn, is_internal, path, rev=None, cached=False):
                                                           fg.start_lincol[0], fg.end_lincol[0]),
                                     is_temp=True)
 
-        reports, filename_prev = apply_tools(mods, reports, fg, options, filename_prev,
-                                             filter_reports, context)
+        reports, filename_prev = apply(RSTParser, mods, reports, RSTParser.snippet(fg),
+                                       parse_options, print_options,
+                                       filename_prev, filter_reports, context)
 
-    if options["show_summary"]:
-        reports_summary(reports, options)
+    if print_options["show_summary"]:
+        reports_summary(reports, print_options)
 
     if show_current:
         monostylestd.print_over("processing: done")
@@ -102,7 +103,8 @@ def get_reports_file(path):
     reports = []
     show_current = True
     filename_prev = None
-    options = options_overide()
+    print_options = options_overide()
+    parse_options = {"parse": True, "resolve": False, "post": False}
     for filename, text in monostylestd.rst_texts(path):
         doc = RSTParser.document(filename, text)
         if show_current:
@@ -111,39 +113,16 @@ def get_reports_file(path):
                                                           0, doc.code.end_lincol[0]),
                                     is_temp=True)
 
-        reports, filename_prev = apply_tools(mods, reports, doc.code, options, filename_prev)
+        reports, filename_prev = apply(RSTParser, mods, reports, doc,
+                                       parse_options, print_options, filename_prev)
 
-    if options["show_summary"]:
-        reports_summary(reports, options)
+    if print_options["show_summary"]:
+        reports_summary(reports, print_options)
 
     if show_current:
         monostylestd.print_over("processing: done")
 
     return reports
-
-
-def apply_tools(mods, reports, fg, options, filename_prev, filter_func=None, context=None):
-    """Parse the hunks and apply the tools."""
-    if fg.filename.endswith(".rst"):
-        document = RSTParser.parse(RSTParser.snippet(fg))
-        document = hunk_post_parser.parse(RSTParser, document)
-    else:
-        document = RSTParser.snippet(fg)
-
-    for ops, ext_test in mods:
-        if len(ext_test) != 0 and not fg.filename.endswith(ext_test):
-            continue
-
-        for op in ops:
-            reports_tool = []
-            reports_tool = op[0](document, reports_tool, **op[1])
-
-            for report in reports_tool:
-                if filter_func is None or not filter_func(report, context):
-                    filename_prev = print_report(report, options, filename_prev)
-                    reports.append(report)
-
-    return reports, filename_prev
 
 
 def filter_reports(report, context):

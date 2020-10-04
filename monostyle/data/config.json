@@ -26,7 +26,7 @@
 			"ext": ".rst"
 		},
 		"natural": {
-			"tools": ["article", "grammar", "metric", "repeated"],
+			"tools": ["article", "grammar", "metric", "passive", "repeated"],
 			"ext": ".rst"
 		},
 		"code_style": {

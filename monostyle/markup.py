@@ -474,7 +474,7 @@ def search_directive(document, reports):
 
 
     roles = (
-        'abbr', 'class', 'doc', 'download', 'guilabel', 'kbd', 'math',
+        'abbr', 'class', 'doc', 'download', 'guilabel', 'index', 'kbd', 'math',
         'menuselection', 'mod', 'ref', 'sub', 'sup', 'term'
     )
 
@@ -483,12 +483,12 @@ def search_directive(document, reports):
         #   admonition
         'admonition', 'hint', 'important', 'note', 'tip', 'warning',
         #    other
-        'container', 'figure', 'image', 'include', 'list-table', 'parsed-literal',
-        'replace', 'rubric', 'unicode', 'math',
+        'container', 'figure', 'image', 'include', 'list-table', 'math',
+        'parsed-literal', 'replace', 'rubric', 'unicode',
         # Sphinx custom ones
-        'code-block', 'glossary', 'highlight', 'only', 'seealso', 'toctree', 'hlist',
+        'code-block', 'glossary', 'highlight', 'hlist', 'index', 'only', 'seealso', 'toctree',
         # Sphinx extension
-        'youtube', 'vimeo'
+        'dropdown', 'vimeo', 'youtube'
     )
 
 
