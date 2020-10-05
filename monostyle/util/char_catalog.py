@@ -34,7 +34,7 @@ class CharCatalog:
         return "".join(list(value for value in iter_sub(obj)))
 
 
-    def classify(self, char):
+    def tag(self, char):
         """Return the branch to the first leaf matching the char."""
         def search(obj, char):
             if not isinstance(obj, str):
@@ -120,15 +120,15 @@ class CharCatalog:
     def stringify(self, chars, apply_escape=True):
         """Join a mixed list of single chars and tuble for ranges."""
         region = []
-        for ent in chars:
-            if isinstance(ent, tuple):
+        for entry in chars:
+            if isinstance(entry, tuple):
                 if apply_escape:
-                    for ent_range in ent:
-                        if ent_range.endswith('-') and not ent_range.startswith('\\'):
-                            ent_range = '\\' + ent_range
-                region.append(ent[0] + '-' + ent[1])
+                    for entry_range in entry:
+                        if entry_range.endswith('-') and not entry_range.startswith('\\'):
+                            entry_range = '\\' + entry_range
+                region.append(entry[0] + '-' + entry[1])
             else:
-                region.append(ent)
+                region.append(entry)
 
         return ''.join(region)
 
@@ -175,12 +175,12 @@ class CharCatalog:
     def expand(self, pattern_str):
         """Expand a shorten set into a char list."""
         chars_ex = []
-        for ent in self.split(pattern_str):
-            if isinstance(ent, tuple):
-                for range_char in range(ord(ent[0][-1]), ord(ent[1][-1]) + 1):
+        for entry in self.split(pattern_str):
+            if isinstance(entry, tuple):
+                for range_char in range(ord(entry[0][-1]), ord(entry[1][-1]) + 1):
                     chars_ex.append(chr(range_char))
             else:
-                chars_ex.append(ent)
+                chars_ex.append(entry)
 
         return chars_ex
 

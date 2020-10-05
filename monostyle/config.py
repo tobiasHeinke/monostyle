@@ -17,8 +17,8 @@ def setup_config(root):
     root_dir = root
     filename_default = os.path.normpath(os.path.join(os.path.dirname(__file__), "data", "config.json"))
     config_default, source_default = load_config(filename_default)
-    for key, val in config_default.items():
-        globals()[key] = val
+    for key, value in config_default.items():
+        globals()[key] = value
 
     filename_user = os.path.normpath(os.path.join(root, "monostyle", "config.json"))
     if not os.path.isfile(filename_user):
@@ -28,9 +28,9 @@ def setup_config(root):
         if config_user is None:
             return False
 
-        for key, val in config_user.items():
-            if key in config_default.keys() and val is not None:
-                globals()[key] = override_typecheck(val, globals()[key], "monostyle config")
+        for key, value in config_user.items():
+            if key in config_default.keys() and value is not None:
+                globals()[key] = override_typecheck(value, globals()[key], "monostyle config")
 
     return True
 

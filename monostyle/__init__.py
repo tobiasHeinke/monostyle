@@ -35,11 +35,11 @@ RSTParser = RSTParser()
 def init_tools():
     """Execute the init function of each module."""
     mods = []
-    for module_name, val in config.tool_selection.items():
+    for module_name, value in config.tool_selection.items():
         if module := import_module(module_name):
-            ops = init(module.OPS, val["tools"], module_name)
+            ops = init(module.OPS, value["tools"], module_name)
             if ops is not None and len(ops) != 0:
-                mods.append((ops, val["ext"]))
+                mods.append((ops, value["ext"]))
 
     return mods
 
@@ -130,8 +130,8 @@ def filter_reports(report, context):
     return bool(report.tool in
                 ("mark", "blank-line", "directive", "indention", "heading-level",
                  "heading-char-count", "starting", "flavor") and # "search-word",
-                report.out.start_lincol is not None and context is not None and
-                report.out.start_lincol[0] in context)
+                report.output.start_lincol is not None and context is not None and
+                report.output.start_lincol[0] in context)
 
 
 def update(path, rev=None):
@@ -273,7 +273,7 @@ def main():
         reports = get_reports_version(False, True,
                                       monostylestd.replace_windows_path_sep(args.patch))
         for report in reports:# custom root
-            report.out.filename = monostylestd.path_to_abs(report.out.filename)
+            report.output.filename = monostylestd.path_to_abs(report.output.filename)
     else:
         reports = get_reports_file(monostylestd.replace_windows_path_sep(args.filename))
 

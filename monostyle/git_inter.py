@@ -93,8 +93,8 @@ def difference(from_vsn, is_internal, filename_source, rev, cached):
 
             elif line.startswith('\\'):
                 msg = line[2:] # backslash + space
-                out = fg.copy().clear(False)
-                yield out, None, msg
+                fg_copy = fg.copy().clear(False)
+                yield fg_copy, None, msg
 
     if fg and len(fg.content) != len(context):
         yield fg, context, None

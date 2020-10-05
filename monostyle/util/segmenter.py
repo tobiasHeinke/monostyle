@@ -65,10 +65,10 @@ class Segmenter:
 
     def _join_abbr_data(self, data):
         abbrs = []
-        for val in data.values():
-            for ent in val:
-                if not re.match(self.abbr_re, ent):
-                    abbrs.append(ent)
+        for value in data.values():
+            for entry in value:
+                if not re.match(self.abbr_re, entry):
+                    abbrs.append(entry)
         return abbrs
 
 

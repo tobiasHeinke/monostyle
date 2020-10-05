@@ -40,10 +40,10 @@ def open_reports_files(reports, min_severity=None):
     for report in reports:
         if report.severity in levels:
             for filename, _ in files:
-                if filename == report.out.filename:
+                if filename == report.output.filename:
                     break
             else:
-                files.append((report.out.filename, report.out.start_lincol))
+                files.append((report.output.filename, report.output.start_lincol))
 
     open_files(files, True)
 
@@ -82,22 +82,22 @@ def main(argv=None):
 
     files_str = argv[0].split(',')
     files = []
-    for ent in files_str:
+    for entry in files_str:
         colno = "0"
         lineno = "0"
-        path = ent
+        path = entry
         # search only after file extension
-        dot_idx = ent.rfind('.')
-        last_idx = ent.rfind(':', dot_idx)
+        dot_idx = entry.rfind('.')
+        last_idx = entry.rfind(':', dot_idx)
         if last_idx != -1:
-            penul_idx = ent.rfind(':', dot_idx, last_idx)
+            penul_idx = entry.rfind(':', dot_idx, last_idx)
             if penul_idx != -1:
-                path = ent[:penul_idx]
-                lineno = ent[penul_idx+1:last_idx]
-                colno = ent[last_idx+1:]
+                path = entry[:penul_idx]
+                lineno = entry[penul_idx+1:last_idx]
+                colno = entry[last_idx+1:]
             else:
-                path = ent[:last_idx]
-                lineno = ent[last_idx+1:]
+                path = entry[:last_idx]
+                lineno = entry[last_idx+1:]
 
         files.append((path, (int(lineno) - 1, int(colno) - 1)))
 

@@ -45,8 +45,8 @@ def indefinite_article(document, reports, re_lib, data):
                     return False
         else:
             word_lower = word_str.lower()
-            for ent in data["syllable"]:
-                if word_lower.startswith(ent):
+            for entry in data["syllable"]:
+                if word_lower.startswith(entry):
                     return False
 
         return True
@@ -204,11 +204,11 @@ def search_pure(document, reports, re_lib, config):
         for pattern, msg in re_lib.values():
             part_str = str(part.code)
             for m in re.finditer(pattern, part_str):
-                out = part.code.slice_match_obj(m, 0, True)
-                line = getline_punc(document.body.code, out.start_pos,
-                                    out.span_len(True), 50, 0)
+                output = part.code.slice_match_obj(m, 0, True)
+                line = getline_punc(document.body.code, output.start_pos,
+                                    output.span_len(True), 50, 0)
                 reports.append(Report(config.get("severity"), config.get("toolname"),
-                                      out, msg, line))
+                                      output, msg, line))
 
     return reports
 
@@ -230,26 +230,26 @@ def metric(document, reports):
     def compare(node_cur, sen_full, counter, reports, sub_para=False, is_last=False):
         if node_cur.node_name == "sect":
             if counter["sect"] > conf["sect_len"]:
-                out = node_cur.code.copy().clear(True)
+                output = node_cur.code.copy().clear(True)
                 msg = Report.quantity(what="long heading",
                                       how="{0}/{1} letters".format(
                                           counter["sect"], conf["sect_len"]))
-                reports.append(Report('I', toolname, out, msg, node_cur.code))
+                reports.append(Report('I', toolname, output, msg, node_cur.code))
 
         else:
             if counter["sen"] > conf["sen_len"]:
-                out = sen_full.copy().clear(True)
+                output = sen_full.copy().clear(True)
                 msg = Report.quantity(what="long sentence",
                                       how="{0}/{1} words".format(
                                           counter["sen"], conf["sen_len"]))
-                reports.append(Report('I', toolname, out, msg, sen_full))
+                reports.append(Report('I', toolname, output, msg, sen_full))
             if not sub_para:
                 if counter["para"] > conf["para_long"]:
-                    out = node_cur.code.copy().clear(True)
+                    output = node_cur.code.copy().clear(True)
                     msg = Report.quantity(what="long paragraph",
                                           how="{0}/{1} sentences".format(
                                               counter["para"], conf["para_long"]))
-                    reports.append(Report('I', toolname, out, msg, node_cur.code))
+                    reports.append(Report('I', toolname, output, msg, node_cur.code))
                 check = False
                 if counter["para"] <= conf["para_short"] and counter["para"] != 0:
                     counter["para_short"] += 1
@@ -257,11 +257,11 @@ def metric(document, reports):
                     check = True
                 if (check or is_last):
                     if counter["para_short"] > 1:
-                        out = node_cur.code.copy().clear(True)
+                        output = node_cur.code.copy().clear(True)
                         msg = Report.quantity(what="multiple short paragraph",
                                               how="{0}/{1} paragraphs".format(
                                                   counter["para_short"], 1))
-                        reports.append(Report('I', toolname, out, msg, node_cur.code))
+                        reports.append(Report('I', toolname, output, msg, node_cur.code))
                         counter["para_short"] = 0
                     elif counter["para"] != 0:
                         counter["para_short"] = 0

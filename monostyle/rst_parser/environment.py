@@ -77,8 +77,8 @@ def resolve_subst(document, gobal_substdef):
     https://breakingcode.wordpress.com/2013/03/11/an-example-dependency-resolution-algorithm-in-python/
     """
 
-    graph = dict((key, {"content": val, "deps": set(), "global": True})
-                 for key, val in gobal_substdef.items())
+    graph = dict((key, {"content": value, "deps": set(), "global": True})
+                 for key, value in gobal_substdef.items())
 
     refs = {}
     for node in rst_walker.iter_node(document.body, ("substdef", "subst")):
@@ -103,25 +103,25 @@ def resolve_subst(document, gobal_substdef):
             }
 
     while graph:
-        ready = dict((key, val) for key, val in graph.items() if not val["deps"])
+        ready = dict((key, value) for key, value in graph.items() if not value["deps"])
         if not ready:
             print("{0}: Circular dependencies in substitutions".format(document.code.filename))
             break
 
-        for key, ent in ready.items():
+        for key, entry in ready.items():
             if key in refs.keys():
                 for node in refs[key]:
                     if not node.head:
-                        if ent["global"]:
-                            node.insert_part("head", ent["content"], node.body_start)
+                        if entry["global"]:
+                            node.insert_part("head", entry["content"], node.body_start)
                         else:
-                            node.insert_part("head", ent["content"].code, node.body_start)
-                            node.head.child_nodes = ent["content"].child_nodes
+                            node.insert_part("head", entry["content"].code, node.body_start)
+                            node.head.child_nodes = entry["content"].child_nodes
 
                 del refs[key]
 
-            for val in graph.values():
-                val["deps"].discard(key)
+            for value in graph.values():
+                value["deps"].discard(key)
             del graph[key]
 
     return document

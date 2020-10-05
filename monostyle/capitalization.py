@@ -40,7 +40,7 @@ def titlecase(word, is_first_word, is_last_word, name):
             return msg, fg_repl
         return None
 
-    path = POS.classify(word_str.lower())
+    path = POS.tag(word_str.lower())
     if (word_str[0].islower() !=
             (len(path) != 0 and
              (path[0] in ("preposition", "conjunction", "pronoun", "auxiliary") or
@@ -76,8 +76,8 @@ def admonition_title(document, reports):
                             word_low += 1
                 if word_all > 1 and word_low/ word_all >= threshold:
                     msg = "admonition caption titlecase: {:4.0%}".format(word_low/ word_all)
-                    out = node.head.code.copy().clear(True)
-                    reports.append(Report('W', toolname, out, msg, node.head.code))
+                    output = node.head.code.copy().clear(True)
+                    reports.append(Report('W', toolname, output, msg, node.head.code))
 
     return reports
 
@@ -151,8 +151,8 @@ def heading_cap(document, reports, re_lib):
             part_str = str(part.code)
             for pattern, msg in re_lib.values():
                 for m in re.finditer(pattern, part_str):
-                    out = part.code.slice_match_obj(m, 0, True)
-                    reports.append(Report('W', toolname, out, msg, node.name.code))
+                    output = part.code.slice_match_obj(m, 0, True)
+                    reports.append(Report('W', toolname, output, msg, node.name.code))
 
     return reports
 
@@ -191,7 +191,7 @@ def pos_case(document, reports):
                 if word_str[0].islower() or word_str in ("I", "Y"):
                     continue
 
-                path = POS.classify(word_str.lower())
+                path = POS.tag(word_str.lower())
                 if len(path) != 0 and path[0] not in ("noun", "abbreviation", "adjective", "verb"):
                     msg = Report.misformatted(what="uppercase " + path[0])
                     reports.append(Report('W', toolname, word, msg, sen))
@@ -255,9 +255,9 @@ def starting(document, reports, re_lib):
                     part.parent_node.parent_node.parent_node.node_name == "text"):
 
                 if re.match(start_re, str(part.code)):
-                    out = part.code.copy().clear(True)
-                    line = getline_punc(document.body.code, out.start_pos, 0, 50, 0)
-                    reports.append(Report('W', toolname, out, re_lib["lowerpara"][1], line))
+                    output = part.code.copy().clear(True)
+                    line = getline_punc(document.body.code, output.start_pos, 0, 50, 0)
+                    reports.append(Report('W', toolname, output, re_lib["lowerpara"][1], line))
 
                 was_empty = bool(len(part.code) == 0)
 
@@ -268,10 +268,10 @@ def starting(document, reports, re_lib):
                     continue
                 pattern = value[0]
                 for m in re.finditer(pattern, part_str):
-                    out = part.code.slice_match_obj(m, 0, True)
-                    line = getline_punc(document.body.code, out.start_pos,
-                                        out.span_len(True), 50, 0)
-                    reports.append(Report('W', toolname, out, value[1], line))
+                    output = part.code.slice_match_obj(m, 0, True)
+                    line = getline_punc(document.body.code, output.start_pos,
+                                        output.span_len(True), 50, 0)
+                    reports.append(Report('W', toolname, output, value[1], line))
 
     return reports
 
@@ -317,28 +317,28 @@ def property_noun_pre(_):
                     if first_letter not in lexicon.keys():
                         lexicon.setdefault(first_letter, [])
                     leaf = lexicon[first_letter]
-                    for ent in leaf:
-                        if ent[0] == word_lower:
+                    for entry in leaf:
+                        if entry[0] == word_lower:
                             break
                     else:
-                        ent = [word_lower, 0, 0]
-                        leaf.append(ent)
+                        entry = [word_lower, 0, 0]
+                        leaf.append(entry)
 
                     if word_str[0].isupper():
-                        ent[1] += 1
+                        entry[1] += 1
                     else:
-                        ent[2] += 1
+                        entry[2] += 1
 
                 first = True
             first = True
 
-    for key, val in lexicon.items():
+    for key, value in lexicon.items():
         new = []
-        for ent in val:
-            if ent[2] != 0:
-                ratio = ent[1] / (ent[1] + ent[2])
+        for entry in value:
+            if entry[2] != 0:
+                ratio = entry[1] / (entry[1] + entry[2])
                 if ratio >= threshold:
-                    new.append((ent[0], ratio))
+                    new.append((entry[0], ratio))
 
         lexicon[key] = new
 
@@ -360,9 +360,9 @@ def property_noun(document, reports, data, config):
             first_letter = word_str[0].lower()
             if first_letter not in data.keys():
                 continue
-            for ent in data[first_letter]:
-                if ent[0] == word_str:
-                    msg = "property noun: {:4.0%}".format(ent[1])
+            for entry in data[first_letter]:
+                if entry[0] == word_str:
+                    msg = "property noun: {:4.0%}".format(entry[1])
                     line = getline_punc(document.code, word.start_pos,
                                         word.span_len(True), 50, 30)
                     reports.append(Report('W', toolname, word, msg, line))

@@ -27,28 +27,28 @@ def check(document, reports, data):
     if filename.startswith('/'):
         filename = filename[1:]
 
-    for ent in data:
-        if ent.startswith('/'):
-            ent = ent[1:]
+    for entry in data:
+        if entry.startswith('/'):
+            entry = entry[1:]
 
         msg = ""
         # match all subfolders
-        if ent.endswith('/'):
-            if re.match(ent, filename):
-                msg = "changed in " + ent
+        if entry.endswith('/'):
+            if re.match(entry, filename):
+                msg = "changed in " + entry
         else:
             # match file
-            if re.match(r"\.[A-Za-z\d]*?$", ent):
-                if filename == ent:
+            if re.match(r"\.[A-Za-z\d]*?$", entry):
+                if filename == entry:
                     msg = "changed"
             else:
                 # match folder
-                if re.match(ent + r"\/[^/]+?$", filename):
-                    msg = "changed in " + ent
+                if re.match(entry + r"\/[^/]+?$", filename):
+                    msg = "changed in " + entry
 
         if msg != "" and filename not in check.reg:
-            out = document.body.code.copy().clear(True)
-            reports.append(Report('I', toolname, out, msg))
+            output = document.body.code.copy().clear(True)
+            reports.append(Report('I', toolname, output, msg))
             check.reg.append(filename)
 
     return reports

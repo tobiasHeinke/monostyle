@@ -30,42 +30,42 @@ def heading_level(document, reports):
             level_cur = levels[heading_char]
 
         if level_cur == -1:
-            out = node.name_end.code.copy().replace_fill(heading_char)
+            output = node.name_end.code.copy().replace_fill(heading_char)
             msg = Report.existing(what="unknown level")
-            reports.append(Report('W', toolname, out, msg))
+            reports.append(Report('W', toolname, output, msg))
 
         elif level_cur <= 2:
             if level_cur == 0:
 
                 if not document.code.filename.endswith("manual/index.rst"):
-                    out = node.name_end.code.copy().replace_fill(heading_char)
+                    output = node.name_end.code.copy().replace_fill(heading_char)
                     msg = Report.existing(what="main index title", where="not on main")
-                    reports.append(Report('W', toolname, out, msg))
+                    reports.append(Report('W', toolname, output, msg))
 
             elif level_cur == 1:
                 if not document.code.filename.endswith("index.rst"):
-                    out = node.name_end.code.copy().replace_fill(heading_char)
+                    output = node.name_end.code.copy().replace_fill(heading_char)
                     msg = Report.existing(what="index title", where="on page")
-                    reports.append(Report('W', toolname, out, msg))
+                    reports.append(Report('W', toolname, output, msg))
 
             elif document.code.filename.endswith("index.rst"):
-                out = node.name_end.code.copy().replace_fill(heading_char)
+                output = node.name_end.code.copy().replace_fill(heading_char)
                 msg = Report.existing(what="page title", where="on index")
-                reports.append(Report('W', toolname, out, msg))
+                reports.append(Report('W', toolname, output, msg))
 
             title_count += 1
             if title_count > 1:
                 msg = Report.over(what="title headings: " + str(title_count))
-                out = node.name_end.code.copy().replace_fill(heading_char)
-                reports.append(Report('W', toolname, out, msg))
+                output = node.name_end.code.copy().replace_fill(heading_char)
+                reports.append(Report('W', toolname, output, msg))
 
             level_prev = 2
         else:
             if title_count == 0:
                 if document.body.code.start_lincol[0] == 0:
-                    out = node.name_end.code.copy().replace_fill(heading_char)
+                    output = node.name_end.code.copy().replace_fill(heading_char)
                     msg = Report.missing(what="title heading")
-                    reports.append(Report('W', toolname, out, msg))
+                    reports.append(Report('W', toolname, output, msg))
                     # report only once
                     title_count = 1
 
@@ -74,8 +74,8 @@ def heading_level(document, reports):
                                           level_chars[level_prev], heading_char),
                                           with_what=level_chars[level_prev + 1])
 
-                out = node.name_end.code.copy().replace_fill(heading_char)
-                reports.append(Report('W', toolname, out, msg))
+                output = node.name_end.code.copy().replace_fill(heading_char)
+                reports.append(Report('W', toolname, output, msg))
 
             level_prev = level_cur
 
@@ -153,15 +153,15 @@ def indention(document, reports):
             if len(stack_prev) != 1:
                 with_what += " or " + str(stack_prev[-2]) + " chars"
             msg = Report.substitution(what="wrong indent", with_what=with_what)
-            out = Fragment(document.code.filename, "", -1,
+            output = Fragment(document.code.filename, "", -1,
                            start_lincol=(line.start_lincol[0], stack_cur[0]))
-            reports.append(Report('E', toolname, out, msg, line))
+            reports.append(Report('E', toolname, output, msg, line))
 
         if stack_cur[0] == 0:
             stack_prev.clear()
         else:
-            for index, ent in enumerate(stack_prev):
-                if ent >= stack_cur[0]:
+            for index, entry in enumerate(stack_prev):
+                if entry >= stack_cur[0]:
                     stack_prev = stack_prev[:index]
                     break
         stack_prev.extend(stack_cur)
@@ -200,8 +200,8 @@ def indention(document, reports):
                                               with_what="{:+} chars".format(
                                               refbox_col - node_field.name_end.code.end_lincol[1]))
 
-                    out = node_field.name_end.code.copy().clear(False)
-                    reports.append(Report('E', toolname, out, msg, line))
+                    output = node_field.name_end.code.copy().clear(False)
+                    reports.append(Report('E', toolname, output, msg, line))
 
     return reports
 
@@ -460,10 +460,10 @@ def search_code(document, reports, re_lib, config):
     text = str(document.code)
     for pattern, msg in re_lib.values():
         for m in re.finditer(pattern, text):
-            out = document.body.code.slice_match_obj(m, 0, True)
+            output = document.body.code.slice_match_obj(m, 0, True)
             line = getline_punc(document.body.code, m.start(), len(m.group(0)), 50, 0)
             reports.append(Report(config.get("severity"), config.get("toolname"),
-                                  out, msg, line))
+                                  output, msg, line))
 
     return reports
 
@@ -514,9 +514,9 @@ def search_directive(document, reports):
         else:
             # not at diff hunk can be cut off def list
             if node.code.start_lincol[0] != document.code.start_lincol[0]:
-                out = node.code.copy().clear(True)
+                output = node.code.copy().clear(True)
                 msg = "block quote"
-                reports.append(Report('W', toolname, out, msg))
+                reports.append(Report('W', toolname, output, msg))
 
     return reports
 

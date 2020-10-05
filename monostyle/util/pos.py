@@ -3,7 +3,7 @@
 util.pos
 ~~~~~~~~
 
-Data-driven part of speech classification.
+Data-driven part of speech tagging.
 """
 
 import re
@@ -11,7 +11,7 @@ from monostyle.util.monostylestd import get_data_file, get_branch
 from monostyle.util.char_catalog import CharCatalog
 
 class PartofSpeech:
-    """Part of speech classification."""
+    """Part of speech tagging."""
 
     def __init__(self):
         CC = CharCatalog()
@@ -55,7 +55,7 @@ class PartofSpeech:
         return get_branch(self.data, path, index)
 
 
-    def classify(self, word):
+    def tag(self, word):
         def search(obj, word):
             if not isinstance(obj, str):
                 path = []
@@ -73,9 +73,9 @@ class PartofSpeech:
                                  self.prev[0] != "auxiliary")):
                             continue
 
-                        for ent in value:
-                            if ((re.match(r"\-", ent) and re.search(ent[1:] + r"$", word)) or
-                                    word == ent):
+                        for entry in value:
+                            if ((re.match(r"\-", entry) and re.search(entry[1:] + r"$", word)) or
+                                    word == entry):
                                 path.append(key)
                                 return path
 

@@ -152,10 +152,10 @@ def search_free(document, reports, comlist):
         part_str = str(part.code)
         for pattern, msg in comlist:
             for m in re.finditer(pattern, part_str):
-                out = part.code.slice_match_obj(m, 0, True)
-                line = getline_punc(document.body.code, out.start_pos,
-                                    out.span_len(True), 50, 30)
-                reports.append(Report('I', toolname, out, msg, line))
+                output = part.code.slice_match_obj(m, 0, True)
+                line = getline_punc(document.body.code, output.start_pos,
+                                    output.span_len(True), 50, 30)
+                reports.append(Report('I', toolname, output, msg, line))
 
     return reports
 

@@ -98,11 +98,11 @@ class LinkedList:
 
 
     def __str__(self):
-        out = []
+        result = []
         for node in self:
-            out.append(str(node))
+            result.append(str(node))
 
-        return str(out)
+        return str(result)
 
 
     def __repr__(self):

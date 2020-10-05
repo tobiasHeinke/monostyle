@@ -210,7 +210,7 @@ class Fragment():
             if not right_inner:
                 cuts.append((at_end_rel, end_rel, None, at_end))
 
-        out = []
+        result = []
         for start, end, pos_abs, lincol_abs in cuts:
             if start <= start_rel and end <= start_rel:
                 fg = self.copy().clear(True) if output_zero else None
@@ -242,9 +242,9 @@ class Fragment():
                 fg = Fragment(self.filename, cont, pos_abs, start_lincol=lincol_abs)
                 start_pos_abs = fg.end_pos
 
-            out.append(fg)
+            result.append(fg)
 
-        return out[0] if len(out) == 1 else tuple(out)
+        return result[0] if len(result) == 1 else tuple(result)
 
 
     def splitlines(self, buffered=False):
@@ -628,16 +628,16 @@ class FragmentBundle():
         if len(self.bundle) == 1:
             return self.bundle[0]
 
-        out = None
+        result = None
         for fg in self:
-            if not out:
-                out = fg
+            if not result:
+                result = fg
                 continue
-            if not out.is_aligned(fg, pos_lincol):
+            if not result.is_aligned(fg, pos_lincol):
                 return None
-            out.combine(fg, check_align=False)
+            result.combine(fg, check_align=False)
 
-        return out
+        return result
 
 
     def join(self, filler=None):
@@ -762,7 +762,7 @@ class FragmentBundle():
                              (max(0, len(self.bundle) - 1), True),
                              self.bundle[-1].get_end(pos_lincol)))
 
-        out = []
+        result = []
         for index_start, start, index_end, end in cuts:
             if start <= self.get_start(pos_lincol) and end <= self.get_start(pos_lincol):
                 bd = self.bundle[0].clear(True) if output_zero else None
@@ -800,9 +800,9 @@ class FragmentBundle():
                         if fg_last:
                             bd.bundle.append(fg_last)
 
-            out.append(bd)
+            result.append(bd)
 
-        return out[0] if len(out) == 1 else tuple(out)
+        return result[0] if len(result) == 1 else tuple(result)
 
 
     def splitlines(self, buffered=False):

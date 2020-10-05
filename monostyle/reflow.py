@@ -116,7 +116,7 @@ def fix(root_rst, reports):
             is_first_report = True
             reports_pro = []
             for report in unlocated:
-                if node.body.code.is_in_span(report.out.start_lincol):
+                if node.body.code.is_in_span(report.output.start_lincol):
                     reports_pro.append(report)
                     if is_first_report:
                         changes_para = reflow(node)
@@ -392,7 +392,7 @@ def pos_weight(word):
             "doc": [0, -3]
         }
     }
-    if path := POS.classify(word):
+    if path := POS.tag(word):
         weight = weights.copy()
         for seg in path:
             if seg in weight:

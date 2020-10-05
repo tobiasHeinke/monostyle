@@ -149,10 +149,10 @@ def number(document, reports, re_lib):
                          rst_walker.is_of(part, "dir", "math"))):
                     continue
 
-                out = part.code.slice_match_obj(m, 0, True)
-                line = getline_punc(document.body.code, out.start_pos,
-                                    out.span_len(True), 50, 0)
-                reports.append(Report('W', toolname, out, value[1], line))
+                output = part.code.slice_match_obj(m, 0, True)
+                line = getline_punc(document.body.code, output.start_pos,
+                                    output.span_len(True), 50, 0)
+                reports.append(Report('W', toolname, output, value[1], line))
 
     return reports
 
@@ -211,18 +211,19 @@ def pairs(document, reports, re_lib, config):
             line_str = str(line)
             for pair_m in re.finditer(pair_re, line_str):
                 pair_char = pair_m.group(0)
-                for index, ent in enumerate(reversed(stack)):
-                    if (ent[0] == pair_char or
-                            (pair_char in pairs_map and ent[0] == pairs_map[pair_char])):
+                for index, entry in enumerate(reversed(stack)):
+                    if (entry[0] == pair_char or
+                            (pair_char in pairs_map and entry[0] == pairs_map[pair_char])):
 
                         if (max_line_span is not None and
-                                line.start_lincol[0] - ent[1][0] > max_line_span):
+                                line.start_lincol[0] - entry[1][0] > max_line_span):
                             lincol_abs = line.loc_to_abs((0, pair_m.start(0)))
                             msg = "long span"
                             msg += " - " + str(lincol_abs[0] + 1) + ","
                             msg += str(lincol_abs[1] + 1)
-                            out = Fragment(document.code.filename, ent[0], -1, start_lincol=ent[1])
-                            reports.append(Report('W', toolname, out, msg))
+                            output = Fragment(document.code.filename, entry[0], -1,
+                                              start_lincol=entry[1])
+                            reports.append(Report('W', toolname, output, msg))
 
                         # invert index
                         index = len(stack) - 1 - index
@@ -233,14 +234,14 @@ def pairs(document, reports, re_lib, config):
                     stack.append((pair_char, line.loc_to_abs((0, pair_m.start(0)))))
 
             for markup_m in re.finditer(markup_re, line_str):
-                out = line.slice_match_obj(markup_m, 0, True)
-                reports.append(Report('E', toolname, out, "leaked markup char"))
+                output = line.slice_match_obj(markup_m, 0, True)
+                reports.append(Report('E', toolname, output, "leaked markup char"))
 
     if len(stack) != 0:
         msg = "unclosed pairs"
-        for ent in stack:
-            out = Fragment(document.code.filename, ent[0], -1, start_lincol=ent[1])
-            reports.append(Report('W', toolname, out, msg))
+        for entry in stack:
+            output = Fragment(document.code.filename, entry[0], -1, start_lincol=entry[1])
+            reports.append(Report('W', toolname, output, msg))
 
     if max_line_span is not None:
         for node in rst_walker.iter_node(document.body,
@@ -391,10 +392,10 @@ def mark(document, reports, re_lib):
                     continue
                 pattern = value[0]
                 for m in re.finditer(pattern, part_str):
-                    out = part.code.slice_match_obj(m, 0, True)
-                    line = getline_punc(document.body.code, out.start_pos,
-                                        out.span_len(True), 50, 0)
-                    reports.append(Report('W', toolname, out, value[1], line))
+                    output = part.code.slice_match_obj(m, 0, True)
+                    line = getline_punc(document.body.code, output.start_pos,
+                                        output.span_len(True), 50, 0)
+                    reports.append(Report('W', toolname, output, value[1], line))
 
 
     instr_pos = {
@@ -434,24 +435,24 @@ def mark(document, reports, re_lib):
                                               "Tool", "Editor", "Header", "Type")) and
                             (not rst_walker.is_of(part.next_leaf(), "dir", "default") or
                              part_str.endswith(" "))):
-                        out = part.code.copy().clear(False)
+                        output = part.code.copy().clear(False)
                         msg = re_lib["nopuncend"][1].format("paragraph")
                         line = getline_punc(document.body.code, part.code.end_pos, 0, 50, 0)
-                        reports.append(Report('W', toolname, out, msg, line))
+                        reports.append(Report('W', toolname, output, msg, line))
 
                 else:
                     if comma_m := re.search(comma_re, part_str):
-                        out = part.code.slice_match_obj(comma_m, 0, True)
+                        output = part.code.slice_match_obj(comma_m, 0, True)
                         msg = re_lib["commaend"][1].format(part.parent_node.node_name +
                                                            " " + part.node_name)
-                        reports.append(Report('W', toolname, out, msg))
+                        reports.append(Report('W', toolname, output, msg))
 
         elif rst_walker.is_of(part, ("role", "hyperlink"), "*", "head"):
             if re.search(noend_re, str(part.code)):
-                out = part.code.copy().clear(False)
+                output = part.code.copy().clear(False)
                 msg = re_lib["nopuncend"][1].format(part.parent_node.node_name + " " +
                                                     part.node_name)
-                reports.append(Report('W', toolname, out, msg))
+                reports.append(Report('W', toolname, output, msg))
 
     return reports
 
@@ -501,11 +502,11 @@ def whitespace(document, reports, re_lib):
             continue
         pattern = value[0]
         for m in re.finditer(pattern, text):
-            out = document.body.code.slice_match_obj(m, 0, True)
+            output = document.body.code.slice_match_obj(m, 0, True)
             line = getline_punc(document.body.code, m.start(), len(m.group(0)), 50, 0)
             fg_repl = document.body.code.slice_match_obj(m, 1, True)
             fg_repl.replace_fill(value[2])
-            reports.append(Report('W', toolname, out, value[1], line, fg_repl))
+            reports.append(Report('W', toolname, output, value[1], line, fg_repl))
 
     instr_pos = {
         "field": {"*": ["name", "body"]},
@@ -524,19 +525,20 @@ def whitespace(document, reports, re_lib):
             part_str = str(part.code)
             if part.code.start_lincol[1] != 0:
                 if multi_start_m := re.match(multi_start_re, part_str):
-                    out = part.code.slice_match_obj(multi_start_m, 1, True)
-                    line = getline_punc(document.body.code, out.start_pos,
-                                        out.span_len(True), 50, 0)
-                    fg_repl = out.copy().replace_fill(value[2])
-                    reports.append(Report('W', toolname, out, re_lib["multispacestart"][1],
+                    output = part.code.slice_match_obj(multi_start_m, 1, True)
+                    line = getline_punc(document.body.code, output.start_pos,
+                                        output.span_len(True), 50, 0)
+                    fg_repl = output.copy().replace_fill(value[2])
+                    reports.append(Report('W', toolname, output, re_lib["multispacestart"][1],
                                           line, fg_repl))
 
             for multi_m in re.finditer(multi_re, part_str):
-                out = part.code.slice_match_obj(multi_m, 1, True)
-                line = getline_punc(document.body.code, out.start_pos,
-                                    out.span_len(True), 50, 0)
-                fg_repl = out.copy().replace_fill(value[2])
-                reports.append(Report('W', toolname, out, re_lib["multispace"][1], line, fg_repl))
+                output = part.code.slice_match_obj(multi_m, 1, True)
+                line = getline_punc(document.body.code, output.start_pos,
+                                    output.span_len(True), 50, 0)
+                fg_repl = output.copy().replace_fill(value[2])
+                reports.append(Report('W', toolname, output, re_lib["multispace"][1],
+                                      line, fg_repl))
 
     return reports
 

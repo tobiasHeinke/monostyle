@@ -78,25 +78,26 @@ class Editor:
             return text_src
 
         self._remove_doubles()
-        self._changes.sort(key=lambda ent: (ent.get_start(pos_lc), ent.get_end(pos_lc)))
+        self._changes.sort(key=lambda change: (change.get_start(pos_lc), change.get_end(pos_lc)))
         conflicted = []
         if not self._check_integrity(pos_lc):
             if not use_conflict_handling:
                 return None
 
             conflicted = self.handle_conflicts(pos_lc)
-            self._changes.sort(key=lambda ent: (ent.get_start(pos_lc), ent.get_end(pos_lc)))
+            self._changes.sort(key=lambda change: (change.get_start(pos_lc),
+                                                   change.get_end(pos_lc)))
 
         text_dst = text_src.copy().clear(True)
         after = text_src
-        for ent in self._changes:
-            before, _, after = after.slice(ent.get_start(pos_lc), ent.get_end(pos_lc),
+        for change in self._changes:
+            before, _, after = after.slice(change.get_start(pos_lc), change.get_end(pos_lc),
                                            output_zero=True)
 
             if before:
                 text_dst.combine(before, False)
 
-            text_dst.combine(ent, False)
+            text_dst.combine(change, False)
 
         if after:
             text_dst.combine(after, False)
@@ -117,12 +118,12 @@ class Editor:
     def _remove_doubles(self):
         """Remove duplicated entries."""
         new_changes = []
-        for ent in self._changes:
-            for ent_new in new_changes:
-                if ent == ent_new:
+        for change in self._changes:
+            for change_new in new_changes:
+                if change == change_new:
                     break
             else:
-                new_changes.append(ent)
+                new_changes.append(change)
 
         self._changes = new_changes
 
@@ -130,13 +131,14 @@ class Editor:
     def _check_integrity(self, pos_lc):
         """Check for overlaps of the start to end span."""
         prev = None
-        for ent in self._changes:
+        for change in self._changes:
             if prev:
-                if ent.is_in_span(prev.get_start(pos_lc)) or ent.is_in_span(prev.get_end(pos_lc)):
+                if (change.is_in_span(prev.get_start(pos_lc)) or
+                        change.is_in_span(prev.get_end(pos_lc))):
                     self._status = False
                     break
 
-            prev = ent
+            prev = change
 
         return self._status
 
@@ -149,7 +151,8 @@ class Editor:
         https://www.techiedelight.com/activity-selection-problem-using-dynamic-programming/
         """
         groups = [[] for _ in range(0, len(self._changes))]
-        for index, pair in enumerate(sorted(self._changes, key=lambda ent: ent.get_end(pos_lc))):
+        for index, pair in enumerate(sorted(self._changes,
+                                            key=lambda change: change.get_end(pos_lc))):
             for index_sub, pair_sub in enumerate(self._changes[:index]):
                 if (pair_sub.get_end(pos_lc) < pair.get_start(pos_lc) or
                         (pair_sub.get_end(pos_lc) == pair.get_start(pos_lc) and
@@ -204,8 +207,8 @@ class Editor:
 
 
     def is_in_fg(self, loc):
-        for ent in self._changes:
-            if ent.is_in_span(loc):
+        for change in self._changes:
+            if change.is_in_span(loc):
                 return True
 
         return False
@@ -371,9 +374,9 @@ class EditorSession:
         if virtual:
             result = []
         for editor in self._editor_stack:
-            out = editor.apply(virtual=virtual, pos_lc=pos_lc)
+            output = editor.apply(virtual=virtual, pos_lc=pos_lc)
             if virtual:
-                result.append(out)
+                result.append(output)
 
             if not editor:
                 print("Editor error: conflict in", editor.fg.filename)

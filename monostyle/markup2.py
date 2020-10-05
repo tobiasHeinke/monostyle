@@ -30,16 +30,16 @@ def page_name(document, reports):
 
     page = re.search(r"/([\w\-_]+?)(?:/index)?\.rst$", document.code.filename).group(1)
     page_split = []
-    for ent in re.split(r"[_-]", page):
-        page_split.append(simple_stem(ent))
+    for word in re.split(r"[_-]", page):
+        page_split.append(simple_stem(word))
 
     for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
         head = str(node.name.code).lower().strip()
         head = re.sub(r"\b(\w)\-", r"\1", head)
         head = re.sub(r"[&/,-]", " ", head)
         head_split = []
-        for ent in re.split(r"\s+", head):
-            head_split.append(simple_stem(ent))
+        for word in re.split(r"\s+", head):
+            head_split.append(simple_stem(word))
 
         acr = ""
         match_count = 0

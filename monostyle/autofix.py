@@ -33,7 +33,7 @@ def run(reports, rst_parser, fns_conflicted=None):
 
     group_file = {}
     for report in group_fix:
-        filename = report.out.filename
+        filename = report.output.filename
         if filename not in group_file.keys():
             group_file.setdefault(filename, {})
 
@@ -94,14 +94,14 @@ def apply(filename, tools, reports_unfixed, rst_parser):
 
     # filter out space at eol removed already by reflow
     new_changes = []
-    for ent in changes_file:
-        for ent_new in new_changes:
-            if (ent.start_lincol == ent_new.start_lincol and
-                    str(ent_new) == '\n' * len(ent_new) and
-                    ent.isspace()):
+    for entry in changes_file:
+        for entry_new in new_changes:
+            if (entry.start_lincol == entry_new.start_lincol and
+                    str(entry_new) == '\n' * len(entry_new) and
+                    entry.isspace()):
                 break
         else:
-            new_changes.append(ent)
+            new_changes.append(entry)
 
     changes_file = new_changes
 

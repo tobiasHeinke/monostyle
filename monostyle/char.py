@@ -35,16 +35,16 @@ def char_search(document, reports):
         char_re = re.compile(r"[" + pattern + r"]")
         explicits += pattern
         for char_m in re.finditer(char_re, text):
-            out = document.code.slice_match_obj(char_m, 0, True)
-            fg_repl = out.copy().replace_fill(repl) if repl else None
-            reports.append(Report('E', toolname, out, msg, fix=fg_repl))
+            output = document.code.slice_match_obj(char_m, 0, True)
+            fg_repl = output.copy().replace_fill(repl) if repl else None
+            reports.append(Report('E', toolname, output, msg, fix=fg_repl))
 
     parttern_str = r"[^\n -~À-ʨ" + ''.join(('©', '®', '°', '±', '€', '™', "\t")) + explicits +  r"]"
     char_re = re.compile(parttern_str)
     for char_m in re.finditer(char_re, text):
         msg = "uncommon char: {0}, 0x{0:04x}".format(ord(char_m.group(0)))
-        out = document.code.slice_match_obj(char_m, 0, True)
-        reports.append(Report('E', toolname, out, msg))
+        output = document.code.slice_match_obj(char_m, 0, True)
+        reports.append(Report('E', toolname, output, msg))
 
     return reports
 
@@ -61,21 +61,21 @@ def file_encoding(reports):
                 text = f.read()
 
             except UnicodeEncodeError as err:
-                out = Fragment(filename, "")
+                output = Fragment(filename, "")
                 msg = "encode error: " + str(err)
-                reports.append(Report('E', toolname, out, msg))
+                reports.append(Report('E', toolname, output, msg))
 
             except:
-                out = Fragment(filename, "")
+                output = Fragment(filename, "")
                 msg = "unknown encode error"
-                reports.append(Report('E', toolname, out, msg))
+                reports.append(Report('E', toolname, output, msg))
 
             else:
                 document_fg = Fragment(filename, text)
                 for repchar_m in re.finditer(repchar_re, text):
-                    out = document_fg.slice_match_obj(repchar_m, 0, True)
+                    output = document_fg.slice_match_obj(repchar_m, 0, True)
                     msg = "unsupported character"
-                    reports.append(Report('E', toolname, out, msg))
+                    reports.append(Report('E', toolname, output, msg))
 
     return reports
 

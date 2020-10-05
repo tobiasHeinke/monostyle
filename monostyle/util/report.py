@@ -81,18 +81,18 @@ class Report():
 
     severity -- severity level of the report.
     tool -- name of the tool which issued the report.
-    out -- extracted content Fragment defines the file path and name and position
+    output -- extracted content Fragment defines the file path and name and position
     msg -- message.
     line -- extracted line Fragment.
     fix -- autofix options.
     """
 
-    __slots__ = ('severity', 'tool', 'out', 'msg', 'line', 'fix')
+    __slots__ = ('severity', 'tool', 'output', 'msg', 'line', 'fix')
 
-    def __init__(self, severity, tool, out, msg, line=None, fix=None):
+    def __init__(self, severity, tool, output, msg, line=None, fix=None):
         self.severity = severity
         self.tool = tool
-        self.out = out
+        self.output = output
         self.msg = msg
         self.line = line
         self.fix = fix
@@ -181,12 +181,12 @@ class Report():
         if options is None:
             options = {}
         options = {
-            "format_str": "{filename}{loc} {severity} {out} {msg}{line}",
+            "format_str": "{filename}{location} {severity} {output} {msg}{line}",
             "show_filename": True,
             "absolute_path": False,
             "show_end": False,
 
-            "severity_display": "letter",
+            "severity_display": "long",
 
             "out_sep_start": "'",
             "out_sep_end": "'",
@@ -199,57 +199,57 @@ class Report():
             "line_ellipsis": "…",
 
             "show_autofix": False,
-            "autofix_mark": "@",
+            "autofix_mark": "/autofixed/",
             **options
         }
-        output = {}
-        for slot in self.__slots__:
-            output[slot] = ""
-        output["filename"] = ""
-        output["loc"] = ""
+        entries = dict.fromkeys(self.__slots__, "")
+        entries["filename"] = ""
+        entries["location"] = ""
 
         if not options.get("file_title", False) and options["show_filename"]:
             if options["absolute_path"]:
-                output["filename"] = self.out.filename + ":"
+                entries["filename"] = self.output.filename + ":"
             else:
-                output["filename"] = path_to_rel(self.out.filename) + ":"
+                entries["filename"] = path_to_rel(self.output.filename) + ":"
 
         sev_map = self.severity_maps.get(options["severity_display"], self.severity_maps["letter"])
-        output["severity"] = sev_map.get(self.severity, sev_map["U"])
+        entries["severity"] = sev_map.get(self.severity, sev_map["U"])
 
-        output["tool"] = self.tool
+        entries["tool"] = self.tool
 
-        if self.out.start_lincol and self.out.start_lincol[0] != -1:
-            output["loc"] = str(self.out.start_lincol[0] + 1) + "," + \
-                            str(self.out.start_lincol[1] + 1)
-
-            if options["show_end"]:
-                output["loc"] += " - {0},{1}".format(self.out.end_lincol[0] + 1,
-                                                     self.out.end_lincol[1] + 1)
-
-        elif self.out.start_pos != -1:
-            output["loc"] = str(self.out.start_pos)
+        if self.output.start_lincol and self.output.start_lincol[0] != -1:
+            entries["location"] = str(self.output.start_lincol[0] + 1) + "," + \
+                            str(self.output.start_lincol[1] + 1)
 
             if options["show_end"]:
-                output["loc"] += " - " + str(self.out.end_pos)
+                entries["location"] += " - {0},{1}".format(self.output.end_lincol[0] + 1,
+                                                     self.output.end_lincol[1] + 1)
 
-        if len(self.out) != 0:
-            output["out"] = str(self.out).replace("\n", "")
-            if len(output["out"]) > options["out_max_len"]:
-                output["out"] = output["out"][:options["out_max_len"]] + options["out_ellipsis"]
-            output["out"] = options["out_sep_start"] + output["out"] + options["out_sep_end"]
+        elif self.output.start_pos != -1:
+            entries["location"] = str(self.output.start_pos)
 
-        output["msg"] = self.msg
+            if options["show_end"]:
+                entries["location"] += " - " + str(self.output.end_pos)
+
+        if len(self.output) != 0:
+            entries["output"] = str(self.output).replace("\n", '¶')
+            if len(entries["output"]) > options["out_max_len"]:
+                entries["output"] = entries["output"][:options["out_max_len"]]
+                entries["output"] += options["out_ellipsis"]
+            entries["output"] = options["out_sep_start"] + entries["output"] + options["out_sep_end"]
+
+        entries["msg"] = self.msg
 
         if options["show_line"] and self.line:
-            output["line"] = str(self.line).replace('\n', '¶')
-            if len(output["line"]) > options["line_max_len"]:
-                output["line"] = output["line"][:options["line_max_len"]] + options["line_ellipsis"]
-            output["line"] = "\n" + options["line_indent"] + output["line"]
+            entries["line"] = str(self.line).replace('\n', '¶')
+            if len(entries["line"]) > options["line_max_len"]:
+                entries["line"] = entries["line"][:options["line_max_len"]]
+                entries["line"] += options["line_ellipsis"]
+            entries["line"] = "\n" + options["line_indent"] + entries["line"]
 
         if options["show_autofix"] and self.fix is not None:
-            output["fix"] = options["autofix_mark"]
-        return options["format_str"].format(**output)
+            entries["fix"] = options["autofix_mark"]
+        return options["format_str"].format(**entries)
 
 
     def __repr__(self):
@@ -257,7 +257,7 @@ class Report():
 
 
     def copy(self):
-        return type(self)(self.severity, self.tool, self.out.copy(), self.msg,
+        return type(self)(self.severity, self.tool, self.output.copy(), self.msg,
                           self.line.copy(), self.fix.copy())
 
 
@@ -296,13 +296,13 @@ def print_report(report, options=None, filename_prev=None):
     if report is None:
         return
     if options and options["file_title"]:
-        if filename_prev is None or filename_prev != report.out.filename:
-            print_title(report.out.filename if options["absolute_path"]
-                        else path_to_rel(report.out.filename),
+        if filename_prev is None or filename_prev != report.output.filename:
+            print_title(report.output.filename if options["absolute_path"]
+                        else path_to_rel(report.output.filename),
                         underline=options["file_title_underline"])
 
     print_over(report.repr(options))
-    return report.out.filename
+    return report.output.filename
 
 
 def reports_summary(reports, options):
@@ -316,11 +316,11 @@ def reports_summary(reports, options):
         summary["total"] += 1
 
     summary_text = []
-    for key, val in summary.items():
-        if key not in {'L', "total"} and (key != 'U' or val != 0):
+    for key, value in summary.items():
+        if key not in {'L', "total"} and (key != 'U' or value != 0):
             sev_map = Report.severity_maps.get(options["severity_display"],
                                                Report.severity_maps["letter"])
-            summary_text.append(sev_map.get(key, sev_map["U"]) + ": " + str(val))
+            summary_text.append(sev_map.get(key, sev_map["U"]) + ": " + str(value))
 
     summary_text.append("total" + ": " + str(summary["total"]))
 

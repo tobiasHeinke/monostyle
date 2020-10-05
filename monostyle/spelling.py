@@ -35,9 +35,9 @@ def search(document, reports, re_lib, data, config):
         word_cont = norm_punc(word_cont, re_lib)
         if not POS.isacr(word) and not POS.isabbr(word):
             word_cont = lower_first(word_cont)
-        for ent in text_words:
-            if word_cont == ent[1]:
-                ent[2] += 1
+        for entry in text_words:
+            if word_cont == entry[1]:
+                entry[2] += 1
                 break
         else:
             text_words.append([word, word_cont, 0])
@@ -99,10 +99,10 @@ def find_similar(word_str, word_cont, lexicon, count, sim_threshold):
                 else:
                     min_value = None
                     min_index = 0
-                    for index, ent in enumerate(similars):
-                        if min_value is None or ent[1] <= min_value:
+                    for index, entry in enumerate(similars):
+                        if min_value is None or entry[1] <= min_value:
                             min_index = index
-                            min_value = ent[1]
+                            min_value = entry[1]
 
                     similars[min_index] = (stored_word, sim_slow, sim_quick, sim_rough)
 
@@ -110,8 +110,8 @@ def find_similar(word_str, word_cont, lexicon, count, sim_threshold):
                 min_rough = min(s[3] for s in similars)
 
     similars.sort(key=lambda key: key[1], reverse=True)
-    return tuple(lower_first_reverse(ent[0], word_str) for ent in similars
-                 if ent[1] >= sim_threshold)
+    return tuple(lower_first_reverse(entry[0], word_str) for entry in similars
+                 if entry[1] >= sim_threshold)
 
 
 def build_lexicon(re_lib):
@@ -124,8 +124,8 @@ def build_lexicon(re_lib):
 
     # Flatten tree to list.
     lexicon_flat = []
-    for val in lexicon.values():
-        lexicon_flat.extend(val)
+    for value in lexicon.values():
+        lexicon_flat.extend(value)
 
     # Sort list by highest occurrence.
     lexicon_flat.sort(key=lambda word: word[1], reverse=True)
@@ -144,9 +144,9 @@ def populate_lexicon(document, lexicon, re_lib):
         if first_char not in lexicon.keys():
             lexicon.setdefault(first_char, [])
         leaf = lexicon[first_char]
-        for ent in leaf:
-            if ent[0] == word_cont:
-                ent[1] += 1
+        for entry in leaf:
+            if entry[0] == word_cont:
+                entry[1] += 1
                 break
         else:
             new_word = [word_cont, 0]
@@ -158,11 +158,11 @@ def populate_lexicon(document, lexicon, re_lib):
 def split_lexicon(lexicon_flat):
     """Split lexicon by first char."""
     lexicon = dict()
-    for ent in lexicon_flat:
-        first_char = ent[0][0]
+    for entry in lexicon_flat:
+        first_char = entry[0][0]
         if first_char not in lexicon.keys():
             lexicon.setdefault(first_char, [])
-        lexicon[first_char].append(ent)
+        lexicon[first_char].append(entry)
 
     return lexicon
 
@@ -267,8 +267,8 @@ def write_csv_lexicon(lexicon):
     try:
         with open(lex_filename, 'w', newline='', encoding='utf-8') as csvfile:
             csv_writer = csv.writer(csvfile)
-            for ent in lexicon:
-                csv_writer.writerow(ent)
+            for entry in lexicon:
+                csv_writer.writerow(entry)
                 count += 1
 
             print("wrote lexicon file with {0} words".format(count))
@@ -279,8 +279,8 @@ def write_csv_lexicon(lexicon):
 
 def difference(lex_stored, lex_new):
     """Show a differential between the current texts and the stored lexicon."""
-    lex_stored = set(ent[0] for ent in lex_stored)
-    lex_new = set(ent[0] for ent in lex_new)
+    lex_stored = set(entry[0] for entry in lex_stored)
+    lex_new = set(entry[0] for entry in lex_new)
 
     monostylestd.print_title("Added", True)
     for word in sorted(lex_new.difference(lex_stored)):
@@ -302,8 +302,8 @@ def compile_lib():
 
 def search_pre(_):
     def add_charset(lexicon):
-        for ent in lexicon:
-            ent.append(set(ord(c) for c in ent[0].lower()))
+        for entry in lexicon:
+            entry.append(set(ord(c) for c in entry[0].lower()))
         return lexicon
 
     config_dir = monostylestd.path_to_abs("monostyle")

@@ -170,20 +170,20 @@ def override_typecheck(obj, ref, op_name, key_name=None):
         for key in invalid_keys:
             del obj[key]
     elif hasattr(obj, "__iter__") and type(obj) != str:
-        typs = list(set(type(ent) for ent in ref))
+        typs = list(set(type(entry) for entry in ref))
         new = []
-        for ent in obj:
-            if len(typs) != 0 and type(ent) not in typs:
-                print_error(ent, typs, op_name, key_name)
+        for entry in obj:
+            if len(typs) != 0 and type(entry) not in typs:
+                print_error(entry, typs, op_name, key_name)
                 continue
             if len(typs) == 1:
                 try:
-                    ent = typs[0](ent)
+                    entry = typs[0](entry)
                 except (TypeError, ValueError):
-                    print_error(ent, (typs[0],), op_name, key_name)
+                    print_error(entry, (typs[0],), op_name, key_name)
                     continue
 
-            new.append(ent)
+            new.append(entry)
 
         try:
             obj = type(ref)(new)
