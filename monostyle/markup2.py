@@ -79,8 +79,8 @@ def page_name(document, reports):
             elif sim < 0.33:
                 severity = 'W'
 
-            msg = "page title - filename mismatch {:4.0%}".format(sim)
-            reports.append(Report(severity, toolname, node.name.code, msg,
+            message = "page title - filename mismatch {:4.0%}".format(sim)
+            reports.append(Report(severity, toolname, node.name.code, message,
                                   Fragment(document.code.filename, page)))
 
         # break to only process only the first heading
@@ -118,8 +118,8 @@ def unused_targets(reports, data):
 
     for node in data["targets"]:
         if str(node.id.code).strip() not in data["links"]:
-            msg = "unused target"
-            reports.append(Report('W', toolname, node.id.code, msg))
+            message = "unused target"
+            reports.append(Report('W', toolname, node.id.code, message))
 
     return reports
 
@@ -164,8 +164,8 @@ def local_targets(reports, data):
         # false positives: non heading targets, title not heading
         if is_same_file and not is_multi:
             if not id_str.startswith("fig-") and not id_str.startswith("tab-"):
-                msg = "local target"
-                reports.append(Report('I', toolname, node.id.code, msg))
+                message = "local target"
+                reports.append(Report('I', toolname, node.id.code, message))
 
     return reports
 
@@ -188,8 +188,8 @@ def link_titles(document, reports, data):
                     sim = SequenceMatcher(lambda x: x == " ", str(title_head).lower(),
                                           str(node.head.code).lower()).ratio()
                     if sim < 0.9:
-                        msg = "link title mismatches heading title: {:4.0%}".format(sim)
-                        reports.append(Report('W', toolname, node.head.code, msg, title_head))
+                        message = "link title mismatches heading title: {:4.0%}".format(sim)
+                        reports.append(Report('W', toolname, node.head.code, message, title_head))
 
     return reports
 
@@ -234,14 +234,14 @@ def glossary(document, reports, data):
                 for line in def_node.head.code.splitlines():
                     line_strip = str(line).strip()
                     if line_strip in data["terms_glossary"]:
-                        msg = "term used only within glossary"
-                        reports.append(Report('I', toolname, def_node.head.code, msg))
+                        message = "term used only within glossary"
+                        reports.append(Report('I', toolname, def_node.head.code, message))
                         break
                     if line_strip in data["terms"]:
                         break
                 else:
-                    msg = "unused term"
-                    reports.append(Report('I', toolname, def_node.head.code, msg))
+                    message = "unused term"
+                    reports.append(Report('I', toolname, def_node.head.code, message))
 
     return reports
 
@@ -274,9 +274,9 @@ def tool_title(document, reports):
                         sim_max = sim
 
         else:
-            msg = Report.missing(what="tool name match", where="in ref box")
-            msg += ":{:4.0%}".format(sim_max)
-            reports.append(Report('W', toolname, node.name.code, msg, tool_max))
+            message = Report.missing(what="tool name match", where="in ref box")
+            message += ":{:4.0%}".format(sim_max)
+            reports.append(Report('W', toolname, node.name.code, message, tool_max))
 
     return reports
 

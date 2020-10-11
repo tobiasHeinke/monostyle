@@ -25,85 +25,85 @@ def number_pre(_):
     start = r"(?:(?<=[^\d,.])|\A)"
     pattern_str = start + r"[\d,]*\d{4}"
     pattern = re.compile(pattern_str)
-    msg = Report.missing(what="separator", where="between four digits")
-    re_lib["digitsep"] = (pattern, msg)
+    message = Report.missing(what="separator", where="between four digits")
+    re_lib["digitsep"] = (pattern, message)
 
     pattern_str = start + r"\d,\d{1,2}\b"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="separator", where="between less than four digits")
-    re_lib["digitsepless"] = (pattern, msg)
+    message = Report.existing(what="separator", where="between less than four digits")
+    re_lib["digitsepless"] = (pattern, message)
 
     pattern_str = r"\d \d"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="space", where="between digits")
-    re_lib["digitspace"] = (pattern, msg)
+    message = Report.existing(what="space", where="between digits")
+    re_lib["digitspace"] = (pattern, message)
 
     spelled_out = r"\b" + r"\b|\b".join(POS.data["determiner"]["numeral"]["cardinal"])
     spelled_out += r"\b|" + r"\b|\b".join(POS.data["determiner"]["numeral"]["ordinal"])
     spelled_out += r"\b|" + r"\b|\b".join(("half", "halves", "thirds?"))
     pattern_str = r"(?:" + spelled_out + r") (?:" + spelled_out + r")"
     pattern = re.compile(pattern_str)
-    msg = Report.missing(what="hyphen", where="between spelled-out numbers")
-    re_lib["spelloutspace"] = (pattern, msg)
+    message = Report.missing(what="hyphen", where="between spelled-out numbers")
+    re_lib["spelloutspace"] = (pattern, message)
 
     # FP: math, code
     pattern_str = r"(?:\w |^)([0-9]|1[0-2])(?: \w|$)"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="low digit", where="in continuous text")
-    re_lib["lowdigit"] = (pattern, msg)
+    message = Report.existing(what="low digit", where="in continuous text")
+    re_lib["lowdigit"] = (pattern, message)
 
     pattern_str = start + r"\.\d"
     pattern = re.compile(pattern_str)
-    msg = Report.missing(what="zero", where="in front of a decimal point")
-    re_lib["nozero"] = (pattern, msg)
+    message = Report.missing(what="zero", where="in front of a decimal point")
+    re_lib["nozero"] = (pattern, message)
 
     pattern_str = start + r"0[1-9]"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="zero", where="at number start")
-    re_lib["zeronodot"] = (pattern, msg)
+    message = Report.existing(what="zero", where="at number start")
+    re_lib["zeronodot"] = (pattern, message)
 
     pattern_str = start + r"\d\.\d*0{2,}(?=\D|\Z)"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="zeros", where="at number end")
-    re_lib["zerotrail"] = (pattern, msg)
+    message = Report.existing(what="zeros", where="at number end")
+    re_lib["zerotrail"] = (pattern, message)
 
 
     pattern_str = r"\d ?x( ?\d)?"
     pattern = re.compile(pattern_str)
-    msg = Report.option(what="x letter", with_what="times or × sign")
-    re_lib["times"] = (pattern, msg)
+    message = Report.option(what="x letter", with_what="times or × sign")
+    re_lib["times"] = (pattern, message)
 
     pattern_str = r"\d\.\.+\d"
     pattern = re.compile(pattern_str)
-    msg = Report.option(what="range separator", with_what="to or dash")
-    re_lib["range"] = (pattern, msg)
+    message = Report.option(what="range separator", with_what="to or dash")
+    re_lib["range"] = (pattern, message)
 
     pattern_str = r"\D(?:0|100)%"
     pattern = re.compile(pattern_str)
-    msg = Report.option(what="percentage limits", with_what="spelled out no or fully")
-    re_lib["percentlimit"] = (pattern, msg)
+    message = Report.option(what="percentage limits", with_what="spelled out no or fully")
+    re_lib["percentlimit"] = (pattern, message)
 
     #-----------------
 
     pattern_str = r"\b[0-9]d\b"
     pattern = re.compile(pattern_str)
-    msg = Report.misformatted(what="lowercase dimension letter")
-    re_lib["dimension"] = (pattern, msg)
+    message = Report.misformatted(what="lowercase dimension letter")
+    re_lib["dimension"] = (pattern, message)
 
     pattern_str = r"\d [%‰‱]"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="space", where="before percentage sign")
-    re_lib["percent"] = (pattern, msg)
+    message = Report.existing(what="space", where="before percentage sign")
+    re_lib["percent"] = (pattern, message)
 
     pattern_str = r"\d °(?! ?C\b)"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="space", where="before degree sign")
-    re_lib["degree"] = (pattern, msg)
+    message = Report.existing(what="space", where="before degree sign")
+    re_lib["degree"] = (pattern, message)
 
     pattern_str = r"\d° ?C\b|° C\b"
     pattern = re.compile(pattern_str)
-    msg = Report.substitution(what="Celsius", with_what="°C")
-    re_lib["celsius"] = (pattern, msg)
+    message = Report.substitution(what="Celsius", with_what="°C")
+    re_lib["celsius"] = (pattern, message)
 
     units = (
         'D', 'th', 'nd', 'st', 'rd', # math
@@ -111,8 +111,8 @@ def number_pre(_):
     )
     pattern_str = r"\d(?!\W|\d|" + r'\b|'.join(units) + r"\b|\Z)"
     pattern = re.compile(pattern_str)
-    msg = Report.missing(what="space", where="before physics unit")
-    re_lib["nospaceunit"] = (pattern, msg)
+    message = Report.missing(what="space", where="before physics unit")
+    re_lib["nospaceunit"] = (pattern, message)
 
     args = dict()
     args["re_lib"] = re_lib
@@ -218,12 +218,12 @@ def pairs(document, reports, re_lib, config):
                         if (max_line_span is not None and
                                 line.start_lincol[0] - entry[1][0] > max_line_span):
                             lincol_abs = line.loc_to_abs((0, pair_m.start(0)))
-                            msg = "long span"
-                            msg += " - " + str(lincol_abs[0] + 1) + ","
-                            msg += str(lincol_abs[1] + 1)
+                            message = "long span"
+                            message += " - " + str(lincol_abs[0] + 1) + ","
+                            message += str(lincol_abs[1] + 1)
                             output = Fragment(document.code.filename, entry[0], -1,
                                               start_lincol=entry[1])
-                            reports.append(Report('W', toolname, output, msg))
+                            reports.append(Report('W', toolname, output, message))
 
                         # invert index
                         index = len(stack) - 1 - index
@@ -238,10 +238,10 @@ def pairs(document, reports, re_lib, config):
                 reports.append(Report('E', toolname, output, "leaked markup char"))
 
     if len(stack) != 0:
-        msg = "unclosed pairs"
+        message = "unclosed pairs"
         for entry in stack:
             output = Fragment(document.code.filename, entry[0], -1, start_lincol=entry[1])
-            reports.append(Report('W', toolname, output, msg))
+            reports.append(Report('W', toolname, output, message))
 
     if max_line_span is not None:
         for node in rst_walker.iter_node(document.body,
@@ -254,14 +254,14 @@ def pairs(document, reports, re_lib, config):
 
             if (node.body_start.code.end_lincol[0] - node.body_end.code.start_lincol[0] >
                     max_line_span):
-                msg = "long span"
-                msg += " - " + str(node.body_start.code.end_lincol[0] + 1)
-                msg += "," + str(node.body_end.code.start_lincol[1] + 1)
-                reports.append(Report('W', toolname, node.body_start.code, msg))
+                message = "long span"
+                message += " - " + str(node.body_start.code.end_lincol[0] + 1)
+                message += "," + str(node.body_end.code.start_lincol[1] + 1)
+                reports.append(Report('W', toolname, node.body_start.code, message))
 
             if node.body_start.code.end_pos == node.body_end.code.start_pos:
-                msg = "zero span"
-                reports.append(Report('W', toolname, node.code, msg))
+                message = "zero span"
+                reports.append(Report('W', toolname, node.code, message))
 
     return reports
 
@@ -281,85 +281,85 @@ def mark_pre(_):
         r"[", pare_close, r"][", punc, r"]"
     )
     pattern = re.compile(''.join(pattern_str), re.MULTILINE | re.DOTALL)
-    msg = Report.misplaced(what="punctuation mark", where="after closing bracket",
-                           to_where="before")
-    re_lib["bracketpunc"] = (pattern, msg)
+    message = Report.misplaced(what="punctuation mark", where="after closing bracket",
+                               to_where="before")
+    re_lib["bracketpunc"] = (pattern, message)
 
     # FP: code, literal
     pattern_str = r"([" + pare_open + r"]\s)|(\s[" + pare_close + r"])"
     pattern = re.compile(pattern_str, re.MULTILINE)
-    msg = Report.existing(what="space", where="after/before opening/closing bracket")
-    re_lib["spacebracket"] = (pattern, msg)
+    message = Report.existing(what="space", where="after/before opening/closing bracket")
+    re_lib["spacebracket"] = (pattern, message)
 
     pattern_str = r"[" + punc + r"][" + pare_close + r"]?\s*\Z"
     pattern = re.compile(pattern_str)
-    msg = Report.missing(what="punctuation mark", where="at {0} end")
-    re_lib["nopuncend"] = (pattern, msg)
+    message = Report.missing(what="punctuation mark", where="at {0} end")
+    re_lib["nopuncend"] = (pattern, message)
 
     # FP: code
     pattern_str = r"[,;]\s*\Z"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="comma", where="at paragraph end")
-    re_lib["commaend"] = (pattern, msg)
+    message = Report.existing(what="comma", where="at paragraph end")
+    re_lib["commaend"] = (pattern, message)
 
     # match: uppercase to not: ellipsis, directive starter, number, extensions...
     # FP: code, target
     punc_nodot = punc.replace('.', '').replace(',', '')
     pattern_str = r"[" + punc_nodot + r"][" + pare_close + r"]?\S|\.[A-Z]|,[^\s\d]"
     pattern = re.compile(pattern_str)
-    msg = Report.missing(what="space", where="after punctuation mark")
-    re_lib["puncspaceend"] = (pattern, msg)
+    message = Report.missing(what="space", where="after punctuation mark")
+    re_lib["puncspaceend"] = (pattern, message)
 
     pattern_str = r"\w\"\w"
     pattern = re.compile(pattern_str)
-    msg = Report.missing(what="space", where="after/before quote mark")
-    re_lib["unquote"] = (pattern, msg)
+    message = Report.missing(what="space", where="after/before quote mark")
+    re_lib["unquote"] = (pattern, message)
 
     pattern_str = r"([^\w\d\s\-\.])\1|(?<!\.)\.\.(?!\.)"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="double punctuation")
-    re_lib["double"] = (pattern, msg)
+    message = Report.existing(what="double punctuation")
+    re_lib["double"] = (pattern, message)
 
     # not match: ellipsis
     pattern_str = r"\s[" + punc + r"](?!\.\.)"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="space", where="before punctuation mark")
-    re_lib["puncspacestart"] = (pattern, msg)
+    message = Report.existing(what="space", where="before punctuation mark")
+    re_lib["puncspacestart"] = (pattern, message)
 
     # FP: code, literal, footnote
     pattern_str = r"\w[" + pare_open + r"](?!s\))|[" + pare_close + r"]\w"
     pattern = re.compile(pattern_str)
-    msg = Report.missing(what="space", where="after/before bracket")
-    re_lib["unbracket"] = (pattern, msg)
+    message = Report.missing(what="space", where="after/before bracket")
+    re_lib["unbracket"] = (pattern, message)
 
     # Style
     pattern_str = r"\w/s\b"
     pattern = re.compile(pattern_str)
-    msg = Report.substitution(what="optional plural", with_what="(s)")
-    re_lib["optplur"] = (pattern, msg)
+    message = Report.substitution(what="optional plural", with_what="(s)")
+    re_lib["optplur"] = (pattern, message)
 
     # FP: cut toctree
     pattern_str = r"&"
     pattern = re.compile(pattern_str)
-    msg = Report.substitution(what="Ampersand", where="in continuous text",
-                              with_what="spelled out and")
-    re_lib["enumamp"] = (pattern, msg)
+    message = Report.substitution(what="Ampersand", where="in continuous text",
+                                  with_what="spelled out and")
+    re_lib["enumamp"] = (pattern, message)
 
     pattern_str = r"/"
     pattern = re.compile(pattern_str)
-    msg = Report.conditional(what="Slash", where="in continuous text",
-                             with_what="spelled out or", when="(if it not short for alias)")
-    re_lib["enumslash"] = (pattern, msg)
+    message = Report.conditional(what="Slash", where="in continuous text",
+                                 with_what="spelled out or", when="(if it not short for alias)")
+    re_lib["enumslash"] = (pattern, message)
 
     pattern_str = r">"
     pattern = re.compile(pattern_str)
-    msg = Report.substitution(what="greater-than sign", with_what="spelled out")
-    re_lib["greater"] = (pattern, msg)
+    message = Report.substitution(what="greater-than sign", with_what="spelled out")
+    re_lib["greater"] = (pattern, message)
 
     pattern_str = r"<"
     pattern = re.compile(pattern_str)
-    msg = Report.substitution(what="less-than sign", with_what="spelled out")
-    re_lib["less"] = (pattern, msg)
+    message = Report.substitution(what="less-than sign", with_what="spelled out")
+    re_lib["less"] = (pattern, message)
 
     args = dict()
     args["re_lib"] = re_lib
@@ -436,23 +436,23 @@ def mark(document, reports, re_lib):
                             (not rst_walker.is_of(part.next_leaf(), "dir", "default") or
                              part_str.endswith(" "))):
                         output = part.code.copy().clear(False)
-                        msg = re_lib["nopuncend"][1].format("paragraph")
+                        message = re_lib["nopuncend"][1].format("paragraph")
                         line = getline_punc(document.body.code, part.code.end_pos, 0, 50, 0)
-                        reports.append(Report('W', toolname, output, msg, line))
+                        reports.append(Report('W', toolname, output, message, line))
 
                 else:
                     if comma_m := re.search(comma_re, part_str):
                         output = part.code.slice_match_obj(comma_m, 0, True)
-                        msg = re_lib["commaend"][1].format(part.parent_node.node_name +
-                                                           " " + part.node_name)
-                        reports.append(Report('W', toolname, output, msg))
+                        message = re_lib["commaend"][1].format(part.parent_node.node_name +
+                                                               " " + part.node_name)
+                        reports.append(Report('W', toolname, output, message))
 
         elif rst_walker.is_of(part, ("role", "hyperlink"), "*", "head"):
             if re.search(noend_re, str(part.code)):
                 output = part.code.copy().clear(False)
-                msg = re_lib["nopuncend"][1].format(part.parent_node.node_name + " " +
-                                                    part.node_name)
-                reports.append(Report('W', toolname, output, msg))
+                message = re_lib["nopuncend"][1].format(part.parent_node.node_name + " " +
+                                                        part.node_name)
+                reports.append(Report('W', toolname, output, message))
 
     return reports
 
@@ -461,30 +461,30 @@ def whitespace_pre(_):
     re_lib = dict()
     pattern_str = r"(\t)"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="tab char")
+    message = Report.existing(what="tab char")
     repl = "   "
-    re_lib["tab"] = (pattern, msg, repl)
+    re_lib["tab"] = (pattern, message, repl)
 
     pattern_str = r"( +?)\n"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="spaces", where="at line end")
+    message = Report.existing(what="spaces", where="at line end")
     repl = ""
-    re_lib["spaceeol"] = (pattern, msg, repl)
+    re_lib["spaceeol"] = (pattern, message, repl)
 
     # FP: code, unicode, comment
     # not match: indent at start, trailing at eol
     pattern_str = r"\S(  +)(?:\S|\Z)"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="multiple spaces", where="in text")
+    message = Report.existing(what="multiple spaces", where="in text")
     repl = " "
-    re_lib["multispace"] = (pattern, msg, repl)
+    re_lib["multispace"] = (pattern, message, repl)
 
     # match: at start (when not line start), trailing at eol
     pattern_str = r"\A(  +)(?:\S|\Z)"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="multiple spaces", where="at start")
+    message = Report.existing(what="multiple spaces", where="at start")
     repl = " "
-    re_lib["multispacestart"] = (pattern, msg, repl)
+    re_lib["multispacestart"] = (pattern, message, repl)
 
     args = dict()
     args["re_lib"] = re_lib

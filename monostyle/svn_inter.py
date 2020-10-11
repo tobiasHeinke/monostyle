@@ -130,9 +130,9 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
                 lineno += 1
 
             elif line.startswith('\\'):
-                msg = line[2:] # backslash + space
+                message = line[2:] # backslash + space
                 fg_copy = fg.copy().clear(False)
-                yield fg_copy, None, msg
+                yield fg_copy, None, message
 
     if fg and len(fg.content) != len(context):
         yield fg, context, None

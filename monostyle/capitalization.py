@@ -31,13 +31,13 @@ def titlecase(word, is_first_word, is_last_word, name):
                 where = "at the start of a "
             elif is_last_word:
                 where = "at the end of a "
-            msg = Report.misformatted(what="lowercase", where=where + name)
+            message = Report.misformatted(what="lowercase", where=where + name)
 
             fg_repl = None
             fg_repl = word.slice(word.start_pos, word.start_pos + 1, True)
             fg_repl.replace(str(fg_repl).swapcase())
 
-            return msg, fg_repl
+            return message, fg_repl
         return None
 
     path = POS.tag(word_str.lower())
@@ -45,15 +45,15 @@ def titlecase(word, is_first_word, is_last_word, name):
             (len(path) != 0 and
              (path[0] in ("preposition", "conjunction", "pronoun", "auxiliary") or
               path[0] == "determiner" and path[1] == "article"))):
-        msg = Report.misformatted(what="lowercase" if word_str[0].islower() else "uppercase",
-                                  where="in " + name)
+        message = Report.misformatted(what="lowercase" if word_str[0].islower() else "uppercase",
+                                      where="in " + name)
 
         fg_repl = None
         if not path or path[0] != "preposition":
             fg_repl = word.slice(word.start_pos, word.start_pos + 1, True)
             fg_repl.replace(str(fg_repl).swapcase())
 
-        return msg, fg_repl
+        return message, fg_repl
 
 
 def admonition_title(document, reports):
@@ -75,9 +75,9 @@ def admonition_title(document, reports):
                         if word_str[0].islower():
                             word_low += 1
                 if word_all > 1 and word_low/ word_all >= threshold:
-                    msg = "admonition caption titlecase: {:4.0%}".format(word_low/ word_all)
+                    message = "admonition caption titlecase: {:4.0%}".format(word_low/ word_all)
                     output = node.head.code.copy().clear(True)
-                    reports.append(Report('W', toolname, output, msg, node.head.code))
+                    reports.append(Report('W', toolname, output, message, node.head.code))
 
     return reports
 
@@ -87,23 +87,23 @@ def heading_cap_pre(_):
 
     pattern_str = r"\-[a-z]"
     pattern = re.compile(pattern_str)
-    msg = Report.misformatted(what="lowercase", where="in heading after hyphen")
-    re_lib["hypen"] = (pattern, msg)
+    message = Report.misformatted(what="lowercase", where="in heading after hyphen")
+    re_lib["hypen"] = (pattern, message)
 
     pattern_str = r"[^\w \-&/()'\"\\?!:,\n]"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="not allowed punctuation", where="in heading")
-    re_lib["nonchar"] = (pattern, msg)
+    message = Report.existing(what="not allowed punctuation", where="in heading")
+    re_lib["nonchar"] = (pattern, message)
 
     pattern_str = r"\band\b"
     pattern = re.compile(pattern_str, re.IGNORECASE)
-    msg = Report.substitution(what="and", where="in heading", with_what="ampersand")
-    re_lib["and"] = (pattern, msg)
+    message = Report.substitution(what="and", where="in heading", with_what="ampersand")
+    re_lib["and"] = (pattern, message)
 
     pattern_str = r"\bor\b"
     pattern = re.compile(pattern_str, re.IGNORECASE)
-    msg = Report.substitution(what="or", where="in heading", with_what="slash")
-    re_lib["or"] = (pattern, msg)
+    message = Report.substitution(what="or", where="in heading", with_what="slash")
+    re_lib["or"] = (pattern, message)
 
     return {"re_lib": re_lib}
 
@@ -132,9 +132,9 @@ def heading_cap(document, reports, re_lib):
             buf = None
             for word in Segmenter.iter_word(part.code):
                 if buf:
-                    if msg_repl := titlecase(buf, is_first_word, False, "heading"):
-                        reports.append(Report('W', toolname, buf, msg_repl[0], node.name.code,
-                                              msg_repl[1]))
+                    if message_repl := titlecase(buf, is_first_word, False, "heading"):
+                        reports.append(Report('W', toolname, buf, message_repl[0], node.name.code,
+                                              message_repl[1]))
                     if is_faq:
                         break
                     is_first_word = False
@@ -143,16 +143,16 @@ def heading_cap(document, reports, re_lib):
             if buf and not is_faq:
                 # ignore part.next, one part per node
                 is_last_word = bool(part.parent_node.next is None)
-                if msg_repl := titlecase(buf, is_first_word, is_last_word, "heading"):
-                    reports.append(Report('W', toolname, buf, msg_repl[0], node.name.code,
-                                          msg_repl[1]))
+                if message_repl := titlecase(buf, is_first_word, is_last_word, "heading"):
+                    reports.append(Report('W', toolname, buf, message_repl[0], node.name.code,
+                                          message_repl[1]))
                 is_first_word = False
 
             part_str = str(part.code)
-            for pattern, msg in re_lib.values():
+            for pattern, message in re_lib.values():
                 for m in re.finditer(pattern, part_str):
                     output = part.code.slice_match_obj(m, 0, True)
-                    reports.append(Report('W', toolname, output, msg, node.name.code))
+                    reports.append(Report('W', toolname, output, message, node.name.code))
 
     return reports
 
@@ -193,8 +193,8 @@ def pos_case(document, reports):
 
                 path = POS.tag(word_str.lower())
                 if len(path) != 0 and path[0] not in ("noun", "abbreviation", "adjective", "verb"):
-                    msg = Report.misformatted(what="uppercase " + path[0])
-                    reports.append(Report('W', toolname, word, msg, sen))
+                    message = Report.misformatted(what="uppercase " + path[0])
+                    reports.append(Report('W', toolname, word, message, sen))
 
     return reports
 
@@ -207,22 +207,22 @@ def starting_pre(_):
     # FP: code, container
     pattern_str = r"[" + pare_open + r"]?[a-z]"
     pattern = re.compile(pattern_str)
-    msg = Report.misformatted(what="lowercase", where="at paragraph start")
-    re_lib["lowerpara"] = (pattern, msg)
+    message = Report.misformatted(what="lowercase", where="at paragraph start")
+    re_lib["lowerpara"] = (pattern, message)
 
     # todo? split sentence
     # limitation: not nested parenthesis
     # not match abbr
     pattern_str = r"(?<!\w\.\w)[" + punc_sent + r"]\s+?" + r"[" + pare_open + r"]?[a-z]"
     pattern = re.compile(pattern_str, re.MULTILINE | re.DOTALL)
-    msg = Report.misformatted(what="lowercase", where="after sentence start")
-    re_lib["punclower"] = (pattern, msg)
+    message = Report.misformatted(what="lowercase", where="after sentence start")
+    re_lib["punclower"] = (pattern, message)
 
     # FP: abbr, menu, heading, code
     pattern_str = r"[^.\s]\s*?[" + pare_open + r"][A-Z][a-z ]"
     pattern = re.compile(pattern_str, re.MULTILINE)
-    msg = Report.misformatted(what="uppercase", where="at bracket start")
-    re_lib["upperbracket"] = (pattern, msg)
+    message = Report.misformatted(what="uppercase", where="at bracket start")
+    re_lib["upperbracket"] = (pattern, message)
 
     args = dict()
     args["re_lib"] = re_lib
@@ -362,10 +362,10 @@ def property_noun(document, reports, data, config):
                 continue
             for entry in data[first_letter]:
                 if entry[0] == word_str:
-                    msg = "property noun: {:4.0%}".format(entry[1])
+                    message = "property noun: {:4.0%}".format(entry[1])
                     line = getline_punc(document.code, word.start_pos,
                                         word.span_len(True), 50, 30)
-                    reports.append(Report('W', toolname, word, msg, line))
+                    reports.append(Report('W', toolname, word, message, line))
                     break
 
     return reports
@@ -481,9 +481,9 @@ def ui_case(document, reports):
             buf = None
             for word in Segmenter.iter_word(part_code):
                 if buf:
-                    if msg_repl := titlecase(buf, is_first_word, False, "definition term"):
-                        reports.append(Report('W', toolname, buf, msg_repl[0], node.head.code,
-                                              msg_repl[1]))
+                    if message_repl := titlecase(buf, is_first_word, False, "definition term"):
+                        reports.append(Report('W', toolname, buf, message_repl[0], node.head.code,
+                                              message_repl[1]))
                     is_first_word = False
                 buf = word
 
@@ -491,9 +491,9 @@ def ui_case(document, reports):
                 # ignore part.next, one part per node
                 is_last_word = bool(part.parent_node.next is None or
                                     rst_walker.is_of(part.parent_node.next, "role", "kbd"))
-                if msg_repl := titlecase(buf, is_first_word, is_last_word, "definition term"):
-                    reports.append(Report('W', toolname, buf, msg_repl[0], node.head.code,
-                                          msg_repl[1]))
+                if message_repl := titlecase(buf, is_first_word, is_last_word, "definition term"):
+                    reports.append(Report('W', toolname, buf, message_repl[0], node.head.code,
+                                          message_repl[1]))
                 is_first_word = False
 
     return reports

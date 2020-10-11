@@ -86,36 +86,37 @@ def indefinite_article(document, reports, re_lib, data):
                     if buf in ("a", "A"):
                         if re.match(vowel_re, word_str):
                             if is_fp(word, word_str, data["an"]):
-                                msg = Report.existing(what="a", where="before vowel")
+                                message = Report.existing(what="a", where="before vowel")
                                 line = getline_punc(document.body.code, word.start_pos,
                                                     len(word_str), 50, 30)
-                                reports.append(Report('E', toolname, word, msg, line))
+                                reports.append(Report('E', toolname, word, message, line))
                         else:
                             if not is_fp(word, word_str, data["a"]):
-                                msg = Report.existing(what="a", where="before vowel sound")
+                                message = Report.existing(what="a", where="before vowel sound")
                                 line = getline_punc(document.body.code, word.start_pos,
                                                     len(word_str), 50, 30)
-                                reports.append(Report('E', toolname, word, msg, line))
+                                reports.append(Report('E', toolname, word, message, line))
 
                     elif buf in ("an", "An"):
                         if re.match(digit_re, word_str):
-                            msg = Report.existing(what="an", where="before digit")
+                            message = Report.existing(what="an", where="before digit")
                             line = getline_punc(document.body.code, word.start_pos,
                                                 len(word_str), 50, 30)
-                            reports.append(Report('E', toolname, word, msg, line))
+                            reports.append(Report('E', toolname, word, message, line))
                         else:
                             if re.match(vowel_re, word_str):
                                 if not is_fp(word, word_str, data["an"]):
-                                    msg = Report.existing(what="an", where="before consonant sound")
+                                    message = Report.existing(what="an",
+                                                              where="before consonant sound")
                                     line = getline_punc(document.body.code, word.start_pos,
                                                         len(word_str), 50, 30)
-                                    reports.append(Report('E', toolname, word, msg, line))
+                                    reports.append(Report('E', toolname, word, message, line))
                             else:
                                 if is_fp(word, word_str, data["a"]):
-                                    msg = Report.existing(what="an", where="before consonant")
+                                    message = Report.existing(what="an", where="before consonant")
                                     line = getline_punc(document.body.code, word.start_pos,
                                                         len(word_str), 50, 30)
-                                    reports.append(Report('E', toolname, word, msg, line))
+                                    reports.append(Report('E', toolname, word, message, line))
 
                     buf = None
 
@@ -135,20 +136,20 @@ def grammar_pre(_):
     re_lib = dict()
     pattern_str = r"s's"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="s apostrophe", where="after s")
-    re_lib["sapos"] = (pattern, msg)
+    message = Report.existing(what="s apostrophe", where="after s")
+    re_lib["sapos"] = (pattern, message)
 
     pattern_str = r"'s\-"
     pattern = re.compile(pattern_str)
-    msg = Report.existing(what="apostrophe", where="in compound")
-    re_lib["aposcomp"] = (pattern, msg)
+    message = Report.existing(what="apostrophe", where="in compound")
+    re_lib["aposcomp"] = (pattern, message)
 
     pattern_str = (r"(?:'",
                    '|'.join((r"(?<!numb)er", "more", "less", "different(?:ly)?",
                              "else", "otherwise")), r")\s+?then")
     pattern = re.compile(''.join(pattern_str), re.DOTALL)
-    msg = Report.substitution(what="then", where="after comparison", with_what="than")
-    re_lib["comparethen"] = (pattern, msg)
+    message = Report.substitution(what="then", where="after comparison", with_what="than")
+    re_lib["comparethen"] = (pattern, message)
 
     args = dict()
     args["re_lib"] = re_lib
@@ -169,8 +170,8 @@ def passive_pre(_):
                    r"\b|\b".join(monostylestd.get_data_file("irregular_participle")), r"\b)")
 
     pattern = re.compile(''.join(pattern_str), re.DOTALL)
-    msg = Report.existing(what="passive voice")
-    re_lib["passive"] = (pattern, msg)
+    message = Report.existing(what="passive voice")
+    re_lib["passive"] = (pattern, message)
 
     args = dict()
     args["re_lib"] = re_lib
@@ -201,14 +202,14 @@ def search_pure(document, reports, re_lib, config):
     }
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        for pattern, msg in re_lib.values():
+        for pattern, message in re_lib.values():
             part_str = str(part.code)
             for m in re.finditer(pattern, part_str):
                 output = part.code.slice_match_obj(m, 0, True)
                 line = getline_punc(document.body.code, output.start_pos,
                                     output.span_len(True), 50, 0)
                 reports.append(Report(config.get("severity"), config.get("toolname"),
-                                      output, msg, line))
+                                      output, message, line))
 
     return reports
 
@@ -231,25 +232,25 @@ def metric(document, reports):
         if node_cur.node_name == "sect":
             if counter["sect"] > conf["sect_len"]:
                 output = node_cur.code.copy().clear(True)
-                msg = Report.quantity(what="long heading",
-                                      how="{0}/{1} letters".format(
-                                          counter["sect"], conf["sect_len"]))
-                reports.append(Report('I', toolname, output, msg, node_cur.code))
+                message = Report.quantity(what="long heading",
+                                          how="{0}/{1} letters".format(
+                                              counter["sect"], conf["sect_len"]))
+                reports.append(Report('I', toolname, output, message, node_cur.code))
 
         else:
             if counter["sen"] > conf["sen_len"]:
                 output = sen_full.copy().clear(True)
-                msg = Report.quantity(what="long sentence",
-                                      how="{0}/{1} words".format(
-                                          counter["sen"], conf["sen_len"]))
-                reports.append(Report('I', toolname, output, msg, sen_full))
+                message = Report.quantity(what="long sentence",
+                                          how="{0}/{1} words".format(
+                                              counter["sen"], conf["sen_len"]))
+                reports.append(Report('I', toolname, output, message, sen_full))
             if not sub_para:
                 if counter["para"] > conf["para_long"]:
                     output = node_cur.code.copy().clear(True)
-                    msg = Report.quantity(what="long paragraph",
-                                          how="{0}/{1} sentences".format(
-                                              counter["para"], conf["para_long"]))
-                    reports.append(Report('I', toolname, output, msg, node_cur.code))
+                    message = Report.quantity(what="long paragraph",
+                                              how="{0}/{1} sentences".format(
+                                                  counter["para"], conf["para_long"]))
+                    reports.append(Report('I', toolname, output, message, node_cur.code))
                 check = False
                 if counter["para"] <= conf["para_short"] and counter["para"] != 0:
                     counter["para_short"] += 1
@@ -258,10 +259,10 @@ def metric(document, reports):
                 if (check or is_last):
                     if counter["para_short"] > 1:
                         output = node_cur.code.copy().clear(True)
-                        msg = Report.quantity(what="multiple short paragraph",
-                                              how="{0}/{1} paragraphs".format(
-                                                  counter["para_short"], 1))
-                        reports.append(Report('I', toolname, output, msg, node_cur.code))
+                        message = Report.quantity(what="multiple short paragraph",
+                                                  how="{0}/{1} paragraphs".format(
+                                                      counter["para_short"], 1))
+                        reports.append(Report('I', toolname, output, message, node_cur.code))
                         counter["para_short"] = 0
                     elif counter["para"] != 0:
                         counter["para_short"] = 0
@@ -339,16 +340,16 @@ def metric(document, reports):
                         for word in Segmenter.iter_word(sen):
                             counter["sen"] += 1
                             if len(word) >= conf["word_len"]:
-                                msg = Report.quantity(what="long word",
-                                                      how="{0}/{1} letters".format(
-                                                          len(word), conf["word_len"]))
-                                reports.append(Report('I', toolname, word, msg))
+                                message = Report.quantity(what="long word",
+                                                          how="{0}/{1} letters".format(
+                                                              len(word), conf["word_len"]))
+                                reports.append(Report('I', toolname, word, message))
 
                         if not sen_full:
                             sen_full = sen
                         else:
                             sen_full = document.body.code.slice(
-                                        sen_full.start_lincol, sen.end_lincol, True)
+                                           sen_full.start_lincol, sen.end_lincol, True)
                         if not is_open:
                             reports = compare(node_cur, sen_full, counter, reports, True)
                             counter["sen"] = 0
@@ -431,11 +432,11 @@ def repeated_words(document, reports, config):
                                 continue
 
                             sev = 'W' if distance == 0 else 'I'
-                            msg = Report.quantity(what="repeated words",
-                                                  how=str(distance) + " words in between")
+                            message = Report.quantity(what="repeated words",
+                                                      how=str(distance) + " words in between")
                             line = getline_punc(document.body.code, word.start_pos,
                                                 word.span_len(True), 50, 30)
-                            reports.append(Report(sev, toolname, word, msg, line))
+                            reports.append(Report(sev, toolname, word, message, line))
                             break
 
                     if len(buf) == buf_size - 1:

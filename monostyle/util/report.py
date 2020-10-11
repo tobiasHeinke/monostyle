@@ -13,7 +13,7 @@ import monostyle.config as config
 from monostyle.util.monostylestd import print_over, print_title, path_to_rel
 
 
-class MsgTemplate():
+class MessageTemplate():
 
     __slots__ = ('_template', '_components')
 
@@ -54,26 +54,26 @@ class MsgTemplate():
 
             kwargs = mapping
 
-        msg = []
+        message = []
         missing_keys = None
         for is_key, value, is_optional in self._components:
             if not is_key:
-                msg.append(value)
+                message.append(value)
             else:
                 subst = str(kwargs.get(value, "")).strip()
                 if len(subst) != 0:
-                    msg.append(subst)
+                    message.append(subst)
                 elif not is_optional:
                     if missing_keys is None:
                         missing_keys = []
-                    msg.append("{" + value + "}")
+                    message.append("{" + value + "}")
                     missing_keys.append(value)
 
-        msg = " ".join(msg)
+        message = " ".join(message)
         if missing_keys is not None:
-            print("Error missing template keys:", ", ".join(missing_keys), "in message:", msg)
+            print("Error missing template keys:", ", ".join(missing_keys), "in message:", message)
 
-        return msg
+        return message
 
 
 class Report():
@@ -82,18 +82,18 @@ class Report():
     severity -- severity level of the report.
     tool -- name of the tool which issued the report.
     output -- extracted content Fragment defines the file path and name and position
-    msg -- message.
+    message -- message outputted to the user.
     line -- extracted line Fragment.
     fix -- autofix options.
     """
 
-    __slots__ = ('severity', 'tool', 'output', 'msg', 'line', 'fix')
+    __slots__ = ('severity', 'tool', 'output', 'message', 'line', 'fix')
 
-    def __init__(self, severity, tool, output, msg, line=None, fix=None):
+    def __init__(self, severity, tool, output, message, line=None, fix=None):
         self.severity = severity
         self.tool = tool
         self.output = output
-        self.msg = msg
+        self.message = message
         self.line = line
         self.fix = fix
 
@@ -149,20 +149,20 @@ class Report():
     #--------------------
     # Message Templates
 
-    quantity = MsgTemplate("{what} {?where} {?how}").substitute
-    existing = MsgTemplate("{what} {?where}").substitute
-    missing = MsgTemplate("no {what} {?where}").substitute
-    under = MsgTemplate("too few {what} {?where}").substitute
-    over = MsgTemplate("too many {what} {?where}").substitute
+    quantity = MessageTemplate("{what} {?where} {?how}").substitute
+    existing = MessageTemplate("{what} {?where}").substitute
+    missing = MessageTemplate("no {what} {?where}").substitute
+    under = MessageTemplate("too few {what} {?where}").substitute
+    over = MessageTemplate("too many {what} {?where}").substitute
 
-    misplaced = MsgTemplate("{what} {where} should be {to_where}").substitute
-    misformatted = MsgTemplate("{what} {?where} {?how}").substitute
+    misplaced = MessageTemplate("{what} {where} should be {to_where}").substitute
+    misformatted = MessageTemplate("{what} {?where} {?how}").substitute
 
-    substitution = MsgTemplate("{what} {?where} should be {with_what}").substitute
-    conditional = MsgTemplate("{what} {?where} should be {with_what} {when}").substitute
-    option = MsgTemplate("{what} {?where} should be either {with_what}").substitute
+    substitution = MessageTemplate("{what} {?where} should be {with_what}").substitute
+    conditional = MessageTemplate("{what} {?where} should be {with_what} {when}").substitute
+    option = MessageTemplate("{what} {?where} should be either {with_what}").substitute
 
-    msg_templates = ("quantity", "existing", "missing", "under", "over",
+    message_templates = ("quantity", "existing", "missing", "under", "over",
                      "misplaced", "misformatted", "substitution", "conditional", "option")
 
 
@@ -170,8 +170,8 @@ class Report():
         """Override or add templates with a dict."""
         for key, value in new_templates.items():
             if (isinstance(key, str) and isinstance(value, str) and
-                    (key in Report.msg_templates or getattr(Report, key) is None)):
-                setattr(Report, key, MsgTemplate(value).substitute)
+                    (key in Report.message_templates or getattr(Report, key) is None)):
+                setattr(Report, key, MessageTemplate(value).substitute)
 
 
     #--------------------
@@ -181,7 +181,7 @@ class Report():
         if options is None:
             options = {}
         options = {
-            "format_str": "{filename}{location} {severity} {output} {msg}{line}",
+            "format_str": "{filename}{location} {severity} {output} {message}{line}",
             "show_filename": True,
             "absolute_path": False,
             "show_end": False,
@@ -238,7 +238,7 @@ class Report():
                 entries["output"] += options["out_ellipsis"]
             entries["output"] = options["out_sep_start"] + entries["output"] + options["out_sep_end"]
 
-        entries["msg"] = self.msg
+        entries["message"] = self.message
 
         if options["show_line"] and self.line:
             entries["line"] = str(self.line).replace('\n', '¶')
@@ -257,7 +257,7 @@ class Report():
 
 
     def copy(self):
-        return type(self)(self.severity, self.tool, self.output.copy(), self.msg,
+        return type(self)(self.severity, self.tool, self.output.copy(), self.message,
                           self.line.copy(), self.fix.copy())
 
 

@@ -56,15 +56,15 @@ def search(document, reports, re_lib, data, config):
             line = None
             if found_count != -1:
                 severity = 'I'
-                msg = "rare word: hunk: {0} lex: {1}".format(str(hunk_count + 1),
-                                                             str(found_count + 1))
+                message = "rare word: hunk: {0} lex: {1}".format(str(hunk_count + 1),
+                                                                 str(found_count + 1))
             else:
                 severity = 'W'
-                msg = "new word: hunk: " + str(hunk_count + 1)
+                message = "new word: hunk: " + str(hunk_count + 1)
                 line = Fragment(word.filename, ", ".join(find_similar(norm_punc(str(word), re_lib),
                                                                 word_cont, data, 5, 0.6)))
 
-            reports.append(Report(severity, toolname, word, msg, line))
+            reports.append(Report(severity, toolname, word, message, line))
 
     return reports
 

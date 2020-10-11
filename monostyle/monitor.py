@@ -31,24 +31,24 @@ def check(document, reports, data):
         if entry.startswith('/'):
             entry = entry[1:]
 
-        msg = ""
+        message = ""
         # match all subfolders
         if entry.endswith('/'):
             if re.match(entry, filename):
-                msg = "changed in " + entry
+                message = "changed in " + entry
         else:
             # match file
             if re.match(r"\.[A-Za-z\d]*?$", entry):
                 if filename == entry:
-                    msg = "changed"
+                    message = "changed"
             else:
                 # match folder
                 if re.match(entry + r"\/[^/]+?$", filename):
-                    msg = "changed in " + entry
+                    message = "changed in " + entry
 
-        if msg != "" and filename not in check.reg:
+        if message != "" and filename not in check.reg:
             output = document.body.code.copy().clear(True)
-            reports.append(Report('I', toolname, output, msg))
+            reports.append(Report('I', toolname, output, message))
             check.reg.append(filename)
 
     return reports
