@@ -25,11 +25,9 @@ from .util.report import (Report, print_report,
 from .rst_parser.core import RSTParser
 from . import autofix
 from .util import file_opener
-from .cmd import init, apply
+from .cmd import init, apply, apply_file
 
 __version__ = "0.2.0"
-
-RSTParser = RSTParser()
 
 
 def init_tools():
@@ -60,7 +58,7 @@ def import_module(name, dst=None):
         print("module import: can't find the {0} module".format(name))
 
 
-def get_reports_version(from_vsn, is_internal, path, rev=None, cached=False):
+def get_reports_version(rst_parser, from_vsn, is_internal, path, rev=None, cached=False):
     """Gets text snippets (hunk) from versioning."""
     mods = init_tools()
 
@@ -82,7 +80,7 @@ def get_reports_version(from_vsn, is_internal, path, rev=None, cached=False):
                                                           fg.start_lincol[0], fg.end_lincol[0]),
                                     is_temp=True)
 
-        reports, filename_prev = apply(RSTParser, mods, reports, RSTParser.snippet(fg),
+        reports, filename_prev = apply(rst_parser, mods, reports, rst_parser.snippet(fg),
                                        parse_options, print_options,
                                        filename_prev, filter_reports, context)
 
@@ -95,32 +93,14 @@ def get_reports_version(from_vsn, is_internal, path, rev=None, cached=False):
     return reports
 
 
-def get_reports_file(path):
+def get_reports_file(rst_parser, path):
     """Get working copy text files."""
     mods = init_tools()
 
-    path = monostylestd.path_to_abs(path, "rst")
     reports = []
-    show_current = True
-    filename_prev = None
-    print_options = options_overide()
+    path = monostylestd.path_to_abs(path, "rst")
     parse_options = {"parse": True, "resolve": False, "post": False}
-    for filename, text in monostylestd.rst_texts(path):
-        doc = RSTParser.document(filename, text)
-        if show_current:
-            monostylestd.print_over("processing:",
-                                    "{0}[{1}-{2}]".format(monostylestd.path_to_rel(filename),
-                                                          0, doc.code.end_lincol[0]),
-                                    is_temp=True)
-
-        reports, filename_prev = apply(RSTParser, mods, reports, doc,
-                                       parse_options, print_options, filename_prev)
-
-    if print_options["show_summary"]:
-        reports_summary(reports, print_options)
-
-    if show_current:
-        monostylestd.print_over("processing: done")
+    reports = apply_file(rst_parser, mods, reports, path, parse_options)
 
     return reports
 
@@ -256,6 +236,7 @@ def main():
     if not args.auto and "console_options" in vars(config).keys():
         config.console_options["show_autofix"] = False
 
+    rst_parser = RSTParser()
     if not args.filename and not args.patch:
         is_internal = bool(args.internal is not None)
         if is_internal:
@@ -263,19 +244,19 @@ def main():
         else:
             rev = args.external if len(args.external.strip()) != 0 else None
 
-        reports = get_reports_version(True, is_internal, root_dir, rev, args.cached)
+        reports = get_reports_version(rst_parser, True, is_internal, root_dir, rev, args.cached)
 
     elif args.patch:
         if not os.path.exists(args.patch):
             print('Error: file {0} does not exists'.format(args.patch))
             return 2
 
-        reports = get_reports_version(False, True,
+        reports = get_reports_version(rst_parser, False, True,
                                       monostylestd.replace_windows_path_sep(args.patch))
         for report in reports:# custom root
             report.output.filename = monostylestd.path_to_abs(report.output.filename)
     else:
-        reports = get_reports_file(monostylestd.replace_windows_path_sep(args.filename))
+        reports = get_reports_file(rst_parser, monostylestd.replace_windows_path_sep(args.filename))
 
     fns_conflicted = None
     if args.up or (args.auto and args.external is not None):
@@ -285,7 +266,7 @@ def main():
         if (not ((args.external and rev) or args.patch) or
                 monostylestd.ask_user(("Apply autofix on possibly altered sources"))):
 
-            autofix.run(reports, RSTParser, fns_conflicted)
+            autofix.run(reports, rst_parser, fns_conflicted)
     if args.min_severity:
         file_opener.open_reports_files(reports, args.min_severity)
 

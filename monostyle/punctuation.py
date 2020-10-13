@@ -38,13 +38,13 @@ def number_pre(_):
     message = Report.existing(what="space", where="between digits")
     re_lib["digitspace"] = (pattern, message)
 
-    spelled_out = r"\b" + r"\b|\b".join(POS.data["determiner"]["numeral"]["cardinal"])
-    spelled_out += r"\b|" + r"\b|\b".join(POS.data["determiner"]["numeral"]["ordinal"])
-    spelled_out += r"\b|" + r"\b|\b".join(("half", "halves", "thirds?"))
-    pattern_str = r"(?:" + spelled_out + r") (?:" + spelled_out + r")"
+    written_out = r"\b" + r"\b|\b".join(POS.data["determiner"]["numeral"]["cardinal"])
+    written_out += r"\b|" + r"\b|\b".join(POS.data["determiner"]["numeral"]["ordinal"])
+    written_out += r"\b|" + r"\b|\b".join(("half", "halves", "thirds?"))
+    pattern_str = r"(?:" + written_out + r") (?:" + written_out + r")"
     pattern = re.compile(pattern_str)
-    message = Report.missing(what="hyphen", where="between spelled-out numbers")
-    re_lib["spelloutspace"] = (pattern, message)
+    message = Report.missing(what="hyphen", where="between written-out numbers")
+    re_lib["writtenoutspace"] = (pattern, message)
 
     # FP: math, code
     pattern_str = r"(?:\w |^)([0-9]|1[0-2])(?: \w|$)"
@@ -80,7 +80,7 @@ def number_pre(_):
 
     pattern_str = r"\D(?:0|100)%"
     pattern = re.compile(pattern_str)
-    message = Report.option(what="percentage limits", with_what="spelled out no or fully")
+    message = Report.option(what="percentage limits", with_what="written out no or fully")
     re_lib["percentlimit"] = (pattern, message)
 
     #-----------------
@@ -342,23 +342,23 @@ def mark_pre(_):
     pattern_str = r"&"
     pattern = re.compile(pattern_str)
     message = Report.substitution(what="Ampersand", where="in continuous text",
-                                  with_what="spelled out and")
+                                  with_what="written out and")
     re_lib["enumamp"] = (pattern, message)
 
     pattern_str = r"/"
     pattern = re.compile(pattern_str)
     message = Report.conditional(what="Slash", where="in continuous text",
-                                 with_what="spelled out or", when="(if it not short for alias)")
+                                 with_what="written out or", when="(if it not short for alias)")
     re_lib["enumslash"] = (pattern, message)
 
     pattern_str = r">"
     pattern = re.compile(pattern_str)
-    message = Report.substitution(what="greater-than sign", with_what="spelled out")
+    message = Report.substitution(what="greater-than sign", with_what="written out")
     re_lib["greater"] = (pattern, message)
 
     pattern_str = r"<"
     pattern = re.compile(pattern_str)
-    message = Report.substitution(what="less-than sign", with_what="spelled out")
+    message = Report.substitution(what="less-than sign", with_what="written out")
     re_lib["less"] = (pattern, message)
 
     args = dict()

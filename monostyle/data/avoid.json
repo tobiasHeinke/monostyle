@@ -8,6 +8,7 @@
 ],
 "vague":[
 	"#another",
+	"#literally",
 	"#other",
 	"achieved",
 	"actual(ly)?",
@@ -49,6 +50,7 @@
 	"almost",
 	"enough",
 	"especially",
+	"fairly",
 	"few",
 	"huge",
 	"many",
@@ -58,6 +60,7 @@
 	"partly",
 	"quite",
 	"rare(ly)?",
+	"rather(?! than)",
 	"some",
 	"something",
 	"somewhat",
@@ -72,7 +75,8 @@
 	"mere(ly)?",
 	"obvious(ly)?",
 	"simple(ly)?",
-	"straightforward"
+	"straightforward",
+	"trivial"
 ],
 "humanization":[
 	"accepts",
@@ -84,9 +88,10 @@
 	"concern",
 	"controls",
 	"decides",
-	"guess",
+	"guess(es|ed)?",
 	"makes",
 	"predicts?",
+	"remember(s|ed)",
 	"takes?",
 	"tells?",
 	"try", "tries",

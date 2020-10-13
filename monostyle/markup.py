@@ -489,7 +489,7 @@ def search_directive(document, reports):
         # Sphinx custom ones
         'code-block', 'glossary', 'highlight', 'hlist', 'index', 'only', 'seealso', 'toctree',
         # Sphinx extension
-        'dropdown', 'vimeo', 'youtube'
+        'vimeo', 'youtube'
     )
 
 

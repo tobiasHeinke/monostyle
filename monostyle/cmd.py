@@ -68,6 +68,36 @@ def apply(rst_parser, mods, reports, document, parse_options, print_options,
     return reports, filename_prev
 
 
+def apply_file(rst_parser, mods, reports, path, parse_options):
+    """Apply tools on working copy text files."""
+    reports = []
+    show_current = bool(path)
+    filename_prev = None
+    print_options = options_overide()
+    if parse_options["resolve"]:
+        titles, targets = env.get_link_titles(rst_parser)
+        parse_options["titles"] = titles
+        parse_options["targets"] = targets
+    for filename, text in monostylestd.rst_texts(path):
+        doc = rst_parser.document(filename, text)
+        if show_current:
+            monostylestd.print_over("processing:",
+                                    "{0}[{1}-{2}]".format(monostylestd.path_to_rel(filename),
+                                                          0, doc.code.end_lincol[0]),
+                                    is_temp=True)
+
+        reports, filename_prev = apply(rst_parser, mods, reports, doc,
+                                       parse_options, print_options, filename_prev)
+
+    if print_options["show_summary"]:
+        reports_summary(reports, print_options)
+
+    if show_current:
+        monostylestd.print_over("processing: done")
+
+    return reports
+
+
 def hub(ops_sel, do_parse=True, do_resolve=False):
     reports = []
     ops_loop = []
@@ -82,19 +112,9 @@ def hub(ops_sel, do_parse=True, do_resolve=False):
         return reports
 
     rst_parser = RSTParser()
-    filename_prev = None
-    print_options = options_overide()
     parse_options = {"parse": do_parse, "resolve": do_resolve, "post": False}
-    if do_resolve:
-        titles, targets = env.get_link_titles(rst_parser)
-        parse_options["titles"] = titles
-        parse_options["targets"] = targets
-    for filename, text in monostylestd.rst_texts():
-        apply(rst_parser, ((ops_loop, None),), reports, rst_parser.document(filename, text),
-              parse_options, print_options, filename_prev)
+    reports = apply_file(rst_parser, ((ops_loop, None),), reports, None, parse_options)
 
-    if print_options["show_summary"]:
-        reports_summary(reports, print_options)
     return reports
 
 

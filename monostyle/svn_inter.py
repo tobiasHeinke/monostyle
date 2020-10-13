@@ -309,7 +309,7 @@ def replace_windows_path_sep(filename):
 
 def run_diff(from_vsn, is_internal, path, rev, cached=None):
     if from_vsn:
-        print("Current revision: ", get_revision(path))
+        print("Current revision:", get_revision(path))
 
     binary_ext = (".png", ".jpg", ".jpeg", ".gif", ".pyc")
     if from_vsn and is_internal:

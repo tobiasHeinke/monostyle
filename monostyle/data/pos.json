@@ -18,7 +18,7 @@
 		"both", "certain", "couple", "each", "either", "enough", "especially",
 		"ever", "every", "few", "fewer", "fewest", "huge", "least", "less", "little",
 		"many", "more", "most", "much", "neither", "none", "often", "other",
-		"overmuch", "partially", "partly", "plenty", "quite", "rare", "rarely",
+		"overmuch", "partially", "partly", "plenty", "rare", "rarely",
 		"several", "some", "something", "somewhat", "sufficient", "tiny", "totally",
 		"various", "very"
 	],
@@ -141,7 +141,7 @@
 	"lay", "play", "prevent",
 	"-ate", "-en", "-ify", "-ise", "-ize"
 ],
-"adverb": ["-ly", "-ward", "-wards", "-ways", "-wise"],
+"adverb": ["quite", "rather", "-ly", "-ward", "-wards", "-ways", "-wise"],
 "adjective": [
 	"big", "cool", "cold", "greater", "higher", "hot", "new", "old", "small",
 	"-able", "-ible", "-al", "-ial", "-ful", "-ic", "-ical", "-ish", "-ive", "-ative", "-less",
