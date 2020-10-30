@@ -55,10 +55,10 @@
 ],
 "pronoun": [
 	"I", "me", "my", "mine", "myself", "you", "your", "yours", "yourself", "yourselves",
-	"he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "it", "its", "itself",
+	"he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself",
 	"we", "us", "our", "ours", "ourselves", "they", "them", "their", "theirs", "themselves",
 	"this", "these", "those", "that", "former", "latter",
-	"who", "whom", "whose", "what", "which", "which",
+	"who", "whom", "whose", "what", "which",
 	"something", "someone", "somebody", "anything", "anyone", "anybody",
 	"nothing", "no one", "no-one", "nobody"
 ],
@@ -96,6 +96,12 @@
 		"as", "for", "from", "of", "on", "per", "than", "to", "with"
 	]
 },
+"contraction": [
+	"-'d", "-'ll", "-'m", "-'re", "-'ve", "-n't",
+	"everybody's", "everyone's", "he's", "how's", "it's", "let's", "ma'am",
+	"o'clock", "she's", "somebody's", "someone's", "something's",
+	"that's", "there's", "what's", "when's", "where's", "which's", "who's", "why's"
+],
 
 "abbreviation": {
 	"#source": "https://metacpan.org/pod/Text::Reflow",

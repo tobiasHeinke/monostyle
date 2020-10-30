@@ -380,6 +380,7 @@ def pos_weight(word):
             "distributive": [2, -2],
             "interrogative": [2, -2]
         },
+        "contraction": [0, -2],
         "abbreviation": {
             "title": {
                 "civil": [0, -4],

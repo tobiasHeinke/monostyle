@@ -96,6 +96,7 @@
 	"tells?",
 	"try", "tries",
 	"visits",
+	"wants",
 	"will do"
 ],
 "voice":[
@@ -121,9 +122,11 @@
 	"occasionally",
 	"possibly",
 	"potentially",
+	"practically",
 	"probably",
 	"seems?",
 	"sometimes?",
+	"theoretically",
 	"typically",
 	"usually"
 ],
@@ -134,7 +137,7 @@
 	"get(ting|s)? rid",
 	["go(ing)? in(to)?", ["switch to", "enter", "open"]],
 	"going(?! to)",
-	[["kind of", "sort of"], "type of"],
+	[["kinds? of", "sorts? of"], "type of"],
 	"neat", "nicely",
 	"(right|for) now",
 	"so (forth|now|on|to)",
