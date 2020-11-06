@@ -96,20 +96,23 @@ class Fragment():
         self.rermove_zero_len_end()
 
         if isinstance(new_content, str):
-            self.content.append(new_content)
             if not keep_end:
                 self.end_pos += len(new_content)
                 if self.end_lincol:
-                    self.end_lincol = (self.end_lincol[0] + 1, len(new_content))
+                    self.end_lincol = (self.end_lincol[0] + 1 if self.content
+                                       else self.end_lincol[0], len(new_content))
+
+            self.content.append(new_content)
         else:
-            self.content.extend(new_content)
             if not keep_end:
                 self.end_pos += sum(map(len, new_content))
 
                 if self.end_lincol:
-                    self.end_lincol = (self.end_lincol[0] + len(new_content),
+                    self.end_lincol = (self.end_lincol[0] + len(new_content) if self.content
+                                       else self.end_lincol[0] + max(0, len(new_content) - 1),
                                        len(new_content[-1]) if len(new_content) != 0 else 0)
 
+            self.content.extend(new_content)
         return self
 
 
@@ -134,13 +137,11 @@ class Fragment():
         if not self.end_lincol or not fg.end_lincol:
             self.content.extend(fg.content)
         else:
-            if fg.start_lincol == fg.end_lincol or len(fg.content) == 0:
-                return self
             if check_align and not self.is_aligned(fg, False):
                 return self
 
             if self.end_lincol == fg.start_lincol:
-                if len(self.content) != 0:
+                if len(self.content) != 0 and len(fg.content) != 0:
                     self.content[-1] += fg.content[0]
                     if len(fg.content) != 1:
                         self.content.extend(fg.content[1:])
@@ -165,8 +166,8 @@ class Fragment():
         else:
             if self.end_lincol == fg.start_lincol:
                 return True
-            if ((self.end_lincol == self.start_lincol or self.content[-1][-1] == "\n") and
-                    self.end_lincol[0] + 1 == fg.start_lincol[0] and fg.start_lincol[1] == 0):
+            if (fg.start_lincol[1] == 0 and self.end_lincol[0] + 1 == fg.start_lincol[0] and
+                    self.content and self.content[-1][-1] == '\n'):
                 return True
 
         return False

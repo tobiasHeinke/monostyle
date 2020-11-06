@@ -151,6 +151,12 @@ def grammar_pre(_):
     message = Report.substitution(what="then", where="after comparison", with_what="than")
     re_lib["comparethen"] = (pattern, message)
 
+    # FP 'only', not match 'by'
+    pattern_str = (r"\w(.)y\b\s+?\w[\w\-]+\1y\b")
+    pattern = re.compile(''.join(pattern_str), re.DOTALL)
+    message = Report.existing(what="two adverbs/adjectives with the same suffix")
+    re_lib["adsuffix"] = (pattern, message)
+
     args = dict()
     args["re_lib"] = re_lib
     args["config"] = {"severity": 'W', "toolname": toolname}

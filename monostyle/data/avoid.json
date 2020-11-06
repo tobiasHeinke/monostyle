@@ -43,7 +43,7 @@
 	"wherever",
 	"work(s|ing)?"
 ],
-"qualifiers":[
+"qualifier":[
 	"a bit",
 	"a little",
 	"a lot",
@@ -116,10 +116,15 @@
 	["should", "must or _ recommends"]
 ],
 "uncertainty":[
+	"almost",
 	"likely",
 	"maybe",
+	"most of",
+	"mostly",
+	"nearly",
 	"normally",
 	"occasionally",
+	"#often",
 	"possibly",
 	"potentially",
 	"practically",

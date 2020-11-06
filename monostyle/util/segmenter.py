@@ -16,8 +16,7 @@ class Segmenter:
         CC = CharCatalog()
         pos = PartofSpeech()
         # paragraph
-        # self.para_re = re.compile(r"(?:\n|\r\n?)(?:\n|\r\n?)+?", re.MULTILINE)
-        self.para_re = re.compile(r"\A\s+\Z")
+        self.para_re = re.compile(r"\n\s*\n", re.MULTILINE)
 
         # sentence
         pattern_str = r"([\w\.]+)?(?<!\.\.)([" + CC.data["terminal"]["final"] + r"])([\W\D]|\Z)"
@@ -75,22 +74,24 @@ class Segmenter:
     # -----------------
 
 
-    def iter_paragraph(self, fg):
+    def iter_paragraph(self, fg, output_openess=False):
+        buf_start = 0
         para_re = self.para_re
-        buf_start = fg.start_lincol
-        on_break = False
-
-        for line in fg.splitlines():
-            if re.match(para_re, str(line)):
-                on_break = True
+        text = str(fg)
+        for para_m in re.finditer(para_re, text):
+            para_fg = fg.slice(fg.loc_to_abs(buf_start), fg.loc_to_abs(para_m.end(0)), True)
+            if not output_openess:
+                yield para_fg
             else:
-                if on_break:
-                    yield fg.slice(buf_start, line.start_lincol, True)
-                    buf_start = line.start_lincol
+                yield para_fg, False
+            buf_start = para_m.end(0)
 
-                on_break = False
-
-        yield fg.slice(buf_start, right_inner=True)
+        if fg.loc_to_abs(buf_start) != fg.end_pos:
+            para_fg = fg.slice(fg.loc_to_abs(buf_start), right_inner=True)
+            if not output_openess:
+                yield para_fg
+            else:
+                yield para_fg, True
 
 
     def iter_sentence(self, fg, crop_start=False, crop_end=False, output_openess=False):
@@ -108,7 +109,7 @@ class Segmenter:
                 buf_start = sent_m.end(0)
                 continue
 
-            sent_fg = fg.slice(buf_start + fg.start_pos, sent_m.end(0) + fg.start_pos, True)
+            sent_fg = fg.slice(fg.loc_to_abs(buf_start), fg.loc_to_abs(sent_m.end(0)), True)
             if not output_openess:
                 yield sent_fg
             else:
@@ -117,7 +118,7 @@ class Segmenter:
             buf_start = sent_m.end(0)
 
         if not crop_end and buf_start != len(text):
-            sent_fg = fg.slice(buf_start + fg.start_pos, right_inner=True)
+            sent_fg = fg.slice(fg.loc_to_abs(buf_start), right_inner=True)
             if not output_openess:
                 yield sent_fg
             else:
@@ -134,7 +135,7 @@ class Segmenter:
         buf = None
         text = str(fg)
         for clause_m in re.finditer(clause_re, text):
-            c = fg.slice(buf_start +  fg.start_pos, clause_m.end(0) +  fg.start_pos, True)
+            c = fg.slice(fg.loc_to_abs(buf_start), fg.loc_to_abs(clause_m.end(0)), True)
             space_count = 0
             for line in c:
                 space_count += line.count(" ")
@@ -152,7 +153,7 @@ class Segmenter:
             buf_start = clause_m.end(0)
 
         if buf_start != len(text):
-            c = fg.slice(buf_start +  fg.start_pos, right_inner=True)
+            c = fg.slice(fg.loc_to_abs(buf_start), right_inner=True)
             space_count = 0
             for line in c:
                 space_count += line.count(" ")
@@ -178,12 +179,12 @@ class Segmenter:
         for pare_m in re.finditer(pare_re, text):
             if pare_m.group(0).count(" ") > threshold:
                 if buf_start != pare_m.start(0):
-                    yield fg.slice(buf_start + fg.start_pos, pare_m.start(0) + fg.start_pos, True)
+                    yield fg.slice(fg.loc_to_abs(buf_start), fg.loc_to_abs(pare_m.start(0)), True)
                 yield fg.slice_match_obj(pare_m, 0, True)
                 buf_start = pare_m.end(0)
 
         if buf_start != len(text):
-            yield fg.slice(buf_start + fg.start_pos, right_inner=True)
+            yield fg.slice(fg.loc_to_abs(buf_start), right_inner=True)
 
 
     def iter_word(self, fg):

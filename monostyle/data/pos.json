@@ -7,7 +7,7 @@
 		"the", "a", "an"
 	],
 	"demonstrative": [
-		"here", "that", "there", "these", "this", "those"
+		"here", "such", "that", "there", "these", "this", "those"
 	],
 	"possessive": [
 		"my", "mine", "your", "yours", "his", "her", "hers", "its",
@@ -17,7 +17,7 @@
 		"a bit", "a few", "a little", "a lot", "all", "almost", "another", "any",
 		"both", "certain", "couple", "each", "either", "enough", "especially",
 		"ever", "every", "few", "fewer", "fewest", "huge", "least", "less", "little",
-		"many", "more", "most", "much", "neither", "none", "often", "other",
+		"many", "more", "most", "much", "neither", "no", "none", "often", "other",
 		"overmuch", "partially", "partly", "plenty", "rare", "rarely",
 		"several", "some", "something", "somewhat", "sufficient", "tiny", "totally",
 		"various", "very"
@@ -72,7 +72,7 @@
 	"subordinate": [
 		"after", "although", "as", "as far as", "as if", "as long as",
 		"as soon as", "as though", "because", "before", "even if", "even though",
-		"every time", "if", "in order that", "since", "so", "so that",
+		"every time", "if", "in order that", "once", "since", "so", "so that",
 		"than", "though", "unless", "until", "when", "whenever", "where",
 		"whereas", "wherever", "while"
 	]
@@ -147,9 +147,13 @@
 	"lay", "play", "prevent",
 	"-ate", "-en", "-ify", "-ise", "-ize"
 ],
-"adverb": ["quite", "rather", "-ly", "-ward", "-wards", "-ways", "-wise"],
+"adverb": [
+	"again", "how", "just", "not", "now", "quite", "rather", "then", "too", "why",
+	"-ly", "-ward", "-wards", "-ways", "-wise"
+],
 "adjective": [
-	"big", "cool", "cold", "greater", "higher", "hot", "new", "old", "small",
+	"big", "cool", "cold", "further", "greater", "higher", "hot", "new",
+	"old", "own", "same", "small",
 	"-able", "-ible", "-al", "-ial", "-ful", "-ic", "-ical", "-ish", "-ive", "-ative", "-less",
 	"-eous", "-ious", "-ous", "-ose", "-y", "-ile", "-ant", "-ent", "-an", "-ian", "-ary"
 ],

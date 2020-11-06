@@ -148,6 +148,7 @@
 	"tuple",
 	"#type(?! of)",
 	"variables?",
-	"wildcard"
+	"wildcard",
+	"wrappers?"
 ]
 }

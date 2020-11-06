@@ -69,7 +69,7 @@ def get_reports_version(rst_parser, from_vsn, is_internal, path, rev=None, cache
     parse_options = {"parse": True, "resolve": False, "post": True}
     for fg, context, message in vsn_inter.run_diff(from_vsn, is_internal, path, rev, cached):
         if message is not None:
-            vsn_report = Report('W', "versioning-diff", fg, message)
+            vsn_report = Report('W', "versioning-diff", fg, message, fix=fg.copy().replace('\n'))
             filename_prev = print_report(vsn_report, print_options, filename_prev)
             reports.append(vsn_report)
             continue

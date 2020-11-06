@@ -179,9 +179,10 @@ def pos_case(document, reports):
         "role": "*", "emphasis": "*", "int-target": "*", "hyperlink": "*",
         "literal": "*", "standalone": "*"
     }
+    was_open = False
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        for sen in Segmenter.iter_sentence(part.code):
-            is_first_word = True
+        for sen, is_open in Segmenter.iter_sentence(part.code, output_openess=True):
+            is_first_word = not was_open
             for word in Segmenter.iter_word(sen):
                 if is_first_word:
                     is_first_word = False
@@ -195,6 +196,11 @@ def pos_case(document, reports):
                 if len(path) != 0 and path[0] not in ("noun", "abbreviation", "adjective", "verb"):
                     message = Report.misformatted(what="uppercase " + path[0])
                     reports.append(Report('W', toolname, word, message, sen))
+
+            was_open = is_open
+
+        if not part.parent_node.next:
+            was_open = False
 
     return reports
 
