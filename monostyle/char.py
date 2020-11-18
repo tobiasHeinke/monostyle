@@ -39,7 +39,7 @@ def char_search(document, reports):
             fg_repl = output.copy().replace_fill(repl) if repl else None
             reports.append(Report('E', toolname, output, message, fix=fg_repl))
 
-    parttern_str = r"[^\n -~À-ʨ" + ''.join(('©', '®', '°', '±', '€', '™', "\t")) + explicits +  r"]"
+    parttern_str = r"[^\n -~À-ʨ" + ''.join(('©', '®', '°', '±', '€', '™', "\t")) + explicits + r"]"
     char_re = re.compile(parttern_str)
     for char_m in re.finditer(char_re, text):
         message = "uncommon char: {0}, 0x{0:04x}".format(ord(char_m.group(0)))

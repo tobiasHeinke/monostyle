@@ -97,7 +97,7 @@ def apply(filename, tools, reports_unfixed, rst_parser):
     for entry in changes_file:
         for entry_new in new_changes:
             if (entry.start_lincol == entry_new.start_lincol and
-                    str(entry_new) == '\n' * len(entry_new) and
+                    len(entry_new) != 0 and str(entry_new) in '\n' * len(entry_new) and
                     entry.isspace()):
                 break
         else:

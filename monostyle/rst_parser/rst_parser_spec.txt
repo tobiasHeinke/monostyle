@@ -145,7 +145,7 @@ simple-table
 	␣ cell 1 ␣
 	 -------- {name_end, cell 1}
 	␣ cell 2 ␣
-	 ========  {name_end, head last cell}
+	 ======== {name_end, head last cell}
 	␣ {body} ␣
 	 ========
 
@@ -226,6 +226,7 @@ Default directive requires a blank line between start and body.
 Default directive no multi line head.
 Options lists option name itself and aliases are not split.
 Options lists args limited allowed chars.
+
 
 Inline
 ------

@@ -268,7 +268,10 @@ def metric(document, reports):
                         message = Report.quantity(what="multiple short paragraph",
                                                   how="{0}/{1} paragraphs".format(
                                                       counter["para_short"], 1))
-                        reports.append(Report('I', toolname, output, message, node_cur.code))
+
+                        reports.append(Report('I', toolname, output, message, node_cur.code
+                                              if not (node_cur.code.isspace() and node_cur.prev)
+                                              else node_cur.prev.code))
                         counter["para_short"] = 0
                     elif counter["para"] != 0:
                         counter["para_short"] = 0
@@ -361,6 +364,10 @@ def metric(document, reports):
                             counter["sen"] = 0
                             counter["para"] += 1
                             sen_full = None
+
+                    # paragraph end
+                    if not part.parent_node.next:
+                        sen_full = None
 
     if node_cur:
         if is_open and sen_full and not sen_full.isspace():

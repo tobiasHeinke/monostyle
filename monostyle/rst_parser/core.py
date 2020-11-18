@@ -7,7 +7,7 @@ A RST parser.
 """
 
 import re
-from monostyle.util.fragment import Fragment
+from monostyle.util.fragment import Fragment, FragmentBundle
 from monostyle.util.nodes import LinkedList
 from monostyle.rst_parser.rst_node import NodeRST, NodePartRST
 
@@ -1072,17 +1072,18 @@ class RSTParser:
                     border = before.combine(border)
 
                 if top_bottom:
-                    cell_node = NodeRST("cell", None)
+                    cell_node = NodeRST("cell", FragmentBundle([border]))
                 else:
                     cell_node = row.body.child_nodes[index - 1]
 
                 last = split_m.start(1)
                 # double sep
                 if top_bottom:
-                    cell_node.append_part("name_start", border, True)
-                    row.body.append_child(cell_node)
+                    cell_node.append_part("name_start", border)
+                    row.body.append_child(cell_node, False)
                 else:
-                    cell_node.append_part("name_end", border, True)
+                    cell_node.append_part("name_end", border)
+                    row.body.append_code(line, False)
 
 
         def cell(active, line):
@@ -1095,6 +1096,7 @@ class RSTParser:
                 active.active.append_child(row)
                 is_new = True
             else:
+                row.body.append_code(line)
                 is_new = False
 
             for index, cell_def_node in enumerate(table_def.body.child_nodes):
@@ -1117,7 +1119,7 @@ class RSTParser:
                     left, inner, right = code.slice_match_obj(trim_m, 1)
                     if is_new:
                         new_cell = NodeRST("cell", code)
-                        row.body.append_child(new_cell)
+                        row.body.append_child(new_cell, False)
                     else:
                         new_cell = row.body.child_nodes[index]
 
@@ -1198,16 +1200,17 @@ class RSTParser:
                 border = line.slice(line.loc_to_abs(last),
                                     line.loc_to_abs(split_m.start(0)), True)
                 if top_bottom:
-                    cell_node = NodeRST("cell", None)
+                    cell_node = NodeRST("cell", FragmentBundle([border]))
                 else:
                     cell_node = row.body.child_nodes[index + index_offset]
                 last = split_m.end(0)
                 # double sep
                 if top_bottom:
-                    cell_node.append_part("name_start", border, True)
-                    row.body.append_child(cell_node)
+                    cell_node.append_part("name_start", border)
+                    row.body.append_child(cell_node, False)
                 else:
-                    cell_node.append_part("name_end", border, True)
+                    cell_node.append_part("name_end", border)
+                    row.body.append_code(line)
 
 
         def cell(active, line):
@@ -1220,6 +1223,7 @@ class RSTParser:
                 active.active.append_child(row)
                 is_new = True
             else:
+                row.body.append_code(line)
                 is_new = False
 
             for index, cell_def_node in enumerate(table_def.body.child_nodes):
@@ -1239,7 +1243,7 @@ class RSTParser:
                     left, inner, right = code.slice_match_obj(trim_m, 1)
                     if is_new:
                         new_cell = NodeRST("cell", code)
-                        row.body.append_child(new_cell)
+                        row.body.append_child(new_cell, False)
                     else:
                         new_cell = row.body.child_nodes[index]
 

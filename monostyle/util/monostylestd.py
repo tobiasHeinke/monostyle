@@ -131,7 +131,7 @@ def get_data_file(path):
 def get_branch(data, path, index=0, silent=False):
     """Walk through data object.
 
-    path --  path through the tree hierarchy.
+    path -- path through the tree hierarchy.
     """
     if index < len(path):
         if (data := data.get(path[index])) is not None:

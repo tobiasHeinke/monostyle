@@ -69,8 +69,9 @@
 	"very"
 ],
 "difficulty":[
+	"basically",
 	"clearly",
-	"eas(y|ily|ier)",
+	"eas(e|y|ily|ier)",
 	"just",
 	"mere(ly)?",
 	"obvious(ly)?",
@@ -78,7 +79,7 @@
 	"straightforward",
 	"trivial"
 ],
-"humanization":[
+"anthropomorphism":[
 	"accepts",
 	"acts",
 	"ask",
@@ -91,9 +92,10 @@
 	"guess(es|ed)?",
 	"makes",
 	"predicts?",
+	"prefers",
 	"remember(s|ed)",
 	"takes?",
-	"tells?",
+	"tells?", "told",
 	"try", "tries",
 	"visits",
 	"wants",
@@ -117,6 +119,11 @@
 ],
 "uncertainty":[
 	"almost",
+	"by chance",
+	"considerable",
+	"exception(al|ally|s)?",
+	"generally",
+	"hopefully",
 	"likely",
 	"maybe",
 	"most of",

@@ -33,6 +33,11 @@ def number_pre(_):
     message = Report.existing(what="separator", where="between less than four digits")
     re_lib["digitsepless"] = (pattern, message)
 
+    pattern_str = start + r"0,\d"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="separator", where="after zero")
+    re_lib["digitsepzero"] = (pattern, message)
+
     pattern_str = r"\d \d"
     pattern = re.compile(pattern_str)
     message = Report.existing(what="space", where="between digits")
@@ -315,6 +320,12 @@ def mark_pre(_):
     message = Report.missing(what="space", where="after/before quote mark")
     re_lib["unquote"] = (pattern, message)
 
+    # not match: 'a' article; more than two letters are detected as misspelling
+    pattern_str = r"\w' +[b-zA-Z]\b"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="space", where="after apostrophe")
+    re_lib["spaceapos"] = (pattern, message)
+
     pattern_str = r"([^\w\d\s\-\.])\1|(?<!\.)\.\.(?!\.)"
     pattern = re.compile(pattern_str)
     message = Report.existing(what="double punctuation")
@@ -360,6 +371,11 @@ def mark_pre(_):
     pattern = re.compile(pattern_str)
     message = Report.substitution(what="less-than sign", with_what="written out")
     re_lib["less"] = (pattern, message)
+
+    pattern_str = r"~"
+    pattern = re.compile(pattern_str)
+    message = Report.substitution(what="about sign", with_what="written out")
+    re_lib["about"] = (pattern, message)
 
     args = dict()
     args["re_lib"] = re_lib

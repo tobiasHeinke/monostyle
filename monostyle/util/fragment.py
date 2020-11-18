@@ -159,7 +159,7 @@ class Fragment():
 
 
     def is_aligned(self, fg, pos_lincol):
-        """Check if two  fragments are aligned."""
+        """Check if two fragments are aligned."""
         if pos_lincol or not self.end_lincol or not fg.start_lincol:
             if self.end_pos == fg.start_pos:
                 return True

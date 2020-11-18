@@ -33,7 +33,7 @@ def unversioned_files(path, binary_ext):
             if binary_ext is not None and os.path.splitext(filename)[1] in binary_ext:
                 continue
 
-            yield  path + "/" + filename
+            yield path + "/" + filename
 
 
 def difference(from_vsn, is_internal, filename_source, rev, cached):

@@ -199,6 +199,7 @@ def pos_case(document, reports):
 
             was_open = is_open
 
+        # paragraph end
         if not part.parent_node.next:
             was_open = False
 
