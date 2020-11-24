@@ -70,6 +70,17 @@ def apply(filename, tools, reports_unfixed, rst_parser):
                     if report.fix is fg_conflict:
                         return report
 
+    def filter_tool_overlap(changes_file, changes):
+        """Filter out space at eol also removed by reflow."""
+        new_changes = []
+        for entry_old in changes_file:
+            for entry in changes:
+                if entry.start_lincol == entry_old.start_lincol and len(entry_old) == 0:
+                    break
+            else:
+                new_changes.append(entry_old)
+        new_changes.extend(changes)
+        return new_changes
 
     filename, text = monostylestd.single_text(filename)
     if text is None:
@@ -83,7 +94,7 @@ def apply(filename, tools, reports_unfixed, rst_parser):
             fg = document.code
             changes, unlocated = monostyle.reflow.fix(document.body, reports)
 
-            changes_file.extend(changes)
+            changes_file = filter_tool_overlap(changes_file, changes)
             reports_unfixed.extend(unlocated)
         else:
             for report in reports:
@@ -91,19 +102,6 @@ def apply(filename, tools, reports_unfixed, rst_parser):
 
     if len(changes_file) == 0:
         return reports_unfixed
-
-    # filter out space at eol removed already by reflow
-    new_changes = []
-    for entry in changes_file:
-        for entry_new in new_changes:
-            if (entry.start_lincol == entry_new.start_lincol and
-                    len(entry_new) != 0 and str(entry_new) in '\n' * len(entry_new) and
-                    entry.isspace()):
-                break
-        else:
-            new_changes.append(entry)
-
-    changes_file = new_changes
 
     if fg is None:
         fg = Fragment(filename, text)

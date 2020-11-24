@@ -692,12 +692,23 @@ class FragmentBundle():
 
     def combine(self, bd, pos_lincol=True, keep_end=False, merge=False):
         """Merge -- combine last and first if aligned."""
-        if merge and self and bd:
+        if not bd:
+            return self
+
+        bundle = bd.bundle if isinstance(bd, FragmentBundle) else [bd]
+
+        if keep_end:
+            bundle[-1].end_pos = self.bundle[-1].end_pos
+            if self.bundle[-1].end_lincol:
+                bundle[-1].end_lincol = self.bundle[-1].end_lincol
+
+        if merge and self:
             if self.is_aligned(bd, pos_lincol):
-                self.bundle[-1].combine(bd.bundle[0])
-                self.bundle.extend(bd.bundle[1:], keep_end)
+                self.bundle[-1].combine(bundle[0])
+                self.bundle.extend(bundle[1:])
         else:
-            self.bundle.extend(bd.bundle, keep_end)
+            self.bundle.extend(bundle)
+
         return self
 
 
@@ -720,7 +731,9 @@ class FragmentBundle():
         if not self or not bd:
             return True
 
-        return self.bundle[-1].is_aligned(bd.bundle[0], pos_lincol)
+        fg = bd.bundle[0] if isinstance(bd, FragmentBundle) else bd
+
+        return self.bundle[-1].is_aligned(fg, pos_lincol)
 
 
     def slice_match_obj(self, match_obj, groupno, right_inner=False, output_zero=True):

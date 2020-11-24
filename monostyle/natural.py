@@ -67,7 +67,7 @@ def indefinite_article(document, reports, re_lib, data):
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "target": "*",
+        "doctest": "*", "target": "*",
         "role": {
             "class": "*", "mod": "*", "math": "*"
         },
@@ -200,7 +200,7 @@ def search_pure(document, reports, re_lib, config):
             "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "target": "*",
+        "doctest": "*", "target": "*",
         "role": {
             "kbd": "*", "class": "*", "mod": "*", "math": "*"
         },
@@ -366,7 +366,8 @@ def metric(document, reports):
                             sen_full = None
 
                     # paragraph end
-                    if not part.parent_node.next:
+                    if (not part.parent_node.next and
+                            part.parent_node.parent_node.parent_node.next):
                         sen_full = None
 
     if node_cur:
@@ -416,7 +417,7 @@ def repeated_words(document, reports, config):
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "target": "*",
+        "doctest": "*", "target": "*",
         "role": {
             "kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"
         },

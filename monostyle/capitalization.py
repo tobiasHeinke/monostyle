@@ -97,12 +97,12 @@ def heading_cap_pre(_):
 
     pattern_str = r"\band\b"
     pattern = re.compile(pattern_str, re.IGNORECASE)
-    message = Report.substitution(what="and", where="in heading", with_what="ampersand")
+    message = Report.substitution(what="and", where="in heading", with_what="an ampersand")
     re_lib["and"] = (pattern, message)
 
     pattern_str = r"\bor\b"
     pattern = re.compile(pattern_str, re.IGNORECASE)
-    message = Report.substitution(what="or", where="in heading", with_what="slash")
+    message = Report.substitution(what="or", where="in heading", with_what="a slash")
     re_lib["or"] = (pattern, message)
 
     return {"re_lib": re_lib}
@@ -175,7 +175,7 @@ def pos_case(document, reports):
         },
         "def": {"*": ["head"]},
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "target": "*", "comment": "*",
+        "doctest": "*", "target": "*", "comment": "*",
         "role": "*", "emphasis": "*", "int-target": "*", "hyperlink": "*",
         "literal": "*", "standalone": "*"
     }
@@ -251,6 +251,7 @@ def starting(document, reports, re_lib):
             "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
+        "doctest": "*",
         "literal": "*", "standalone": "*"
     }
 
@@ -297,7 +298,7 @@ def property_noun_pre(_):
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "target": "*", "comment": "*",
+        "doctest": "*", "target": "*", "comment": "*",
         "role": {
             "kbd": "*", "class": "*", "mod": "*", "math": "*"
         },

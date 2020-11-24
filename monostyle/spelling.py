@@ -183,7 +183,7 @@ def word_filtered(document):
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "target": "*", "comment": "*",
+        "doctest": "*", "target": "*", "comment": "*",
         "role": {
             "kbd": "*", "class": "*", "mod": "*", "math": "*"
         },

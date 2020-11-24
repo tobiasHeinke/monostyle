@@ -141,7 +141,7 @@ def search_free(document, reports, comlist):
             "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "target": "*",
+        "doctest": "*", "target": "*",
         "role": {
             "kbd": "*", "class": "*", "mod": "*", "math": "*"
         },
@@ -176,7 +176,7 @@ def search_word(document, reports, comlist, config):
             "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "target": "*",
+        "doctest": "*", "target": "*",
         "role": {
             "kbd": "*", "class": "*", "mod": "*", "math": "*"
         },

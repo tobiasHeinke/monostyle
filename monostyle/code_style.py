@@ -200,6 +200,7 @@ def long_line(document, reports):
             "code-block": "*", "default": "*",
         },
         "substdef": {"image": ["head"]},
+        "doctest": "*",
     }
     line = None
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):

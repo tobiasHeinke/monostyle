@@ -139,7 +139,7 @@ def number(document, reports, re_lib):
             "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "comment": "*",
+        "doctest": "*", "comment": "*",
         "role": {"kbd": "*"},
         "literal": "*", "standalone": "*", "footref": "*", "citref": "*"
     }
@@ -199,8 +199,7 @@ def pairs(document, reports, re_lib, config):
     instr_neg = {
         "dir": {"code-block": "*", "default": "*", "math": "*", "youtube": "*", "vimeo": "*"},
         "substdef": {"unicode": "*", "replace": "*"},
-        "target": "*",
-        "comment": "*",
+        "doctest": "*", "target": "*", "comment": "*",
         "role": {"kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"},
         "literal": "*", "standalone": "*"
     }
@@ -326,7 +325,7 @@ def mark_pre(_):
     message = Report.existing(what="space", where="after apostrophe")
     re_lib["spaceapos"] = (pattern, message)
 
-    pattern_str = r"([^\w\d\s\-\.])\1|(?<!\.)\.\.(?!\.)"
+    pattern_str = r"([^\w\d\s\-\.])\1|(?<!\.)(?:\.{2}|\.{4})(?!\.)"
     pattern = re.compile(pattern_str)
     message = Report.existing(what="double punctuation")
     re_lib["double"] = (pattern, message)
@@ -397,6 +396,7 @@ def mark(document, reports, re_lib):
             "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
+        "doctest": "*",
         "literal": "*", "standalone": "*"
     }
 
@@ -426,9 +426,10 @@ def mark(document, reports, re_lib):
             "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": "*",
-        "def": {"*": ["head"]},
-        "target": {"*": ["head"]},
-        "standalone": "*"
+        "def": {"*": ["head"]}, "target": {"*": ["head"]},
+        "doctest": "*",
+        "standalone": "*",
+        "grid-table": "*", "simple-table": "*"
     }
 
     noend_re = re_lib["nopuncend"][0]
@@ -531,7 +532,8 @@ def whitespace(document, reports, re_lib):
     instr_neg = {
         "dir": {"code-block": "*", "default": "*"},
         "substdef": {"image": ["head"], "unicode": "*"},
-        "comment": "*"
+        "doctest": "*", "comment": "*",
+        "grid-table": "*", "simple-table": "*"
     }
 
     multi_start_re = re_lib["multispacestart"][0]
