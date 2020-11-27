@@ -61,6 +61,7 @@
 	"quite",
 	"rare(ly)?",
 	"rather(?! than)",
+	"slightly",
 	"some",
 	"something",
 	"somewhat",
@@ -69,6 +70,7 @@
 	"very"
 ],
 "difficulty":[
+	"apperant(ly)?",
 	"basically",
 	"clearly",
 	"eas(e|y|ily|ier)",
@@ -118,9 +120,11 @@
 	["should", "must or _ recommends"]
 ],
 "uncertainty":[
+	"a round",
 	"almost",
+	"arbitrar(ily|y)",
 	"by chance",
-	"considerable",
+	"consider(ed|able)",
 	"exception(al|ally|s)?",
 	"generally",
 	"hopefully",
@@ -144,6 +148,7 @@
 ],
 "informal":[
 	"# only ambiguous or spaced compounds",
+	"bring(s|ing)(?! out)",
 	["check out", ["please refer to", "see"]],
 	"(forget|scratch) that",
 	"get(ting|s)? rid",

@@ -60,7 +60,7 @@ class NodeRST(Node):
         setattr(self, name, newpart)
 
 
-    def append_code(self, code):
+    def append_code(self, code, check_align=True):
         if self.code is None:
             if code is None:
                 self.code = code
@@ -68,7 +68,7 @@ class NodeRST(Node):
                 self.code = code.copy()
         else:
             if code is not None and not self.is_parsing:
-                self.code.combine(code)
+                self.code.combine(code, check_align)
 
 
     def prev_leaf(self):
@@ -154,7 +154,7 @@ class NodePartRST(Node):
                 self.parent_node.parent_node.append_code(newnode.code)
 
 
-    def append_code(self, code):
+    def append_code(self, code, check_align=True):
         if self.code is None:
             if code is None:
                 self.code = code
@@ -162,7 +162,7 @@ class NodePartRST(Node):
                 self.code = code.copy()
         else:
             if code is not None and not self.is_parsing:
-                self.code.combine(code)
+                self.code.combine(code, check_align=check_align)
 
         if code is not None and self.parent_node is not None and not self.parent_node.is_parsing:
             self.parent_node.append_code(code)

@@ -1082,8 +1082,10 @@ class RSTParser:
                     cell_node.append_part("name_start", border)
                     row.body.append_child(cell_node, False)
                 else:
-                    cell_node.append_part("name_end", border)
-                    row.body.append_code(line, False)
+                    cell_node.append_part("name_end", border, True)
+
+                if not top_bottom:
+                    row.body.append_code(line)
 
 
         def cell(active, line):
@@ -1122,6 +1124,7 @@ class RSTParser:
                         row.body.append_child(new_cell, False)
                     else:
                         new_cell = row.body.child_nodes[index]
+                        new_cell.append_code(code, check_align=False)
 
                     if is_last:
                         after = line.slice(border_right.end_pos, right_inner=True)
@@ -1209,8 +1212,10 @@ class RSTParser:
                     cell_node.append_part("name_start", border)
                     row.body.append_child(cell_node, False)
                 else:
-                    cell_node.append_part("name_end", border)
-                    row.body.append_code(line)
+                    cell_node.append_part("name_end", border, True)
+
+            if not top_bottom:
+                row.body.append_code(line)
 
 
         def cell(active, line):
@@ -1246,6 +1251,7 @@ class RSTParser:
                         row.body.append_child(new_cell, False)
                     else:
                         new_cell = row.body.child_nodes[index]
+                        new_cell.append_code(code, check_align=False)
 
                     if not new_cell.body:
                         new_cell.append_part("body_start", left)
