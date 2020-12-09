@@ -63,7 +63,7 @@ def indefinite_article(document, reports, re_lib, data):
     instr_neg = {
         "dir": {
             "figure": ["head"],
-            "code-block": "*", "default": "*", "include": "*", "toctree": "*",
+            "code-block": "*", "default": "*", "include": "*", "index": "*", "toctree": "*",
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
@@ -196,7 +196,7 @@ def search_pure(document, reports, re_lib, config):
     instr_neg = {
         "dir": {
             "figure": ["head"],
-            "code-block": "*", "default": "*", "include": "*",
+            "code-block": "*", "default": "*", "include": "*", "index": "*",
             "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
@@ -284,7 +284,7 @@ def metric(document, reports):
     }
     instr_neg = {
         "dir": {
-            "*": ["head"], "include": "*", "toctree": "*",
+            "*": ["head"], "include": "*", "index": "*", "toctree": "*",
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
         },
         "def": {"*": ["head"]},
@@ -413,7 +413,7 @@ def repeated_words(document, reports, config):
     instr_neg = {
         "dir": {
             "figure": ["head"],
-            "code-block": "*", "default": "*", "include": "*", "toctree": "*",
+            "code-block": "*", "default": "*", "include": "*", "index": "*", "toctree": "*",
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},

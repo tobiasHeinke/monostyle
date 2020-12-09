@@ -392,7 +392,7 @@ def mark(document, reports, re_lib):
     }
     instr_neg = {
         "dir": {
-            "figure": ["head"], "toctree": "*", "include": "*",
+            "figure": ["head"], "toctree": "*", "include": "*", "index": "*",
             "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
@@ -420,7 +420,7 @@ def mark(document, reports, re_lib):
     }
     instr_neg = {
         "dir": {
-            "figure": ["head"], "toctree": "*", "include": "*",
+            "figure": ["head"], "toctree": "*", "include": "*", "index": "*",
             "admonition": ["head"], "hint": ["head"], "important": ["head"],
             "note": ["head"], "tip": ["head"], "warning": ["head"], "rubric": ["head"],
             "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"

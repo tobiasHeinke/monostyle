@@ -61,7 +61,7 @@ class Fragment():
         self.end_lincol = end_lincol
 
 
-    def to_fragment(self, filler=None):
+    def to_fragment(self, pos_lincol=None, filler=None):
         return self
 
 

@@ -23,7 +23,7 @@ CharCatalog = CharCatalog()
 
 
 def titlecase(word, is_first_word, is_last_word, name):
-    """Cicago style titlecase."""
+    """Chicago style titlecase."""
     word_str = str(word)
     if is_first_word or is_last_word:
         if word_str[0].islower():
@@ -170,7 +170,7 @@ def pos_case(document, reports):
             "figure": ["head"],
             "admonition": ["head"], "hint": ["head"], "important": ["head"],
             "note": ["head"], "tip": ["head"], "warning": ["head"], "rubric": ["head"],
-            "code-block": "*", "default": "*", "include": "*", "toctree": "*",
+            "code-block": "*", "default": "*", "include": "*", "index": "*", "toctree": "*",
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
         },
         "def": {"*": ["head"]},
@@ -247,7 +247,7 @@ def starting(document, reports, re_lib):
     }
     instr_neg = {
         "dir": {
-            "figure": ["head"], "toctree": "*", "include": "*",
+            "figure": ["head"], "toctree": "*", "include": "*", "index": "*",
             "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
@@ -294,7 +294,7 @@ def property_noun_pre(_):
     instr_neg = {
         "dir": {
             "figure": ["head"],
-            "code-block": "*", "default": "*", "include": "*", "toctree": "*",
+            "code-block": "*", "default": "*", "include": "*", "index": "*", "toctree": "*",
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
@@ -412,7 +412,7 @@ def typ_caps_pre(_):
             # all lower except last
             pattern_str = splitter[:-1]
             pattern_str.append(words[-1])
-            term.append(" ".join(pattern_str))
+            term.append(r"\b" + " ".join(pattern_str))
 
             if len(splitter) > 2:
                 for index in range(0, len(words)):
@@ -420,7 +420,7 @@ def typ_caps_pre(_):
                         pattern_str = words[:index]
                         pattern_str.append(re.escape(splitter[index]))
                         pattern_str.extend(words[index + 1:])
-                        term.append(" ".join(pattern_str))
+                        term.append(r"\b" + " ".join(pattern_str))
 
             searchlist.append([term, head])
 
@@ -429,23 +429,33 @@ def typ_caps_pre(_):
         return searchlist
 
     typs = (
-        ("Modifier", "/modeling/modifiers/", ["common_options"]),
-        ("Constraint", "/animation/constraints/", ["adding_removing", "common", "header", "stack"]),
-        ("Node", "/compositing/types", ["groups"]),
-        ("Node", "/render/shader_nodes", ["osl"]),
-        ("Node", "/editors/texture_node/types", []),
-        ("Strip", "/video_editing/sequencer/strips", [])
+        ("Modifier", "modeling/modifiers/", ["common_options"]),
+        ("Constraint", "animation/constraints/", ["adding_removing", "common", "header", "stack"]),
+        ("Node", "compositing/types/", ["groups"]),
+        ("Node", "render/shader_nodes/", ["osl"]),
+        ("Node", "editors/texture_node/types/", []),
+        ("Node", "modeling/modifiers/nodes/", []),
+        ("Strip", "video_editing/sequencer/strips/", [])
     )
     searchlist = []
     for kind, path, ignore in typs:
-        ignore.append("index")
-        ignore.append("introduction")
+        ignore.extend(("index", "introduction"))
 
         for filename, text in monostylestd.rst_texts(monostylestd.path_to_abs(path, "rst")):
+            skip = False
             for skip_filename in ignore:
                 if filename.endswith(skip_filename + ".rst"):
+                    skip = True
                     break
-            else:
+
+            # is not nested
+            filename_rel = monostylestd.path_to_rel(filename, "rst")
+            for _, path_rec, __ in typs:
+                if (path != path_rec and len(path) < len(path_rec) and
+                        filename_rel.startswith(path_rec)):
+                    skip = True
+                    break
+            if not skip:
                 document = rst_parser.parse(rst_parser.document(filename, text))
                 searchlist = typ_titles(document, kind, searchlist)
 

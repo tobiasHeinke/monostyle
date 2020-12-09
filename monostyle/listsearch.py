@@ -137,7 +137,7 @@ def search_free(document, reports, comlist):
     instr_neg = {
         "dir": {
             "figure": ["head"],
-            "code-block": "*", "default": "*", "include": "*",
+            "code-block": "*", "default": "*", "include": "*", "index": "*",
             "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
@@ -172,7 +172,7 @@ def search_word(document, reports, comlist, config):
     instr_neg = {
         "dir": {
             "figure": ["head"],
-            "code-block": "*", "default": "*", "include": "*",
+            "code-block": "*", "default": "*", "include": "*", "index": "*",
             "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},

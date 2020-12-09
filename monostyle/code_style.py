@@ -341,7 +341,8 @@ def blank_line(document, reports):
         return nl_count, prev_node, False
 
 
-    pos_over_heading = (("target",), ("comment",), ("substdef",), ("dir", "highlight"))
+    pos_over_heading = (("target",), ("comment",), ("substdef",),
+                        ("dir", "highlight"), ("dir", "index"))
     for node in rst_walker.iter_node(document.body):
         if node.node_name == "sect" or rst_walker.is_of(node, "dir", "rubric"):
             display_name = "heading" if node.node_name == "sect" else "rubric"

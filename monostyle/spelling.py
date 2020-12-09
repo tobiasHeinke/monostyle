@@ -179,7 +179,7 @@ def word_filtered(document):
     instr_neg = {
         "dir": {
             "figure": ["head"],
-            "code-block": "*", "default": "*", "include": "*", "toctree": "*",
+            "code-block": "*", "default": "*", "include": "*", "index": "*", "toctree": "*",
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
