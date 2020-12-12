@@ -358,7 +358,7 @@ def mark_pre(_):
     pattern_str = r"/"
     pattern = re.compile(pattern_str)
     message = Report.conditional(what="Slash", where="in continuous text",
-                                 with_what="written out or", when="(if it not short for alias)")
+                                 with_what="written out or/per", when="(if it not short for alias)")
     re_lib["enumslash"] = (pattern, message)
 
     pattern_str = r">"

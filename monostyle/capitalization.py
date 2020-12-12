@@ -49,7 +49,8 @@ def titlecase(word, is_first_word, is_last_word, name):
                                       where="in " + name)
 
         fg_repl = None
-        if not path or path[0] != "preposition":
+        if (not path or (path[0] != "preposition" and
+                (path[-1] != "article" or word_str != "A"))):
             fg_repl = word.slice(word.start_pos, word.start_pos + 1, True)
             fg_repl.replace(str(fg_repl).swapcase())
 

@@ -11,6 +11,7 @@ import re
 from monostyle.util.report import Report, getline_punc
 from monostyle.util.fragment import Fragment
 import monostyle.rst_parser.walker as rst_walker
+from monostyle.rst_parser.core import RSTParser
 
 
 def heading_level(document, reports):
@@ -297,12 +298,17 @@ def leak_pre(_):
 
     # BLOCK
     # Directive
-    pattern_str = r"\:\:[A-Za-z\d_-]"
+    pattern_str = r"^ *\.\. +(?:" + r"|".join(RSTParser.directives) + r")\:\s"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="suspicious comment")
+    re_lib["dirsingleend"] = (pattern, message)
+
+    pattern_str = r"(?<=\w)\:\:\w"
     pattern = re.compile(pattern_str)
     message = Report.missing(what="space", where="after directive")
-    re_lib["dirend"] = (pattern, message)
+    re_lib["dirnoend"] = (pattern, message)
 
-    pattern_str = r"(?:^|(?<=\s))\.\.[A-Za-z]"
+    pattern_str = r"^ *\.\.[A-Za-z]"
     pattern = re.compile(pattern_str)
     message = Report.missing(what="space", where="in middle of directive")
     re_lib["dirmid"] = (pattern, message)
@@ -473,7 +479,6 @@ def search_directive(document, reports):
     """Find unknown/uncommon roles and directives names."""
     toolname = "directive"
 
-
     roles = (
         'abbr', 'class', 'doc', 'download', 'guilabel', 'index', 'kbd', 'math',
         'menuselection', 'mod', 'ref', 'sub', 'sup', 'term'
@@ -492,12 +497,13 @@ def search_directive(document, reports):
         'vimeo', 'youtube'
     )
 
-
     for node in rst_walker.iter_node(document.body, ("dir", "role", "block-quote")):
         if node.node_name == "role":
             if node.name:
-                if str(node.name.code).strip() not in roles:
-                    message = "unknown/uncommon role"
+                node_name_str = str(node.name.code).strip()
+                if node_name_str not in roles:
+                    message = ("uncommon role" if node_name_str in RSTParser.roles
+                               else "unknown role")
                     reports.append(Report('E', toolname, node.name.code, message))
             else:
                 reports.append(Report('E', toolname, node.body.code, "default role"))
@@ -505,7 +511,8 @@ def search_directive(document, reports):
         elif node.node_name == "dir":
             name = str(node.name.code).strip() if node.name else node.name
             if name and name not in directives:
-                message = "unknown/uncommon directive"
+                message = ("uncommon directive" if name in RSTParser.directives
+                           else "unknown directive")
                 reports.append(Report('E', toolname, node.name.code, message))
 
             if name == "raw":
