@@ -13,9 +13,10 @@ For example style guide rules that have exceptions which can't be filtered out.
 Supported for versioning are SVN and Git (experimental).
 
 Monostyle is build as a framework and not as a ready-made tool
-because the tools require customization like markup filtering or you might not want to use Chicago style title case. 
+because the tools and data require customization like markup filtering or you might not want to use Chicago style title case. 
 It includes its own RST parser and a port of the [Reflow line wrapper](https://metacpan.org/pod/Text::Reflow).
 Its utilities can also be used for text editing with scripts.
+Monostyle is customized for the[Blender manual](https://developer.blender.org/project/profile/53/).
 
 
 ## Setup
@@ -26,7 +27,7 @@ For spell checking a dictionary has to build.
 On first run you have to confirm to start this (or also if the dictionary file is not found).
 
 The dictionary has to be updated from time to time or after a new topic has been added
-to include new words (of cause the whole project has to be spell-checked).
+to include new words (of cause the whole project has to be spell-checked at this point).
 To do this run the `spelling` script:
 ```sh
 python -m monostyle.spelling
