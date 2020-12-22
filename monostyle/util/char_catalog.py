@@ -18,7 +18,7 @@ class CharCatalog:
 
     def get(self, path, index=0, joined=True):
         """Return a data segment.
-        joined -- join all subordinary leafs.
+        joined -- join all subordinate leafs.
         """
         def iter_sub(obj):
             for value in obj.values():
@@ -118,7 +118,7 @@ class CharCatalog:
 
 
     def stringify(self, chars, apply_escape=True):
-        """Join a mixed list of single chars and tuble for ranges."""
+        """Join a mixed list of single chars and tuple for ranges."""
         region = []
         for entry in chars:
             if isinstance(entry, tuple):
@@ -134,7 +134,7 @@ class CharCatalog:
 
 
     def join(self, chars):
-        """Find ranges and store them as tubles."""
+        """Find ranges and store them as tuples."""
         region = []
         buf = None
         last = ""
@@ -186,7 +186,7 @@ class CharCatalog:
 
 
     def split(self, pattern_str):
-        """Parse the pattern for dashes and store them as tubles."""
+        """Parse the pattern for dashes and store them as tuples."""
         chars = []
         was_esc = False
         was_dash = False

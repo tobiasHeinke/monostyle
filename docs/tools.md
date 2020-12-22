@@ -104,9 +104,18 @@ Additional markup conventions.
 
 Indefinite article a/an.
 
+### collocation
+
+Search for space-separated versions of compounds like 'may be' vs. 'maybe'.
+
 ### grammar
 
 Grammar linting.
+
+### hyphen
+
+Search for space-separated or joined versions of hyphened compounds like 'sub step' vs. 'substep' vs. 'sub-step'.
+
 
 ### metric
 

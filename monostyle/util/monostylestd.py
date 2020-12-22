@@ -150,7 +150,7 @@ def override_typecheck(obj, ref, op_name, key_name=None):
     No callables.
     """
     def print_error(obj, typs, op_name, key_name):
-        print("{0} unvalid type {1} expected {2}".format(op_name,
+        print("{0} invalid type {1} expected {2}".format(op_name,
               type(obj).__name__, ", ".join(t.__name__ for t in typs)),
               "in " + key_name if key_name else "")
 
@@ -160,7 +160,7 @@ def override_typecheck(obj, ref, op_name, key_name=None):
         for key in obj.keys():
             if key not in ref_keys:
                 if len(ref_keys) != 0:
-                    print("{0} unvalid key {1}".format(op_name, key),
+                    print("{0} invalid key {1}".format(op_name, key),
                           "in " + key_name if key_name else "")
                     invalid_keys.append(key)
                 continue

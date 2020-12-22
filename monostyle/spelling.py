@@ -216,7 +216,7 @@ def norm_punc(word_cont, re_lib):
 
 
 def lower_first(word):
-    """Lower case of first char in hypened compound."""
+    """Lower case of first char in hyphened compound."""
     new_word = []
     for compound in word.split('-'):
         if len(compound) != 0:
@@ -228,7 +228,7 @@ def lower_first(word):
 
 
 def lower_first_reverse(word, ref):
-    """Upper case of first char in hypened compound based on a reference word."""
+    """Upper case of first char in hyphened compound based on a reference word."""
     new_word = []
     word_spit = word.split('-')
     ref_split = ref.split('-')

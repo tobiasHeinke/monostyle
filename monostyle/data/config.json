@@ -26,7 +26,7 @@
 			"ext": ".rst"
 		},
 		"natural": {
-			"tools": ["article", "grammar", "metric", "passive", "repeated"],
+			"tools": ["article", "grammar", "hyphen", "metric", "passive", "repeated"],
 			"ext": ".rst"
 		},
 		"code_style": {

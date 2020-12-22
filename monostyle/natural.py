@@ -130,6 +130,80 @@ def indefinite_article(document, reports, re_lib, data):
     return reports
 
 
+def collocation_pre(_):
+    """Find spaced versions of joined compounds."""
+    global listsearch
+    import monostyle.listsearch as listsearch
+    import monostyle.spelling as spelling
+
+    def split_rec(lexicon, word, is_first_level, result=None, branch=None):
+        if result is None:
+            result = []
+        if branch is None:
+            branch = []
+
+        c = word[0]
+        if c in lexicon.keys():
+            for word_rec in lexicon[c]:
+                if len(word_rec) > len(word) or not word.startswith(word_rec):
+                    continue
+
+                if len(word_rec) != len(word):
+                    branch_copy = branch.copy()
+                    branch_copy.append(word_rec)
+                    result = split_rec(lexicon, word[len(word_rec):], False, result, branch_copy)
+
+                else:
+                    if not is_first_level:
+                        branch.append(word_rec)
+                        result.append(branch)
+
+        return result
+
+    lexicon = spelling.read_csv_lexicon()
+
+    # prefixes, file extensions (containing a vowel)
+    ignore = ('ad', 'al', 'ati', 'de', 'ed', 'eg', 'el', 'es', 'ing', 'po', 'py', 're', 'un')
+
+    lexicon_new = []
+    for word, _ in lexicon:
+        if "-" in word or "." in word or POS.isacr(word):
+            continue
+        if re.search(r"\d", word):
+            continue
+        # non ASCII vowels
+        if len(word) < 4 and not re.search(r"[aeiou]", word):
+            continue
+        if word in ignore:
+            continue
+
+        lexicon_new.append(word)
+
+    lexicon = spelling.split_lexicon(lexicon_new)
+    del lexicon_new
+
+    searchlist = []
+    for value in lexicon.values():
+        for word in value:
+            if len(word) <= 4:
+                continue
+
+            result = split_rec(lexicon, word, True)
+            if result:
+                terms = list(r"\s+?".join(group) for group in result)
+                searchlist.append([terms, word])
+
+    args = dict()
+    args["config"] = listsearch.parse_config("BI")
+    args["data"] = listsearch.compile_searchlist(searchlist, args["config"])
+
+    return args
+
+
+def collocation(document, reports, data, config):
+    return listsearch.search(document, reports, data, config)
+
+
 def grammar_pre(_):
     toolname = "grammar"
 
@@ -162,6 +236,50 @@ def grammar_pre(_):
     args["config"] = {"severity": 'W', "toolname": toolname}
 
     return args
+
+
+def hyphen_pre(_):
+    """Find spaced or joined versions of hyphened compounds."""
+    global listsearch
+    import monostyle.listsearch as listsearch
+    import monostyle.spelling as spelling
+
+    ratio_threshold = 0.55
+    count_threshold_joined = 3
+    # can be lower if the spelling is uniform
+    count_threshold_spaced = 6
+
+    lexicon = spelling.read_csv_lexicon()
+    searchlist = []
+    dash_re = re.compile(r"(?<!\A)\-(?!\Z)")
+    for word, count in lexicon:
+        if not re.search(dash_re, word):
+            continue
+
+        word_join = re.sub(r"\-", "", word)
+        count = int(count) + 1
+        for word_rec, count_rec in lexicon:
+            if word_join != word_rec:
+                continue
+
+            count_rec = int(count_rec) + 1
+            if (count_rec / (count_rec + count) < ratio_threshold and
+                    (count_rec + count / 2) > count_threshold_joined):
+                searchlist.append([word_rec, word])
+                break
+
+        if count > count_threshold_spaced:
+            searchlist.append([re.sub(dash_re, "\\\\s+?", word), word])
+
+    args = dict()
+    args["config"] = listsearch.parse_config("BI")
+    args["data"] = listsearch.compile_searchlist(searchlist, args["config"])
+
+    return args
+
+
+def hyphen(document, reports, data, config):
+    return listsearch.search(document, reports, data, config)
 
 
 def passive_pre(_):
@@ -474,7 +592,9 @@ def repeated_words(document, reports, config):
 
 OPS = (
     ("article", indefinite_article, indefinite_article_pre),
+    ("collocation", collocation, collocation_pre),
     ("grammar", search_pure, grammar_pre),
+    ("hyphen", hyphen, hyphen_pre),
     ("metric", metric, None),
     ("passive", search_pure, passive_pre),
     ("repeated", repeated_words, repeated_words_pre),

@@ -51,8 +51,26 @@ class PartofSpeech:
             del obj[key]
 
 
-    def get(self, path, index=0):
-        return get_branch(self.data, path, index)
+    def get(self, path, index=0, joined=False):
+        """
+        joined -- join all subordinate leafs.
+        """
+        def iter_sub(obj):
+            if isinstance(obj, dict):
+                for value in obj.values():
+                    if not isinstance(value, str):
+                            yield from iter_sub(value)
+                    else:
+                        yield value
+            else:
+                for entry in obj:
+                    yield entry
+
+        obj = get_branch(self.data, path, index)
+        if not joined or isinstance(obj, str) or isinstance(obj, list):
+            return obj
+
+        return list(value for value in iter_sub(obj))
 
 
     def tag(self, word):

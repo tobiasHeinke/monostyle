@@ -4,7 +4,7 @@
 	"now you should have",
 	"#https://developer.salesforce.com/docs/atlas.en-us.216.0.salesforce_pubs_style_guide.meta/salesforce_pubs_style_guide/style_allow_let.htm",
 	[["allows?", "lets?"], "restructure so the reader is the subject"],
-	["automat(e|ic|ically|ions?)", "only use as an acronym of manually"]
+	["automat(e|ic|ically|ions?)", "only use as the opposite of manually"]
 ],
 "vague":[
 	"#another",
@@ -18,7 +18,7 @@
 	"anytime",
 	"anyway",
 	"anywhere",
-	"do(ne|ing|es)?",
+	"do(es|ing|ne)?",
 	"elsewhere",
 	"enhances?",
 	"eventually",
@@ -33,7 +33,6 @@
 	"mak(e|ing)",
 	"nothing",
 	"operat(es?|ing)",
-	"really",
 	"refines?",
 	"strictly",
 	"specified",
@@ -71,17 +70,25 @@
 	"very"
 ],
 "difficulty":[
+	"#quickly, efficiently",
 	"apperant(ly)?",
 	"basically",
 	"clearly",
 	"eas(e|y|ily|ier)",
+	"effortless",
 	"intuitive(ly)?",
 	"just",
+	"manageable",
 	"mere(ly)?",
+	"not difficult",
+	"not hard",
+	"naturally",
 	"obvious(ly)?",
+	"of course",
 	"simple(ly)?",
 	"straightforward",
-	"trivial"
+	"trivial",
+	"undemanding"
 ],
 "anthropomorphism":[
 	"accepts",
@@ -127,6 +134,8 @@
 ],
 "uncertainty":[
 	"#be chosen",
+	"#mainly",
+	"#often",
 	"able to",
 	"a round",
 	"almost",
@@ -142,24 +151,24 @@
 	"generally",
 	"guess", "be guessed",
 	"hopefully",
-	"likely",
 	"maybe",
 	"most of",
 	"mostly",
 	"nearly",
 	"normally",
 	"occasional(ly)?",
-	"#often",
 	"possibl[ey]",
 	"potential(ly)?",
 	"practical(ly)?",
 	"probabl[ey]",
+	"really",
 	"seeks?",
 	"seem(s|ing|ingly)?",
 	"sometimes?",
 	"theoretical(ly)?",
 	"try",
 	"typical(ly)?",
+	"(un)?likely",
 	"usual(ly)?"
 ],
 "informal":[

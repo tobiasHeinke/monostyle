@@ -59,15 +59,14 @@ class Segmenter:
         self.number_re = re.compile(''.join(pattern_str))
 
         self.abbr_re = pos.abbr_re
-        self.abbrs = self._join_abbr_data(pos.get(("abbreviation",)))
+        self.abbrs = self._filter_abbr_data(pos.get(("abbreviation",), joined=True))
 
 
-    def _join_abbr_data(self, data):
+    def _filter_abbr_data(self, data):
         abbrs = []
-        for value in data.values():
-            for entry in value:
-                if not re.match(self.abbr_re, entry):
-                    abbrs.append(entry)
+        for entry in data:
+            if not re.match(self.abbr_re, entry):
+                abbrs.append(entry)
         return abbrs
 
 
