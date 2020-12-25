@@ -196,16 +196,18 @@ def word_filtered(document):
             par_node = par_node.parent_node.parent_node
 
         # refbox parts
-        if (par_node.node_name != "field" or
-                not(str(par_node.name.code) in ("File", "Maintainer") or
+        if (par_node.node_name == "field" and
+                (str(par_node.name.code) in ("File", "Maintainer") or
                     re.match(r"Author(?:[\(/]?s\)?)?", str(par_node.name.code)))):
-            for line in part.code.splitlines():
-                for word in Segmenter.iter_word(line):
-                    word_cont = str(word)
-                    if len(word) > 1:
-                        if re.search(dev_re, word_cont):
-                            continue
-                        yield word
+            continue
+
+        for word in Segmenter.iter_word(part.code):
+            word_cont = str(word)
+            if len(word) < 2:
+                continue
+            if re.search(dev_re, word_cont):
+                continue
+            yield word
 
 
 def norm_punc(word_cont, re_lib):
@@ -284,11 +286,11 @@ def difference(lex_stored, lex_new):
 
     monostylestd.print_title("Added", True)
     for word in sorted(lex_new.difference(lex_stored)):
-        print(word + ', ', end="")
+        print(word)
 
     monostylestd.print_title("Removed", True)
     for word in sorted(lex_stored.difference(lex_new)):
-        print(word + ', ', end="")
+        print(word)
 
 
 

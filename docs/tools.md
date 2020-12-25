@@ -24,7 +24,7 @@ Explicit search for terms and capitalization.
   - vague: unspecific verbs like 'make'.
   - qualifier: requires the reader to make an assessment, e.g. 'very' can often be removed.
   - difficulty: simplicity is subjective. Can be condescending.
-  - anthropomorphism: attribute programs or algorithms human qualities, e.g. 'wants' thus a will.
+  - anthropomorphism: verbs that attribute programs or algorithms human qualities, e.g. 'wants' thus a will.
   - voice: how to address the reader.
   - pronoun: non gender neutral pronouns.
   - uncertainty: requires the reader to make an assessment or the writer is unsure.
@@ -33,7 +33,7 @@ Explicit search for terms and capitalization.
   - style: miscellaneous rules.
 
 - dev
-  - development: wording for release node not belonging in docs and limitations that might be outdated.
+  - development: wording for release nodes not belonging in docs and limitations that might be outdated.
   - CS technical term: software development jargon.
 
 - simplify: complicated words (long, loan or uncommon words and official language).
@@ -100,6 +100,11 @@ Additional markup conventions.
 
 ## Natural
 
+### abbrevation
+
+Find abbreviations/acronyms without an explanation.
+(It will not find explanations that are split by phrases like 'stands for'.)
+
 ### article
 
 Indefinite article a/an.
@@ -115,7 +120,6 @@ Grammar linting.
 ### hyphen
 
 Search for space-separated or joined versions of hyphened compounds like 'sub step' vs. 'substep' vs. 'sub-step'.
-
 
 ### metric
 
@@ -138,7 +142,7 @@ Number and unit formatting.
 
 ### pairs
 
-Check pairs of parenthesis/brackets, quote marks for being not closed.
+Check pairs of parenthesis/brackets, quote marks for not matched/closed.
 
 ### mark
 
@@ -199,7 +203,7 @@ Unused glossary terms.
 
 ### link-titles
 
-Finds (ref) links where the title mismatches the headline title.
+Finds (ref) links where the title mismatches the heading title.
 
 ### local-targets
 

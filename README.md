@@ -13,10 +13,13 @@ For example style guide rules that have exceptions which can't be filtered out.
 Supported for versioning are SVN and Git (experimental).
 
 Monostyle is build as a framework and not as a ready-made tool
-because the tools and data require customization like markup filtering or you might not want to use Chicago style title case. 
+because the tools and data require customization.
+For example you might not want to use Chicago style title case or you might have different technical terms that are acceptable.
 It includes its own RST parser and a port of the [Reflow line wrapper](https://metacpan.org/pod/Text::Reflow).
 Its utilities can also be used for text editing with scripts.
-Monostyle is customized for the[Blender manual](https://developer.blender.org/project/profile/53/).
+Monostyle is customized for the [Blender manual](https://developer.blender.org/project/profile/53/).
+
+Please refer to [Tools](/docs/tools.md) for a listing.
 
 
 ## Setup

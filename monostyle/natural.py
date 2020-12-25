@@ -10,6 +10,7 @@ import re
 
 import monostyle.util.monostylestd as monostylestd
 from monostyle.util.report import Report, getline_punc
+from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.segmenter import Segmenter
 from monostyle.util.pos import PartofSpeech
@@ -18,6 +19,155 @@ from monostyle.util.porter_stemmer import Porterstemmer
 PorterStemmer = Porterstemmer()
 Segmenter = Segmenter()
 POS = PartofSpeech()
+
+
+def abbreviation_pre(_):
+    """Search for abbreviation/acronyms without an explanation."""
+    def is_explanation(abbr, desc):
+        """Check if the words start with the letters of the abbreviation."""
+        desc_split = []
+        for lexeme in re.split(r"[\s-]", desc):
+            for camel_m in re.finditer(r"([A-Z]+|\A)[^A-Z]+", lexeme):
+                desc_split.append(camel_m.group(0)[0])
+
+        for char in abbr.replace(".", ""):
+            if char not in desc_split:
+                return False
+            desc_split.remove(char)
+
+        return True
+
+    rst_parser = RSTParser()
+    explanations = dict()
+    ignore = monostylestd.get_data_file("common_abbr")
+
+    for entry in POS.get(("abbreviation",), joined=True):
+        if POS.isabbr(entry + "."):
+            ignore.append(entry + ".")
+
+    ignore = list(entry.upper() for entry in ignore)
+
+    instr_pos = {
+        "sect": {"*": ["name"]},
+        "field": {"*": ["name", "body"]},
+        "*": {"*": ["head", "body"]}
+    }
+    instr_neg = {
+        "dir": {
+            "figure": ["head"],
+            "code-block": "*", "default": "*", "include": "*", "index": "*",
+            "math": "*", "youtube": "*", "vimeo": "*"
+        },
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
+        "doctest": "*", "target": "*", "comment": "*",
+        "role": {
+            "kbd": "*", "class": "*", "mod": "*", "math": "*", "term": "*"
+        },
+        "literal": "*", "standalone": "*"
+    }
+
+    before_test_re = re.compile(r"\(\s*?\Z")
+    after_test_re = re.compile(r"\A\s*?\(")
+    after_re = re.compile(r"\A\s*?\(([^\)]+?)\)")
+
+    for filename, text in monostylestd.rst_texts():
+        document = rst_parser.parse(rst_parser.document(filename, text))
+
+        # todo glossary terms as explanation?
+        explanation_file = []
+        for node in rst_walker.iter_node(document.body, ("role",), enter_pos=False):
+            if not rst_walker.is_of(node, "role", "abbr"):
+                continue
+
+            explanation_file.append((str(node.head.code).strip(), node.head.code.start_pos))
+
+        explanations[filename] = explanation_file
+
+        # Plain text/no markup explanations.
+        for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
+            for word in Segmenter.iter_word(part.code):
+                if not POS.isacr(word) and not POS.isabbr(word):
+                    continue
+
+                word_str = str(word).strip()
+                before, _, after = part.code.slice(word.start_pos, word.end_pos)
+                if re.match(after_test_re, str(after)):
+                    if after_m := re.match(after_re, str(after)):
+                        if is_explanation(word_str, after_m.group(1)):
+                            explanation_file.append((word_str, word.start_pos))
+
+                elif re.search(before_test_re, str(before)):
+                    before_pattern = (r"((?:\b[\w\d-]+ ){",
+                                      str(sum(c.isupper() for c in word_str)),
+                                      r"})\s*?\(\s*?\Z")
+                    if before_m := re.search("".join(before_pattern), str(before)):
+                        if is_explanation(word_str, before_m.group(1)):
+                            explanation_file.append((word_str, word.start_pos))
+
+    args = dict()
+    args["data"] = {"explanations": explanations, "ignore": ignore}
+    args["config"] = (instr_pos, instr_neg)
+    return args
+
+
+def abbreviation(document, reports, data, config):
+    toolname = "abbreviation"
+
+    for part in rst_walker.iter_nodeparts_instr(document.body, config[0], config[1]):
+        for word in Segmenter.iter_word(part.code):
+            if not POS.isacr(word) and not POS.isabbr(word):
+                continue
+            if str(word).upper() in data["ignore"]:
+                continue
+            word_str = str(word)
+            word_re = re.compile(word_str + r"s?\s*?\Z" if not word_str.endswith("s")
+                                 else word_str + r"?\s*?\Z")
+            for entry, loc in data["explanations"][document.code.filename]:
+                if re.match(word_re, entry):
+                    if word.start_pos < loc:
+                        msg = "abbr before the explanation"
+                        line = getline_punc(part.code, word.start_pos, len(word), 50, 30)
+                        reports.append(Report('I', toolname, word, msg, line))
+                    break
+
+            else:
+                msg = "no explanation on same page"
+                severity = 'I'
+                found = False
+                for key, value in data["explanations"].items():
+                    if key == document.code.filename:
+                        continue
+                    for entry_rec, _ in value:
+                        if re.match(word_re, entry_rec):
+                            found = True
+                            break
+                    if found:
+                        # Compare folder hierarchy.
+                        dir_key = key.strip("/")
+                        dir_key = dir_key[:dir_key.rfind("/")] if "/" in dir_key else ""
+                        dir_doc = document.code.filename.strip("/")
+                        dir_doc = dir_doc[:dir_doc.rfind("/")] if "/" in dir_doc else ""
+
+                        if len(dir_key) <= len(dir_doc):
+                            if dir_key == dir_doc:
+                                msg += " (same directory)"
+                            elif dir_doc.startswith(dir_key):
+                                msg += " (above file)"
+                            else:
+                                severity = 'W'
+                        else:
+                            severity = 'W'
+                            if dir_key.startswith(dir_doc):
+                                msg += " (below file)"
+                        break
+                if not found:
+                    msg = "no explanation"
+                    severity = 'W'
+
+                line = getline_punc(part.code, word.start_pos, len(word), 50, 30)
+                reports.append(Report(severity, toolname, word, msg, line))
+
+    return reports
 
 
 def indefinite_article_pre(_):
@@ -591,6 +741,7 @@ def repeated_words(document, reports, config):
 
 
 OPS = (
+    ("abbr", abbreviation, abbreviation_pre, True),
     ("article", indefinite_article, indefinite_article_pre),
     ("collocation", collocation, collocation_pre),
     ("grammar", search_pure, grammar_pre),
