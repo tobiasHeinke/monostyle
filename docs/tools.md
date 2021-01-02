@@ -9,7 +9,7 @@ An overview of the modules and tools.
 Find rare or new words. This is a multi tool because it detects:
 
 - Spelling errors, also detects valid word e.g. 'which' vs. 'witch' and
-  words that are not in a general dictionary like business/product names.
+  words that are not in a general dictionary like business and product names.
 - Word choices like not simple words, interjection like 'heck', etc.
 - Compounding/hyphenation (if the words are not used individually like 'well defined').
 - Acronyms and capitalization within a word.
@@ -25,10 +25,12 @@ Explicit search for terms and capitalization.
   - qualifier: requires the reader to make an assessment, e.g. 'very' can often be removed.
   - difficulty: simplicity is subjective. Can be condescending.
   - anthropomorphism: verbs that attribute programs or algorithms human qualities, e.g. 'wants' thus a will.
+  - computer characteristic: adverbs that superficially describe expected characteristics of computer programs
+    like speed thus 'instant' results.
   - voice: how to address the reader.
   - pronoun: non gender neutral pronouns.
   - uncertainty: requires the reader to make an assessment or the writer is unsure.
-  - modal verbs: same as uncertainty.
+  - modal verb: same as uncertainty.
   - informal: words and phrases unsuited for docs.
   - style: miscellaneous rules.
 
@@ -100,14 +102,14 @@ Additional markup conventions.
 
 ## Natural
 
-### abbrevation
+### abbreviation
 
 Find abbreviations/acronyms without an explanation.
 (It will not find explanations that are split by phrases like 'stands for'.)
 
 ### article
 
-Indefinite article a/an.
+Indefinite article a or an.
 
 ### collocation
 
@@ -142,7 +144,7 @@ Number and unit formatting.
 
 ### pairs
 
-Check pairs of parenthesis/brackets, quote marks for not matched/closed.
+Check pairs of parenthesis/brackets, quote marks for not being matched.
 
 ### mark
 

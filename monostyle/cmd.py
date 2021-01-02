@@ -57,6 +57,10 @@ def apply(rst_parser, mods, reports, document, parse_options, print_options,
             continue
 
         for op in ops:
+            # init failed
+            if op[1] is None:
+                continue
+
             reports_tool = []
             reports_tool = op[0](document, reports_tool, **op[1])
 

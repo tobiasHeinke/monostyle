@@ -89,7 +89,7 @@ def heading_cap_pre(_):
     pattern_str = r"\-[a-z]"
     pattern = re.compile(pattern_str)
     message = Report.misformatted(what="lowercase", where="in heading after hyphen")
-    re_lib["hypen"] = (pattern, message)
+    re_lib["hyphen"] = (pattern, message)
 
     pattern_str = r"[^\w \-&/()'\"\\?!:,\n]"
     pattern = re.compile(pattern_str)

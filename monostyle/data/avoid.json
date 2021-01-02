@@ -3,8 +3,7 @@
 	"hence",
 	"now you should have",
 	"#https://developer.salesforce.com/docs/atlas.en-us.216.0.salesforce_pubs_style_guide.meta/salesforce_pubs_style_guide/style_allow_let.htm",
-	[["allows?", "lets?"], "restructure so the reader is the subject"],
-	["automat(e|ic|ically|ions?)", "only use as the opposite of manually"]
+	[["allows?", "lets?"], "restructure so the reader is the subject"]
 ],
 "vague":[
 	"#another",
@@ -61,6 +60,7 @@
 	"quite",
 	"rare(ly)?",
 	"rather(?! than)",
+	"several",
 	"slightly",
 	"some",
 	"something",
@@ -116,17 +116,31 @@
 	"wants",
 	"will do"
 ],
+"computer characteristic":[
+	"#ad hoc",
+	"#quickly",
+	"at once",
+	["automat(e|ic|ically|ions?)", "only use as the opposite of manually"],
+	"directly",
+	"immediat(e|ely)",
+	"instant(aneously|ly)?",
+	"promptly",
+	"right away",
+	"straight ?away",
+	"swiftly"
+],
 "voice":[
 	"I(?!\\.e\\.)", "I'(ll|m|ve)", "me", "mine",
 	"we", "we'(ll|re|ve)", "us", "our", "let's",
-	"the user(?! interface)"
+	"the user(?! interface)", "users"
 ],
 "pronoun":[
 	"he", "he'(d|ll|s)", "his",
 	"she", "she'(d|ll|s)", "her"
 ],
-"modal verbs":[
+"modal verb":[
 	"#https://developer.salesforce.com/docs/atlas.en-us.216.0.salesforce_pubs_style_guide.meta/salesforce_pubs_style_guide/style_can.htm",
+	"#semi-modal: need, have, used to",
 	["could", "can"],
 	["may", "not use"],
 	["might", "use imperative"],
@@ -143,6 +157,7 @@
 	"ambivalent",
 	"arbitrar(ily|y)",
 	"attempt(s|ing)?",
+	"approximat(e(ly)?|ions?)",
 	"assum(ed?|ing)",
 	"by chance",
 	"commonly",
@@ -176,6 +191,7 @@
 	"as you",
 	"bring(s|ing)(?! out)",
 	["check out", ["please refer to", "see"]],
+	"comes",
 	"(forget|scratch) that",
 	"get(ting|s)? rid",
 	["go(ing)? in(to)?", ["switch to", "enter", "open"]],
@@ -184,9 +200,11 @@
 	"neat", "nicely",
 	"(right|for) now",
 	"say you",
-	"so (forth|now|on|to)",
+	"shows? up",
+	"so (forth|now|on|that|this|to)",
+	"now,? (that|this|to)",
 	"sooner or later",
-	[["turn on", "turn off"], ["de/activate", "dis/enable"]],
+	["turn (on|off)", "de/activate", "dis/enable"],
 	"whatever", "what ever",
 	"what not",
 	"what so ever"

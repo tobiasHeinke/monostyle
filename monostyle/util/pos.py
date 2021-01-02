@@ -106,8 +106,14 @@ class PartofSpeech:
 
 
     def isacr(self, word):
-        return bool(re.match(self.acr_re, str(word)))
+        if acr_m := re.match(self.acr_re, str(word)):
+            if acr_m.end() - acr_m.start() == len(word):
+                return True
+        return False
 
 
     def isabbr(self, word):
-        return bool(re.match(self.abbr_re, str(word)))
+        if abbr_m := re.match(self.abbr_re, str(word)):
+            if abbr_m.end() - abbr_m.start() == len(word):
+                return True
+        return False

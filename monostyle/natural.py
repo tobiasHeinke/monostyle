@@ -30,12 +30,7 @@ def abbreviation_pre(_):
             for camel_m in re.finditer(r"([A-Z]+|\A)[^A-Z]+", lexeme):
                 desc_split.append(camel_m.group(0)[0])
 
-        for char in abbr.replace(".", ""):
-            if char not in desc_split:
-                return False
-            desc_split.remove(char)
-
-        return True
+        return "".join(desc_split).upper().endswith(abbr.rstrip('s').upper())
 
     rst_parser = RSTParser()
     explanations = dict()
@@ -125,7 +120,7 @@ def abbreviation(document, reports, data, config):
             for entry, loc in data["explanations"][document.code.filename]:
                 if re.match(word_re, entry):
                     if word.start_pos < loc:
-                        msg = "abbr before the explanation"
+                        msg = "abbreviation before its explanation"
                         line = getline_punc(part.code, word.start_pos, len(word), 50, 30)
                         reports.append(Report('I', toolname, word, msg, line))
                     break
@@ -311,6 +306,8 @@ def collocation_pre(_):
         return result
 
     lexicon = spelling.read_csv_lexicon()
+    if not lexicon:
+        return None
 
     # prefixes, file extensions (containing a vowel)
     ignore = ('ad', 'al', 'ati', 'de', 'ed', 'eg', 'el', 'es', 'ing', 'po', 'py', 're', 'un')
@@ -400,6 +397,9 @@ def hyphen_pre(_):
     count_threshold_spaced = 6
 
     lexicon = spelling.read_csv_lexicon()
+    if not lexicon:
+        return None
+
     searchlist = []
     dash_re = re.compile(r"(?<!\A)\-(?!\Z)")
     for word, count in lexicon:
@@ -513,6 +513,8 @@ def metric(document, reports):
 
         else:
             if counter["sen"] > conf["sen_len"]:
+                if not sen_full:
+                    print(node_cur.code.repr(False))
                 output = sen_full.copy().clear(True)
                 message = Report.quantity(what="long sentence",
                                           how="{0}/{1} words".format(
@@ -627,6 +629,7 @@ def metric(document, reports):
                         else:
                             sen_full = document.body.code.slice(
                                            sen_full.start_lincol, sen.end_lincol, True)
+
                         if not is_open:
                             reports = compare(node_cur, sen_full, counter, reports, True)
                             counter["sen"] = 0
@@ -636,6 +639,8 @@ def metric(document, reports):
                     # paragraph end
                     if (not part.parent_node.next and
                             part.parent_node.parent_node.parent_node.next):
+                        reports = compare(node_cur, sen_full, counter, reports, True)
+                        counter["sen"] = 0
                         sen_full = None
 
     if node_cur:
@@ -741,7 +746,7 @@ def repeated_words(document, reports, config):
 
 
 OPS = (
-    ("abbr", abbreviation, abbreviation_pre, True),
+    ("abbreviation", abbreviation, abbreviation_pre, True),
     ("article", indefinite_article, indefinite_article_pre),
     ("collocation", collocation, collocation_pre),
     ("grammar", search_pure, grammar_pre),

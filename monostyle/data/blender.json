@@ -23,7 +23,7 @@
 	[["node graph", "node map"], "node tree"],
 	[["noodles"], "node setup"],
 	[["command(?![ -]line)"], "tool (if not console command)"],
-	[["windows?"], "only when referring to an OS window/ the OS Windows"],
+	[["windows?"], "as an UI element only for an OS window"],
 
 	[["top header", "Info editor header"], "Topbar"],
 	[["Tool Shelf", "toolshelf", "tools shelf", "toolsshelf"], "Sidebar"],

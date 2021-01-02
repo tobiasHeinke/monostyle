@@ -199,32 +199,37 @@ class RSTParser:
         is_first = True
         line_info_prev = None
         line_info = {"is_not_blank": False}
-        for line in node.code.splitlines():
-            line_str = str(line)
-            line_info = {"is_block_start": not line_info["is_not_blank"],
-                         "line_str": line_str,
-                         "is_block_end": False}
+        line = None
+        for buf in node.code.splitlines(True):
+            if line:
+                line_str = str(line)
+                line_info = {"is_block_start": not line_info["is_not_blank"],
+                             "line_str": line_str,
+                             "line_str_next": str(buf) if buf else None,
+                             "is_block_end": False}
 
-            if m := re.match(ind_re, line_str):
-                if block_ind is None:
-                    if not is_first or not ind_first_unkown:
-                        block_ind = m.end(1)
+                if m := re.match(ind_re, line_str):
+                    if block_ind is None:
+                        if not is_first or not ind_first_unkown:
+                            block_ind = m.end(1)
+                        else:
+                            block_ind = node.code.start_lincol[1]
                     else:
-                        block_ind = node.code.start_lincol[1]
+                        block_ind = min(block_ind, m.end(1))
+
+                    line_info["ind_cur"] = line.start_lincol[1] + m.end(1)
+                    line_info["is_not_blank"] = True
                 else:
-                    block_ind = min(block_ind, m.end(1))
+                    line_info["ind_cur"] = 0
+                    line_info["is_not_blank"] = False
+                    if line_info_prev:
+                        line_info_prev["is_block_end"] = True
 
-                line_info["ind_cur"] = line.start_lincol[1] + m.end(1)
-                line_info["is_not_blank"] = True
-            else:
-                line_info["ind_cur"] = 0
-                line_info["is_not_blank"] = False
-                if line_info_prev:
-                    line_info_prev["is_block_end"] = True
+                lines.append((line, line_info))
+                line_info_prev = line_info
+                is_first = False
 
-            lines.append((line, line_info))
-            line_info_prev = line_info
-            is_first = False
+            line = buf
 
         line_info["is_block_end"] = True
 
@@ -321,10 +326,6 @@ class RSTParser:
             elif node.active.node_name in {"dir", "target", "comment", "substdef",
                                            "footdef", "citdef"}:
                 node, sub = self.explicit_block(line, line_info, on, node, sub)
-            elif node.active.node_name == "trans":
-                node = self.transition(line, line_info, node)
-                if node.active:
-                    node = self.section(line, line_info, on, node)
             elif node.active.node_name == "sect":
                 node = self.section(line, line_info, on, node)
             elif node.active.node_name == "doctest":
@@ -336,7 +337,10 @@ class RSTParser:
             elif node.active.node_name == "block-quote":
                 node = self.block_quote(line, line_info, on, node)
             else:
-                node = self.section(line, line_info, on, node)
+                if node.active.node_name == "trans":
+                    node = self.transition(line, line_info, node)
+                if node.active:
+                    node = self.section(line, line_info, on, node)
                 if (node.active and node.active.node_name != "sect") or sub:
                     node, sub = self.def_list(line, line_info, on, node, sub)
                     if node.active and node.active.node_name == "text":
@@ -518,6 +522,15 @@ class RSTParser:
                 if line_info["is_block_end"]:
                     node.append_child(node.active)
                     node.active = None
+                    return node
+                elif not re.match(self.re_lib["trans"], line_info["line_str_next"]):
+                    # only if short overline else warn
+                    node.active.node_name = "text"
+                    node.active.indent.code.combine(node.active.name_start.code)
+                    node.active.body = node.active.indent
+                    node.active.body.node_name = "body"
+                    node.active.indent = None
+                    node.active.name_start = None
                     return node
 
                 node.active.append_part("name", line, True)

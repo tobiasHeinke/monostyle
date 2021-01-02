@@ -202,17 +202,16 @@ def word_filtered(document):
             continue
 
         for word in Segmenter.iter_word(part.code):
-            word_cont = str(word)
             if len(word) < 2:
                 continue
-            if re.search(dev_re, word_cont):
+            if re.search(dev_re, str(word)):
                 continue
             yield word
 
 
 def norm_punc(word_cont, re_lib):
     """Normalize the word's punctuation."""
-    word_cont = re.sub(re_lib["hypen"], '-', word_cont)
+    word_cont = re.sub(re_lib["hyphen"], '-', word_cont)
     word_cont = re.sub(re_lib["apostrophe"], '\'', word_cont)
     return word_cont
 
@@ -297,7 +296,7 @@ def difference(lex_stored, lex_new):
 def compile_lib():
     re_lib = dict()
     char_catalog = CharCatalog()
-    re_lib["hypen"] = re.compile(r"[" + char_catalog.data["connector"]["hyphen"] + r"]")
+    re_lib["hyphen"] = re.compile(r"[" + char_catalog.data["connector"]["hyphen"] + r"]")
     re_lib["apostrophe"] = re.compile(r"[" + char_catalog.data["connector"]["apostrophe"] + r"]")
     return re_lib
 

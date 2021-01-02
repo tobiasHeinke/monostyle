@@ -31,18 +31,18 @@ class Segmenter:
         self.parenthesis_re = re.compile(r"\([^)]+?(\).?\s*|\Z)")
 
         # word
-        hypen = CC.data["connector"]["hyphen"]
+        hyphen = CC.data["connector"]["hyphen"]
         apostrophe = CC.data["connector"]["apostrophe"]
         # abbreviation
         pattern_str = (
             r"(\b(?:(?:[", CC.unicode_set("A-Za-z", 0, 7), r"]\.){2,})|",
             # compound: dash with letters on both sides and
             # one at start and end (for pre-/suffixes).
-            r"(?:[", hypen, r"]|\b)[", CC.unicode_set("A-Za-z", 0, 7), r"](?:\w*",
+            r"(?:[", hyphen, r"]|\b)[", CC.unicode_set("A-Za-z", 0, 7), r"](?:\w*",
             # contraction: with letters on both sides and after s at word end.
-            r"(?<=\w)[", apostrophe, hypen, r"]?(?=\w)\w*)*",
+            r"(?<=\w)[", apostrophe, hyphen, r"]?(?=\w)\w*)*",
             r"(?:(?<=s)[" + apostrophe + r"](?!\w)|\b)",
-            r"[", hypen, r"]?)"
+            r"[", hyphen, r"]?)"
         )
 
         self.word_re = re.compile(''.join(pattern_str))
