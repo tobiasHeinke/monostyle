@@ -337,11 +337,11 @@ def collocation_pre(_):
 
             result = split_rec(lexicon, word, True)
             if result:
-                terms = list(r"\s+?".join(group) for group in result)
+                terms = list(" ".join(group) for group in result)
                 searchlist.append([terms, word])
 
     args = dict()
-    args["config"] = listsearch.parse_config("BI")
+    args["config"] = listsearch.parse_config("BIO")
     args["data"] = listsearch.compile_searchlist(searchlist, args["config"])
 
     return args
@@ -419,10 +419,10 @@ def hyphen_pre(_):
                 break
 
         if count > count_threshold_spaced:
-            searchlist.append([re.sub(dash_re, "\\\\s+?", word), word])
+            searchlist.append([re.sub(dash_re, " ", word), word])
 
     args = dict()
-    args["config"] = listsearch.parse_config("BI")
+    args["config"] = listsearch.parse_config("BIO")
     args["data"] = listsearch.compile_searchlist(searchlist, args["config"])
 
     return args
@@ -513,8 +513,6 @@ def metric(document, reports):
 
         else:
             if counter["sen"] > conf["sen_len"]:
-                if not sen_full:
-                    print(node_cur.code.repr(False))
                 output = sen_full.copy().clear(True)
                 message = Report.quantity(what="long sentence",
                                           how="{0}/{1} words".format(

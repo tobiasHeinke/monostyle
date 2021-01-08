@@ -1069,7 +1069,7 @@ class RSTParser:
 
     def grid_table(self, line, line_info, node):
         def row_sep(active, line, top_bottom):
-            row = active.active.child_nodes.last()
+            row = active.active.active
             last = row.body.code.start_lincol[1]
             for index, split_m in enumerate(re.finditer(r"(\+)([-=])?", line_info["line_str"])):
                 if index == 0:
@@ -1081,7 +1081,7 @@ class RSTParser:
                     after = line.slice(line.loc_to_abs(split_m.start(1)), right_inner=True)
                     border.combine(after)
                 if index == 1:
-                    before, _ = line.slice(line.loc_to_abs(split_m.start(1)))
+                    before, _ = line.slice(line.loc_to_abs(last))
                     border = before.combine(border)
 
                 if top_bottom:
@@ -1097,18 +1097,19 @@ class RSTParser:
                 else:
                     cell_node.append_part("name_end", border, True)
 
-                if not top_bottom:
-                    row.body.append_code(line)
+            if not top_bottom:
+                row.body.append_code(line)
 
 
         def cell(active, line):
-            table_def = active.head.child_nodes.last()
-            row = active.active.child_nodes.last()
+            table_def = (active.head.child_nodes.first() if not active.head.child_nodes.is_empty()
+                         else active.head.active)
+            row = active.active.active
             if (not row or (not row.body.child_nodes.is_empty() and
                             row.body.child_nodes.first().name_end)):
                 row = NodeRST("row", line)
                 row.append_part("body", line)
-                active.active.append_child(row)
+                active.active.active = row
                 is_new = True
             else:
                 row.body.append_code(line)
@@ -1133,11 +1134,11 @@ class RSTParser:
                     trim_m = re.match(r"\s*(.*?)\s*\Z", str(code))
                     left, inner, right = code.slice_match_obj(trim_m, 1)
                     if is_new:
-                        new_cell = NodeRST("cell", code)
+                        new_cell = NodeRST("cell", FragmentBundle([code]))
                         row.body.append_child(new_cell, False)
                     else:
                         new_cell = row.body.child_nodes[index]
-                        new_cell.append_code(code, check_align=False)
+                        new_cell.append_code(code)
 
                     if is_last:
                         after = line.slice(border_right.end_pos, right_inner=True)
@@ -1152,7 +1153,7 @@ class RSTParser:
                         new_cell.body_end.code.combine(right.combine(border_right))
 
                 else:
-                    print("{0}:{1}: grid table colums not conforming"
+                    print("{0}:{1}: grid table columns not conforming"
                           .format(line.filename, line.start_lincol[0]))
 
         if not node.active or node.active.node_name != "grid-table":
@@ -1165,7 +1166,7 @@ class RSTParser:
                 newnode.append_part("indent", ind)
                 newnode.append_part("body", after)
 
-                prime.head.append_child(newnode)
+                prime.head.active = newnode
 
                 if node.active:
                     node.append_child(node.active)
@@ -1177,10 +1178,12 @@ class RSTParser:
             if node.active.active.node_name == "head":
                 if re.match(self.re_lib["grid_head_border"], line_info["line_str"]):
                     row_sep(node.active, line, False)
+                    node.active.active.append_child(node.active.active.active)
                     node.active.append_part("body", None)
                     node.active.active = node.active.body
                 elif re.match(self.re_lib["grid_border"], line_info["line_str"]):
                     row_sep(node.active, line, False)
+                    node.active.active.append_child(node.active.active.active)
                     if line_info["is_block_end"]:
                         # body only
                         node.active.body = node.active.head
@@ -1196,6 +1199,7 @@ class RSTParser:
                     cell(node.active, line)
                 else:
                     row_sep(node.active, line, False)
+                    node.active.active.append_child(node.active.active.active)
                     if line_info["is_block_end"]:
                         line_info["is_not_blank"] = False
                         node.append_child(node.active)
@@ -1206,7 +1210,7 @@ class RSTParser:
 
     def simple_table(self, line, line_info, node):
         def row_sep(active, line, top_bottom):
-            row = active.active.child_nodes.last()
+            row = active.active.active
             last = row.body.code.start_lincol[1]
             index_offset = 0
             for index, split_m in enumerate(re.finditer(r"\s+", line_info["line_str"])):
@@ -1232,13 +1236,14 @@ class RSTParser:
 
 
         def cell(active, line):
-            table_def = active.head.child_nodes.last()
-            row = active.active.child_nodes.last()
+            table_def = (active.head.child_nodes.first() if not active.head.child_nodes.is_empty()
+                         else active.head.active)
+            row = active.active.active
             if (not row or (not row.body.child_nodes.is_empty() and
                             row.body.child_nodes.first().body)):
                 row = NodeRST("row", line)
                 row.append_part("body", line)
-                active.active.append_child(row)
+                active.active.active = row
                 is_new = True
             else:
                 row.body.append_code(line)
@@ -1260,11 +1265,11 @@ class RSTParser:
                     trim_m = re.match(r"\s*(.*?)\s*\Z", str(code))
                     left, inner, right = code.slice_match_obj(trim_m, 1)
                     if is_new:
-                        new_cell = NodeRST("cell", code)
+                        new_cell = NodeRST("cell", FragmentBundle([code]))
                         row.body.append_child(new_cell, False)
                     else:
                         new_cell = row.body.child_nodes[index]
-                        new_cell.append_code(code, check_align=False)
+                        new_cell.append_code(code)
 
                     if not new_cell.body:
                         new_cell.append_part("body_start", left)
@@ -1276,7 +1281,7 @@ class RSTParser:
                         new_cell.body_end.code.combine(right.combine(border_right))
 
                 else:
-                    print("{0}:{1}: simple table colums not conforming"
+                    print("{0}:{1}: simple table columns not conforming"
                           .format(line.filename, line.start_lincol[0]))
 
         if not node.active or node.active.node_name != "simple-table":
@@ -1289,7 +1294,7 @@ class RSTParser:
                 newnode.append_part("indent", ind)
                 newnode.append_part("body", after)
 
-                prime.head.append_child(newnode)
+                prime.head.active = newnode
 
                 if node.active:
                     node.append_child(node.active)
@@ -1301,6 +1306,7 @@ class RSTParser:
             if node.active.active.node_name == "head":
                 if re.match(self.re_lib["simple_row_border"], line_info["line_str"]):
                     row_sep(node.active, line, False)
+                    node.active.active.append_child(node.active.active.active)
                     if not line_info["is_block_end"]:
                         node.active.append_part("body", None)
                         node.active.active = node.active.body
@@ -1314,12 +1320,19 @@ class RSTParser:
                         node.active = None
 
                 elif not re.match(self.re_lib["simple_column_span"], line_info["line_str"]):
+                    if (node.active.active.active and
+                            not node.active.active.active.body.child_nodes.is_empty() and
+                            node.active.active.active.body.child_nodes.first().body):
+                        node.active.active.append_child(node.active.active.active)
                     cell(node.active, line)
             elif node.active.active.node_name == "body":
                 if not re.match(self.re_lib["simple_row_border"], line_info["line_str"]):
+                    if node.active.active.active:
+                        node.active.active.append_child(node.active.active.active)
                     cell(node.active, line)
                 else:
                     row_sep(node.active, line, False)
+                    node.active.active.append_child(node.active.active.active)
                     line_info["is_not_blank"] = False
                     node.append_child(node.active)
                     node.active = None

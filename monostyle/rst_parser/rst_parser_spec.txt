@@ -225,7 +225,9 @@ Lists at block start only.
 Default directive requires a blank line between start and body.
 Default directive no multi line head.
 Options lists option name itself and aliases are not split.
-Options lists args limited allowed chars.
+Options lists arguments limited allowed chars.
+Tables no row or column spans.
+Tables head borders are in the first/last row.
 
 
 Inline
@@ -238,10 +240,10 @@ Standalone limited number of recognized protocols.
 Standalone no allowed-char checks, but mails without mailto must contain a dot after the at sign.
 
 
-Enviroment
-==========
+Environment
+===========
 
-In general all code documentation related are unsupported like role mod or dir index.
+In general all code documentation related types are unsupported like role mod or dir index.
 
 Content: include, toctree
 Numbers: section, figure, math, toctree, enum, ...

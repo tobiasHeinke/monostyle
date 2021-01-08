@@ -90,7 +90,7 @@ def compile_searchlist(searchlist, re_conf):
                     pattern_str = pattern_str[:-1]
             else:
                 if re_conf["overline"]:
-                    pattern_str = pattern_str.replace(' ', r'(?s\s+)')
+                    pattern_str = re.sub(r" +", "\\\\s+?", pattern_str)
                 if re_conf["boundary"]:
                     pattern_str = r'\b' + pattern_str + r'\b'
 

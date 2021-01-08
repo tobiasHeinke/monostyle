@@ -2,3 +2,5 @@ include README.md
 include LICENSE
 
 recursive-include monostyle/data *
+
+recursive-include docs *

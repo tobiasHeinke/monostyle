@@ -11,8 +11,19 @@ import json
 from monostyle.util.monostylestd import override_typecheck
 
 
+tool_selection = None
+root_dir = None
+rst_dir = None
+po_dir = None
+build_dir = None
+img_dir = None
+console_options = None
+config_override = None
+template_override = None
+
+
 def setup_config(root):
-    """Create user config file or overide config."""
+    """Create user config file or override config."""
     global root_dir
     root_dir = root
     filename_default = os.path.normpath(os.path.join(os.path.dirname(__file__), "data", "config.json"))

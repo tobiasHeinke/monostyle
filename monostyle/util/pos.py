@@ -59,7 +59,7 @@ class PartofSpeech:
             if isinstance(obj, dict):
                 for value in obj.values():
                     if not isinstance(value, str):
-                            yield from iter_sub(value)
+                        yield from iter_sub(value)
                     else:
                         yield value
             else:
