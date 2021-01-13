@@ -234,7 +234,7 @@ def long_line(document, reports):
 
 def heading_lines(document, reports):
     """Heading over/underline char count and indent."""
-    toolname = "heading-char-count"
+    toolname = "heading-line-length"
 
     for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
         heading_char = str(node.name_end.code)[0]
@@ -503,7 +503,7 @@ OPS = (
     ("blank-line", blank_line, None),
     ("EOF", search_code, eol_pre),
     ("flavor", flavor, None),
-    ("heading-char-count", heading_lines, None),
+    ("heading-line-length", heading_lines, None),
     ("line-style", line_style, line_style_pre),
     ("long-line", long_line, None),
     ("style-add", style_add, None)

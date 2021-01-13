@@ -9,41 +9,55 @@ RST node tree walker.
 from monostyle.rst_parser.rst_node import NodeRST
 
 
-def iter_node(root, names=None, enter_pos=True, leafs_only=False):
-    for node in root.child_nodes:
-        enter = True
-        if not names or node.node_name in names:
-            enter = enter_pos
-            if leafs_only:
-                for part in node.child_nodes:
-                    if not part.child_nodes.is_empty():
-                        break
+def iter_node(root, names=None, enter_pos=True, leafs_only=False, output_root=False):
+    if isinstance(root, NodeRST):
+        if output_root:
+            yield root
+
+        for part in root.child_nodes:
+            yield from iter_node(part, names, enter_pos, leafs_only)
+    else:
+        for node in root.child_nodes:
+            enter = True
+            if not names or node.node_name in names:
+                enter = enter_pos
+                if leafs_only:
+                    for part in node.child_nodes:
+                        if not part.child_nodes.is_empty():
+                            break
+                    else:
+                        yield node
                 else:
                     yield node
-            else:
-                yield node
 
-        if enter:
+            if enter:
+                for part in node.child_nodes:
+                    if not part.child_nodes.is_empty():
+                        yield from iter_node(part, names, enter_pos, leafs_only)
+
+
+def iter_nodeparts(root, names=None, enter_pos=True, leafs_only=True, output_root=False):
+    if isinstance(root, NodeRST):
+        for part in root.child_nodes:
+            yield from iter_nodeparts(part, names, enter_pos, leafs_only)
+    else:
+        if output_root:
+            yield root
+
+        for node in root.child_nodes:
             for part in node.child_nodes:
-                if not part.child_nodes.is_empty():
-                    yield from iter_node(part, names, enter_pos, leafs_only)
+                enter = True
+                if not names or part.node_name in names:
+                    enter = enter_pos
+
+                    if not leafs_only or part.child_nodes.is_empty():
+                        yield part
+
+                if enter and not part.child_nodes.is_empty():
+                    yield from iter_nodeparts(part, names, enter_pos, leafs_only)
 
 
-def iter_nodeparts(root, names=None, enter_pos=True, leafs_only=True):
-    for node in root.child_nodes:
-        for part in node.child_nodes:
-            enter = True
-            if not names or part.node_name in names:
-                enter = enter_pos
-
-                if not leafs_only or part.child_nodes.is_empty():
-                    yield part
-
-            if enter and not part.child_nodes.is_empty():
-                yield from iter_nodeparts(part, names, enter_pos, leafs_only)
-
-
-def iter_nodeparts_instr(root, instr_pos, instr_neg, leafs_only=True):
+def iter_nodeparts_instr(root, instr_pos, instr_neg, leafs_only=True, output_root=False):
     """Iterate over node parts.
     instruction format: node.node_name, node.name, part.node_name
     asterisk wildcards matches all or None
@@ -88,33 +102,39 @@ def iter_nodeparts_instr(root, instr_pos, instr_neg, leafs_only=True):
 
         return enter, part_node_name_rule
 
+    if isinstance(root, NodeRST):
+        for part in root.child_nodes:
+            yield from iter_nodeparts_instr(part, instr_pos, instr_neg, leafs_only)
+    else:
+        if output_root:
+            yield root
 
-    for node in root.child_nodes:
-        enter, part_node_name_rule_pos = rules(node, instr_pos, True)
-        if not enter:
-            continue
+        for node in root.child_nodes:
+            enter, part_node_name_rule_pos = rules(node, instr_pos, True)
+            if not enter:
+                continue
 
-        enter, part_node_name_rule_neg = rules(node, instr_neg, False)
-        if enter:
-            for part in node.child_nodes:
-                if ((part_node_name_rule_pos is None or part_node_name_rule_pos == "*" or
-                         part.node_name in part_node_name_rule_pos) and
-                        (part_node_name_rule_neg is None or
-                         not (part_node_name_rule_neg == "*" or
-                              part.node_name in part_node_name_rule_neg))):
+            enter, part_node_name_rule_neg = rules(node, instr_neg, False)
+            if enter:
+                for part in node.child_nodes:
+                    if ((part_node_name_rule_pos is None or part_node_name_rule_pos == "*" or
+                             part.node_name in part_node_name_rule_pos) and
+                            (part_node_name_rule_neg is None or
+                             not (part_node_name_rule_neg == "*" or
+                                  part.node_name in part_node_name_rule_neg))):
 
-                    if not part.child_nodes.is_empty():
-                        if not leafs_only:
+                        if not part.child_nodes.is_empty():
+                            if not leafs_only:
+                                yield part
+
+                            yield from iter_nodeparts_instr(part, instr_pos, instr_neg, leafs_only)
+
+                        else:
                             yield part
-
-                        yield from iter_nodeparts_instr(part, instr_pos, instr_neg, leafs_only)
-
-                    else:
-                        yield part
 
 
 def is_of(node, node_name_rule, name_rule=None, part_node_name_rule=None):
-    """Iter over node parts.
+    """Check if node and part node_name matches the rules.
     instruction format: node.node_name, node.name, part.node_name
     asterisk wildcards matches all or None
     node.name: default for default directive or role

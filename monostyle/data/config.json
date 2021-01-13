@@ -30,7 +30,7 @@
 			"ext": ".rst"
 		},
 		"code_style": {
-			"tools": ["heading-char-count", "flavor", "line-style", "long-line", "blank-line", "style-add"],
+			"tools": ["heading-line-length", "flavor", "line-style", "long-line", "blank-line", "style-add"],
 			"ext": ".rst"
 		},
 		"monitor": {

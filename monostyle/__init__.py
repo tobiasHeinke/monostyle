@@ -109,7 +109,7 @@ def filter_reports(report, context):
     """Filter out reports in the diff context."""
     return bool(report.tool in
                 ("mark", "blank-line", "directive", "indention", "heading-level",
-                 "heading-char-count", "starting", "flavor") and # "search-word",
+                 "heading-line-length", "starting", "flavor") and # "search-word",
                 report.output.start_lincol is not None and context is not None and
                 report.output.start_lincol[0] in context)
 

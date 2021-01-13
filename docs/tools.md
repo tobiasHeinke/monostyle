@@ -83,7 +83,7 @@ Check blank lines at the end of the file.
 
 Check markup conventions.
 
-### heading-char-count
+### heading-line-length
 
 Check the length of heading over/underlines.
 
@@ -194,7 +194,7 @@ Find lowercase versions of a type.
 
 ### ui
 
-Check capitalization of user interface elements in definition terms.
+Check capitalization of user interface labels in definition terms.
 
 
 ## Markup 2
@@ -205,7 +205,7 @@ Unused glossary terms.
 
 ### link-titles
 
-Finds (ref) links where the title mismatches the heading title.
+Finds (ref) links where the title mismatches the targeted heading title.
 
 ### local-targets
 
@@ -213,7 +213,7 @@ Searches for (ref) target used only on same page.
 
 ### page-name
 
-Compares the page title and the file name.
+Compares the page title with the file name.
 
 ### tool-title
 

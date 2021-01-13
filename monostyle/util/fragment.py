@@ -525,9 +525,9 @@ class Fragment():
         return self.repr(bool(not self.end_lincol), True, False)
 
 
-    def repr(self, show_pos, show_fn=False, show_content=True):
+    def repr(self, show_pos, show_filename=False, show_content=True):
         """Shows the content with the location at start and end."""
-        filename = self.filename + ":" if show_fn else ''
+        filename = self.filename + ":" if show_filename else ''
         if show_pos:
             start = str(self.get_start(show_pos))
             end = str(self.get_end(show_pos))
@@ -1137,8 +1137,8 @@ class FragmentBundle():
         return self.repr(bool(not(not self or self.bundle[0].end_lincol)), True, False)
 
 
-    def repr(self, show_pos, show_fn=False, show_content=True):
-        return str(', '.join([fg.repr(show_pos, show_fn, show_content) for fg in self]))
+    def repr(self, show_pos, show_filename=False, show_content=True):
+        return str(', '.join([fg.repr(show_pos, show_filename, show_content) for fg in self]))
 
 
     def copy(self):

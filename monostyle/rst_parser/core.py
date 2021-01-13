@@ -56,7 +56,8 @@ class RSTParser:
         # Block
 
         ind = r"( *)"
-        re_lib["ind"] = re.compile(ind + r"\S")
+        re_lib["ind"] = re.compile(ind)
+        re_lib["indnonS"] = re.compile(ind + r"\S")
         space_end = r"(?: +|(?=\n)|\Z)"
 
         name_any = r"[A-Za-z0-9\-_.+]+?"
@@ -195,7 +196,7 @@ class RSTParser:
     def parse_block(self, node, ind_first_unkown=False):
         lines = []
         block_ind = None
-        ind_re = self.re_lib["ind"]
+        ind_re = self.re_lib["indnonS"]
         is_first = True
         line_info_prev = None
         line_info = {"is_not_blank": False}
@@ -287,7 +288,9 @@ class RSTParser:
         free = True
         if not node.active:
             if line_info["is_not_blank"]:
-                node, sub = self.field(line, line_info, on, node, sub)
+                node = self.block_quote(line, line_info, on, node)
+                if not node.active:
+                    node, sub = self.field(line, line_info, on, node, sub)
                 if not node.active:
                     node, sub = self.be_list(line, line_info, on, node, sub)
                 if not node.active:
@@ -304,8 +307,6 @@ class RSTParser:
                     node = self.grid_table(line, line_info, node)
                 if not node.active:
                     node = self.simple_table(line, line_info, node)
-                if not node.active:
-                    node = self.block_quote(line, line_info, on, node)
 
             if not node.active or (node.active and node.active.node_name == "text"):
                 node = self.textnode(line, line_info, node)
@@ -569,7 +570,14 @@ class RSTParser:
 
         else:
             newnode = NodeRST("text", line)
-            newnode.append_part("body", line)
+            if line.start_lincol[1] == 0:
+                ind, after = line.slice(line.loc_to_abs(re.match(self.re_lib["ind"],
+                                        line_info["line_str"]).end(1)))
+                newnode.append_part("indent", ind)
+                newnode.append_part("body", after)
+            else:
+                newnode.append_part("body", line)
+
             if line_info["is_not_blank"]:
                 node.active = newnode
             else:
@@ -678,7 +686,10 @@ class RSTParser:
 
             elif not node.active:
                 newnode = NodeRST("block-quote", line)
-                newnode.append_part("body", line)
+                ind, after = line.slice(line.loc_to_abs(re.match(self.re_lib["ind"],
+                                        line_info["line_str"]).end(1)))
+                newnode.append_part("indent", ind)
+                newnode.append_part("body", after)
                 node.active = newnode
 
         else:

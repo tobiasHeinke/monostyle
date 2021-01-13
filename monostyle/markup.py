@@ -9,7 +9,6 @@ RST markup tools.
 import re
 
 from monostyle.util.report import Report, getline_punc
-from monostyle.util.fragment import Fragment
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.rst_parser.core import RSTParser
 
@@ -88,89 +87,10 @@ def indention(document, reports):
     toolname = "indention"
 
     default_indent = 3
+    field_ind_hanging = 3
+    field_ind_fix = 15
 
-    skip_linenos = []
-    for node in rst_walker.iter_node(document.body):
-        if rst_walker.is_of(node, "dir", ("code-block", "default")):
-            if node.body and node.body.code.start_lincol[0] != node.body.code.end_lincol[0]:
-                start = node.body.code.start_lincol[0]
-                if node.code.start_lincol[0] == start:
-                    start += 1
-                skip_linenos.append(start)
-                skip_linenos.append(node.body.code.end_lincol[0])
-
-    code_on = False
-    skip_index = 0
-
-    stack_prev = []
-    if document.code.start_lincol[0] == 0:
-        stack_prev.append(0)
-    stack_cur = []
-    head = [r"(" + c + r")(" + c + r")" for c in ("#", "%")]
-    block = [r"(" + c + r")( |\Z)" for c in map(re.escape, ("*", "-", "#.", "|", ".."))]
-    block.append(r"(\:[^:]+\:)( +)")
-
-    for line in document.body.code.splitlines():
-        if len(skip_linenos) < skip_index and line.start_lincol[0] == skip_linenos[skip_index]:
-            skip_index += 1
-            code_on = not code_on
-
-        if code_on:
-            continue
-
-        line_str = str(line)
-        line_strip = line_str.lstrip(' \n')
-        if len(line_strip) == 0:
-            continue
-
-        stack_cur.append(len(line) - len(line_strip))
-
-        is_first_loop = True
-
-        if len(line_strip) < 3:
-            stack_cur.append(stack_cur[-1] + default_indent)
-
-        while len(line_strip) > 3:
-            matcher = block
-            if is_first_loop:
-                matcher = head.copy()
-                matcher.extend(block)
-
-            for match_char in matcher:
-                if c_m := re.match(match_char, line_strip):
-                    stack_cur.append(stack_cur[-1] + len(c_m[1]) + max(1, len(c_m[2])))
-                    line_strip = line_strip[len(c_m[0]):]
-                    break
-            else:
-                stack_cur.append(stack_cur[-1] + default_indent)
-                break
-
-            is_first_loop = False
-
-        if (len(stack_prev) != 0 and stack_cur[0] not in stack_prev and
-                stack_cur[0] > stack_prev[0]):
-
-            with_what = str(stack_prev[-1]) + " chars"
-            if len(stack_prev) != 1:
-                with_what += " or " + str(stack_prev[-2]) + " chars"
-            message = Report.substitution(what="wrong indent", with_what=with_what)
-            output = Fragment(document.code.filename, "", -1,
-                           start_lincol=(line.start_lincol[0], stack_cur[0]))
-            reports.append(Report('E', toolname, output, message, line))
-
-        if stack_cur[0] == 0:
-            stack_prev.clear()
-        else:
-            for index, entry in enumerate(stack_prev):
-                if entry >= stack_cur[0]:
-                    stack_prev = stack_prev[:index]
-                    break
-        stack_prev.extend(stack_cur)
-        stack_cur.clear()
-
-
-    refbox_col = 15
-    for node in rst_walker.iter_node(document.body, ("dir", "target")):
+    for node in rst_walker.iter_node(document, output_root=True):
         if node.node_name == "target":
             next_node = node.next
             while (next_node and next_node.node_name == "text" and
@@ -193,17 +113,192 @@ def indention(document, reports):
                     message = Report.existing(what="target", where="not on same indent level")
                     reports.append(Report('W', toolname, node.id.code, message))
 
-        elif (rst_walker.is_of(node, "dir", "admonition") and
-              str(rst_walker.get_attr(node, "class")).strip() == "refbox") and node.body:
+        # limit: groups of aligned fields, todo favor fix on refbox
+        elif node.node_name == "field-list":
+            # if (rst_walker.is_of(node.parent_node, "dir", "admonition") and
+                  # str(rst_walker.get_attr(node.parent_node, "class")).strip() == "refbox"):
+
+            inds = []
             for node_field in rst_walker.iter_node(node.body, "field"):
-                if node_field.name_end.code.end_lincol[1] != refbox_col:
-                    message = Report.substitution(what="ref-box wrong indent",
+                # add one for colon
+                ind_name = node_field.name_end.code.start_lincol[1] + 1
+                ind_first = (node_field.name_end.code.end_lincol[1]
+                            if len(node_field.name_end.code) != 1 else None)
+                block_ind = None
+                if node_field.body and node_field.body.code.span_len(False)[0] != 0:
+                    is_first = True
+                    for line in node_field.body.code.splitlines():
+                        if is_first or line.isspace():
+                            is_first = False
+                            continue
+
+                        ind_cur = len(line) - len(str(line).lstrip(' \n'))
+                        if not block_ind:
+                            block_ind = ind_cur
+                        else:
+                            block_ind = min(ind_cur, block_ind)
+
+                inds.append((node_field, ind_name, ind_first, block_ind))
+
+            max_name = None
+            max_count = 0
+            main_ind = 0
+            for _, ind_name, ind_first, __ in inds:
+                if max_name is None:
+                    max_name = ind_name
+                else:
+                    max_name = max(ind_name, max_name)
+
+                count_cur = sum(1 for _, __, ind_first_rec, ___ in inds
+                                            if ind_first_rec == ind_first)
+                if count_cur > max_count:
+                    max_count = count_cur
+                    main_ind = ind_first
+
+            score = {"first": dict.fromkeys({"jag", "align", "fix"}, 0),
+                  "block": dict.fromkeys({"hanging", "align"}, 0)}
+            for _, ind_name, ind_first, ind_block in inds:
+                if ind_first is not None:
+                    if ind_first - ind_name == 1:
+                        score["first"]["jag"] += 1
+                    if ind_first - ind_name >= 1 and ind_first - max_name == 1:
+                        score["first"]["align"] += 1
+                    if ind_first - ind_name > 1 and ind_first == main_ind:
+                        score["first"]["fix"] += 1
+
+                if ind_block is not None:
+                    if ind_block < ind_name + 1:
+                        score["block"]["hanging"] += 1
+                    else:
+                        score["block"]["align"] += 1
+
+            ind_aim_first = None
+            is_jag = False
+            if (score["first"]["align"] > score["first"]["jag"] and
+                    score["first"]["align"] > score["first"]["fix"]):
+                ind_aim_first = max_name + 1
+            elif score["first"]["fix"] > score["first"]["jag"]:
+                ind_aim_first = field_ind_fix
+            else:
+                is_jag = True
+
+            if score["block"]["hanging"] < score["block"]["align"]:
+                ind_aim_block = ind_aim_first
+            else:
+                # subtract colon
+                ind_aim_block = (node.body.child_nodes.first().name.code
+                                 .loc_to_abs((0, field_ind_hanging))[1] - 1)
+
+            for node_field, ind_name, ind_first, ind_block in inds:
+                if ind_first is None:
+                    continue
+                if is_jag:
+                    # add one space
+                    ind_aim_first = ind_name + 1
+                    ind_aim_block = ind_aim_first
+
+                if ind_first != ind_aim_first:
+                    message = Report.substitution(what="field wrong alignment",
                                                   with_what="{:+} chars".format(
-                                                  refbox_col -
-                                                  node_field.name_end.code.end_lincol[1]))
+                                                  ind_aim_first - ind_first))
 
                     output = node_field.name_end.code.copy().clear(False)
-                    reports.append(Report('E', toolname, output, message, line))
+                    reports.append(Report('W', toolname, output, message, node_field.name))
+
+                if ind_block is not None and ind_block != ind_aim_block:
+                    message = Report.substitution(what="field wrong indent",
+                                                  with_what="{:+} chars".format(
+                                                  ind_aim_block - ind_block))
+
+                    output = node_field.name_end.code.copy().clear(False)
+                    reports.append(Report('W', toolname, output, message, node_field.name))
+
+        # todo allow nested block-quote
+        else:
+            if (rst_walker.is_of(node, "dir", ("code-block", "default")) or
+                    node.node_name.endswith("-list") or
+                    node.node_name.endswith("-table") or
+                    rst_walker.is_of(node, ("sect", "field", "option")) or
+                    rst_walker.is_of(node.parent_node, "text")):
+                continue
+
+            offset = 0
+            if ((not node.parent_node and node.node_name == "snippet") or
+                    (not node.prev and
+                     node.code.start_lincol[0] == document.code.start_lincol[0]) and
+                     document.node_name == "snippet" and
+                     node.node_name == "block-quote"):
+                if node.code.start_lincol[0] != 0:
+                    # base indent is unknown
+                    continue
+            elif node.node_name != "document":
+                if node.indent:
+                    offset = node.indent.code.end_lincol[1]
+                if node.name_start:
+                    offset = node.name_start.code.end_lincol[1]
+                if node.name_end and node.node_name == "enum":
+                    offset = node.name_end.code.end_lincol[1]
+
+            for part in node.child_nodes:
+                if part.child_nodes.is_empty():
+                    continue
+
+                is_first_child = True
+                for child in part.child_nodes:
+                    if child.node_name.endswith("-list"):
+                        child = child.body.child_nodes.first()
+                    if child.indent:
+                        ind_aim = offset + default_indent
+                        part_len = len(child.indent.code)
+                        if part_len != 0 and part_len != offset and part_len != ind_aim:
+                            with_what = "{:+} chars (col: {})".format(ind_aim - part_len,
+                                                                      ind_aim + 1)
+                            if part_len < ind_aim and offset != ind_aim:
+                                with_what += " or {:+} chars (col: {})".format(offset - part_len,
+                                                                               offset + 1)
+                            message = Report.substitution(what="wrong indent", with_what=with_what)
+                            output = child.indent.code.copy().clear(False)
+                            reports.append(Report('E', toolname, output, message, child.code))
+                    else:
+                        # hanging indention of the first child
+                        if not is_first_child:
+                            continue
+                        is_first_child = False
+
+                        if (not (part.node_name == "head" or
+                                (not node.head and part.node_name == "body")) or
+                                (child.node_name != "text" or node.node_name == "text")):
+                            continue
+
+                        ind_aim = offset + default_indent
+                        if child.code.span_len(False)[0] == 0:
+                            continue
+                        block_line = None
+                        block_line_full = None
+                        is_first_line = True
+                        for line in child.code.splitlines():
+                            if is_first_line or line.isspace():
+                                is_first_line = False
+                                continue
+
+                            ind_cur = len(line) - len(str(line).lstrip(' \n'))
+                            if block_line is None or ind_cur < block_line.start_lincol[1]:
+                                block_line = line.slice(line.loc_to_abs(ind_cur), right_inner=True)
+                                block_line_full = line
+
+                        if (block_line is not None and offset != block_line.start_lincol[1] and
+                                ind_aim != block_line.start_lincol[1]):
+                            with_what = ("{:+} chars (col: {})"
+                                         .format(ind_aim - block_line.start_lincol[1],
+                                                 ind_aim + 1))
+                            if block_line.start_lincol[1] < ind_aim and offset != ind_aim:
+                                with_what += (" or {:+} chars (col: {})"
+                                              .format(offset - block_line.start_lincol[1],
+                                                      offset + 1))
+                            message = Report.substitution(what="wrong indent",
+                                                          with_what=with_what)
+                            output = block_line.clear(True)
+                            reports.append(Report('E', toolname, output, message, block_line_full))
 
     return reports
 

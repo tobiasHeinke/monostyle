@@ -218,7 +218,6 @@ No isolated/ adjacent rules for punctuation in "reference" names.
 Body
 ----
 
-Unsupported: tables
 No Recognition: Def. list: term: classifier, bibliographic fields and RCS keywords, block-quote attributions
 
 Lists at block start only.
@@ -243,7 +242,7 @@ Standalone no allowed-char checks, but mails without mailto must contain a dot a
 Environment
 ===========
 
-In general all code documentation related types are unsupported like role mod or dir index.
+In general all code documentation related nodes that are part of Sphinx are unsupported like role mod or dir index.
 
 Content: include, toctree
 Numbers: section, figure, math, toctree, enum, ...
