@@ -18,6 +18,7 @@
 	"anyway",
 	"anywhere",
 	"do(es|ing|ne)?",
+	"effectively",
 	"elsewhere",
 	"enhances?",
 	"eventually",
@@ -183,7 +184,7 @@
 	"theoretical(ly)?",
 	"try",
 	"typical(ly)?",
-	"(un)?likely",
+	"(un)?likel(ier|y)",
 	"usual(ly)?"
 ],
 "informal":[
@@ -200,11 +201,11 @@
 	"neat", "nicely",
 	"now,? (that|this|to)",
 	"(right|for) now",
-	"say you",
+	"say you", "being said",
 	"shows? up",
 	"so (forth|now|on|this|to|what)",
 	"sooner or later",
-	["turn (on|off)", ["de/activate", "dis/enable"]],
+	["turn(ed|ing)? (on|off)", ["de/activate", "dis/enable"]],
 	"whatever", "what ever",
 	"what not",
 	"what so ever"

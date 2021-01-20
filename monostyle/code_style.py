@@ -124,19 +124,20 @@ def line_style_pre(_):
     word_inter += CharCatalog.data["connector"]["apostrophe"]
 
     re_lib = dict()
+    eol = r"\s*$"
     pattern_str = (r"(?<=[", CharCatalog.data["terminal"]["final"], r"] )",
-                   r"([\w" + word_inter + r"]+?)\n")
+                   r"([\w" + word_inter + r"]+?)", eol)
     pattern = re.compile(''.join(pattern_str), re.MULTILINE)
     message = Report.existing(what="first word of a sentence", where="at line end")
     re_lib["sentorphan"] = (pattern, message)
 
     # not match when oxford comma
-    pattern_str = r"(?<!,)\b(?:and|or) ([\w" + word_inter + r"]+?)\n"
+    pattern_str = r"(?<!,)\b(?:and|or) ([\w" + word_inter + r"]+?)" + eol
     pattern = re.compile(pattern_str, re.MULTILINE | re.IGNORECASE)
     message = Report.existing(what="first word of a clause", where="at line end")
     re_lib["clauseorphan"] = (pattern, message)
 
-    pattern_str = (r"(\b[a-z][\w", CharCatalog.data["connector"]["apostrophe"], r"]*?)\n",
+    pattern_str = (r"(\b[a-z][\w", CharCatalog.data["connector"]["apostrophe"], r"]*?)", eol,
                    r"(?! *?[", pare_close, r"])")
     pattern = re.compile(''.join(pattern_str), re.MULTILINE)
     message = Report.existing(what="{0}", where="at line end")

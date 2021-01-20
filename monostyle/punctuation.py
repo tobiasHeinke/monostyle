@@ -530,7 +530,7 @@ def whitespace(document, reports, re_lib):
         "*": {"*": "*"}
     }
     instr_neg = {
-        "dir": {"code-block": "*", "default": "*"},
+        "dir": {"code-block": "*", "default": "*", "math": "*"},
         "substdef": {"image": ["head"], "unicode": "*"},
         "doctest": "*", "comment": "*",
         "grid-table": "*", "simple-table": "*"

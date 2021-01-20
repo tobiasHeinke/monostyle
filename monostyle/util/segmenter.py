@@ -86,7 +86,7 @@ class Segmenter:
             buf_start = para_m.end(0)
 
         if fg.loc_to_abs(buf_start) != fg.end_pos:
-            para_fg = fg.slice(fg.loc_to_abs(buf_start), right_inner=True)
+            para_fg = fg.slice(fg.loc_to_abs(buf_start), after_inner=True)
             if not output_openess:
                 yield para_fg
             else:
@@ -117,7 +117,7 @@ class Segmenter:
             buf_start = sent_m.end(0)
 
         if not crop_end and buf_start != len(text):
-            sent_fg = fg.slice(fg.loc_to_abs(buf_start), right_inner=True)
+            sent_fg = fg.slice(fg.loc_to_abs(buf_start), after_inner=True)
             if not output_openess:
                 yield sent_fg
             else:
@@ -152,7 +152,7 @@ class Segmenter:
             buf_start = clause_m.end(0)
 
         if buf_start != len(text):
-            c = fg.slice(fg.loc_to_abs(buf_start), right_inner=True)
+            c = fg.slice(fg.loc_to_abs(buf_start), after_inner=True)
             space_count = 0
             for line in c:
                 space_count += line.count(" ")
@@ -183,7 +183,7 @@ class Segmenter:
                 buf_start = pare_m.end(0)
 
         if buf_start != len(text):
-            yield fg.slice(fg.loc_to_abs(buf_start), right_inner=True)
+            yield fg.slice(fg.loc_to_abs(buf_start), after_inner=True)
 
 
     def iter_word(self, fg):

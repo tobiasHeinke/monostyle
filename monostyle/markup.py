@@ -90,6 +90,35 @@ def indention(document, reports):
     field_ind_hanging = 3
     field_ind_fix = 15
 
+    def block_indention(reports, node, offset, is_hanging=True):
+        ind_aim = offset + default_indent
+        if node.code.span_len(False)[0] != 0:
+            block_line = None
+            block_line_full = None
+            is_first_line = is_hanging
+            for line in node.code.splitlines():
+                if is_first_line or line.isspace():
+                    is_first_line = False
+                    continue
+
+                ind_cur = len(line) - len(str(line).lstrip(' \n'))
+                if block_line is None or ind_cur < block_line.start_lincol[1]:
+                    block_line = line.slice(line.loc_to_abs(ind_cur), after_inner=True)
+                    block_line_full = line
+
+            if (block_line is not None and offset != block_line.start_lincol[1] and
+                    ind_aim != block_line.start_lincol[1]):
+                with_what = "{:+} chars (col: {})".format(ind_aim - block_line.start_lincol[1],
+                                                          ind_aim + 1)
+                if block_line.start_lincol[1] < ind_aim and offset != ind_aim:
+                    with_what += (" or {:+} chars (col: {})"
+                                  .format(offset - block_line.start_lincol[1], offset + 1))
+                message = Report.substitution(what="wrong indent", with_what=with_what)
+                output = block_line.clear(True)
+                reports.append(Report('E', toolname, output, message, block_line_full))
+
+        return reports
+
     for node in rst_walker.iter_node(document, output_root=True):
         if node.node_name == "target":
             next_node = node.next
@@ -213,21 +242,21 @@ def indention(document, reports):
                     output = node_field.name_end.code.copy().clear(False)
                     reports.append(Report('W', toolname, output, message, node_field.name))
 
-        # todo allow nested block-quote
+        # todo allow nested block-quote, same line nested
         else:
-            if (rst_walker.is_of(node, "dir", ("code-block", "default")) or
-                    node.node_name.endswith("-list") or
+            if (node.node_name.endswith("-list") or
                     node.node_name.endswith("-table") or
-                    rst_walker.is_of(node, ("sect", "field", "option")) or
+                    rst_walker.is_of(node, ("sect", "field", "option", "row", "cell")) or
                     rst_walker.is_of(node.parent_node, "text")):
                 continue
 
+            is_code = bool(rst_walker.is_of(node, "dir", ("code-block", "default")))
             offset = 0
             if ((not node.parent_node and node.node_name == "snippet") or
                     (not node.prev and
-                     node.code.start_lincol[0] == document.code.start_lincol[0]) and
+                     node.code.start_lincol[0] == document.code.start_lincol[0] and
                      document.node_name == "snippet" and
-                     node.node_name == "block-quote"):
+                     node.node_name == "block-quote")):
                 if node.code.start_lincol[0] != 0:
                     # base indent is unknown
                     continue
@@ -238,9 +267,17 @@ def indention(document, reports):
                     offset = node.name_start.code.end_lincol[1]
                 if node.name_end and node.node_name == "enum":
                     offset = node.name_end.code.end_lincol[1]
+                if (is_code and rst_walker.is_of(node, "dir", "default") and
+                        node.name_end.code.start_lincol[1] != 0 and node.prev):
+                    offset = (node.prev.indent.code.end_lincol[1] if node.prev.indent
+                              else node.prev.code.start_lincol[1])
 
             for part in node.child_nodes:
                 if part.child_nodes.is_empty():
+                    if is_code and node.code.start_lincol[0] != part.code.end_lincol[0]:
+                        reports = block_indention(reports, part, offset,
+                                                  bool(node.code.start_lincol[0] ==
+                                                       part.code.start_lincol[0]))
                     continue
 
                 is_first_child = True
@@ -259,46 +296,13 @@ def indention(document, reports):
                             message = Report.substitution(what="wrong indent", with_what=with_what)
                             output = child.indent.code.copy().clear(False)
                             reports.append(Report('E', toolname, output, message, child.code))
-                    else:
+                    elif not is_first_child:
                         # hanging indention of the first child
-                        if not is_first_child:
-                            continue
-                        is_first_child = False
-
-                        if (not (part.node_name == "head" or
-                                (not node.head and part.node_name == "body")) or
+                        if (node.code.start_lincol[0] == part.code.start_lincol[0] or
                                 (child.node_name != "text" or node.node_name == "text")):
-                            continue
+                            reports = block_indention(reports, child, offset)
 
-                        ind_aim = offset + default_indent
-                        if child.code.span_len(False)[0] == 0:
-                            continue
-                        block_line = None
-                        block_line_full = None
-                        is_first_line = True
-                        for line in child.code.splitlines():
-                            if is_first_line or line.isspace():
-                                is_first_line = False
-                                continue
-
-                            ind_cur = len(line) - len(str(line).lstrip(' \n'))
-                            if block_line is None or ind_cur < block_line.start_lincol[1]:
-                                block_line = line.slice(line.loc_to_abs(ind_cur), right_inner=True)
-                                block_line_full = line
-
-                        if (block_line is not None and offset != block_line.start_lincol[1] and
-                                ind_aim != block_line.start_lincol[1]):
-                            with_what = ("{:+} chars (col: {})"
-                                         .format(ind_aim - block_line.start_lincol[1],
-                                                 ind_aim + 1))
-                            if block_line.start_lincol[1] < ind_aim and offset != ind_aim:
-                                with_what += (" or {:+} chars (col: {})"
-                                              .format(offset - block_line.start_lincol[1],
-                                                      offset + 1))
-                            message = Report.substitution(what="wrong indent",
-                                                          with_what=with_what)
-                            output = block_line.clear(True)
-                            reports.append(Report('E', toolname, output, message, block_line_full))
+                        is_first_child = False
 
     return reports
 

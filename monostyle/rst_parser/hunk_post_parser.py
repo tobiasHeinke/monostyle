@@ -70,9 +70,9 @@ def refbox(rst_parser, document):
     def rename(rst_parser, node, add_class):
         node.node_name = "dir"
         fg = Fragment(document.code.filename,
-                      [".. admonition:: Reference\n"
+                      [".. admonition:: Reference\n",
                        "   :class: refbox\n" if add_class else ""],
-                      -1, -1, (-1, 0), (-1, 0))
+                      -2, -2, (-2, 0), (-2, 0))
         doc = rst_parser.parse(rst_parser.snippet(fg))
         part_transfer(node, doc.body.child_nodes.first())
 
@@ -87,6 +87,11 @@ def refbox(rst_parser, document):
         if (str(field_node.name).strip() == "class" and
                 str(field_node.body).strip() == "refbox"):
             rename(rst_parser, node, False)
+            node.body.child_nodes.shift()
+            prime = NodeRST("field-list", None)
+            prime.append_part("body", None)
+            prime.body.append_child(field_node)
+            node.attr = prime
 
         else:
             for field_node in node.body.child_nodes:

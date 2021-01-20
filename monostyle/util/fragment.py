@@ -173,16 +173,16 @@ class Fragment():
         return False
 
 
-    def slice_match_obj(self, match_obj, groupno, right_inner=False, output_zero=True):
+    def slice_match_obj(self, match_obj, groupno, after_inner=False, output_zero=True):
         """Slice by span defined by a regex match object."""
         if len(match_obj.groups()) >= groupno and match_obj.group(groupno) is not None:
             at_start = self.loc_to_abs(match_obj.start(groupno))
             at_end = self.loc_to_abs(match_obj.end(groupno))
 
-            return self.slice(at_start, at_end, right_inner, output_zero)
+            return self.slice(at_start, at_end, after_inner, output_zero)
 
 
-    def slice(self, at_start, at_end=None, right_inner=False, output_zero=True):
+    def slice(self, at_start, at_end=None, after_inner=False, output_zero=True):
         """Cut span."""
         start_pos_abs = None
         if isinstance(at_start, int):
@@ -202,13 +202,13 @@ class Fragment():
             end_rel = self.loc_to_rel(self.pos_to_lincol(self.end_pos, True))
 
         cuts = []
-        if not right_inner:
+        if not after_inner:
             cuts.append((start_rel, at_start_rel, self.start_pos, self.start_lincol))
         if at_end is None:
             cuts.append((at_start_rel, end_rel, start_pos_abs, at_start))
         else:
             cuts.append((at_start_rel, at_end_rel, start_pos_abs, at_start))
-            if not right_inner:
+            if not after_inner:
                 cuts.append((at_end_rel, end_rel, None, at_end))
 
         result = []
@@ -736,7 +736,7 @@ class FragmentBundle():
         return self.bundle[-1].is_aligned(fg, pos_lincol)
 
 
-    def slice_match_obj(self, match_obj, groupno, right_inner=False, output_zero=True):
+    def slice_match_obj(self, match_obj, groupno, after_inner=False, output_zero=True):
         """relative to first."""
         if not self:
             return self
@@ -744,12 +744,12 @@ class FragmentBundle():
             at_start = self.loc_to_abs(match_obj.start(groupno))
             at_end = self.loc_to_abs(match_obj.end(groupno))
 
-            return self.slice(at_start, at_end, right_inner, output_zero)
+            return self.slice(at_start, at_end, after_inner, output_zero)
 
 
-    def slice(self, at_start, at_end=None, right_inner=False, output_zero=True):
+    def slice(self, at_start, at_end=None, after_inner=False, output_zero=True):
         if not self:
-            if right_inner:
+            if after_inner:
                 return None
             if not at_end:
                 return None, None
@@ -761,7 +761,7 @@ class FragmentBundle():
         pos_lincol = bool(isinstance(at_start, int))
         cuts = []
         at_start_index = self.index_clip(at_start, False)
-        if not right_inner:
+        if not after_inner:
             cuts.append(((0, True), self.bundle[0].get_start(pos_lincol),
                          at_start_index, at_start))
         if not at_end:
@@ -771,7 +771,7 @@ class FragmentBundle():
         else:
             at_end_index = self.index_clip(at_end, True)
             cuts.append((at_start_index, at_start, at_end_index, at_end))
-            if not right_inner:
+            if not after_inner:
                 cuts.append((at_end_index, at_end,
                              (max(0, len(self.bundle) - 1), True),
                              self.bundle[-1].get_end(pos_lincol)))
@@ -792,7 +792,7 @@ class FragmentBundle():
                     if index_start[0] == index_end[0]:
                         fg_first = self.bundle[index_start[0]].slice(start, end, True)
                     else:
-                        fg_first = self.bundle[index_start[0]].slice(start, right_inner=True)
+                        fg_first = self.bundle[index_start[0]].slice(start, after_inner=True)
 
                     if fg_first:
                         bd.bundle.append(fg_first)
