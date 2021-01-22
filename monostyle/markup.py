@@ -92,7 +92,7 @@ def indention(document, reports):
 
     def block_indention(reports, node, offset, is_hanging=True):
         ind_aim = offset + default_indent
-        if node.code.span_len(False)[0] != 0:
+        if node.code.span_len(False)[0] > 1:
             block_line = None
             block_line_full = None
             is_first_line = is_hanging
@@ -119,6 +119,7 @@ def indention(document, reports):
 
         return reports
 
+    markup_space_re = re.compile(r"\S( +)\Z")
     for node in rst_walker.iter_node(document, output_root=True):
         if node.node_name == "target":
             next_node = node.next
@@ -154,7 +155,7 @@ def indention(document, reports):
                 ind_first = (node_field.name_end.code.end_lincol[1]
                             if len(node_field.name_end.code) != 1 else None)
                 block_ind = None
-                if node_field.body and node_field.body.code.span_len(False)[0] != 0:
+                if node_field.body and node_field.body.code.span_len(False)[0] > 1:
                     is_first = True
                     for line in node_field.body.code.splitlines():
                         if is_first or line.isspace():
@@ -246,7 +247,7 @@ def indention(document, reports):
         else:
             if (node.node_name.endswith("-list") or
                     node.node_name.endswith("-table") or
-                    rst_walker.is_of(node, ("sect", "field", "option", "row", "cell")) or
+                    rst_walker.is_of(node, ("sect", "comment", "field", "option", "row", "cell")) or
                     rst_walker.is_of(node.parent_node, "text")):
                 continue
 
@@ -274,17 +275,31 @@ def indention(document, reports):
 
             for part in node.child_nodes:
                 if part.child_nodes.is_empty():
-                    if is_code and node.code.start_lincol[0] != part.code.end_lincol[0]:
-                        reports = block_indention(reports, part, offset,
-                                                  bool(node.code.start_lincol[0] ==
-                                                       part.code.start_lincol[0]))
+                    if node.code.start_lincol[0] != part.code.end_lincol[0]:
+                        if is_code:
+                            reports = block_indention(reports, part, offset,
+                                                      bool(node.code.start_lincol[0] ==
+                                                           part.code.start_lincol[0]))
+                    elif m := re.search(markup_space_re, str(part.code)):
+                        if (len(m.group(1)) != 1 and
+                                not rst_walker.is_of(part, "substdef", "*", "id_end")):
+                            with_what = "{:+} chars".format(1 - len(m.group(1)))
+                            message = Report.substitution(what="wrong markup spacing",
+                                                          with_what=with_what)
+                            line = (node.child_nodes[2].code if len(node.child_nodes) > 1
+                                    else node.code)
+                            reports.append(Report('W', toolname, part.code, message, line))
                     continue
 
-                is_first_child = True
                 for child in part.child_nodes:
                     if child.node_name.endswith("-list"):
                         child = child.body.child_nodes.first()
-                    if child.indent:
+                    if (node.code.start_lincol[0] == child.code.start_lincol[0] and
+                            child.node_name == "text"):
+                        # hanging indention of the first child
+                        if node.node_name != "text":
+                            reports = block_indention(reports, child, offset)
+                    elif child.indent:                            
                         ind_aim = offset + default_indent
                         part_len = len(child.indent.code)
                         if part_len != 0 and part_len != offset and part_len != ind_aim:
@@ -296,13 +311,6 @@ def indention(document, reports):
                             message = Report.substitution(what="wrong indent", with_what=with_what)
                             output = child.indent.code.copy().clear(False)
                             reports.append(Report('E', toolname, output, message, child.code))
-                    elif not is_first_child:
-                        # hanging indention of the first child
-                        if (node.code.start_lincol[0] == part.code.start_lincol[0] or
-                                (child.node_name != "text" or node.node_name == "text")):
-                            reports = block_indention(reports, child, offset)
-
-                        is_first_child = False
 
     return reports
 

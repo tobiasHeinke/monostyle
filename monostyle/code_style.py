@@ -175,7 +175,7 @@ def line_style(document, reports, re_lib, config):
                         message = message.format(path[-1])
                     else:
                         continue
-                if m.start() == 0 and key == "sentwidow":
+                if m.start() == 0 and (key == "sentwidow" or is_lw):
                     continue
 
                 output = node.code.slice_match_obj(m, 0, True)

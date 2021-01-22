@@ -490,8 +490,9 @@ class Fragment():
             return self.end_pos - self.start_pos
 
         line_span = self.end_lincol[0] - self.start_lincol[0]
-        if line_span == 0 and len(self.content) != 0:
-            line_span = 1
+        if ((line_span != 0 or self.start_lincol != self.end_lincol) and
+                self.end_lincol[1] != 0):
+            line_span += 1
         return (line_span, self.end_lincol[1] - self.start_lincol[1])
 
 
@@ -1089,8 +1090,9 @@ class FragmentBundle():
             return self.bundle[-1].end_pos - self.bundle[0].start_pos
 
         line_span = self.bundle[-1].end_lincol[0] - self.bundle[0].start_lincol[0]
-        if line_span == 0 and len(self.bundle[0].content) != 0:
-            line_span = 1
+        if ((line_span != 0 or self.bundle[0].start_lincol != self.bundle[-1].end_lincol) and
+                self.bundle[-1].end_lincol[1] != 0):
+            line_span += 1
         return (line_span, self.bundle[-1].end_lincol[1] - self.bundle[0].start_lincol[1])
 
 

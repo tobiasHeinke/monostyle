@@ -1,6 +1,5 @@
 {
 "style":[
-	"hence",
 	"now you should have",
 	"#https://developer.salesforce.com/docs/atlas.en-us.216.0.salesforce_pubs_style_guide.meta/salesforce_pubs_style_guide/style_allow_let.htm",
 	[["allows?", "lets?"], "restructure so the reader is the subject"]
@@ -36,7 +35,6 @@
 	"refines?",
 	"strictly",
 	"specified",
-	"there",
 	"things?",
 	"ways?",
 	"whenever",
@@ -187,6 +185,10 @@
 	"(un)?likel(ier|y)",
 	"usual(ly)?"
 ],
+"syntactic expletive":[
+	"it (is|was)",
+	"there (is|was)"
+],
 "informal":[
 	"# only ambiguous or spaced compounds",
 	"as you",
@@ -205,7 +207,7 @@
 	"shows? up",
 	"so (forth|now|on|this|to|what)",
 	"sooner or later",
-	["turn(ed|ing)? (on|off)", ["de/activate", "dis/enable"]],
+	["turn(ed|ing)? (on|off)", ["(de)activate", "(dis)enable"]],
 	"whatever", "what ever",
 	"what not",
 	"what so ever"

@@ -78,6 +78,9 @@ def apply_file(rst_parser, mods, reports, path, parse_options):
     show_current = bool(path)
     filename_prev = None
     print_options = options_overide()
+    if print_options:
+        print_options["show_autofix"] = False
+
     if parse_options["resolve"]:
         titles, targets = env.get_link_titles(rst_parser)
         parse_options["titles"] = titles

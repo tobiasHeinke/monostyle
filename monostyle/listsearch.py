@@ -138,10 +138,10 @@ def search_free(document, reports, comlist):
         "dir": {
             "figure": ["head"],
             "code-block": "*", "default": "*", "include": "*", "index": "*",
-            "math": "*", "youtube": "*", "vimeo": "*"
+            "math": "*", "toctree": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*", "target": "*",
+        "comment": "*", "doctest": "*", "target": "*",
         "role": {
             "kbd": "*", "class": "*", "mod": "*", "math": "*"
         },
@@ -173,10 +173,10 @@ def search_word(document, reports, comlist, config):
         "dir": {
             "figure": ["head"],
             "code-block": "*", "default": "*", "include": "*", "index": "*",
-            "math": "*", "youtube": "*", "vimeo": "*"
+            "math": "*", "toctree": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*", "target": "*",
+        "comment": "*", "doctest": "*", "target": "*",
         "role": {
             "kbd": "*", "class": "*", "mod": "*", "math": "*"
         },

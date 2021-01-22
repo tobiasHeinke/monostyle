@@ -488,7 +488,6 @@ def whitespace_pre(_):
     repl = ""
     re_lib["spaceeol"] = (pattern, message, repl)
 
-    # FP: code, unicode, comment
     # not match: indent at start, trailing at eol
     pattern_str = r"\S(  +)(?:\S|\Z)"
     pattern = re.compile(pattern_str)
@@ -499,7 +498,7 @@ def whitespace_pre(_):
     # match: at start (when not line start), trailing at eol
     pattern_str = r"\A(  +)(?:\S|\Z)"
     pattern = re.compile(pattern_str)
-    message = Report.existing(what="multiple spaces", where="at start")
+    message = Report.existing(what="multiple spaces", where="in text")
     repl = " "
     re_lib["multispacestart"] = (pattern, message, repl)
 
@@ -525,38 +524,26 @@ def whitespace(document, reports, re_lib):
             fg_repl.replace_fill(value[2])
             reports.append(Report('W', toolname, output, value[1], line, fg_repl))
 
-    instr_pos = {
-        "field": {"*": ["name", "body"]},
-        "*": {"*": "*"}
-    }
-    instr_neg = {
-        "dir": {"code-block": "*", "default": "*", "math": "*"},
-        "substdef": {"image": ["head"], "unicode": "*"},
-        "doctest": "*", "comment": "*",
-        "grid-table": "*", "simple-table": "*"
-    }
-
     multi_start_re = re_lib["multispacestart"][0]
     multi_re = re_lib["multispace"][0]
-    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        if part.child_nodes.is_empty:
-            part_str = str(part.code)
-            if part.code.start_lincol[1] != 0:
-                if multi_start_m := re.match(multi_start_re, part_str):
-                    output = part.code.slice_match_obj(multi_start_m, 1, True)
-                    line = getline_punc(document.body.code, output.start_pos,
-                                        output.span_len(True), 50, 0)
-                    fg_repl = output.copy().replace_fill(value[2])
-                    reports.append(Report('W', toolname, output, re_lib["multispacestart"][1],
-                                          line, fg_repl))
-
-            for multi_m in re.finditer(multi_re, part_str):
-                output = part.code.slice_match_obj(multi_m, 1, True)
+    for node in rst_walker.iter_node(document.body, "text", leafs_only=True):
+        node_str = str(node.code)
+        if node.prev:
+            if multi_start_m := re.match(multi_start_re, node_str):
+                output = node.code.slice_match_obj(multi_start_m, 1, True)
                 line = getline_punc(document.body.code, output.start_pos,
                                     output.span_len(True), 50, 0)
                 fg_repl = output.copy().replace_fill(value[2])
-                reports.append(Report('W', toolname, output, re_lib["multispace"][1],
+                reports.append(Report('W', toolname, output, re_lib["multispacestart"][1],
                                       line, fg_repl))
+
+        for multi_m in re.finditer(multi_re, node_str):
+            output = node.code.slice_match_obj(multi_m, 1, True)
+            line = getline_punc(document.body.code, output.start_pos,
+                                output.span_len(True), 50, 0)
+            fg_repl = output.copy().replace_fill(value[2])
+            reports.append(Report('W', toolname, output, re_lib["multispace"][1],
+                                  line, fg_repl))
 
     return reports
 

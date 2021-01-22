@@ -278,7 +278,7 @@ class RSTParser:
                         ({"simple-table",}, self.simple_table),
                         ({"def", "text"}, self.def_list),
                         ({"text",}, self.explicit_block), # default dir
-                        ({"text",}, self.textnode))
+                        ({"text",}, self.paragraph))
 
             free = True
             if node.active:
@@ -374,14 +374,15 @@ class RSTParser:
                     node.node_name not in {"comment", "doctest"}):
                 parts = ((node.head, node.attr, node.body)
                           if (node.node_name != "dir" or not(not node.name or
-                              str(node.name.code).rstrip() == "code-block")) else (node.attr,))
+                              str(node.name.code).rstrip() in {"code-block", "math"}))
+                          else (node.attr,))
                 for part in parts:
                     if part:
                         if not part.child_nodes.is_empty():
                             self.parse_node(part)
                         else:
                             ind_first_unkown = False
-                            if not part.prev or part.prev.node_name != "indent":
+                            if part.prev and part.prev.node_name != "indent":
                                 ind_first_unkown = (lambda f, c: f[0] == c[0] and f[1] != c[1])(
                                                         node.child_nodes.first().code.start_lincol,
                                                         part.code.start_lincol)
@@ -398,7 +399,7 @@ class RSTParser:
     def parse_node_inline(self, root):
         for node in root.child_nodes:
             if ((node.node_name != "dir" or not(not node.name or
-                    str(node.name.code).rstrip() == "code-block")) and
+                    str(node.name.code).rstrip() in {"code-block", "math"})) and
                     node.node_name not in {"comment", "doctest"}):
 
                 if node.node_name in {"sect", "field"} and node.name:
@@ -497,7 +498,7 @@ class RSTParser:
         return node
 
 
-    def textnode(self, node, line, line_info, *args):
+    def paragraph(self, node, line, line_info, *args):
         if node.active:
             node.active.body.append_code(line)
             if not line_info["is_not_blank"]:
@@ -506,12 +507,9 @@ class RSTParser:
 
         else:
             newnode = NodeRST("text", line)
-            if line.start_lincol[1] == 0:
-                ind, after = line.slice(line.loc_to_abs((0, line_info["ind_cur"])))
-                newnode.append_part("indent", ind)
-                newnode.append_part("body", after)
-            else:
-                newnode.append_part("body", line)
+            ind, after = line.slice((line.start_lincol[0], line_info["ind_cur"]))
+            newnode.append_part("indent", ind)
+            newnode.append_part("body", after)
 
             if line_info["is_not_blank"]:
                 node.active = newnode
@@ -615,13 +613,13 @@ class RSTParser:
                 if not line_info["is_not_blank"] and line_info["is_block_start"]:
                     node.append_child(node.active)
                     node.active = None
-                    node = self.textnode(node, line, line_info)
+                    node = self.paragraph(node, line, line_info)
                 else:
                     node.active.body.append_code(line)
 
             elif not node.active:
                 newnode = NodeRST("block-quote", line)
-                ind, after = line.slice(line.loc_to_abs((0, line_info["block_ind"])))
+                ind, after = line.slice((line.start_lincol[0], line_info["block_ind"]))
                 newnode.append_part("indent", ind)
                 newnode.append_part("body", after)
                 node.active = newnode
@@ -942,7 +940,7 @@ class RSTParser:
                             node.append_child(node.active)
                             node.active.active = None
                             node.active = None
-                        self.textnode(node, before_starter, line_info)
+                        self.paragraph(node, before_starter, line_info)
 
                     if node.active:
                         node.append_child(node.active)
@@ -956,7 +954,6 @@ class RSTParser:
             if node.active:
                 node.append_child(node.active)
             node.active = newnode
-            newnode.parent_node = node
 
 
         elif node.active and not is_text:
