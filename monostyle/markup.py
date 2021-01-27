@@ -251,7 +251,7 @@ def indention(document, reports):
                     rst_walker.is_of(node.parent_node, "text")):
                 continue
 
-            is_code = bool(rst_walker.is_of(node, "dir", ("code-block", "default")))
+            is_code = bool(rst_walker.is_of(node, "dir", ("code-block", "default", "math")))
             offset = 0
             if ((not node.parent_node and node.node_name == "snippet") or
                     (not node.prev and
@@ -299,7 +299,7 @@ def indention(document, reports):
                         # hanging indention of the first child
                         if node.node_name != "text":
                             reports = block_indention(reports, child, offset)
-                    elif child.indent:                            
+                    elif child.indent:
                         ind_aim = offset + default_indent
                         part_len = len(child.indent.code)
                         if part_len != 0 and part_len != offset and part_len != ind_aim:
@@ -399,15 +399,67 @@ def role_kbd(document, reports, re_lib):
 
 
 def leak_pre(_):
-    toolname = "leak"
+    def build_tree(data, root=None):
+        def walk_branch(branch, sub, index=0):
+            node = branch[index]
+            if isinstance(node, str):
+                node = (node,)
+            for name in node:
+                if name not in sub.keys():
+                    sub.setdefault(name, dict())
+                if index == len(branch) - 2:
+                    if not sub[name]:
+                        sub[name] = set()
+                    sub[name].update(branch[-1])
+                else:
+                    sub[name] = walk_branch(branch, sub[name], index+1)
+            return sub
+
+        def wildcard(sub, trans=None):
+            """Copy wildcard subtree to other siblings."""
+            if trans is None:
+                if isinstance(sub, dict):
+                    for key, value in sub.items():
+                        if key == "*":
+                            wildcard(sub, sub["*"])
+                        else:
+                            wildcard(value)
+            else:
+                for key, value in sub.items():
+                    if key == "*":
+                        continue
+                    if isinstance(value, dict):
+                        for key_rec, value_rec in trans.items():
+                            if key_rec in value.keys():
+                                wildcard(value[key_rec], value_rec)
+                            else:
+                                value[key_rec] = value_rec
+                    else:
+                        value.update(trans)
+
+            return sub
+
+        if not root:
+            root = dict()
+        for branch in data:
+            if len(branch) != 4:
+                print("unexpected branch length", branch)
+            root = walk_branch(branch, root)
+        root = wildcard(root)
+        return root
+
 
     re_lib = dict()
+    rst_parser = RSTParser()
+    start_ind = r"^ *"
+    space_end = r"(?: +|(?=\n)|\Z)"
+    ref_name = r"[A-Za-z0-9\-_.+]+"
 
     # BLOCK
     # Directive
-    pattern_str = r"^ *\.\. +(?:" + r"|".join(RSTParser.directives) + r")\:\s"
+    pattern_str = r"\A(?:" + r"|".join(RSTParser.directives) + r")\:\s"
     pattern = re.compile(pattern_str)
-    message = Report.existing(what="suspicious comment")
+    message = Report.missing(what="second colon", where="after directive")
     re_lib["dirsingleend"] = (pattern, message)
 
     pattern_str = r"(?<=\w)\:\:\w"
@@ -415,169 +467,253 @@ def leak_pre(_):
     message = Report.missing(what="space", where="after directive")
     re_lib["dirnoend"] = (pattern, message)
 
-    pattern_str = r"^ *\.\.[A-Za-z]"
-    pattern = re.compile(pattern_str)
+    pattern_str = start_ind + r"(?:\A|\s)\.\.[A-Za-z]"
+    pattern = re.compile(pattern_str, re.MULTILINE)
     message = Report.missing(what="space", where="in middle of directive")
     re_lib["dirmid"] = (pattern, message)
 
     # Target
-    pattern_str = r"^ *\.\. +[^_ ]\S*?(?<!\:)\: *?$"
+    pattern_str = r"\A[^_]\S*?(?<!\:)\: *?(?:\n|\Z)"
     pattern = re.compile(pattern_str, re.MULTILINE)
     message = Report.missing(what="underscore", where="before target")
     re_lib["targetstart"] = (pattern, message)
 
-    pattern_str = r"^ *\.\. +_\S*?[^: \n] *?$"
+    pattern_str = r"\A_\S*?[^: \n] *?(?:\n|\Z)"
     pattern = re.compile(pattern_str, re.MULTILINE)
     message = Report.missing(what="colon", where="after target")
     re_lib["targetend"] = (pattern, message)
 
     # List
-    pattern_str = r"^ *\-[A-Za-z]"
-    pattern = re.compile(pattern_str)
+    pattern_str = r"\n *" + rst_parser.re_lib["bullet"].pattern.replace(space_end, r"[A-Za-z]")
+    pattern = re.compile(pattern_str, re.MULTILINE)
     message = Report.missing(what="space", where="after unordered list")
     re_lib["unordend"] = (pattern, message)
 
-    pattern_str = r"^ *#\.[A-Za-z]"
-    pattern = re.compile(pattern_str)
+    pattern_str = r"\n *" + rst_parser.re_lib["enum"].pattern.replace(space_end, r"[A-Za-z]") \
+                                                             .replace(r"\w", "")
+    pattern = re.compile(pattern_str, re.MULTILINE)
     message = Report.missing(what="space", where="after ordered list")
     re_lib["ordend"] = (pattern, message)
 
-    pattern_str = r"^( *)\b(?!(\-|\#\.) ).*\n" # capture indent, not list
-    pattern_str += r"\1(\-|\#\.) " # same indent, list
+    # todo add line, field
+    pattern_str = r"\n *(?:" + '|'.join((rst_parser.re_lib["bullet"].pattern,
+                                         rst_parser.re_lib["enum"].pattern)) + r")"
     pattern = re.compile(pattern_str, re.MULTILINE)
     message = Report.missing(what="blank line", where="over list")
     re_lib["overlist"] = (pattern, message)
 
-    # INLINE
-    # Literal, Strong, Emphasis
-    # FP: list, code
-    pattern_str = r"(?<=\s)(\*\*?|``?)\s[^\-]"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="spaces", where="around inline markup char")
-    re_lib["spaceinline"] = (pattern, message)
 
-    # FP: target, math
-    pattern_str = r"(?<=[A-Za-z])(\*\*?|``?)[A-Za-z]"
+    # INLINE
+    # Hyperlink, Internal Target
+    pattern_str = r"(?:_')|(?:'_)"
     pattern = re.compile(pattern_str)
-    message = Report.missing(what="space", where="before/after inline markup char")
-    re_lib["unspaceinline"] = (pattern, message)
+    message = Report.existing(what="wrong mark", where="hyperlink or internal target")
+    re_lib["linkapos"] = (pattern, message)
 
     # Role
-    pattern_str = r"\w\:(?:[\w_-]+?)\:`"
+    pattern_str = r"(\:" + ref_name + r"[;,.|]\Z)|([;,.|]" + ref_name + r"\:\Z)"
     pattern = re.compile(pattern_str)
-    message = Report.missing(what="space", where="before role")
-    re_lib["rolestart"] = (pattern, message)
-
-    pattern_str = r"\:(?:[\w_-]+?)\:[ `\:]`"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="space", where="between role type and body")
-    re_lib["rolemid"] = (pattern, message)
-
-    pattern_str = r"\:(?:[\w_-]+?)\:`[^`]+?`\w"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="space", where="after role")
-    re_lib["roleend"] = (pattern, message)
-
-    pattern_str = r"(\:[\w_-]+?[;,.|]`)|([;,.|][\w\-]+?\:`)"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="wrong mark", where="role body")
+    message = Report.existing(what="wrong mark", where="role name")
     re_lib["rolesep"] = (pattern, message)
 
-    pattern_str = r"\:(?:doc|ref)\:`[^`<]+?\S<[^`]+?>`"
+    pattern_str = r"(\:" + ref_name + r"\:')|('\:" + ref_name + r"\:)"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="wrong mark", where="role body")
+    re_lib["roleapos"] = (pattern, message)
+
+    pattern_str = r"\A\S"
     pattern = re.compile(pattern_str)
     message = Report.missing(what="space", where="after link title")
-    re_lib["linkaddr"] = (pattern, message)
+    re_lib["linkspace"] = (pattern, message)
 
-    pattern_str = r"\:(?:abbr)\:`[^`(]+?\S\([^`)]+?\)`"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="space", where="after abbreviation title")
-    re_lib["abbr"] = (pattern, message)
-
-    pattern_str = r"\:doc\:`(?:[^/\\][^<>]+?`|[^`]+?<[^/\\])"
+    pattern_str = r"\A[^/\\]"
     pattern = re.compile(pattern_str)
     message = Report.missing(what="slash", where="at internal link start")
     re_lib["docstart"] = (pattern, message)
 
-    pattern_str = r"\:doc\:`([^`]+?\s<)?[A-Za-z]\:[/\\]"
+    pattern_str = r"\A[A-Za-z]\:[/\\]"
     pattern = re.compile(pattern_str)
     message = Report.existing(what="drive", where="at internal link start")
     re_lib["docdrive"] = (pattern, message)
 
-    pattern_str = r"\:doc\:`[^`]+?\.rst>?`"
+    pattern_str = r"\.[A-Za-z0-9]{1,4}\Z"
     pattern = re.compile(pattern_str)
     message = Report.existing(what="file extension", where="at internal link end")
     re_lib["docext"] = (pattern, message)
 
-    pattern_str = r"\:doc\:`[^`]+? <[^`]*?[^>]`"
+    pattern_str = r" <[^>]*?\Z"
     pattern = re.compile(pattern_str)
     message = Report.missing(what="closing bracket", where="at internal link end")
-    re_lib["docclose"] = (pattern, message)
+    re_lib["linkclose"] = (pattern, message)
 
-    # Internal target
-    pattern_str = r"[A-Za-z]_`[^`]"
+    pattern_str = r" \([^)]*?\Z"
     pattern = re.compile(pattern_str)
-    message = Report.missing(what="space", where="before internal target")
-    re_lib["intrgtstart"] = (pattern, message)
+    message = Report.missing(what="closing parenthesis", where="at abbreviation end")
+    re_lib["abbrclose"] = (pattern, message)
 
-    # Hyperlink
-    pattern_str = r"[^`]`__?[A-Za-z]"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="space", where="after hyperlink")
-    re_lib["linkend"] = (pattern, message)
-
-    pattern_str = r"https?\:\/\/[^`]+?>`(?!_)"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="underscore", where="after external hyperlink")
-    re_lib["exlinkend"] = (pattern, message)
-
-    # Substitution
-    pattern_str = r"[A-Za-z]\|[A-Za-z]|[A-Za-z]\|_{0,2}[A-Za-z]"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="space", where="before/after substitution")
-    re_lib["subst"] = (pattern, message)
+    # FP: math
+    inlines = {
+         ("literal", r"``"),
+         ("strong", r"\*\*"),
+         ("emphasis", r"(?<!\*)\*(?!\*)"),
+         ("subst", r"\|_{0,2}"),
+         ("int-target", r"_`"),
+         ("dftrole", r"(?<!_)`(?!_)"),
+         ("hyperlink", r"`__?"),
+         ("role-ft", r"\:" + ref_name + r"\: *`"),
+         ("role-bk", r"` *\:" + ref_name + r"\:"),
+         ("foot", r"\]_"), # same as cit
+         # space underscore?
+    }
+    markup_keys = set()
+    for name, pattern_str in inlines:
+        markup_keys.add(name)
+        re_lib[name] = (re.compile(r"(\A|^|.)((?<!\\)" + pattern_str + r")(.|$|\Z)", re.MULTILINE),
+                        (name if name not in {"role-ft", "role-bk", "dftrole"} else "role",
+                         False if name not in {"dftrole"} else None), True)
 
     # Arrow
     pattern_str = r"(?:[^ \-`]\-\->)|(?:\->[^ `|])"
     pattern = re.compile(pattern_str)
     message = Report.missing(what="space", where="before/after arrow")
-    re_lib["arrow"] = (pattern, message)
+    re_lib["arrow"] = (pattern, message, False)
 
     pattern_str = r"[^\-<]\->"
     pattern = re.compile(pattern_str)
     message = Report.under(what="dashes", where="in arrow")
-    re_lib["arrowlen"] = (pattern, message)
+    re_lib["arrowlen"] = (pattern, message, False)
 
     # Dash
     pattern_str = r"(?:\w(\-{2,3})(?![->]))|(?:(?<![<-])(\-{2,3})\w)"
     pattern = re.compile(pattern_str)
     message = Report.missing(what="space", where="before/after dash")
-    re_lib["dash"] = (pattern, message)
+    re_lib["dash"] = (pattern, message, False)
 
+    # Backslash
+    # Not at block start/ after inline markup
+    pattern_str = r"(?!\A)[^\\`*|_]\\[^\s\\`*|_]"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="unnecessary escape")
+    re_lib["escape"] = (pattern, message, False)
+
+    markup_keys.update(("arrow", "arrowlen", "dash", "escape"))
 
     # Merge Conflict
-    # = nl to not match heading underline
     # FP = transition
-    pattern_str = r"(?:[<>|]{7} \.(?:r\d+?|mine))|(?:\n{2}={7}\n{2})"
+    pattern_str = r"(?:[<>|]{7} \.(?:r\d+?|mine))|(?:={7}\n)"
     pattern = re.compile(pattern_str, re.MULTILINE)
     message = Report.existing(what="merge conflict")
     re_lib["mc"] = (pattern, message)
 
+    node_pattern_map = (
+        ("comment", "*", "body", {"dirsingleend", "targetstart", "targetend"}),
+        ("text", "*", "body", {"dirnoend", "dirmid", "unordend", "ordend", "overlist",
+                               "linkapos", "rolesep", "roleapos", "mc"}),
+        ("trans", "*", "name_start", {"mc",}),
+        ("role", {"doc", "ref", "term", "any", "download", "numref"}, "id_start", {"linkspace",}),
+        ("role", {"doc", "ref", "any", "download", "numref"}, "id", {"linkclose",}),
+        ("role", "term", "head", {"linkclose",}),
+        ("hyperlink", "*", "id_start", {"linkspace",}),
+        ("hyperlink", "*", "body", {"linkclose"}),
+        ("role", "abbr", "id_start", {"linkspace",}),
+        ("role", "abbr", "head", {"abbrclose",}),
+        ("role", "doc", "id", {"docstart", "docdrive", "docext"}),
+    )
+    node_pattern_map = build_tree(node_pattern_map)
+
     args = dict()
     args["re_lib"] = re_lib
-    args["config"] = {"severity": 'E', "toolname": toolname}
-
+    args["data"] = (node_pattern_map, markup_keys)
     return args
 
 
-def search_code(document, reports, re_lib, config):
-    """Iterate regex tools."""
-    text = str(document.code)
-    for pattern, message in re_lib.values():
-        for m in re.finditer(pattern, text):
-            output = document.body.code.slice_match_obj(m, 0, True)
-            line = getline_punc(document.body.code, m.start(), len(m.group(0)), 50, 0)
-            reports.append(Report(config.get("severity"), config.get("toolname"),
-                                  output, message, line))
+def leak(document, reports, re_lib, data):
+    """Find piece of leaked markup and suspicious patterns."""
+    toolname = "leak"
+
+    names = set(data[0].keys()) if not "*" in data[0].keys() else None
+    for node in rst_walker.iter_node(document.body, names, leafs_only=True):
+        mapper_portion = (data[0][node.node_name] if node.node_name in data[0].keys()
+                                else data[0]["*"])
+        name_str = str(node.name.code).strip() if node.name is not None else "default"
+        if name_str in mapper_portion.keys():
+            mapper_portion = mapper_portion[name_str]
+        elif not node.name and "*" in mapper_portion.keys():
+            mapper_portion = mapper_portion["*"]
+        else:
+            continue
+        names_part = set(mapper_portion.keys()) if not "*" in mapper_portion.keys() else None
+        for part in rst_walker.iter_nodeparts(node, names_part):
+            part_str = str(part.code)
+            mapper_portion_part = (mapper_portion[part.node_name]
+                                   if part.node_name in mapper_portion.keys()
+                                   else mapper_portion["*"])
+            for key in mapper_portion_part:
+                for m in re.finditer(re_lib[key][0], part_str):
+                    output = part.code.slice_match_obj(m, 0, True)
+                    line = getline_punc(part.code, part.code.loc_to_abs(m.start()),
+                                        len(m.group(0)), 50, 0)
+                    reports.append(Report('E', toolname, output, re_lib[key][1], line))
+
+
+    for node in rst_walker.iter_node(document.body, {"text", "sect", "field"}):
+        if node.node_name == "text":
+            if node.body.child_nodes.is_empty():
+                continue
+            part_parent = node.body
+        else:
+            part_parent = node.name
+
+        for node_inline in rst_walker.iter_node(part_parent):
+            if (node_inline.node_name == "literal" or
+                    rst_walker.is_of(node_inline, "role", "math")):
+                continue
+            if node_inline.head:
+                part = node_inline.head
+            elif node_inline.body:
+                part = node_inline.body
+            else:
+                continue
+
+            is_text = bool(node_inline.node_name == "text")
+            part_str = str(part.code)
+            for key in data[1]:
+                for m in re.finditer(re_lib[key][0], part_str):
+                    output = part.code.slice_match_obj(m, 0, True)
+                    if re_lib[key][2]:
+                        message = "leaked "
+                        if is_text:
+                            direction = None
+                            if m.group(2)[-1] in ("_", ":"):
+                                direction = False
+                            elif m.group(2)[0] in ("_", ":"):
+                                direction = True
+                            delim = (bool(re.match(r"[\W\s]", m.group(1))),
+                                      bool(re.match(r"[\W\s]", m.group(3))))
+                            whitespace = (bool(re.match(r"\s", m.group(1))),
+                                      bool(re.match(r"\s", m.group(3))))
+                            if direction is True:
+                                if not delim[0]:
+                                    message = "no delimiter at start of "
+                                elif whitespace[1]:
+                                    message = "space after body start of "
+                            elif direction is False:
+                                if whitespace[0]:
+                                    message = "space before body end of "
+                                elif not delim[1]:
+                                    message = "no delimiter at end of "
+                            else:
+                                if whitespace[0] and whitespace[1]:
+                                    message = "spaces around "
+                                elif not delim[0] and not delim[1]:
+                                    message = "no delimiter around "
+
+                        message += rst_walker.write_out(re_lib[key][1][0], re_lib[key][1][1])
+                    else:
+                        message = re_lib[key][1]
+                    line = getline_punc(part.code, part.code.loc_to_abs(m.start()),
+                                        len(m.group(0)), 50, 0)
+                    reports.append(Report('E', toolname, output, message, line))
 
     return reports
 
@@ -641,7 +777,7 @@ OPS = (
     ("heading-level", heading_level, None),
     ("indent", indention, None),
     ("kbd", role_kbd, role_kbd_pre),
-    ("leak", search_code, leak_pre)
+    ("leak", leak, leak_pre)
 )
 
 

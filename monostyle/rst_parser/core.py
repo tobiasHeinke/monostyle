@@ -54,97 +54,59 @@ class RSTParser:
         re_lib = dict()
 
         # Block
-
         ind = r"( *)"
         re_lib["ind"] = re.compile(ind + r"\S")
         space_end = r"(?: +|(?=\n)|\Z)"
+        eol_end = r" *(?:\n)|\Z)"
 
-        name_any = r"[A-Za-z0-9\-_.+]+?"
-        foot_name = "".join((r"(?:\d+)|[", "".join(self.foot_chars), r"]|(?:#", name_any, r")"))
-
-        mid_a = r"(.*?(?<![\s\\"
+        ref_name = r"[A-Za-z0-9\-_.+]+"
+        foot_name = "".join((r"(?:\d+)|[", "".join(self.foot_chars), r"]|(?:#", ref_name, r")"))
+        mid_a = r"(\S.*?(?<![\s\\"
         mid_b = r"]))"
-
-        pattern_str = (ind, r"(([", r''.join(map(re.escape, self.trans_chars)), r"])\3*",
-                       r" *(?:\n|\Z))")
-        re_lib["trans"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (ind, r"([", r''.join(map(re.escape, self.bullet_chars)), r"]",
-                       space_end, r")")
-        re_lib["bullet"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (ind, r"(\()?([#\w]|\d+)([\.\)]", space_end, r")")
-        re_lib["enum"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (ind, r"(\|", space_end, r")")
-        re_lib["line"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (ind, r"(\:(?!", name_any, r"\:`))([^:].*?)((?<!\\)\:", space_end, r")")
-        re_lib["field"] = re.compile(''.join(pattern_str))
-
         option_arg = r"(?:[-/]\w|\-\-\w[\w-]+(?:[ =][\w.;:\\/\"'-]+)?)"
-        pattern_str = (ind, r"(", option_arg, r"(?:, ", option_arg, r")*)(  +|(?=\n)|\Z)")
-        re_lib["option"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (ind, r"((?:\.\.|__)", space_end, r")")
-        re_lib["exp"] = re.compile(''.join(pattern_str))
-
         dd = ''.join((ind, r"(\.\.", space_end, r")"))
+        direc = ''.join((r"(", ref_name, r")(\:\:", space_end, r")"))
 
-        pattern_str = (r"(\A *)?(?<![^\\]\\)(\:\: *)(?:\n|\Z)")
-        re_lib["dftdir"] = re.compile(''.join(pattern_str), re.DOTALL)
+        blocks = (
+            ("trans", (ind, r"(([", r''.join(map(re.escape, self.trans_chars)), r"])\3*",
+                       eol_end)),
+            ("bullet", (ind, r"([", r''.join(map(re.escape, self.bullet_chars)), r"]",
+                        space_end, r")")),
+            ("enum", (ind, r"(\()?([#\w]|\d+)([\.\)]", space_end, r")")),
+            ("line", (ind, r"(\|", space_end, r")")),
+            ("field", (ind, r"(\:(?!", ref_name, r"\:`))([^:].*?)((?<!\\)\:", space_end, r")")),
+            ("option", (ind, r"(", option_arg, r"(?:, ", option_arg, r")*)( ", space_end, ")")),
 
-        direc = ''.join((r"(", name_any, r")(\:\:", space_end, r")"))
-        re_lib["dir"] = re.compile(dd + direc)
+            ("expl", (ind, r"((?:\.\.|__)", space_end, r")")),
+            ("dftdir",(r"(\A *)?(?<![^\\]\\)(\:\:", space_end, ")")),
+            ("dir", (dd, direc)),
+            ("substdef", (dd, r"(\|)(", ref_name, r")(\|\s+)(?:", direc, r")?")),
+            ("footdef", (dd, r"(\[)(", foot_name, r")(\]", space_end, r")")),
+            ("citdef", (dd, r"(\[)(", ref_name, r")(\]", space_end, r")")),
+            ("target", (dd, r"(_ *)(`)?(?(4)(?:((?:[^`]*?[^\\", mid_b, r"(`))|",
+                        mid_a, mid_b, r")", r"(\:", space_end, r")")),
+            ("target-anon", (dd, r"?(__ *)(\:", space_end, r")?")),
+            ("quoted", (ind, r"[", r''.join(map(re.escape, self.trans_chars)), r"]")),
+            ("doctest", (ind, r">>>\s")),
 
-        pattern_str = (dd, r"(\|)(", name_any, r")(\|\s+)(?:", direc, r")?")
-        re_lib["substdef"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (dd, r"(\[)(", foot_name, r")(\]", space_end, r")")
-        re_lib["footdef"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (dd, r"(\[)(", name_any, r")(\]", space_end, r")")
-        re_lib["citdef"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (dd, r"(_ *)(`)?(?(4)(?:((?:[^`]*?[^\\", mid_b, r"(`))|", mid_a, mid_b, r")",
-                       r"(\:", space_end, r")")
-        re_lib["target"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (dd, r"?(__ *)(\:", space_end, r")?")
-        re_lib["target-anon"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (ind, r"[", r''.join(map(re.escape, self.trans_chars)), r"]")
-        re_lib["quoted"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (ind, r">>>\s")
-        re_lib["doctest"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (ind, r"((?:\+\-+?)*\+\-+\+)", space_end)
-        re_lib["grid_border"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (ind, r"[+|].+[+|]", space_end)
-        re_lib["grid_row_frame"] = re.compile(''.join(pattern_str))
-
-        pattern_str = r"[\+-]\Z"
-        re_lib["grid_cell_border"] = re.compile(pattern_str)
-
-        pattern_str = (ind, r"((?:\+=+?)*\+=+\+)", space_end)
-        re_lib["grid_head_border"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (ind, r"(=+?\s+)*=+", space_end)
-        re_lib["simple_row_border"] = re.compile(''.join(pattern_str))
-
-        pattern_str = (ind, r"(\-+?\s+)*\-+", space_end)
-        re_lib["simple_column_span"] = re.compile(''.join(pattern_str))
+            ("grid_border", (ind, r"((?:\+\-+?)*\+\-+\+", eol_end)),
+            ("grid_row_frame", (ind, r"[+|].+[+|]", space_end)),
+            ("grid_cell_border", (r"[\+-]\Z",)),
+            ("grid_head_border", (ind, r"((?:\+=+?)*\+=+\+", eol_end)),
+            ("simple_row_border", (ind, r"((?:=+?\s+)*=+", eol_end)),
+            ("simple_column_span", (ind, r"((?:\-+?\s+)*\-+", eol_end)),
+        )
+        for name, pattern_str in blocks:
+            re_lib[name] = re.compile(''.join(pattern_str))
 
         # Inline
-
         before_a = r"(?:(?<=[^\w\\"
         before_b = r"])|\A)"
         after_a = r"(?:(?=[^\w"
         after_b = r"])|\Z)"
+        url = r"(?:\\[*_])?[\w\d/+\-.]*?\b(?:\\[*_][\w\d/+\-.]*?)*?"
 
-        inliners = {
+        inlines = {
             ("literal", r"`", r"``", True, r"", r"``", r"`"),
             ("strong", r"\*", r"\*\*", True, r"*", r"\*\*", r"\*"),
             ("emphasis", r"\*", r"\*", True, r"*", r"\*", r"\*"),
@@ -152,29 +114,30 @@ class RSTParser:
             ("int-target", "", r"_`", True, "", r"`", r"`"),
             ("dftrole", r"_:`", r"`", True, r"`", r"`", r"`"),
             ("hyperlink", r"`:_", r"`", True, r"`", r"`__?", ""),
-            ("role-ft", "", r"\:)(" + name_any + r")(\:)(`", True, "", r"`", ""),
-            ("role-bk", "", r"`", True, "", r"`)(\:)(" + name_any + r")(\:", ""),
+            ("role-ft", "", r"\:)(" + ref_name + r")(\:)(`", True, "", r"`", ""),
+            ("role-bk", "", r"`", True, "", r"`)(\:)(" + ref_name + r")(\:", ""),
             ("foot", "", r"\[", False, foot_name, r"\]_", ""),
-            ("cit", "", r"\[", False, name_any, r"\]_", ""),
-            ("int-target-sw", "", r"_(?!_)", False, r"[\w'-]+", "", ""),
-            ("hyperlink-sw", "", "", False, r"[\w'-]+?", r"_(?!_)", ""),
-            ("standalone", r"<`/", "", False, r"\b(?<!\\)(?:https?\:\/\/|mailto\:)\S*\b(\\\S)*", "", ""),
-            ("mail", r"<`/", "", False, r"\b\S*?(?<!\\)@\S*?\.\S*\b(\\\S)*", "", ""),
+            ("cit", "", r"\[", False, ref_name, r"\]_", ""),
+            ("int-target-sw", "", r"_(?!_)", False, ref_name, "", ""),
+            ("hyperlink-sw", "", "", False, ref_name, r"_(?!_)", ""),
+            ("standalone", r"<`/", "", False, r"\b(?<!\\)(?:https?\:\/\/|mailto\:)" + url, "", ""),
+            ("mail", r"<`/", "", False, r"\b" + url + r"(?<!\\)@" + url + r"\." + url, "", ""),
             ("link", "", r"<", True, "", r">", ""),
             ("parenthesis", "", r"\(", True, "", r"\)", "")
             # ("arrow", r"-", "", False, r"\-{1,2}>", "", "")
             # ("dash", r"-", "", False, r"\-{2,3}", "", "")
         }
-        for name, before_no, start, is_dot_mid, mid, end, after_no in inliners:
-            if is_dot_mid:
-                mid = (mid_a if name != "literal" else mid_a[:-2], mid, mid_b)
-            else:
-                mid = (r"(", mid, r")")
+        for name, before_no, start, is_dot_mid, mid, end, after_no in inlines:
             if name not in {"link", "parenthesis"}:
                 before = (before_a, before_no, before_b)
             else:
                 before = ()
                 start = r"(?:\s+?|\A)" + start
+
+            if is_dot_mid:
+                mid = (mid_a if name != "literal" else mid_a[:-2], mid, mid_b)
+            else:
+                mid = (r"(", mid, r")")
 
             if name != {"standalone", "mail"}:
                 after = (after_a, after_no, after_b)
@@ -336,8 +299,10 @@ class RSTParser:
         if name:
             for names, node_typ in recorder:
                 if name in names:
-                    recorder = ((name,), node_typ)
+                    recorder = (((name,), node_typ),)
                     break
+            else:
+                recorder = (((name,), self.inline),)
 
         for names, node_typ in recorder:
             for name in names:
@@ -906,7 +871,7 @@ class RSTParser:
         is_text = bool(not on and node.active and node.active.node_name == "text")
         if not on and (not is_text or line_info["is_block_end"]):
 
-            if (node.active and not is_text and 
+            if (node.active and not is_text and
                     node.active.node_name in {"dir", "target", "comment", "substdef",
                                               "footdef", "citdef"}):
                 if node.active.node_name == "dir" and node.active.name is None:
@@ -918,8 +883,8 @@ class RSTParser:
                     node.active = None
                 return node
 
-            if starter_m := re.match(self.re_lib["exp"], line_info["line_str"]):
-                newnode = NodeRST("exp", line)
+            if starter_m := re.match(self.re_lib["expl"], line_info["line_str"]):
+                newnode = NodeRST("expl", line)
                 newnode.append_part("indent", line.slice_match_obj(starter_m, 1, True))
                 _, fg, after_starter = line.slice_match_obj(starter_m, 2)
                 newnode.append_part("name_start", fg)
@@ -1356,7 +1321,7 @@ class RSTParser:
             if m := re.search(self.re_lib[name], str(code)):
                 fg_before, fg_code, fg_after = node.active.body.code.slice(
                                                     code.loc_to_abs(m.start(0)),
-                                                    code.loc_to_abs(m.end(2)))
+                                                    code.loc_to_abs(m.end(3)))
                 node.active.body.code = fg_before
                 node.active.code = fg_before
 
@@ -1366,8 +1331,8 @@ class RSTParser:
                         newnode.append_part("body_start", code.slice_match_obj(m, 1, True))
                         newnode.append_part("body", code.slice_match_obj(m, 2, True))
                     else:
-                        newnode.append_part("id", code.slice_match_obj(m, 1, True))
-                        newnode.append_part("body_end", code.slice_match_obj(m, 2, True))
+                        newnode.append_part("id", code.slice_match_obj(m, 2, True))
+                        newnode.append_part("body_end", code.slice_match_obj(m, 3, True))
 
                 else:
                     if name == "mail":
@@ -1395,7 +1360,7 @@ class RSTParser:
             sub = True
         else:
             name_str = str(node.name.code).strip()
-            if name_str in ('doc', 'ref', 'term', 'any', 'download', 'numref'):
+            if name_str in {'doc', 'ref', 'term', 'any', 'download', 'numref'}:
                 sub_name = "link"
                 sub = True
             elif name_str == 'abbr':

@@ -233,10 +233,10 @@ Inline
 ------
 
 No inline elements over two paragraphs.
-No other escape than backslash or spaces on both sides.
-Standalone link on a single line only.
+No other escape than backslash or spaces on both sides 'simple-inline-markup'.
+Standalone on a single line only.
 Standalone limited number of recognized protocols.
-Standalone no allowed-char checks, but mails without mailto must contain a dot after the at sign.
+Standalone mail without mailto must contain a dot after the at sign.
 
 
 Environment

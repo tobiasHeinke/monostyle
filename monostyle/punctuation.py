@@ -174,10 +174,6 @@ def pairs_pre(_):
     pattern = re.compile(pattern_str)
     re_lib["pairchar"] = pattern
 
-    pattern_str = r"(?<!\\)([`*])\1*"
-    pattern = re.compile(pattern_str)
-    re_lib["markupchar"] = pattern
-
     args["re_lib"] = re_lib
 
     # Max number of lines between the open and close mark.
@@ -207,7 +203,6 @@ def pairs(document, reports, re_lib, config):
     max_line_span = config.get("max_line_span")
     stack = []
     pair_re = re_lib["pairchar"]
-    markup_re = re_lib["markupchar"]
     pairs_map = {')': '(', ']': '[', '}': '{'}
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
@@ -236,10 +231,6 @@ def pairs(document, reports, re_lib, config):
 
                 else:
                     stack.append((pair_char, line.loc_to_abs((0, pair_m.start(0)))))
-
-            for markup_m in re.finditer(markup_re, line_str):
-                output = line.slice_match_obj(markup_m, 0, True)
-                reports.append(Report('E', toolname, output, "leaked markup char"))
 
     if len(stack) != 0:
         message = "unclosed pairs"
@@ -290,7 +281,7 @@ def mark_pre(_):
     re_lib["bracketpunc"] = (pattern, message)
 
     # FP: code, literal
-    pattern_str = r"([" + pare_open + r"]\s)|(\s[" + pare_close + r"])"
+    pattern_str = r"([" + pare_open + r"] )|( [" + pare_close + r"])"
     pattern = re.compile(pattern_str, re.MULTILINE)
     message = Report.existing(what="space", where="after/before opening/closing bracket")
     re_lib["spacebracket"] = (pattern, message)
@@ -330,8 +321,8 @@ def mark_pre(_):
     message = Report.existing(what="double punctuation")
     re_lib["double"] = (pattern, message)
 
-    # not match: ellipsis
-    pattern_str = r"\s[" + punc + r"](?!\.\.)"
+    # not match: indent, ellipsis
+    pattern_str = r"\S( +[" + punc + r"])(?!\.\.)"
     pattern = re.compile(pattern_str)
     message = Report.existing(what="space", where="before punctuation mark")
     re_lib["puncspacestart"] = (pattern, message)
@@ -341,6 +332,17 @@ def mark_pre(_):
     pattern = re.compile(pattern_str)
     message = Report.missing(what="space", where="after/before bracket")
     re_lib["unbracket"] = (pattern, message)
+
+    # Line
+    pattern_str = r"^\s*[" + punc + CharCatalog.get(("quote", "final")) + r"]"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="closing punctuation", where="at line start")
+    re_lib["closesol"] = (pattern, message)
+
+    pattern_str = r"[" + pare_open + CharCatalog.get(("quote", "initial")) + r"]\s*?\n"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="opening punctuation", where="at line end")
+    re_lib["openeol"] = (pattern, message)
 
     # Style
     pattern_str = r"\w/s\b"
@@ -460,15 +462,17 @@ def mark(document, reports, re_lib):
                 else:
                     if comma_m := re.search(comma_re, part_str):
                         output = part.code.slice_match_obj(comma_m, 0, True)
-                        message = re_lib["commaend"][1].format(part.parent_node.node_name +
-                                                               " " + part.node_name)
+                        message = (re_lib["commaend"][1]
+                                   .format(rst_walker.write_out(part.parent_node.node_name) +
+                                           " " + part.node_name))
                         reports.append(Report('W', toolname, output, message))
 
         elif rst_walker.is_of(part, ("role", "hyperlink"), "*", "head"):
             if re.search(noend_re, str(part.code)):
                 output = part.code.copy().clear(False)
-                message = re_lib["nopuncend"][1].format(part.parent_node.node_name + " " +
-                                                        part.node_name)
+                message = (re_lib["nopuncend"][1]
+                           .format(rst_walker.write_out(part.parent_node.node_name) +
+                                   " " + part.node_name))
                 reports.append(Report('W', toolname, output, message))
 
     return reports

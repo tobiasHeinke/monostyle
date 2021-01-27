@@ -398,7 +398,8 @@ def blank_line(document, reports):
 
         elif node.node_name in ("target", "comment"):
             cond_plain = 2
-            message = Report.quantity(what="one blank line", where="over " + node.node_name)
+            message = Report.quantity(what="one blank line",
+                                      where="over " + rst_walker.write_out(node.node_name))
             nl_count, _, __ = count_nl(node, cond_plain)
 
             if nl_count > cond_plain:
@@ -421,8 +422,9 @@ def blank_line(document, reports):
                 if node.head is not None and re.match(r"\n ", str(node.head.code)):
                     output = node.head.code.copy().clear(True)
                     message = Report.missing(what="blank line",
-                                             where="after head " + node.node_name +
-                                                   " " + str(node.name.code))
+                                             where="after head " +
+                                                   rst_walker.write_out(node.node_name,
+                                                                        node.name.code))
                     reports.append(Report('W', toolname, output, message))
 
 

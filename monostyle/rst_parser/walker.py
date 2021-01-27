@@ -37,107 +37,95 @@ def iter_node(root, names=None, enter_pos=True, leafs_only=False, output_root=Fa
 
 
 def iter_nodeparts(root, names=None, enter_pos=True, leafs_only=True, output_root=False):
-    if isinstance(root, NodeRST):
-        for part in root.child_nodes:
-            yield from iter_nodeparts(part, names, enter_pos, leafs_only)
+    if not isinstance(root, NodeRST):
+        for node in root.child_nodes:
+            yield from iter_nodeparts(node, names, enter_pos, leafs_only)
     else:
         if output_root:
             yield root
 
-        for node in root.child_nodes:
-            for part in node.child_nodes:
-                enter = True
-                if not names or part.node_name in names:
-                    enter = enter_pos
+        for part in root.child_nodes:
+            enter = True
+            if not names or part.node_name in names:
+                enter = enter_pos
 
-                    if not leafs_only or part.child_nodes.is_empty():
-                        yield part
+                if not leafs_only or part.child_nodes.is_empty():
+                    yield part
 
-                if enter and not part.child_nodes.is_empty():
-                    yield from iter_nodeparts(part, names, enter_pos, leafs_only)
+            if enter and not part.child_nodes.is_empty():
+                yield from iter_nodeparts(part, names, enter_pos, leafs_only)
 
 
 def iter_nodeparts_instr(root, instr_pos, instr_neg, leafs_only=True, output_root=False):
     """Iterate over node parts.
     instruction format: node.node_name, node.name, part.node_name
     asterisk wildcards matches all or None
-    node.name: default for default directive or role
+    default matches None for default directives or roles
     """
-    def rules(node, instr, posneg):
-        enter = False
-        part_node_name_rule = None
+    def rules(name, instr):
+        if instr is True or instr is False:
+            return instr
 
-        if node.node_name in instr.keys():
-            node_name_rule = instr[node.node_name]
-            enter = posneg
-        elif "*" in instr.keys():
-            node_name_rule = instr["*"]
-            enter = posneg
+        is_dict = bool(isinstance(instr, dict))
+        if is_dict:
+            keys = set(instr.keys())
+        elif isinstance(instr, str):
+            keys = {instr,}
         else:
-            node_name_rule = None
-            enter = not posneg
+            keys = instr
 
-        if enter == posneg:
-            node_name = str(node.name.code).strip() if node.name is not None else None
-
-            if node_name_rule and not isinstance(node_name_rule, str):
-                if node_name in node_name_rule.keys():
-                    part_node_name_rule = node_name_rule[node_name]
-                    enter = True
-                elif node_name is None and "default" in node_name_rule.keys():
-                    part_node_name_rule = node_name_rule["default"]
-                    enter = True
-                elif "*" in node_name_rule.keys():
-                    part_node_name_rule = node_name_rule["*"]
-                    enter = True
-                else:
-                    enter = not posneg
+        if name is None:
+            name = "default"
+        if name not in keys:
+            if "*" in keys:
+                name = "*"
             else:
-                if node_name == node_name_rule:
-                    enter = posneg
-                elif "*" == node_name_rule:
-                    enter = posneg
-                else:
-                    enter = not posneg
+                return False
 
-        return enter, part_node_name_rule
+        if is_dict:
+            return instr[name]
+        return True
 
     if isinstance(root, NodeRST):
-        for part in root.child_nodes:
-            yield from iter_nodeparts_instr(part, instr_pos, instr_neg, leafs_only)
+        for node in root.child_nodes:
+            yield from iter_nodeparts_instr(node, instr_pos, instr_neg, leafs_only)
     else:
         if output_root:
             yield root
 
         for node in root.child_nodes:
-            enter, part_node_name_rule_pos = rules(node, instr_pos, True)
-            if not enter:
+            instr_portion_pos = rules(node.node_name, instr_pos)
+            if not instr_portion_pos:
+                continue
+            instr_portion_neg = rules(node.node_name, instr_neg)
+            if instr_portion_neg is True:
                 continue
 
-            enter, part_node_name_rule_neg = rules(node, instr_neg, False)
-            if enter:
-                for part in node.child_nodes:
-                    if ((part_node_name_rule_pos is None or part_node_name_rule_pos == "*" or
-                             part.node_name in part_node_name_rule_pos) and
-                            (part_node_name_rule_neg is None or
-                             not (part_node_name_rule_neg == "*" or
-                                  part.node_name in part_node_name_rule_neg))):
-
-                        if not part.child_nodes.is_empty():
-                            if not leafs_only:
-                                yield part
-
-                            yield from iter_nodeparts_instr(part, instr_pos, instr_neg, leafs_only)
-
-                        else:
+            name_str = str(node.name.code).strip() if node.name is not None else None
+            instr_portion_pos = rules(name_str, instr_portion_pos)
+            if not instr_portion_pos:
+                continue
+            instr_portion_neg = rules(name_str, instr_portion_neg)
+            if instr_portion_neg is True:
+                continue
+            for part in node.child_nodes:
+                if (rules(part.node_name, instr_portion_pos) and
+                        not rules(part.node_name, instr_portion_neg)):
+                    if not part.child_nodes.is_empty():
+                        if not leafs_only:
                             yield part
+
+                        yield from iter_nodeparts_instr(part, instr_pos, instr_neg, leafs_only)
+
+                    else:
+                        yield part
 
 
 def is_of(node, node_name_rule, name_rule=None, part_node_name_rule=None):
     """Check if node and part node_name matches the rules.
     instruction format: node.node_name, node.name, part.node_name
-    asterisk wildcards matches all or None
-    node.name: default for default directive or role
+    asterisk wildcard matches all or None
+    default matches None thus for default directives or roles
     """
     if node is None:
         return False
@@ -148,32 +136,16 @@ def is_of(node, node_name_rule, name_rule=None, part_node_name_rule=None):
         part = node
         node = part.parent_node
 
-    if not isinstance(node_name_rule, str):
-        if (not("*" in node_name_rule or
-                node.node_name in node_name_rule)):
-            return False
-    elif (not("*" == node_name_rule or
-              node.node_name == node_name_rule)):
-        return False
+    for name, rule in ((node.node_name, node_name_rule), (str(node.name.code).strip()
+                       if name_rule is not None and node.name is not None else "default",
+                       name_rule), (part.node_name if part else None, part_node_name_rule)):
 
-    if name_rule is not None:
-        if not isinstance(name_rule, str):
-            if (not("*" in name_rule or
-                    (not node.name and "default" in name_rule) or
-                    (node.name and str(node.name.code).strip() in name_rule))):
+        if rule is None:
+            continue
+        if not isinstance(rule, str):
+            if not("*" in rule or name in rule):
                 return False
-        elif (not("*" == name_rule or
-                  (not node.name and "default" == name_rule) or
-                  (node.name and str(node.name.code).strip() == name_rule))):
-            return False
-
-    if part and part_node_name_rule is not None:
-        if not isinstance(part_node_name_rule, str):
-            if (not("*" in part_node_name_rule or
-                    part.node_name in part_node_name_rule)):
-                return False
-        elif (not("*" == part_node_name_rule or
-                  part.node_name == part_node_name_rule)):
+        elif not("*" == rule or name == rule):
             return False
 
     return True
@@ -187,3 +159,26 @@ def get_attr(node, name):
             for field_node in field_list.child_nodes.last().child_nodes:
                 if str(field_node.name).strip().lower() == name:
                     return field_node.body
+
+
+def write_out(node_name, name=False):
+    """Write out shortened node_name and name."""
+    node_name_map = {
+        "enum": "enumeration",
+        "dir": "directive",
+        "substdef": "substitution definition",
+        "footdef": "footnote definition",
+        "citdef": "citation definition",
+        "trans": "transition",
+        "sect": "section",
+        "def": "definition",
+        "int-target": "internal target",
+        "subst": "substitution reference",
+        "foot": "footnote reference",
+        "cit": "citation reference"
+    }
+    result = ""
+    if name is False and node_name in {"dir", "role"}:
+        result = (str(name).strip() if name is not None else "default") + " "
+    result += node_name_map.get(node_name, node_name)
+    return result

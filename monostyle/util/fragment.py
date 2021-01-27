@@ -222,6 +222,8 @@ class Fragment():
             elif start == end and not output_zero:
                 fg = None
             else:
+                start = (max(start[0], 0), max(start[1], 0))
+                end = (max(end[0], 0), max(end[1], 0))
                 if start == end:
                     cont = []
                 else:
@@ -231,7 +233,8 @@ class Fragment():
                     else:
                         if start[0] + 1 < len(self.content):
                             cont.extend(self.content[start[0]+1:end[0]])
-                        cont.extend([self.content[end[0]][:end[1]]])
+                        if end[0] < len(self.content):
+                            cont.extend([self.content[end[0]][:end[1]]])
 
                 if pos_abs is None:
                     if start_pos_abs is not None:
@@ -246,6 +249,19 @@ class Fragment():
             result.append(fg)
 
         return result[0] if len(result) == 1 else tuple(result)
+
+
+    def slice_block(self, at_start, at_end):
+        """Returns a rectangular block defined by the start and end corners."""
+        if isinstance(at_start, int):
+            at_start = self.pos_to_lincol(at_start)
+        if isinstance(at_end, int):
+            at_end = self.pos_to_lincol(at_end)
+        result = FragmentBundle([])
+        for line in self.slice(at_start, at_end, True).splitlines():
+            result.combine(line.slice((line.start_lincol[0], at_start[1]),
+                                      (line.start_lincol[0], at_end[1]), True))
+        return result
 
 
     def splitlines(self, buffered=False):
@@ -490,8 +506,7 @@ class Fragment():
             return self.end_pos - self.start_pos
 
         line_span = self.end_lincol[0] - self.start_lincol[0]
-        if ((line_span != 0 or self.start_lincol != self.end_lincol) and
-                self.end_lincol[1] != 0):
+        if self.start_lincol != self.end_lincol:
             line_span += 1
         return (line_span, self.end_lincol[1] - self.start_lincol[1])
 
@@ -820,6 +835,18 @@ class FragmentBundle():
         return result[0] if len(result) == 1 else tuple(result)
 
 
+    def slice_block(self, at_start, at_end):
+        if isinstance(at_start, int):
+            at_start = self.pos_to_lincol(at_start)
+        if isinstance(at_end, int):
+            at_end = self.pos_to_lincol(at_end)
+        result = FragmentBundle([])
+        for fg in self:
+            print(fg.repr(False))
+            result.combine(fg.slice_block(at_start, at_end))
+        return result
+
+
     def splitlines(self, buffered=False):
         for fg in self:
             yield from fg.splitlines()
@@ -1090,8 +1117,7 @@ class FragmentBundle():
             return self.bundle[-1].end_pos - self.bundle[0].start_pos
 
         line_span = self.bundle[-1].end_lincol[0] - self.bundle[0].start_lincol[0]
-        if ((line_span != 0 or self.bundle[0].start_lincol != self.bundle[-1].end_lincol) and
-                self.bundle[-1].end_lincol[1] != 0):
+        if self.bundle[0].start_lincol != self.bundle[-1].end_lincol:
             line_span += 1
         return (line_span, self.bundle[-1].end_lincol[1] - self.bundle[0].start_lincol[1])
 
@@ -1132,7 +1158,7 @@ class FragmentBundle():
 
 
     def __str__(self):
-        return str(''.join([str(fg) for fg in self]))
+        return ''.join([str(fg) for fg in self])
 
 
     def __repr__(self):
@@ -1140,7 +1166,8 @@ class FragmentBundle():
 
 
     def repr(self, show_pos, show_filename=False, show_content=True):
-        return str(', '.join([fg.repr(show_pos, show_filename, show_content) for fg in self]))
+        return '[' + ', '.join([fg.repr(show_pos, show_filename, show_content)
+                               for fg in self]) + ']'
 
 
     def copy(self):
