@@ -168,11 +168,11 @@ def line_style(document, reports, re_lib, config):
             for m in re.finditer(value[0], text):
                 message = value[1]
                 if is_lw:
-                    path = POS.tag(str(m.group(1).lower()))
-                    if (len(path) != 0 and
-                            (path[0] == "adjective" or
-                             (path[0] == "determiner" and path[1] == "article"))):
-                        message = message.format(path[-1])
+                    tag = POS.tag(str(m.group(1).lower()))
+                    if (len(tag) != 0 and
+                            (tag[0] == "adjective" or
+                             (tag[0] == "determiner" and tag[1] == "article"))):
+                        message = message.format(tag[-1])
                     else:
                         continue
                 if m.start() == 0 and (key == "sentwidow" or is_lw):

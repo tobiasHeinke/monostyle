@@ -278,9 +278,9 @@ def reflow_penalties(boxes, options):
 
         # Period or colon
         if punc_m := re.match(r"^([A-Za-z0-9-]+)[\"')]*([\.\:])[\"')]*$", box.content):
-            path = pos_weight(punc_m.group(1))
+            tag = pos_weight(punc_m.group(1))
             # End of sentence
-            if (not path or path[0] != "abbreviation") or punc_m.group(2) == ":":
+            if (not tag or tag[0] != "abbreviation") or punc_m.group(2) == ":":
                 box.demerits += options["sentence"] / 2
                 if box.prev:
                     box.prev.demerits -= options["sentence"]
@@ -291,9 +291,9 @@ def reflow_penalties(boxes, options):
                     if options["dosentence2"] and box.next.next:
                         box.next.next.demerits -= options["sentence2"]
 
-            elif path:
+            elif tag:
                 # Don't break "Mr. X"
-                if path[0] == "abbreviation" and path[1] == "title":
+                if tag[0] == "abbreviation" and tag[1] == "title":
                     box.demerits -= options["namebreak"]
 
         # !? after word
@@ -334,10 +334,10 @@ def reflow_penalties(boxes, options):
                 box.demerits -= options["math"]
                 if box.prev: box.prev.demerits -= options["math"]
 
-        path = pos_weight(box.content)
-        if path and path[0] != "abbreviation":
-            box.demerits += path[-1][1] * options["connpenalty"]
-            if box.prev: box.prev.demerits += path[-1][0] * options["connpenalty"]
+        tag = pos_weight(box.content)
+        if tag and tag[0] != "abbreviation":
+            box.demerits += tag[-1][1] * options["connpenalty"]
+            if box.prev: box.prev.demerits += tag[-1][0] * options["connpenalty"]
 
     return boxes
 
@@ -393,16 +393,16 @@ def pos_weight(word):
             "doc": [0, -3]
         }
     }
-    if path := POS.tag(word):
+    if tag := POS.tag(word):
         weight = weights.copy()
-        for seg in path:
+        for seg in tag:
             if seg in weight:
                 weight = weight[seg]
             else:
                 print("reflow weight key error: ", seg)
 
-        path.append(weight)
-        return path
+        tag.append(weight)
+        return tag
 
 
 def stringify_space(boxes, lastbreak):

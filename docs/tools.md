@@ -8,7 +8,7 @@ An overview of the modules and tools.
 
 Find rare or new words. This is a multi tool because it detects:
 
-- Spelling errors, also detects valid word e.g. 'which' vs. 'witch' and
+- Spelling errors, also detects valid words e.g. 'which' vs. 'witch' and
   words that are not in a general dictionary like business and product names.
 - Word choices like not simple words, interjection like 'heck', etc.
 - Compounding/hyphenation (if the words are not used individually like 'well defined').
@@ -128,13 +128,17 @@ Search for space-separated or joined versions of hyphened compounds like 'sub st
 
 Measures the length of segments like paragraphs, sentences and words.
 
+### overuse
+
+Find repetitive word usage on a broad scale. Mainly to find repeated transitions (e.g. 'however').
+
 ### passive
 
 Detect the use of passive voice.
 
 ### repeated
 
-Repeated words inside a range of words.
+Repeated words inside a small range of words.
 
 
 ## Punctuation
@@ -225,13 +229,12 @@ Check if a heading matches the tool name in the admonition reference box.
 Searches for unused (ref) targets.
 
 
-# Monitor
+## Monitor
 
 Monitor files/directories for changes.
 
 
 # Missing Tools
 
-- overuse: of transitions like 'however'.
 - present tense
 - positive language: explain what to do instead of what not to.

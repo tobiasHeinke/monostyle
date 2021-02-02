@@ -13,25 +13,34 @@ from monostyle.rst_parser.rst_node import NodeRST, NodePartRST
 
 class RSTParser:
 
+    directives = (
+        'admonition', 'attention', 'caution', 'class', 'code', 'compound',
+        'container', 'contents', 'csv-table', 'danger', 'date', 'default-role', 'epigraph',
+        'error', 'figure', 'footer', 'header', 'highlights', 'hint', 'image',
+        'important', 'include', 'line-block', 'list-table', 'math', 'meta', 'note',
+        'parsed-literal', 'pull-quote', 'raw', 'replace', 'restructuredtext-test-directive',
+        'role', 'rubric', 'section-numbering', 'sectnum', 'sidebar', 'table', 'target-notes',
+        'tip', 'title', 'topic', 'unicode', 'warning'
+    )
+    directives_sphinx = (
+        'acks', 'centered', 'codeauthor', 'code-block', 'deprecated', 'glossary', 'highlight',
+        'highlightlang', 'hlist', 'index', 'literalinclude', 'only', 'productionlist',
+        'sectionauthor', 'seealso', 'tabularcolumns', 'toctree', 'versionadded', 'versionchanged'
+    )
+
     roles = (
-        'abbr', 'any', 'class', 'command', 'dfn', 'doc', 'download', 'envvar',
+        'ab', 'abbreviation', 'ac', 'acronym', 'anonymous-reference', 'citation-reference', 'code',
+        'emphasis', 'footnote-reference', 'i', 'index', 'literal', 'math', 'named-reference',
+        'pep', 'pep-reference', 'raw', 'rfc', 'rfc-reference', 'strong', 'sub', 'subscript',
+        'substitution-reference', 'sup', 'superscript', 't', 'target', 'title', 'title-reference',
+        'uri', 'uri-reference', 'url'
+    )
+    roles_sphinx = (
+        'abbr', 'any', 'class', 'command', 'dfn', 'doc', 'download', 'envvar', 'eq',
         'file', 'guilabel', 'index', 'kbd', 'keyword', 'mailheader', 'makevar',
         'manpage', 'math', 'menuselection', 'mimetype', 'mod', 'newsgroup',
         'numref', 'option', 'pep', 'program', 'ref', 'regexp', 'rfc', 'samp',
         'sub', 'sup', 'term', 'token'
-    )
-
-    directives = (
-        'admonition', 'attention', 'caution', 'centered', 'class',
-        'code-block', 'codeauthor', 'compound', 'container', 'contents',
-        'csv-table', 'danger', 'default-role', 'deprecated', 'epigraph',
-        'error', 'figure', 'footer', 'glossary', 'header', 'highlight',
-        'highlights', 'hint', 'hlist', 'image', 'important', 'include',
-        'index', 'list-table', 'literalinclude', 'math', 'meta', 'note',
-        'only', 'parsed-literal', 'productionlist', 'pull-quote', 'raw',
-        'replace', 'role', 'rubric', 'sectionauthor', 'sectnum', 'seealso',
-        'sidebar', 'table', 'tip', 'title', 'toctree', 'topic', 'unicode',
-        'versionadded', 'versionchanged', 'warning'
     )
 
     substitution = {
@@ -64,7 +73,7 @@ class RSTParser:
         mid_a = r"(\S.*?(?<![\s\\"
         mid_b = r"]))"
         option_arg = r"(?:[-/]\w|\-\-\w[\w-]+(?:[ =][\w.;:\\/\"'-]+)?)"
-        dd = ''.join((ind, r"(\.\.", space_end, r")"))
+        expl = ''.join((ind, r"(\.\.", space_end, r")"))
         direc = ''.join((r"(", ref_name, r")(\:\:", space_end, r")"))
 
         blocks = (
@@ -79,13 +88,13 @@ class RSTParser:
 
             ("expl", (ind, r"((?:\.\.|__)", space_end, r")")),
             ("dftdir",(r"(\A *)?(?<![^\\]\\)(\:\:", space_end, ")")),
-            ("dir", (dd, direc)),
-            ("substdef", (dd, r"(\|)(", ref_name, r")(\|\s+)(?:", direc, r")?")),
-            ("footdef", (dd, r"(\[)(", foot_name, r")(\]", space_end, r")")),
-            ("citdef", (dd, r"(\[)(", ref_name, r")(\]", space_end, r")")),
-            ("target", (dd, r"(_ *)(`)?(?(4)(?:((?:[^`]*?[^\\", mid_b, r"(`))|",
+            ("dir", (expl, direc)),
+            ("substdef", (expl, r"(\|)(", ref_name, r")(\|\s+)(?:", direc, r")?")),
+            ("footdef", (expl, r"(\[)(", foot_name, r")(\]", space_end, r")")),
+            ("citdef", (expl, r"(\[)(", ref_name, r")(\]", space_end, r")")),
+            ("target", (expl, r"(_ *)(`)?(?(4)(?:((?:[^`]*?[^\\", mid_b, r"(`))|",
                         mid_a, mid_b, r")", r"(\:", space_end, r")")),
-            ("target-anon", (dd, r"?(__ *)(\:", space_end, r")?")),
+            ("target-anon", (expl, r"?(__ *)(\:", space_end, r")?")),
             ("quoted", (ind, r"[", r''.join(map(re.escape, self.trans_chars)), r"]")),
             ("doctest", (ind, r">>>\s")),
 

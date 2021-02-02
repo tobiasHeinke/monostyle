@@ -628,7 +628,7 @@ def leak_pre(_):
 
 
 def leak(document, reports, re_lib, data):
-    """Find piece of leaked markup and suspicious patterns."""
+    """Find pieces of leaked markup and suspicious patterns."""
     toolname = "leak"
 
     names = set(data[0].keys()) if not "*" in data[0].keys() else None
@@ -653,7 +653,7 @@ def leak(document, reports, re_lib, data):
                     output = part.code.slice_match_obj(m, 0, True)
                     line = getline_punc(part.code, part.code.loc_to_abs(m.start()),
                                         len(m.group(0)), 50, 0)
-                    reports.append(Report('E', toolname, output, re_lib[key][1], line))
+                    reports.append(Report('F', toolname, output, re_lib[key][1], line))
 
 
     for node in rst_walker.iter_node(document.body, {"text", "sect", "field"}):
@@ -713,13 +713,13 @@ def leak(document, reports, re_lib, data):
                         message = re_lib[key][1]
                     line = getline_punc(part.code, part.code.loc_to_abs(m.start()),
                                         len(m.group(0)), 50, 0)
-                    reports.append(Report('E', toolname, output, message, line))
+                    reports.append(Report('F', toolname, output, message, line))
 
     return reports
 
 
 def search_directive(document, reports):
-    """Find unknown/uncommon roles and directives names."""
+    """Find unknown/uncommon role and directive names."""
     toolname = "directive"
 
     roles = (
@@ -745,8 +745,8 @@ def search_directive(document, reports):
             if node.name:
                 node_name_str = str(node.name.code).strip()
                 if node_name_str not in roles:
-                    message = ("uncommon role" if node_name_str in RSTParser.roles
-                               else "unknown role")
+                    message = ("uncommon role" if node_name_str in RSTParser.roles or
+                               node_name_str in RSTParser.roles_sphinx else "unknown role")
                     reports.append(Report('E', toolname, node.name.code, message))
             else:
                 reports.append(Report('E', toolname, node.body.code, "default role"))
@@ -754,8 +754,8 @@ def search_directive(document, reports):
         elif node.node_name == "dir":
             name = str(node.name.code).strip() if node.name else node.name
             if name and name not in directives:
-                message = ("uncommon directive" if name in RSTParser.directives
-                           else "unknown directive")
+                message = ("uncommon directive" if name in RSTParser.directives or
+                           name in RSTParser.directives_sphinx else "unknown directive")
                 reports.append(Report('E', toolname, node.name.code, message))
 
             if name == "raw":

@@ -101,14 +101,16 @@ class Report():
     #--------------------
     # Severity
 
+    fatal = 'F'
     error = 'E'
     warning = 'W'
     info = 'I'
     log = 'L'
-    severities = (error, warning, info, log)
+    severities = (fatal, error, warning, info, log)
 
     severity_maps = {
         "letter": {
+            'F': fatal,
             'E': error,
             'W': warning,
             'I': info,
@@ -116,6 +118,7 @@ class Report():
             'U': 'U'
         },
         "long": {
+            'F': "Fatal",
             'E': "Error",
             'W': "Warning",
             'I': "Info",
@@ -123,6 +126,7 @@ class Report():
             'U': "Unset"
         },
         "ascii": {
+            'F': "{#}",
             'E': "<e>",
             'W': "/!\\",
             'I': "(i)",
@@ -130,6 +134,7 @@ class Report():
             'U': "[ ]"
         },
         "icon": {
+            'F': "\U0001F6D1\uFE0E",
             'E': "\u274C\uFE0E",
             'W': "\u26A0\uFE0E",
             'I': "\u2139\uFE0E",
@@ -137,6 +142,7 @@ class Report():
             'U': "\u2754\uFE0E"
         },
         "emoji": {
+            'F': "\U0001F6D1",
             'E': "\u274C",
             'W': "\u26A0",
             'I': "\u2139\uFE0F",

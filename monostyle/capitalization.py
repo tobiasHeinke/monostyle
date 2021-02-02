@@ -40,17 +40,17 @@ def titlecase(word, is_first_word, is_last_word, name):
             return message, fg_repl
         return None
 
-    path = POS.tag(word_str.lower())
+    tag = POS.tag(word_str.lower())
     if (word_str[0].islower() !=
-            (len(path) != 0 and
-             (path[0] in ("preposition", "conjunction", "pronoun", "auxiliary") or
-              path[0] == "determiner" and path[1] == "article"))):
+            (len(tag) != 0 and
+             (tag[0] in ("preposition", "conjunction", "pronoun", "auxiliary") or
+              tag[0] == "determiner" and tag[1] == "article"))):
         message = Report.misformatted(what="lowercase" if word_str[0].islower() else "uppercase",
                                       where="in " + name)
 
         fg_repl = None
-        if (not path or (path[0] != "preposition" and
-                (path[-1] != "article" or word_str != "A"))):
+        if (not tag or (tag[0] != "preposition" and
+                (tag[-1] != "article" or word_str != "A"))):
             fg_repl = word.slice(word.start_pos, word.start_pos + 1, True)
             fg_repl.replace(str(fg_repl).swapcase())
 
@@ -193,9 +193,9 @@ def pos_case(document, reports):
                 if word_str[0].islower() or word_str in ("I", "Y"):
                     continue
 
-                path = POS.tag(word_str.lower())
-                if len(path) != 0 and path[0] not in ("noun", "abbreviation", "adjective", "verb"):
-                    message = Report.misformatted(what="uppercase " + path[0])
+                tag = POS.tag(word_str.lower())
+                if len(tag) != 0 and tag[0] not in ("noun", "abbreviation", "adjective", "verb"):
+                    message = Report.misformatted(what="uppercase " + tag[0])
                     reports.append(Report('W', toolname, word, message, sen))
 
             was_open = is_open

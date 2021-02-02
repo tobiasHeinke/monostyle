@@ -16,7 +16,7 @@ class CharCatalog:
         self.data = get_data_file("char_catalog")
 
 
-    def get(self, path, index=0, joined=True):
+    def get(self, branch, index=0, joined=True):
         """Return a data segment.
         joined -- join all subordinate leafs.
         """
@@ -27,7 +27,7 @@ class CharCatalog:
                 else:
                     yield value
 
-        obj = get_branch(self.data, path, index)
+        obj = get_branch(self.data, branch, index)
         if not joined or isinstance(obj, str):
             return obj
 
@@ -38,23 +38,23 @@ class CharCatalog:
         """Return the branch to the first leaf matching the char."""
         def search(obj, char):
             if not isinstance(obj, str):
-                path = []
+                branch = []
                 for key, value in obj.items():
                     if isinstance(value, dict):
                         result = search(value, char)
                         if result and len(result) != 0:
-                            path.append(key)
-                            path.extend(result)
-                            return path
+                            branch.append(key)
+                            branch.extend(result)
+                            return branch
                     else:
                         if len(value) == 0:
                             continue
 
                         if re.match(r"[" + value + r"]", char):
-                            path.append(key)
-                            return path
+                            branch.append(key)
+                            return branch
 
-                return path
+                return branch
 
         return search(self.data, char)
 

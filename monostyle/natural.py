@@ -649,6 +649,160 @@ def metric(document, reports):
     return reports
 
 
+def overuse(document, reports):
+    """Overuse of words.
+       Filter with markup, subjects after an article, transitions at sentence start."""
+    toolname = "overuse"
+    threshold = 1.8
+    distance_min = 50
+    distance_max = 500
+    modifier_as_topic = True
+
+    def add_topic(topics, word_str, words):
+        topics.add(word_str)
+        if word_str in words:
+            del words[word_str]
+
+    def evaluate(document, reports, words):
+        def add_report(document, reports, word, count):
+            msg = Report.existing(what="overused word {} times ".format(count))
+            line = getline_punc(document.code, word.start_pos, len(word), 50, 30)
+            reports.append(Report('I', toolname, word, msg, line))
+
+            return reports
+
+        for value in words.values():
+            if len(value) == 1:
+                continue
+            buf = None
+            score = 0
+            index_last = 0
+            for index, instance in enumerate(value):
+                if buf is None:
+                    buf = instance
+                distance = instance[0].start_pos - buf[0].start_pos
+                if distance > distance_max:
+                    if score >=  threshold:
+                        reports = add_report(document, reports, instance[0],
+                                             index - index_last + 1)
+                    buf = None
+                    score = 0
+                    index_last = index
+                else:
+                    if distance == 0 or distance > distance_min:
+                        score += instance[1] * (-(pow((1 / (distance_max - distance_min)) *
+                                                      (distance - distance_min), 2)) + 1)
+                    buf = instance
+
+            if score >=  threshold:
+                reports = add_report(document, reports, instance[0], index - index_last + 1)
+        words.clear()
+        return reports
+
+    instr_pos = {
+        "sect": {"*": ["name"]},
+        "field": {"*": ["name", "body"]},
+        "*": {"*": ["head", "body"]}
+    }
+    instr_neg = {
+        "dir": {
+            "figure": ["head"],
+            "code-block": "*", "default": "*", "include": "*", "index": "*",
+            "math": "*", "youtube": "*", "vimeo": "*"
+        },
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
+        "doctest": "*", "target": "*",
+        "role": {
+            "kbd": "*", "class": "*", "mod": "*", "math": "*"
+        },
+        "literal": "*", "standalone": "*"
+    }
+    topics = {'to', 'of', 'and', 'or'}
+    for word in re.split(r"[/._-]", monostylestd.path_to_rel(document.code.filename, 'rst')
+                                                .replace(".rst", "")):
+        topics.add(word)
+    words = dict()
+    is_first = True
+    was_article = False
+    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
+        is_title = False
+        par_part = part.parent_node.parent_node
+        while par_part and par_part.parent_node.node_name == "text":
+            par_part = par_part.parent_node.parent_node
+
+        if rst_walker.is_of(par_part, "sect"):
+            reports = evaluate(document, reports, words)
+            is_title = True
+        elif (rst_walker.is_of(par_part, "dir", "rubric") or
+                rst_walker.is_of(par_part, "def", "*", "head") or
+                rst_walker.is_of(par_part, "field", "*", "name") or
+                rst_walker.is_of(part, {"emphasis", "strong"}) or
+                rst_walker.is_of(par_part, "role", {"term", "menuselection"})):
+            is_title = True
+
+        if not part.parent_node.prev:
+            is_first = True
+        for sen, is_open in Segmenter.iter_sentence(part.code, output_openess=True):
+            for word in Segmenter.iter_word(sen):
+                word_str = str(word).lower()
+                tag = POS.tag(word_str)
+                is_determiner = bool(tag and tag[0] == "determiner")
+                if is_title:
+                    if not tag or is_determiner:
+                        add_topic(topics, word_str, words)
+                    is_first = False
+                    continue
+
+                if tag:
+                    if is_determiner and tag[1] in {"article", "demonstrative"}:
+                        was_article = True
+                        if not is_first:
+                            continue
+                    if not is_first:
+                        if tag[0] in {"contraction", "auxiliary"}:
+                            was_article = False
+                            continue
+                        if is_determiner and tag[1] == "numeral":
+                            continue
+
+                if not is_first and was_article:
+                    if ((tag and (tag[0] == "adjective" or
+                            (is_determiner and tag[1] in {"quantifier", "numeral"}))) or
+                            re.search(r"([^aeiou])\1er\Z", word_str) or word_str.endswith("ed")):
+                        if modifier_as_topic:
+                            add_topic(topics, word_str, words)
+                            is_first = False
+                            continue
+                    else:
+                        was_article = False
+                        if not tag or tag[0] == "noun":
+                            add_topic(topics, word_str, words)
+                            is_first = False
+                            continue
+
+                if is_first or word_str not in topics:
+                    weight = 1
+                    if not is_first:
+                        weight -= 0.2
+                        if not tag:
+                            weight -= 0.1
+                        elif tag[0] in {"noun", "verb", "participle"}:
+                            weight -= 0.2
+
+                    if word_str in words:
+                        words[word_str].append((word, weight))
+                    else:
+                        words[word_str] = [(word, weight)]
+
+                is_first = False
+
+            if not is_open:
+                is_first = True
+
+    reports = evaluate(document, reports, words)
+    return reports
+
+
 def repeated_words_pre(_):
     config = dict()
     # Number of the word within to run the detection.
@@ -750,6 +904,7 @@ OPS = (
     ("grammar", search_pure, grammar_pre),
     ("hyphen", hyphen, hyphen_pre),
     ("metric", metric, None),
+    ("overuse", overuse, None),
     ("passive", search_pure, passive_pre),
     ("repeated", repeated_words, repeated_words_pre),
 )

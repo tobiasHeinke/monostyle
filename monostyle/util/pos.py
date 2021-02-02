@@ -51,7 +51,7 @@ class PartofSpeech:
             del obj[key]
 
 
-    def get(self, path, index=0, joined=False):
+    def get(self, branch, index=0, joined=False):
         """
         joined -- join all subordinate leafs.
         """
@@ -66,7 +66,7 @@ class PartofSpeech:
                 for entry in obj:
                     yield entry
 
-        obj = get_branch(self.data, path, index)
+        obj = get_branch(self.data, branch, index)
         if not joined or isinstance(obj, str) or isinstance(obj, list):
             return obj
 
@@ -76,14 +76,14 @@ class PartofSpeech:
     def tag(self, word):
         def search(obj, word):
             if not isinstance(obj, str):
-                path = []
+                branch = []
                 for key, value in obj.items():
                     if isinstance(value, dict):
                         result = search(value, word)
                         if result and len(result) != 0:
-                            path.append(key)
-                            path.extend(result)
-                            return path
+                            branch.append(key)
+                            branch.extend(result)
+                            return branch
 
                     elif isinstance(value, list):
                         if (key == "participle" and
@@ -94,15 +94,15 @@ class PartofSpeech:
                         for entry in value:
                             if ((re.match(r"\-", entry) and re.search(entry[1:] + r"$", word)) or
                                     word == entry):
-                                path.append(key)
-                                return path
+                                branch.append(key)
+                                return branch
 
-                return path
+                return branch
 
-        path = search(self.data, word)
-        self.prev = path
+        branch = search(self.data, word)
+        self.prev = branch
 
-        return path
+        return branch
 
 
     def isacr(self, word):

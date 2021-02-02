@@ -3,7 +3,7 @@
 util.segmenter
 ~~~~~~~~~~~~~~
 
-Text segmentation.
+Text segmentation and tokenization.
 """
 
 import re
@@ -25,7 +25,9 @@ class Segmenter:
         self.linewrap_re = re.compile(r" *?\n *", re.MULTILINE)
 
         # clause
-        self.clause_re = re.compile(r",(?:\s|\Z)")
+        self.clause_re = re.compile(r"(,(?:\s+|\Z)(?!(?:and|or)))|(\s(?:and|or)\s)")
+        self.non_oxford_re = re.compile(r"")
+        self.ellipsis_re = re.compile(r"\b(etc\.|\.\.\.)\s*\Z")
 
         # parenthesis
         self.parenthesis_re = re.compile(r"\([^)]+?(\).?\s*|\Z)")
@@ -125,58 +127,71 @@ class Segmenter:
 
 
     def iter_clause(self, fg):
-        # todo detect oxford comma, etc, ellipsis, and/or, sentence start/end
+        # config: serial comma skip when less spaces
+        threshold = 3
+
+        def do_not_skip(fg, clause_fg, is_non_oxford, is_buffered, was_non_oxford):
+            if is_non_oxford and is_buffered:
+                return False
+            if was_non_oxford:
+                return True
+            clause_str = str(clause_fg)
+            if re.match(r"\s*however,", clause_str):
+                return False
+            space_count = sum(1 for s in re.finditer(r"\S\s", clause_str)) -1
+            if space_count <= threshold:
+                if fg.start_pos != clause_fg.start_pos and fg.end_pos != clause_fg.end_pos:
+                    return False
+            if re.search(self.ellipsis_re, clause_str):
+                return False
+            return True
+
         clause_re = self.clause_re
 
-        # config: serial comma skip when less spaces
-        threshold = 3 + 2
         buf_start = 0
         buf = None
         text = str(fg)
+        was_non_oxford = False
         for clause_m in re.finditer(clause_re, text):
-            c = fg.slice(fg.loc_to_abs(buf_start), fg.loc_to_abs(clause_m.end(0)), True)
-            space_count = 0
-            for line in c:
-                space_count += line.count(" ")
-            if space_count > threshold:
+            clause_fg = fg.slice(fg.loc_to_abs(buf_start), fg.loc_to_abs(clause_m.end(0)), True)
+            if do_not_skip(fg, clause_fg, bool(clause_m.group(2)), bool(buf), was_non_oxford):
                 if buf is not None:
                     yield buf
                     buf = None
-                yield c
+                yield clause_fg
             else:
                 if buf is None:
-                    buf = c
+                    buf = clause_fg
                 else:
-                    buf.combine(c)
+                    buf.combine(clause_fg)
 
             buf_start = clause_m.end(0)
+            was_non_oxford = clause_m.group(2)
 
         if buf_start != len(text):
-            c = fg.slice(fg.loc_to_abs(buf_start), after_inner=True)
-            space_count = 0
-            for line in c:
-                space_count += line.count(" ")
-            if space_count > threshold:
+            clause_fg = fg.slice(fg.loc_to_abs(buf_start), after_inner=True)
+            if do_not_skip(fg, clause_fg, bool(clause_m.group(2)), bool(buf), was_non_oxford):
                 if buf is not None:
                     yield buf
-                yield c
+                yield clause_fg
             else:
                 if buf is None:
-                    buf = c
+                    buf = clause_fg
                 else:
-                    buf.combine(c)
+                    buf.combine(clause_fg)
                 yield buf
 
 
     def iter_parenthesis(self, fg):
         # config: skip when less spaces
         text = str(fg)
-        threshold = 3 + 1
+        threshold = 3
         buf_start = 0
 
         pare_re = self.parenthesis_re
         for pare_m in re.finditer(pare_re, text):
-            if pare_m.group(0).count(" ") > threshold:
+            space_count = sum(1 for s in re.finditer(r"\S\s", pare_m.group(0))) - 1
+            if space_count > threshold:
                 if buf_start != pare_m.start(0):
                     yield fg.slice(fg.loc_to_abs(buf_start), fg.loc_to_abs(pare_m.start(0)), True)
                 yield fg.slice_match_obj(pare_m, 0, True)

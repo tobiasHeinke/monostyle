@@ -250,10 +250,6 @@ def search(document, reports, data, config):
 
 
 OPS = (
-    ("test", search, search_pre, True, "BIS"),
-    ("be_eng/Be", search, search_pre, True, "BIS"),
-    ("be_eng/Rules", search, search_pre, True, "IS"),
-    ("confuse/Div", search, search_pre, True, "BIS"),
     ("blender/UI", search, search_pre, True, "I"),
     ("blender/Editors", search, search_pre, True, ""),
     ("blender/Modes", search, search_pre, True, ""),

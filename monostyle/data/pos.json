@@ -83,7 +83,7 @@
 		"alongside", "amid", "among", "apropos", "around", "as", "astride", "at", "atop",
 		"bar", "before", "behind", "below", "beneath", "beside", "besides", "between",
 		"beyond", "but", "by",
-		"circa", "come", "despite", "down", "during", "except", "for", "from",
+		"circa", "come", "despite", "down", "due", "during", "except", "for", "from",
 		"in", "inside", "into", "less", "like",
 		"minus", "near", "notwithstanding", "postpositional",
 		"of", "off", "on", "onto", "ontop", "opposite", "out", "outside", "over",
@@ -132,11 +132,13 @@
 	]
 },
 "noun": [
-	"array", "body", "client", "collective", "content", "day", "display", "drive",
-	"energy", "exponent", "family", "fantasy", "file", "gradient", "hierarchy", "hotkey",
-	"July", "key", "manual", "material", "May", "money", "normal", "overlay",
-	"parent", "perspective", "pose", "profile", "property", "proxy", "purpose",
-	"ray", "sky", "table", "tile", "tutorial", "way",
+	"array", "Bézier", "body", "chest", "client", "collective", "content", "crest",
+	"day", "display", "drive", "energy", "exponent", "family", "fantasy", "forest", "file",
+	"gradient", "hierarchy", "hotkey", "identifier", "interest", "July", "key",
+	"light", "manual", "material", "May", "money", "modifier", "multiplier",
+	"normal", "overlay", "parent", "perspective", "pose", "profile", "property",
+	"proxy", "purpose", "quest", "request", "rest", "ray",
+	"sky", "table", "test", "tile", "tutorial", "way", "west", "vest",
 	"-ancy", "-dom", "-ee", "-ence", "-ency", "-hood", "-ion", "-ism",
 	"-ist", "-ity", "-logy", "-ment", "-ness", "-ry", "-ship"
 ],
@@ -144,11 +146,13 @@
 "participle": ["-ing", "-en"],
 "verb": [
 	"able", "apply", "began", "bent", "choose", "copy", "disable", "enable",
-	"lay", "play", "prevent",
+	"lay", "play", "prevent", "suggest",
 	"-ate", "-en", "-ify", "-ise", "-ize"
 ],
 "adverb": [
-	"again", "also", "how", "just", "not", "now", "quite", "rather", "then", "too", "why",
+	"again", "also", "earlier", "furthermore", "how", "however", "indeed", "instead", "just",
+	"moreover", "never", "not", "now", "quite", "rather", "sometimes", "soon", "still",
+	"then", "therefore", "thus", "too", "whether", "why", "yes",
 	"-ly", "-ward", "-wards", "-ways", "-wise"
 ],
 "adjective": [
@@ -158,18 +162,19 @@
 	"faint", "fair", "far", "fast", "few", "fine", "fit", "flat", "free", "fresh", "full", "further",
 	"gentle", "good", "grand", "great", "greater", "green", "gross",
 	"hard", "harsh", "high", "higher", "hot", "huge",
-	"kind", "large", "late", "left", "light", "little", "long", "loud", "low",
-	"main", "major", "mild", "narrow", "near", "neat", "new", "nice",
+	"kind", "large", "last", "late", "later", "left", "little", "long", "loud", "low",
+	"main", "major", "mild", "narrow", "near", "neat", "new", "next", "nice",
 	"odd", "off", "old", "open", "other", "own",
-	"past", "plain", "polite", "poor", "popular", "private", "pure", "quick", "quiet",
+	"past", "plain", "polite", "poor", "popular", "prior", "private", "pure", "quick", "quiet",
 	"rare", "raw", "red", "rich", "right", "ripe", "rough", "rude",
 	"sad", "safe", "same", "shallow", "sharp", "short", "similar", "simple", "sincere",
 	"single", "slim", "slow", "small", "smart", "smooth", "soft",
 	"sore", "sour", "steep", "strange", "strict", "strong", "sure",
 	"tall", "thick", "thin", "tough", "true",
-	"warm", "weak", "weird", "white", "whole", "wide", "wise", "wrong", "young",
+	"warm", "weak", "weird", "white", "whole", "wide", "wise", "worst", "wrong", "young",
 	"-able", "-ible", "-al", "-ial", "-ful", "-ic", "-ical", "-ish", "-ive", "-ative", "-less",
-	"-eous", "-ious", "-ous", "-ose", "-y", "-ile", "-ant", "-ent", "-an", "-ian", "-ary"
+	"-eous", "-ious", "-ous", "-ose", "-y", "-ile", "-ant", "-ent", "-an", "-ian", "-ary",
+	"-ier", "-est"
 ],
 "interjection": []
 }

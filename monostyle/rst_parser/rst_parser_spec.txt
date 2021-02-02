@@ -220,7 +220,7 @@ Body
 
 No Recognition: Def. list: term: classifier, bibliographic fields and RCS keywords, block-quote attributions
 
-Lists at block start only.
+Enum lists no roman numbers.
 Default directive requires a blank line between start and body.
 Default directive no multi line head.
 Options lists option name itself and aliases are not split.
@@ -245,4 +245,4 @@ Environment
 In general all code documentation related nodes that are part of Sphinx are unsupported like role mod or dir index.
 
 Content: include, toctree
-Numbers: section, figure, math, toctree, enum, ...
+Numbers: section, figure, math, toctree, auto enum, ...
