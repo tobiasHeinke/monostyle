@@ -650,12 +650,13 @@ def metric(document, reports):
 
 
 def overuse(document, reports):
-    """Overuse of words.
-       Filter with markup, subjects after an article, transitions at sentence start."""
+    """Overuse of words. Filter with markup, subjects after an determiner,
+       transitions at sentence start, the file path and stopwords."""
     toolname = "overuse"
-    threshold = 1.8
-    distance_min = 50
-    distance_max = 500
+    threshold_min = 1.8
+    threshold_severe = 3.1
+    distance_min = 5
+    distance_max = 80
     modifier_as_topic = True
 
     def add_topic(topics, word_str, words):
@@ -664,10 +665,10 @@ def overuse(document, reports):
             del words[word_str]
 
     def evaluate(document, reports, words):
-        def add_report(document, reports, word, count):
+        def add_report(document, reports, word, is_severe, count):
             msg = Report.existing(what="overused word {} times ".format(count))
             line = getline_punc(document.code, word.start_pos, len(word), 50, 30)
-            reports.append(Report('I', toolname, word, msg, line))
+            reports.append(Report('I' if not is_severe else 'W', toolname, word, msg, line))
 
             return reports
 
@@ -680,10 +681,11 @@ def overuse(document, reports):
             for index, instance in enumerate(value):
                 if buf is None:
                     buf = instance
-                distance = instance[0].start_pos - buf[0].start_pos
+                distance = instance[2] - buf[2]
                 if distance > distance_max:
-                    if score >=  threshold:
+                    if score >= threshold_min:
                         reports = add_report(document, reports, instance[0],
+                                             bool(score >= threshold_severe),
                                              index - index_last + 1)
                     buf = None
                     score = 0
@@ -694,8 +696,9 @@ def overuse(document, reports):
                                                       (distance - distance_min), 2)) + 1)
                     buf = instance
 
-            if score >=  threshold:
-                reports = add_report(document, reports, instance[0], index - index_last + 1)
+            if score >= threshold_min:
+                reports = add_report(document, reports, instance[0],
+                                     bool(score >= threshold_severe), index - index_last + 1)
         words.clear()
         return reports
 
@@ -717,13 +720,17 @@ def overuse(document, reports):
         },
         "literal": "*", "standalone": "*"
     }
-    topics = {'to', 'of', 'and', 'or'}
+    topics = {'and', 'or'}
     for word in re.split(r"[/._-]", monostylestd.path_to_rel(document.code.filename, 'rst')
                                                 .replace(".rst", "")):
         topics.add(word)
     words = dict()
+    stopwords = {'to', 'of', 'in', 'as', 'on', 'by'}
+
     is_first = True
-    was_article = False
+    was_determiner = False
+    counter = -1
+    word = None
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
         is_title = False
         par_part = part.parent_node.parent_node
@@ -742,57 +749,62 @@ def overuse(document, reports):
 
         if not part.parent_node.prev:
             is_first = True
+        if word:
+            # add per average word length in skipped code
+            counter += (part.code.start_pos - word.end_pos) // 6
         for sen, is_open in Segmenter.iter_sentence(part.code, output_openess=True):
             for word in Segmenter.iter_word(sen):
+                counter += 1
                 word_str = str(word).lower()
                 tag = POS.tag(word_str)
                 is_determiner = bool(tag and tag[0] == "determiner")
-                if is_title:
-                    if not tag or is_determiner:
-                        add_topic(topics, word_str, words)
-                    is_first = False
-                    continue
 
                 if tag:
-                    if is_determiner and tag[1] in {"article", "demonstrative"}:
-                        was_article = True
+                    if is_determiner:
+                        was_determiner = True
                         if not is_first:
                             continue
                     if not is_first:
                         if tag[0] in {"contraction", "auxiliary"}:
-                            was_article = False
-                            continue
-                        if is_determiner and tag[1] == "numeral":
+                            was_determiner = False
                             continue
 
-                if not is_first and was_article:
-                    if ((tag and (tag[0] == "adjective" or
-                            (is_determiner and tag[1] in {"quantifier", "numeral"}))) or
+                if not is_first and was_determiner:
+                    if (is_determiner or (tag and tag[0] == "adjective") or
                             re.search(r"([^aeiou])\1er\Z", word_str) or word_str.endswith("ed")):
-                        if modifier_as_topic:
+                        if modifier_as_topic and not is_determiner:
                             add_topic(topics, word_str, words)
                             is_first = False
                             continue
                     else:
-                        was_article = False
+                        was_determiner = False
                         if not tag or tag[0] == "noun":
                             add_topic(topics, word_str, words)
                             is_first = False
                             continue
 
+                if is_title:
+                    if not tag or not is_determiner:
+                        add_topic(topics, word_str, words)
+                    is_first = False
+                    continue
+
                 if is_first or word_str not in topics:
                     weight = 1
                     if not is_first:
-                        weight -= 0.2
-                        if not tag:
-                            weight -= 0.1
-                        elif tag[0] in {"noun", "verb", "participle"}:
+                        if word_str in stopwords:
+                            weight -= 0.4
+                        else:
                             weight -= 0.2
+                            if not tag:
+                                weight -= 0.1
+                            elif tag[0] in {"noun", "verb", "participle", "pronoun"}:
+                                weight -= 0.2
 
                     if word_str in words:
-                        words[word_str].append((word, weight))
+                        words[word_str].append((word, weight, counter))
                     else:
-                        words[word_str] = [(word, weight)]
+                        words[word_str] = [(word, weight, counter)]
 
                 is_first = False
 

@@ -131,14 +131,14 @@ class Report():
             'W': "/!\\",
             'I': "(i)",
             'L': "[=]",
-            'U': "[ ]"
+            'U': "(?)"
         },
         "icon": {
             'F': "\U0001F6D1\uFE0E",
             'E': "\u274C\uFE0E",
             'W': "\u26A0\uFE0E",
             'I': "\u2139\uFE0E",
-            'L': "\u1F4C3\uFE0E",
+            'L': "\U0001F4C3\uFE0E",
             'U': "\u2754\uFE0E"
         },
         "emoji": {
@@ -146,7 +146,7 @@ class Report():
             'E': "\u274C",
             'W': "\u26A0",
             'I': "\u2139\uFE0F",
-            'L': "\u1F4C3",
+            'L': "\U0001F4C3",
             'U': "\u2754"
         }
     }
@@ -181,6 +181,17 @@ class Report():
 
 
     #--------------------
+    # Fix
+
+    fix_mark_map = {
+        "letter": "/a/",
+        "long": "/autofixed/",
+        "ascii": "@",
+        "icon": "\u2714\uFE0E",
+        "emoji": "\u2714",
+    }
+
+    #--------------------
 
 
     def repr(self, options=None):
@@ -205,7 +216,7 @@ class Report():
             "line_ellipsis": "…",
 
             "show_autofix": False,
-            "autofix_mark": "/autofixed/",
+            "autofix_display": "long",
             **options
         }
         entries = dict.fromkeys(self.__slots__, "")
@@ -254,7 +265,8 @@ class Report():
             entries["line"] = "\n" + options["line_indent"] + entries["line"]
 
         if options["show_autofix"] and self.fix is not None:
-            entries["fix"] = options["autofix_mark"]
+            entries["fix"] = self.fix_mark_map.get(options["autofix_display"],
+                                                   self.fix_mark_map["long"])
         return options["format_str"].format(**entries)
 
 
@@ -276,6 +288,7 @@ def options_overide(options=None):
         "file_title": True,
         "absolute_path": False,
         "file_title_underline": None,
+        "compact": False,
         "show_summary": False,
         "summary_overline": '_',
         **options
@@ -308,6 +321,8 @@ def print_report(report, options=None, filename_prev=None):
                         underline=options["file_title_underline"])
 
     print_over(report.repr(options))
+    if not options["compact"]:
+        print_over()
     return report.output.filename
 
 

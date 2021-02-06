@@ -9,6 +9,7 @@ Standard tool init and execution.
 import os
 import argparse
 
+from monostyle import config
 import monostyle.util.monostylestd as monostylestd
 from monostyle.util.report import (Report, print_reports, print_report,
                                    options_overide, reports_summary)
@@ -78,8 +79,6 @@ def apply_file(rst_parser, mods, reports, path, parse_options):
     show_current = bool(path)
     filename_prev = None
     print_options = options_overide()
-    if print_options:
-        print_options["show_autofix"] = False
 
     if parse_options["resolve"]:
         titles, targets = env.get_link_titles(rst_parser)
@@ -119,6 +118,9 @@ def hub(ops_sel, do_parse=True, do_resolve=False):
         return reports
 
     rst_parser = RSTParser()
+    if "console_options" in vars(config).keys():
+        config.console_options["show_autofix"] = False
+
     parse_options = {"parse": do_parse, "resolve": do_resolve, "post": False}
     reports = apply_file(rst_parser, ((ops_loop, None),), reports, None, parse_options)
 

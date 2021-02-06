@@ -419,13 +419,14 @@ def blank_line(document, reports):
                                 ("admonition", "hint", "important", "note", "tip",
                                  "warning", "seealso", "code-block")):
 
-                if node.head is not None and re.match(r"\n ", str(node.head.code)):
+                if node.head is not None and re.match(r"\n +\S", str(node.head.code)):
                     output = node.head.code.copy().clear(True)
                     message = Report.missing(what="blank line",
-                                             where="after head " +
+                                             where="after head of " +
                                                    rst_walker.write_out(node.node_name,
                                                                         node.name.code))
-                    reports.append(Report('W', toolname, output, message))
+                    fg_repl = node.head.code.copy().clear(True).replace('\n')
+                    reports.append(Report('W', toolname, output, message, fix=fg_repl))
 
 
             cond_plain = 2

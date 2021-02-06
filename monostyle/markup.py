@@ -212,7 +212,8 @@ def indention(document, reports):
             else:
                 is_jag = True
 
-            if score["block"]["hanging"] < score["block"]["align"]:
+            is_block_align = bool(score["block"]["hanging"] <= score["block"]["align"])
+            if is_block_align:
                 ind_aim_block = ind_aim_first
             else:
                 # subtract colon
@@ -225,7 +226,8 @@ def indention(document, reports):
                 if is_jag:
                     # add one space
                     ind_aim_first = ind_name + 1
-                    ind_aim_block = ind_aim_first
+                    if is_block_align:
+                        ind_aim_block = ind_aim_first
 
                 if ind_first != ind_aim_first:
                     message = Report.substitution(what="field wrong alignment",
@@ -600,7 +602,7 @@ def leak_pre(_):
 
     # Merge Conflict
     # FP = transition
-    pattern_str = r"(?:[<>|]{7} \.(?:r\d+?|mine))|(?:={7}\n)"
+    pattern_str = r"(?:[<>|]{7} \.(?:r\d+?|mine))|(?:^={7}\n)"
     pattern = re.compile(pattern_str, re.MULTILINE)
     message = Report.existing(what="merge conflict")
     re_lib["mc"] = (pattern, message)
@@ -649,7 +651,11 @@ def leak(document, reports, re_lib, data):
                                    if part.node_name in mapper_portion.keys()
                                    else mapper_portion["*"])
             for key in mapper_portion_part:
+                # cut section
+                on_mc_trans = bool(not node.prev and key == "mc" and node.node_name == "trans")
                 for m in re.finditer(re_lib[key][0], part_str):
+                    if on_mc_trans:
+                        continue
                     output = part.code.slice_match_obj(m, 0, True)
                     line = getline_punc(part.code, part.code.loc_to_abs(m.start()),
                                         len(m.group(0)), 50, 0)

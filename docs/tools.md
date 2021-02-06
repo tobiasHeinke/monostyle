@@ -8,7 +8,7 @@ An overview of the modules and tools.
 
 Find rare or new words. This is a multi tool because it detects:
 
-- Spelling errors, also detects valid words e.g. 'which' vs. 'witch' and
+- Spelling errors, it also detects valid words e.g. 'which' vs. 'witch' and
   words that are not in a general dictionary like business and product names.
 - Word choices like not simple words, interjection like 'heck', etc.
 - Compounding/hyphenation (if the words are not used individually like 'well defined').
@@ -153,7 +153,7 @@ Check pairs of parenthesis/brackets, quote marks for not being matched.
 
 ### mark
 
-Check punctuation marks and capitalization.
+Check punctuation marks placing, spacing and usage of specific marks like ampersand.
 
 ### whitespace
 

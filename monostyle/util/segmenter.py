@@ -170,7 +170,7 @@ class Segmenter:
 
         if buf_start != len(text):
             clause_fg = fg.slice(fg.loc_to_abs(buf_start), after_inner=True)
-            if do_not_skip(fg, clause_fg, bool(clause_m.group(2)), bool(buf), was_non_oxford):
+            if do_not_skip(fg, clause_fg, False, bool(buf), was_non_oxford):
                 if buf is not None:
                     yield buf
                 yield clause_fg

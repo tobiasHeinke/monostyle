@@ -178,7 +178,12 @@ def write_out(node_name, name=False):
         "cit": "citation reference"
     }
     result = ""
-    if name is False and node_name in {"dir", "role"}:
+    if name is not False and node_name in {"dir", "role"}:
         result = (str(name).strip() if name is not None else "default") + " "
-    result += node_name_map.get(node_name, node_name)
+    if not node_name.endswith("-list") and not node_name.endswith("-table"):
+        result += node_name_map.get(node_name, node_name)
+    else:
+        node_name = node_name.split("-")
+        result += node_name_map.get(node_name[0], node_name[0])
+        result += " " + node_name[1]
     return result

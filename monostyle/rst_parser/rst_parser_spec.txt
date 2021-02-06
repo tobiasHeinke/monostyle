@@ -208,13 +208,6 @@ Literal Block: dir with name None (aka default directive). Indented/quoted are n
 Interpreted Text: role with name None (aka default role)
 
 
-General
--------
-
-Only ASCII "reference" names.
-No isolated/ adjacent rules for punctuation in "reference" names.
-
-
 Body
 ----
 
@@ -236,7 +229,7 @@ No inline elements over two paragraphs.
 No other escape than backslash or spaces on both sides 'simple-inline-markup'.
 Standalone on a single line only.
 Standalone limited number of recognized protocols.
-Standalone mail without mailto must contain a dot after the at sign.
+Standalone email uri allowed chars deviation.
 
 
 Environment

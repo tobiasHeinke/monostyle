@@ -99,11 +99,9 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
             skip = bool(binary_ext is not None and os.path.splitext(filename)[1] in binary_ext)
             body = False
 
-        elif line.startswith("Property changes on: "):
+        elif (line.startswith("Property changes on: ") or
+                line.startswith("Cannot display: file marked as a binary type.")):
             # skip svn properties block at eof
-            skip = True
-
-        elif line.startswith("Cannot display: file marked as a binary type."):
             skip = True
 
         if skip:

@@ -92,3 +92,19 @@ However, with SVN these can be colon separated or dash separated for the "change
 When a side is omitted e.g. ":ARG" it will default to BASE (your working copy) on the left and
 on the right to HEAD (the latest revision in the repository).
 For external revisions the "change" syntax is used for single arguments "ARG".
+
+
+## Example Output
+
+```
+test.rst:
+---------
+1,20 ⚠️ 'static' repeated words 0 words in between
+   Linter is a static static code analysis tool `source <https://en.wikipedia.org/wiki/Lint_(software)
+
+2,9 ℹ️ 'flag' CS technical term
+  org/wiki/Lint_(software)> `__¶used to flag programming errors, bugs, stylistic errors, and
+
+1,100 🛑 ' `__' space before body end of hyperlink
+   )> `__¶used to flag programming errors, bugs, stylistic
+```

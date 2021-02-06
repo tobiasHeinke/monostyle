@@ -68,7 +68,7 @@ class RSTParser:
         space_end = r"(?: +|(?=\n)|\Z)"
         eol_end = r" *(?:\n)|\Z)"
 
-        ref_name = r"[A-Za-z0-9\-_.+]+"
+        ref_name = r"(?:(?!_)\w)+(?:[-._+:](?:(?!_)\w)+)*"
         foot_name = "".join((r"(?:\d+)|[", "".join(self.foot_chars), r"]|(?:#", ref_name, r")"))
         mid_a = r"(\S.*?(?<![\s\\"
         mid_b = r"]))"
@@ -113,7 +113,8 @@ class RSTParser:
         before_b = r"])|\A)"
         after_a = r"(?:(?=[^\w"
         after_b = r"])|\Z)"
-        url = r"(?:\\[*_])?[\w\d/+\-.]*?\b(?:\\[*_][\w\d/+\-.]*?)*?"
+        url_chars = r"[-_.!~*'()[\];/:&=+$,%a-zA-Z0-9]"
+        url = r"(?:\\[*_])?" + url_chars + r"*\b(?:\\[*_]" + url_chars + r"*)*"
 
         inlines = {
             ("literal", r"`", r"``", True, r"", r"``", r"`"),
@@ -129,7 +130,7 @@ class RSTParser:
             ("cit", "", r"\[", False, ref_name, r"\]_", ""),
             ("int-target-sw", "", r"_(?!_)", False, ref_name, "", ""),
             ("hyperlink-sw", "", "", False, ref_name, r"_(?!_)", ""),
-            ("standalone", r"<`/", "", False, r"\b(?<!\\)(?:https?\:\/\/|mailto\:)" + url, "", ""),
+            ("standalone", r"", "", False, r"\b(?<!\\)(?:https?\:\/\/|mailto\:)" + url, "", ""),
             ("mail", r"<`/", "", False, r"\b" + url + r"(?<!\\)@" + url + r"\." + url, "", ""),
             ("link", "", r"<", True, "", r">", ""),
             ("parenthesis", "", r"\(", True, "", r"\)", "")

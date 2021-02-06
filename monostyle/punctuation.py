@@ -335,7 +335,7 @@ def mark_pre(_):
 
     # Line
     pattern_str = r"^\s*[" + punc + CharCatalog.get(("quote", "final")) + r"]"
-    pattern = re.compile(pattern_str)
+    pattern = re.compile(pattern_str, re.MULTILINE)
     message = Report.existing(what="closing punctuation", where="at line start")
     re_lib["closesol"] = (pattern, message)
 
@@ -410,6 +410,8 @@ def mark(document, reports, re_lib):
                     continue
                 pattern = value[0]
                 for m in re.finditer(pattern, part_str):
+                    if m.start() == 0 and key == "closesol" and part.parent_node.prev:
+                        continue
                     output = part.code.slice_match_obj(m, 0, True)
                     line = getline_punc(document.body.code, output.start_pos,
                                         output.span_len(True), 50, 0)

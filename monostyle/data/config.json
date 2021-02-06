@@ -54,6 +54,7 @@
 	"console_options": {
 		"file_title": true,
 		"file_title_underline": "-",
+		"compact": true,
 		"show_summary": true,
 		"summary_overline": "_",
 
@@ -76,7 +77,8 @@
 		"line_ellipsis": "…",
 
 		"show_autofix": true,
-		"autofix_mark": "/autofixed/"
+		// options: same as severity_display
+		"autofix_display": "long"
 	},
 
 	// Tool Config Override
