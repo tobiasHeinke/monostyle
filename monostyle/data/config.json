@@ -63,7 +63,7 @@
 		"absolute_path": true,
 		"show_end": false,
 
-		// options: 'long', 'letter', 'ascii', 'icon', 'emoji'
+		// options: 'long', 'letter', 'ascii', 'icon', 'emoji', 'color', 'shape'
 		"severity_display": "long",
 
 		"out_sep_start": "´",

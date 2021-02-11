@@ -387,6 +387,33 @@ def mark_pre(_):
 def mark(document, reports, re_lib):
     """Check for punctuation marks and parenthesis."""
     toolname = "mark"
+    threshold_space = 2
+
+    def is_sentence(part, par_node, instr_pos, instr_neg, space_re):
+        if par_node.node_name == "row":
+            par_node = par_node.parent_node.parent_node
+        if not par_node or not par_node.parent_node:
+            return True
+        par_node = par_node.parent_node.parent_node
+        if (not par_node.node_name.endswith("-list") and
+                not par_node.node_name.endswith("-table")):
+            return True
+
+        space_counter = 0
+        for part in rst_walker.iter_nodeparts_instr(part.parent_node.parent_node,
+                                                    instr_pos, instr_neg):
+            if rst_walker.is_of(part, "role", "menuselection"):
+                space_counter += 1
+                if space_counter > threshold_space:
+                    return True
+                continue
+
+            for _ in re.finditer(space_re, str(part.code)):
+                space_counter += 1
+                if space_counter > threshold_space:
+                    return True
+
+        return False
 
     instr_pos = {
         "field": {"*": ["name", "body"]},
@@ -438,6 +465,7 @@ def mark(document, reports, re_lib):
 
     noend_re = re_lib["nopuncend"][0]
     comma_re = re_lib["commaend"][0]
+    space_re = re.compile(r"\S ")
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
         if not part.parent_node.next:
             if part.parent_node.node_name == "text":
@@ -451,15 +479,19 @@ def mark(document, reports, re_lib):
                         par_node = par_node.parent_node.parent_node
 
                     # refbox parts
-                    if (not rst_walker.is_of(par_node, "field",
-                                             ("Hotkey", "Menu", "Panel", "Mode",
-                                              "Tool", "Editor", "Header", "Type")) and
-                            (not rst_walker.is_of(part.next_leaf(), "dir", "default") or
-                             part_str.endswith(" "))):
-                        output = part.code.copy().clear(False)
-                        message = re_lib["nopuncend"][1].format("paragraph")
-                        line = getline_punc(document.body.code, part.code.end_pos, 0, 50, 0)
-                        reports.append(Report('W', toolname, output, message, line))
+                    if (rst_walker.is_of(par_node, "field",
+                                         ("Hotkey", "Menu", "Panel", "Mode",
+                                          "Tool", "Editor", "Header", "Type"))):
+                         continue
+                    if (rst_walker.is_of(part.next_leaf(), "dir", "default") and
+                             not part_str.endswith(" ")):
+                        continue
+                    if not is_sentence(part, par_node, instr_pos, instr_neg, space_re):
+                        continue
+                    output = part.code.copy().clear(False)
+                    message = re_lib["nopuncend"][1].format("paragraph")
+                    line = getline_punc(document.body.code, part.code.end_pos, 0, 50, 0)
+                    reports.append(Report('W', toolname, output, message, line))
 
                 else:
                     if comma_m := re.search(comma_re, part_str):

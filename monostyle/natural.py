@@ -811,6 +811,9 @@ def overuse(document, reports):
             if not is_open:
                 is_first = True
 
+        if not part.next and not part.parent_node.next:
+            was_determiner = False
+
     reports = evaluate(document, reports, words)
     return reports
 

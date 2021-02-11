@@ -300,158 +300,147 @@ def blank_line(document, reports):
     """Blank line markup formatting."""
     toolname = "blank-line"
 
-    def count_trailnl(node, nl_count):
-        newline_re = re.compile(r"\s*\Z", re.DOTALL)
-        for line in node.code.reversed_splitlines():
-            if line.span_len(True) == 0:
-                continue
-            if newline_m := re.search(newline_re, str(line)):
-                nl_count += str(newline_m.group(0)).count('\n')
-
-                if newline_m.start(0) != 0:
-                    return nl_count, True
-            else:
-                return nl_count, True
-
-        return nl_count, False
-
-
-    def count_nl(node, stop_cond=None, skip_names=None):
-        if skip_names is None:
-            skip_names = tuple()
-        nl_count = 0
-        over = False
-        prev_node = node.prev
-        while prev_node:
-            nl_count, stop = count_trailnl(prev_node, nl_count)
-
-            if stop:
-                for typ in skip_names:
-                    if rst_walker.is_of(prev_node, *typ):
-                        if stop_cond is not None and nl_count >= stop_cond and not over:
-                            return nl_count, prev_node, True
-                        break
+    def counter(node, skip=False, stop_cond=None, invert=False):
+        count = 0
+        node_walk = node.prev if not invert else node
+        while node_walk:
+            was_space = False
+            for line in node_walk.code.reversed_splitlines():
+                if len(line) == 0:
+                    continue
+                if line.start_lincol[1] == 0 and line.isspace():
+                    count +=1
                 else:
-                    return nl_count, prev_node, False
-
-                over = True
-                nl_count = 0
-
-            prev_node = prev_node.prev
-
-        return nl_count, prev_node, False
-
-
-    pos_over_heading = (("target",), ("comment",), ("substdef",),
-                        ("dir", "highlight"), ("dir", "index"))
-    for node in rst_walker.iter_node(document.body):
-        if node.node_name == "sect" or rst_walker.is_of(node, "dir", "rubric"):
-            display_name = "heading" if node.node_name == "sect" else "rubric"
-            if (node.node_name == "sect" and
-                    str(node.name_end.code)[0] in {'%', '#', '*'}):
-                cond_plain = 1
-                message_plain = Report.quantity(what="one blank line", where="over title heading")
-                cond_between = 2
-                message_between = message_plain
-                cond_over = 0
-                message_over = Report.missing(what="blank line", where="over title heading")
+                    break
             else:
-                cond_plain = 3
-                message_plain = Report.quantity(what="two blank line", where="over " + display_name)
-                cond_between = 2
-                message_between = Report.quantity(what="one blank line",
-                                                  where="over " + display_name)
-                cond_over = cond_plain
-                message_over = message_plain
+                was_space = True
 
-            nl_count, prev_node, go_on = count_nl(node, cond_plain, pos_over_heading)
+            if stop_cond and count >= stop_cond:
+                if invert:
+                    node_walk = node_walk.next
+                return count, node_walk, True
 
-            is_same = bool(prev_node and
-                           (prev_node.node_name == "sect" or
-                            rst_walker.is_of(prev_node, "dir", "rubric")))
-            if not is_same and not go_on and nl_count != cond_plain:
-                output = node.name.code.copy()
-                message = message_plain + ": {:+}".format(cond_plain - nl_count)
-                reports.append(Report('W', toolname, output, message, node.name.code))
+            if not was_space:
+                if skip and skip_over_sect(node_walk):
+                    count = 0
+                else:
+                    break
 
-            if (is_same or go_on) and nl_count != cond_between:
-                output = node.name.code.copy()
-                message = message_between + ": {:+}".format(cond_between - nl_count)
-                reports.append(Report('W', toolname, output, message, node.name.code))
+            node_walk = node_walk.prev if not invert else node_walk.next
 
-            if go_on:
-                nl_count, prev_node, _ = count_nl(prev_node, skip_names=pos_over_heading)
+        return count, node_walk, False
 
-                if (not prev_node or
-                        not (prev_node.node_name == "sect" or
-                             rst_walker.is_of(prev_node, "dir", "rubric"))):
-                    if nl_count != cond_over:
-                        output = node.name.code.copy()
-                        message = message_over + ": {:+}".format(cond_over - nl_count)
-                        reports.append(Report('W', toolname, output, message, node.name.code))
+    def skip_over_sect(node):
+        if not node:
+            return False
+        if node.node_name == "field-list":
+            # Sphinx special metafields; check only first, flags only
+            node = node.body.child_nodes.first()
+            return bool(str(node.name.code) in {"tocdepth", "nocomments", "orphan", "nosearch"} and
+                        node.body.code.isspace())
 
-                elif nl_count != cond_between:
-                    output = node.name.code.copy()
-                    message = message_between + ": {:+}".format(cond_between - nl_count)
-                    reports.append(Report('W', toolname, output, message, node.name.code))
+        for typ in (("target",), ("comment",), ("substdef",),
+                    ("dir", "highlight"), ("dir", "index")):
+            if rst_walker.is_of(node, *typ):
+                return True
 
+        return False
 
-        elif node.node_name in ("target", "comment"):
-            cond_plain = 2
-            message = Report.quantity(what="one blank line",
-                                      where="over " + rst_walker.write_out(node.node_name))
-            nl_count, _, __ = count_nl(node, cond_plain)
+    def is_sect(node):
+        return bool(node and (node.node_name == "sect" or
+                              rst_walker.is_of(node, "dir", "rubric")))
 
-            if nl_count > cond_plain:
-                next_node = node.next
-                while (next_node and
-                       (next_node.node_name in ("target", "comment") or
-                        is_blank_node(next_node))):
-                    next_node = next_node.next
+    prime = None
+    for node in rst_walker.iter_node(document.body):
+        if is_blank_node(node) or not node.indent:
+            continue
 
-                if not next_node or next_node.node_name not in ("sect", "rubric"):
-                    message += ": {:+}".format(cond_plain - nl_count)
-                    output = node.code.copy().clear(True)
-                    reports.append(Report('W', toolname, output, message, node.code))
+        aim = 1 if node.prev else 0
+        aim_alt = None
+        output_node = None
+        is_between = False
 
-        elif node.prev and not is_blank_node(node):
-            if rst_walker.is_of(node, "dir",
-                                ("admonition", "hint", "important", "note", "tip",
-                                 "warning", "seealso", "code-block")):
+        count, node_over, __ = counter(node)
 
-                if node.head is not None and re.match(r"\n +\S", str(node.head.code)):
-                    output = node.head.code.copy().clear(True)
-                    message = Report.missing(what="blank line",
-                                             where="after head of " +
-                                                   rst_walker.write_out(node.node_name,
-                                                                        node.name.code))
-                    fg_repl = node.head.code.copy().clear(True).replace('\n')
-                    reports.append(Report('W', toolname, output, message, fix=fg_repl))
+        is_proxy = False
+        if skip_over_sect(node):
+            if skip_over_sect(node_over):
+                aim_alt = 0
 
+            _, node_under, __ = counter(node, True, invert=True)
+            if node_under and node_under is not prime and is_sect(node_under):
+                prime = node_under
+                is_proxy = True
+                if node.node_name == "comment" and not is_sect(node_over):
+                    # find shorter span
+                    _, node_under, stopped = counter(node, True, stop_cond=2, invert=True)
+                    if node_under is not prime or stopped:
+                        prime = None
+                        is_proxy = False
 
-            cond_plain = 2
-            nl_count, _, __ = count_nl(node, cond_plain)
+        else:
+            if node.parent_node:
+                if (node.parent_node.parent_node.node_name.endswith("-list") or
+                        node.parent_node.parent_node.node_name.endswith("-table")):
+                    aim_alt = 0
 
-            if nl_count > cond_plain:
-                naming = node.node_name
-                if node.name:
-                    naming += " " + str(node.name.code).strip()
-                message = Report.quantity(what="one blank line", where="over " + naming,
-                                          how=": {:+}".format(cond_plain - nl_count))
-                output = node.code.copy().clear(True)
-                reports.append(Report('W', toolname, output, message))
+                elif (node.parent_node.parent_node.node_name in {"field", "substdef"} and
+                        node.prev and not node.prev.prev):
+                    # hanging
+                    aim_alt = 0
 
-    if is_blank_node(node):
-        while node and not node.prev and node.parent_node:
-            node = node.parent_node
+                elif rst_walker.is_of(node, "dir", "include"):
+                    aim_alt = 0
 
-        cond_plain = 2
+        if is_proxy or (node is not prime and is_sect(node)):
+            if not prime:
+                prime = node
+            if (prime.node_name == "sect" and
+                    str(prime.name_end.code)[0] in {'%', '#', '*'}):
+                aim = 1 if node is prime else 0
+            else:
+                aim = 2
+
+            if node_over and is_sect(node_over):
+                aim = 1
+                is_between = True
+
+            if not is_proxy:
+                output_node = prime.name if prime.node_name == "sect" else prime.head
+
+        if node is prime:
+            prime = None
+
+        if count != aim and count != aim_alt:
+            if aim_alt is not None and abs(aim - count) > abs(aim_alt - count):
+                aim = aim_alt
+            output = output_node.code if output_node else node.code.copy().clear(True)
+            message = Report.quantity(what=Report.write_out_quantity(aim, "blank line"),
+                                      where=(("over " if not is_between else "between ") +
+                                            rst_walker.write_out(node.node_name, node.name)))
+            message += ": {:+}".format(aim - count)
+            reports.append(Report('W', toolname, output, message, node.code))
+
+        if rst_walker.is_of(node, "dir",
+                            {"admonition", "hint", "important", "note", "tip",
+                             "warning", "seealso", "code-block"}):
+
+            if node.head is not None and re.match(r"\n +\S", str(node.head.code)):
+                output = node.head.code.copy().clear(True)
+                message = Report.missing(what="blank line",
+                                         where="after head of " +
+                                               rst_walker.write_out(node.node_name,
+                                                                    node.name.code))
+                fg_repl = node.head.code.copy().clear(True).replace('\n')
+                reports.append(Report('W', toolname, output, message, fix=fg_repl))
+
+    count_end, _, __ = counter(node, invert=True)
+    if is_blank_node(node) and node.prev:
+        count_end += count
+    if count_end >= 2:
+        output = node.code.copy().clear(True)
         message = Report.quantity(what="three or more blank lines")
-        nl_count, _, __ = count_nl(node, cond_plain)
-
-        if nl_count >= cond_plain:
-            output = node.code.copy().clear(True)
-            reports.append(Report('W', toolname, output, message))
+        reports.append(Report('W', toolname, output, message))
 
     return reports
 

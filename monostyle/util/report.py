@@ -142,18 +142,34 @@ class Report():
             'U': "\u2754\uFE0E"
         },
         "emoji": {
-            'F': "\U0001F6D1",
-            'E': "\u274C",
-            'W': "\u26A0",
+            'F': "\U0001F6D1\uFE0F",
+            'E': "\u274C\uFE0F",
+            'W': "\u26A0\uFE0F",
             'I': "\u2139\uFE0F",
-            'L': "\U0001F4C3",
-            'U': "\u2754"
+            'L': "\U0001F4C3\uFE0F",
+            'U': "\u2754\uFE0F"
+        },
+        "color": {
+            'F': "\U0001F534\uFE0F",
+            'E': "\U0001F7E0\uFE0F",
+            'W': "\U0001F7E1\uFE0F",
+            'I': "\U0001F535\uFE0F",
+            'L': "\u26AB\uFE0F",
+            'U': "\u26AA\uFE0F"
+        },
+        "shape": {
+            'F': "\U0001F534\uFE0E",
+            'E': "\u274C\uFE0E",
+            'W': "\U0001F53A\uFE0E",
+            'I': "\u2757\uFE0E",
+            'L': "\U0001F7E5\uFE0E",
+            'U': "\u2753\uFE0E"
         }
     }
 
 
     #--------------------
-    # Message Templates
+    # Message
 
     quantity = MessageTemplate("{what} {?where} {?how}").substitute
     existing = MessageTemplate("{what} {?where}").substitute
@@ -180,6 +196,39 @@ class Report():
                 setattr(Report, key, MessageTemplate(value).substitute)
 
 
+    def write_out_quantity(number, subject, irregular_plural=None, limit=None):
+        """Spell out number and switch subject between singular and plural."""
+        if limit is None:
+            limit = 99
+        number = int(number)
+        table = (
+            ("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"),
+            ("ten", "eleven", "twelve", "thir", "four", "fif", "six", "seven", "eigh", "nine"),
+            ("", "", "twen", "thir", "for", "fif", "six", "seven", "eigh", "nine")
+        )
+        if number != 1:
+            if not irregular_plural:
+                subject += "s"
+            else:
+                subject = irregular_plural
+
+        if number <= limit:
+            if number == 0:
+                number = table[0][0]
+            else:
+                n, d = divmod(number, 10)
+                if n < 2:
+                    number = table[n][d]
+                    if n == 1 and d > 3:
+                        number += "teen"
+                else:
+                    number = table[min(n, 2)][n] + "ty"
+                    if d != 0:
+                        number += "-" + table[0][d]
+
+        return str(number) + " " + subject
+
+
     #--------------------
     # Fix
 
@@ -188,7 +237,9 @@ class Report():
         "long": "/autofixed/",
         "ascii": "@",
         "icon": "\u2714\uFE0E",
-        "emoji": "\u2714",
+        "emoji": "\u2714\uFE0F",
+        "color": "\u2705\uFE0F",
+        "shape": "\U0001F6A9\uFE0E",
     }
 
     #--------------------
