@@ -18,41 +18,6 @@ POS = PartofSpeech()
 CharCatalog = CharCatalog()
 
 
-def eol_pre(_):
-    """Note this tool can only be applied on full files because the EOL is unknown in Diffs."""
-    toolname = "EOF"
-
-    re_lib = dict()
-    pattern_str = r"\n{2}\Z"
-    pattern = re.compile(pattern_str, re.MULTILINE)
-    message = Report.existing(what="two or more blank lines", where="at end of file")
-    re_lib["trailingnl"] = (pattern, message)
-
-    pattern_str = r"(?<!\n)\Z"
-    pattern = re.compile(pattern_str, re.MULTILINE)
-    message = Report.existing(what="zero blank lines", where="at end of file")
-    re_lib["eofzero"] = (pattern, message)
-
-    args = dict()
-    args["re_lib"] = re_lib
-    args["config"] = {"severity": 'W', "toolname": toolname}
-
-    return args
-
-
-def search_code(document, reports, re_lib, config):
-    """Iterate regex tools."""
-    text = str(document.code)
-    for pattern, message in re_lib.values():
-        for m in re.finditer(pattern, text):
-            output = document.body.code.slice_match_obj(m, 0, True)
-            line = getline_punc(document.body.code, m.start(), len(m.group(0)), 50, 0)
-            reports.append(Report(config.get("severity"), config.get("toolname"),
-                                  output, message, line))
-
-    return reports
-
-
 def flavor(document, reports):
     """Check if the preferred markup is used."""
     toolname = "flavor"
@@ -245,9 +210,9 @@ def heading_lines(document, reports):
         if heading_char in {'%', '#', '*'} and not node.name_start:
             output = node.name_end.code.copy().replace_fill(heading_char)
             message = Report.missing(what="overline")
-            fg_repl = node.name.code.copy().replace_fill([heading_char * title_len + "\n"])
-            fg_repl = fg_repl.clear(True)
-            reports.append(Report('W', toolname, output, message, fix=fg_repl))
+            fix = node.name.code.copy().replace_fill([heading_char * title_len + "\n"])
+            fix = fix.clear(True)
+            reports.append(Report('W', toolname, output, message, fix=fix))
 
         if (len(str(node.name_end.code).strip()) != title_len or
                 (node.name_start and
@@ -265,15 +230,15 @@ def heading_lines(document, reports):
             bd = FragmentBundle()
             if node.name_start:
                 lineno = node.name_start.code.start_lincol[0]
-                fg_repl_over = node.name_start.code.slice((lineno, 0), (lineno + 1, 0), True)
-                fg_repl_over = fg_repl_over.to_fragment()
-                fg_repl_over.replace_fill([heading_char * title_len + "\n"])
-                bd.bundle.append(fg_repl_over)
+                fix_over = node.name_start.code.slice((lineno, 0), (lineno + 1, 0), True)
+                fix_over = fix_over.to_fragment()
+                fix_over.replace_fill([heading_char * title_len + "\n"])
+                bd.bundle.append(fix_over)
             lineno = node.name_end.code.start_lincol[0]
-            fg_repl_under = node.name_end.code.slice((lineno, 0), (lineno + 1, 0), True)
-            fg_repl_under = fg_repl_under.to_fragment()
-            fg_repl_under.replace_fill([heading_char * title_len + "\n"])
-            bd.bundle.append(fg_repl_under)
+            fix_under = node.name_end.code.slice((lineno, 0), (lineno + 1, 0), True)
+            fix_under = fix_under.to_fragment()
+            fix_under.replace_fill([heading_char * title_len + "\n"])
+            bd.bundle.append(fix_under)
             reports.append(Report('W', toolname, output, message, fix=bd))
 
         titel_ind_m = re.match(r" *", str(node.name.code))
@@ -282,9 +247,9 @@ def heading_lines(document, reports):
             message = Report.quantity(what="wrong title indent",
                                       how=": {:+}".format(ind - len(titel_ind_m.group(0))))
 
-            fg_repl = node.name.code.slice_match_obj(titel_ind_m, 0, True)
-            fg_repl.replace_fill([" " * ind])
-            reports.append(Report('W', toolname, output, message, fix=fg_repl))
+            fix = node.name.code.slice_match_obj(titel_ind_m, 0, True)
+            fix.replace_fill([" " * ind])
+            reports.append(Report('W', toolname, output, message, fix=fix))
 
     return reports
 
@@ -419,20 +384,15 @@ def blank_line(document, reports):
                                       where=(("over " if not is_between else "between ") +
                                             rst_walker.write_out(node.node_name, node.name)))
             message += ": {:+}".format(aim - count)
-            reports.append(Report('W', toolname, output, message, node.code))
 
-        if rst_walker.is_of(node, "dir",
-                            {"admonition", "hint", "important", "note", "tip",
-                             "warning", "seealso", "code-block"}):
+            fix = None
+            if (rst_walker.is_of(node.parent_node, "dir",
+                                {"admonition", "hint", "important", "note", "tip",
+                                 "warning", "seealso", "code-block"}, "head") and
+                 node.parent_node.code.start_lincol[0] - node.code.start_lincol[0] < 2):
 
-            if node.head is not None and re.match(r"\n +\S", str(node.head.code)):
-                output = node.head.code.copy().clear(True)
-                message = Report.missing(what="blank line",
-                                         where="after head of " +
-                                               rst_walker.write_out(node.node_name,
-                                                                    node.name.code))
-                fg_repl = node.head.code.copy().clear(True).replace('\n')
-                reports.append(Report('W', toolname, output, message, fix=fg_repl))
+                fix = node.parent_node.code.copy().clear(True).replace('\n')
+            reports.append(Report('W', toolname, output, message, node.code, fix))
 
     count_end, _, __ = counter(node, invert=True)
     if is_blank_node(node) and node.prev:
@@ -455,8 +415,8 @@ def style_add(document, reports):
             if (re.match(proto_re, str(node.id.code)) and
                     not re.match(r"`__", str(node.body_end.code))):
                 message = Report.missing(what="underscore", where="after external link (same tab)")
-                fg_repl = node.body_end.code.copy().clear(True).replace("_")
-                reports.append(Report('W', toolname, node.id.code, message, fix=fg_repl))
+                fix = node.body_end.code.copy().clear(True).replace("_")
+                reports.append(Report('W', toolname, node.id.code, message, fix=fix))
 
         if node.node_name == "target":
             next_node = node.next
@@ -494,7 +454,6 @@ def style_add(document, reports):
 
 OPS = (
     ("blank-line", blank_line, None),
-    ("EOF", search_code, eol_pre),
     ("flavor", flavor, None),
     ("heading-line-length", heading_lines, None),
     ("line-style", line_style, line_style_pre),
@@ -504,5 +463,5 @@ OPS = (
 
 
 if __name__ == "__main__":
-    from monostyle.cmd import main
-    main(OPS, __doc__, __file__)
+    from monostyle import main_mod
+    main_mod(__doc__, OPS, __file__)

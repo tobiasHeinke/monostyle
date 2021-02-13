@@ -312,7 +312,7 @@ def files_recursive(path=None, ext_pos=(), split_output=False):
 
         yield single_text(path)
     else:
-        for dirpath, dirnames, filenames in os.walk(path):
+        for dirpath, _, filenames in os.walk(path):
             if dirpath.startswith("."):
                 continue
 

@@ -33,11 +33,10 @@ def titlecase(word, is_first_word, is_last_word, name):
                 where = "at the end of a "
             message = Report.misformatted(what="lowercase", where=where + name)
 
-            fg_repl = None
-            fg_repl = word.slice(word.start_pos, word.start_pos + 1, True)
-            fg_repl.replace(str(fg_repl).swapcase())
+            fix = word.slice(word.start_pos, word.start_pos + 1, True)
+            fix.replace(str(fix).swapcase())
 
-            return message, fg_repl
+            return message, fix
         return None
 
     tag = POS.tag(word_str.lower())
@@ -48,13 +47,13 @@ def titlecase(word, is_first_word, is_last_word, name):
         message = Report.misformatted(what="lowercase" if word_str[0].islower() else "uppercase",
                                       where="in " + name)
 
-        fg_repl = None
+        fix = None
         if (not tag or (tag[0] != "preposition" and
                 (tag[-1] != "article" or word_str != "A"))):
-            fg_repl = word.slice(word.start_pos, word.start_pos + 1, True)
-            fg_repl.replace(str(fg_repl).swapcase())
+            fix = word.slice(word.start_pos, word.start_pos + 1, True)
+            fix.replace(str(fix).swapcase())
 
-        return message, fg_repl
+        return message, fix
 
 
 def admonition_title(document, reports):
@@ -530,5 +529,5 @@ OPS = (
 
 
 if __name__ == "__main__":
-    from monostyle.cmd import main
-    main(OPS, __doc__, __file__)
+    from monostyle import main_mod
+    main_mod(__doc__, OPS, __file__)

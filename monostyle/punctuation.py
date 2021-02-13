@@ -482,7 +482,7 @@ def mark(document, reports, re_lib):
                     if (rst_walker.is_of(par_node, "field",
                                          ("Hotkey", "Menu", "Panel", "Mode",
                                           "Tool", "Editor", "Header", "Type"))):
-                         continue
+                        continue
                     if (rst_walker.is_of(part.next_leaf(), "dir", "default") and
                              not part_str.endswith(" ")):
                         continue
@@ -558,9 +558,9 @@ def whitespace(document, reports, re_lib):
         for m in re.finditer(pattern, text):
             output = document.body.code.slice_match_obj(m, 0, True)
             line = getline_punc(document.body.code, m.start(), len(m.group(0)), 50, 0)
-            fg_repl = document.body.code.slice_match_obj(m, 1, True)
-            fg_repl.replace_fill(value[2])
-            reports.append(Report('W', toolname, output, value[1], line, fg_repl))
+            fix = document.body.code.slice_match_obj(m, 1, True)
+            fix.replace_fill(value[2])
+            reports.append(Report('W', toolname, output, value[1], line, fix))
 
     multi_start_re = re_lib["multispacestart"][0]
     multi_re = re_lib["multispace"][0]
@@ -571,17 +571,17 @@ def whitespace(document, reports, re_lib):
                 output = node.code.slice_match_obj(multi_start_m, 1, True)
                 line = getline_punc(document.body.code, output.start_pos,
                                     output.span_len(True), 50, 0)
-                fg_repl = output.copy().replace_fill(value[2])
+                fix = output.copy().replace_fill(value[2])
                 reports.append(Report('W', toolname, output, re_lib["multispacestart"][1],
-                                      line, fg_repl))
+                                      line, fix))
 
         for multi_m in re.finditer(multi_re, node_str):
             output = node.code.slice_match_obj(multi_m, 1, True)
             line = getline_punc(document.body.code, output.start_pos,
                                 output.span_len(True), 50, 0)
-            fg_repl = output.copy().replace_fill(value[2])
+            fix = output.copy().replace_fill(value[2])
             reports.append(Report('W', toolname, output, re_lib["multispace"][1],
-                                  line, fg_repl))
+                                  line, fix))
 
     return reports
 
@@ -596,5 +596,5 @@ OPS = (
 
 
 if __name__ == "__main__":
-    from monostyle.cmd import main
-    main(OPS, __doc__, __file__)
+    from monostyle import main_mod
+    main_mod(__doc__, OPS, __file__)

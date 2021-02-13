@@ -212,7 +212,7 @@ class Report():
             else:
                 subject = irregular_plural
 
-        if number <= limit:
+        if number >= 0 and number <= min(limit, 99):
             if number == 0:
                 number = table[0][0]
             else:
@@ -252,17 +252,21 @@ class Report():
             "format_str": "{filename}{location} {severity} {output} {message}{line}",
             "show_filename": True,
             "absolute_path": False,
+            "filename_sep": ":",
+
             "show_end": False,
+            "loc_end_sep": " - ",
+            "loc_column_sep": ":",
 
             "severity_display": "long",
 
-            "out_sep_start": "'",
-            "out_sep_end": "'",
-            "out_max_len": 100,
-            "out_ellipsis": "…",
+            "output_sep_start": "'",
+            "output_sep_end": "'",
+            "output_limit": 100,
+            "output_ellipsis": "…",
 
             "show_line": True,
-            "line_max_len": 200,
+            "line_limit": 200,
             "line_indent": ">>>",
             "line_ellipsis": "…",
 
@@ -271,14 +275,13 @@ class Report():
             **options
         }
         entries = dict.fromkeys(self.__slots__, "")
-        entries["filename"] = ""
-        entries["location"] = ""
+        entries.update((("filename", ""), ("location", "")))
 
         if not options.get("file_title", False) and options["show_filename"]:
             if options["absolute_path"]:
-                entries["filename"] = self.output.filename + ":"
+                entries["filename"] = self.output.filename + options["filename_sep"]
             else:
-                entries["filename"] = path_to_rel(self.output.filename) + ":"
+                entries["filename"] = path_to_rel(self.output.filename) + options["filename_sep"]
 
         sev_map = self.severity_maps.get(options["severity_display"], self.severity_maps["letter"])
         entries["severity"] = sev_map.get(self.severity, sev_map["U"])
@@ -286,32 +289,35 @@ class Report():
         entries["tool"] = self.tool
 
         if self.output.start_lincol and self.output.start_lincol[0] != -1:
-            entries["location"] = str(self.output.start_lincol[0] + 1) + "," + \
-                            str(self.output.start_lincol[1] + 1)
-
-            if options["show_end"]:
-                entries["location"] += " - {0},{1}".format(self.output.end_lincol[0] + 1,
-                                                     self.output.end_lincol[1] + 1)
+            entries["location"] = "".join((str(self.output.start_lincol[0] + 1),
+                                           options["loc_column_sep"],
+                                           str(self.output.start_lincol[1] + 1)))
+            if options["show_end"] and self.output.start_lincol != self.output.end_lincol:
+                entries["location"] += "".join((options["loc_end_sep"],
+                                                str(self.output.end_lincol[0] + 1),
+                                                options["loc_column_sep"],
+                                                str(self.output.end_lincol[1] + 1)))
 
         elif self.output.start_pos != -1:
             entries["location"] = str(self.output.start_pos)
 
-            if options["show_end"]:
-                entries["location"] += " - " + str(self.output.end_pos)
+            if options["show_end"] and self.output.start_pos != self.output.end_pos:
+                entries["location"] += options["loc_end_sep"] + str(self.output.end_pos)
 
         if len(self.output) != 0:
             entries["output"] = str(self.output).replace("\n", '¶')
-            if len(entries["output"]) > options["out_max_len"]:
-                entries["output"] = entries["output"][:options["out_max_len"]]
-                entries["output"] += options["out_ellipsis"]
-            entries["output"] = options["out_sep_start"] + entries["output"] + options["out_sep_end"]
+            if len(entries["output"]) > options["output_limit"]:
+                entries["output"] = entries["output"][:options["output_limit"]]
+                entries["output"] += options["output_ellipsis"]
+            entries["output"] = options["output_sep_start"] + entries["output"] + \
+                                options["output_sep_end"]
 
         entries["message"] = self.message
 
         if options["show_line"] and self.line:
             entries["line"] = str(self.line).replace('\n', '¶')
-            if len(entries["line"]) > options["line_max_len"]:
-                entries["line"] = entries["line"][:options["line_max_len"]]
+            if len(entries["line"]) > options["line_limit"]:
+                entries["line"] = entries["line"][:options["line_limit"]]
                 entries["line"] += options["line_ellipsis"]
             entries["line"] = "\n" + options["line_indent"] + entries["line"]
 

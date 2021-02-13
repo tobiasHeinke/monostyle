@@ -61,18 +61,22 @@
 		"format_str": "{filename}{location} {severity} {output} {message} {fix}{line}",
 		"show_filename": true,
 		"absolute_path": true,
+		"filename_sep": ":",
+
 		"show_end": false,
+		"loc_end_sep": " - ",
+		"loc_column_sep": ":",
 
 		// options: 'long', 'letter', 'ascii', 'icon', 'emoji', 'color', 'shape'
 		"severity_display": "long",
 
-		"out_sep_start": "´",
-		"out_sep_end": "´",
-		"out_max_len": 100,
-		"out_ellipsis": "…",
+		"output_sep_start": "´",
+		"output_sep_end": "´",
+		"output_limit": 100,
+		"output_ellipsis": "…",
 
 		"show_line": true,
-		"line_max_len": 200,
+		"line_limit": 200,
 		"line_indent": ">>>",
 		"line_ellipsis": "…",
 

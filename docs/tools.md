@@ -76,10 +76,6 @@ Find parts of incomplete markup and versioning merge conflicts.
 
 Blank line convention.
 
-### eof
-
-Check blank lines at the end of the file.
-
 ### flavor
 
 Check markup conventions.
@@ -169,6 +165,10 @@ Find specified chars and chars outside of the defined Unicode region.
 ### encoding
 
 Check files for Unicode encoding for errors.
+
+### EOF
+
+Check blank lines at the end of the file.
 
 
 ## Capitalization

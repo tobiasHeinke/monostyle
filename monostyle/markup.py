@@ -788,5 +788,5 @@ OPS = (
 
 
 if __name__ == "__main__":
-    from monostyle.cmd import main
-    main(OPS, __doc__, __file__)
+    from monostyle import main_mod
+    main_mod(__doc__, OPS, __file__)

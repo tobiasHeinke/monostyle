@@ -77,7 +77,8 @@ Post processing:
 </dl>
 
 For more info on command line arguments use the `--help` command.
-The tools can be applied individually by executing the script files. Then the tools will loop over the whole project.
+Individual tools can be selected by executing the modules.
+By default the tools will then loop over the whole project.
 
 Running Monostyle does not replace building the project with Sphinx.
 Markup errors can lead to false negatives, so Monostyle has to be run again or

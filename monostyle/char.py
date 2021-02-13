@@ -36,8 +36,8 @@ def char_search(document, reports):
         explicits += pattern
         for char_m in re.finditer(char_re, text):
             output = document.code.slice_match_obj(char_m, 0, True)
-            fg_repl = output.copy().replace_fill(repl) if repl else None
-            reports.append(Report('E', toolname, output, message, fix=fg_repl))
+            fix = output.copy().replace_fill(repl) if repl else None
+            reports.append(Report('E', toolname, output, message, fix=fix))
 
     parttern_str = r"[^\n -~À-ʨ" + ''.join(('©', '®', '°', '±', '€', '™', "\t")) + explicits + r"]"
     char_re = re.compile(parttern_str)
@@ -63,12 +63,12 @@ def file_encoding(reports):
             except UnicodeEncodeError as err:
                 output = Fragment(filename, "")
                 message = "encode error: " + str(err)
-                reports.append(Report('E', toolname, output, message))
+                reports.append(Report('F', toolname, output, message))
 
             except:
                 output = Fragment(filename, "")
                 message = "unknown encode error"
-                reports.append(Report('E', toolname, output, message))
+                reports.append(Report('F', toolname, output, message))
 
             else:
                 document_fg = Fragment(filename, text)
@@ -80,11 +80,29 @@ def file_encoding(reports):
     return reports
 
 
+def eol(document, reports):
+    """Check blank lines at end of file."""
+    toolname = "EOF"
+
+    if m := re.search(r"\n{2}\Z|(?<!\n)\Z", str(document.code)):
+        output = document.body.code.slice_match_obj(m, 0, True)
+        message = Report.existing(what=Report.write_out_quantity(str(m.group(0)).count('\n'),
+                                                                 "blank line"),
+                                  where="at the end of file")
+        fix = output.copy().replace('\n')
+        output = output.clear(True)
+        reports.append(Report('W', toolname, output, message, fix=fix))
+
+    return reports
+
+
+
 OPS = (
     ("char-search", char_search, None),
     ("encoding", file_encoding, None, False),
+    ("EOF", eol, None),
 )
 
 if __name__ == "__main__":
-    from monostyle.cmd import main
-    main(OPS, __doc__, __file__, do_parse=False)
+    from monostyle import main_mod
+    main_mod(__doc__, OPS, __file__, do_parse=False)
