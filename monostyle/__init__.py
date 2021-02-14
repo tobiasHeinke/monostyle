@@ -1,7 +1,7 @@
 
 """
 monostyle
-~~~~
+~~~~~~~~~
 
 Interface for applying tools on the differential of RST files.
 
@@ -72,7 +72,7 @@ def init(ops, op_names, mod_name):
                     # evaluate pre
                     args = op[2](op)
 
-                ops_sel.append((op[1], args, bool(not(len(op) > 3 and not op[3]))))
+                ops_sel.append((op[0], op[1], args, bool(not(len(op) > 3 and not op[3]))))
                 break
         else:
             print("{0}: unknown operation: {1}".format(mod_name, op_name))
@@ -120,8 +120,8 @@ def get_reports_file(mods, rst_parser, path, parse_options):
     ext_test = None
     for ops, ext_test in mods:
         for op in ops:
-            if not op[2]:
-                reports = op[0](reports, **op[1])
+            if not op[3]:
+                reports = op[1](op[0], reports, **op[2])
             else:
                 ops_loop.append(op)
 
@@ -131,7 +131,8 @@ def get_reports_file(mods, rst_parser, path, parse_options):
 
     print_options = options_overide()
     show_current = bool(path)
-    path = monostylestd.path_to_abs(path, "rst")
+    if path:
+        path = monostylestd.path_to_abs(path, "rst")
     filename_prev = None
     if parse_options["resolve"]:
         titles, targets = env.get_link_titles(rst_parser)
@@ -160,8 +161,8 @@ def get_reports_file(mods, rst_parser, path, parse_options):
 def filter_reports(report, context):
     """Filter out reports in the diff context."""
     return bool(report.tool in
-                ("mark", "blank-line", "directive", "indention", "heading-level",
-                 "heading-line-length", "starting", "flavor") and # "search-word",
+                {"mark", "blank-line", "directive", "indention", "heading-level",
+                 "heading-line-length", "start-case", "flavor"} and # "search-word",
                 report.output.start_lincol is not None and context is not None and
                 report.output.start_lincol[0] in context)
 
@@ -185,11 +186,11 @@ def apply(rst_parser, mods, reports, document, parse_options, print_options,
 
         for op in ops:
             # init failed
-            if op[1] is None:
+            if op[2] is None:
                 continue
 
             reports_tool = []
-            reports_tool = op[0](document, reports_tool, **op[1])
+            reports_tool = op[1](op[0], document, reports_tool, **op[2])
 
             for report in reports_tool:
                 if filter_func is None or not filter_func(report, context):
@@ -290,16 +291,16 @@ def main(descr=None, mod_selection=None, parse_options=None):
                 # first char to lowercase
                 doc_str = op[1].__doc__[0].lower() + op[1].__doc__[1:]
             tools.add_argument("--" + op[0], dest="op_names",
-                                action='append_const', const=op[0], metavar="",
+                                action="append_const", const=op[0], metavar="",
                                 help=doc_str)
 
     group = parser.add_mutually_exclusive_group()
     if not is_selection:
         group.add_argument("-i", "--internal",
-                           dest="internal", nargs='?', const="", metavar='REV',
+                           dest="internal", nargs='?', const="", metavar="REV",
                            help="check changes to the working copy (against REV)")
         group.add_argument("-e", "--external",
-                           dest="external", nargs='?', const="", metavar='REV',
+                           dest="external", nargs='?', const="", metavar="REV",
                            help="check changes to the repository (at REV)")
 
     group.add_argument("-p", "--patch",
@@ -313,24 +314,24 @@ def main(descr=None, mod_selection=None, parse_options=None):
 
     if not is_selection:
         parser.add_argument("--cached", "--staged",
-                            action='store_true', dest="cached", default=False,
+                            action="store_true", dest="cached", default=False,
                             help="set diff cached option (Git only)")
 
     if is_selection:
         parser.add_argument("-s", "--resolve",
-                            action='store_true', dest="do_resolve", default=False,
+                            action="store_true", dest="do_resolve", default=False,
                             help="resolve links and substitutions")
 
 
     if not is_selection:
         parser.add_argument("-u", "--update",
-                            dest="up", nargs='?', const=None, metavar='REV',
+                            dest="up", nargs='?', const=None, metavar="REV",
                             help="update the working copy (to REV)")
     parser.add_argument("-a", "--autofix",
-                        action='store_true', dest="auto", default=False,
+                        action="store_true", dest="auto", default=False,
                         help="apply autofixes")
     parser.add_argument("-o", "--open",
-                        dest='min_severity', choices=Report.severities,
+                        dest="min_severity", choices=Report.severities,
                         help="open files with report severity above")
 
     args = parser.parse_args()

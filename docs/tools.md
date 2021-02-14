@@ -6,6 +6,8 @@ An overview of the modules and tools.
 
 ## Spelling
 
+### new-word
+
 Find rare or new words. This is a multi tool because it detects:
 
 - Spelling errors, it also detects valid words e.g. 'which' vs. 'witch' and
@@ -57,7 +59,7 @@ Find markup (directives and roles) that should not be used in the project.
 
 Check the heading hierarchy.
 
-### indent
+### indention
 
 Check the indention.
 
@@ -177,19 +179,19 @@ Check blank lines at the end of the file.
 
 Check the titlecase convention of the first line of admonitions.
 
-### heading
+### heading-caps
 
 Check the title capitalization convention of headings.
 
-### pos
+### pos-case
 
 Find uppercase part of speech types in continuous text (either a typo or missing sentence punctuation).
 
-### property
+### property-noun
 
 Find lowercase versions of majority uppercase words (usually a property name or name of a person).
 
-### starting
+### start-case
 
 Find lowercase at the start of paragraphs, sentences and parenthesis.
 
@@ -230,6 +232,8 @@ Searches for unused (ref) targets.
 
 
 ## Monitor
+
+### monitor
 
 Monitor files/directories for changes.
 

@@ -88,9 +88,9 @@ class CharCatalog:
             test_op = low
         elif pattern_str == "A-Z":
             test_op = up
-        elif pattern_str in ("A-Za-z", "a-zA-Z"):
+        elif pattern_str in {"A-Za-z", "a-zA-Z"}:
             test_op = alpha
-        elif pattern_str in ("A-Za-z0-9", "a-z0-9A-Z", "0-9A-Za-z"):
+        elif pattern_str in {"A-Za-z0-9", "a-z0-9A-Z", "0-9A-Za-z"}:
             test_op = alnum
         else:
             print("char_catalog.py unicode range: unknown pattern", pattern_str)

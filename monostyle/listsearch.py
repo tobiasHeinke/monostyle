@@ -125,7 +125,7 @@ def parse_config(re_conf_str):
     return re_conf
 
 
-def search_free(document, reports, comlist):
+def search_free(toolname, document, reports, comlist):
     """Search terms in document."""
     toolname = "list-search"
 
@@ -160,7 +160,7 @@ def search_free(document, reports, comlist):
     return reports
 
 
-def search_word(document, reports, comlist, config):
+def search_word(toolname, document, reports, comlist, config):
     """Search terms in document within word boundaries."""
     toolname = "search-word"
 
@@ -239,12 +239,12 @@ def search_pre(op):
     return args
 
 
-def search(document, reports, data, config):
+def search(toolname, document, reports, data, config):
     """Switch between free and with boundary."""
     if not config["word"]:
-        reports = search_free(document, reports, data)
+        reports = search_free(toolname, document, reports, data)
     else:
-        reports = search_word(document, reports, data, config)
+        reports = search_word(toolname, document, reports, data, config)
 
     return reports
 

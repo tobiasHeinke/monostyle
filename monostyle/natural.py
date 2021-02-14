@@ -22,7 +22,6 @@ POS = PartofSpeech()
 
 
 def abbreviation_pre(_):
-    """Search for abbreviation/acronyms without an explanation."""
     def is_explanation(abbr, desc):
         """Check if the words start with the letters of the abbreviation."""
         desc_split = []
@@ -70,7 +69,7 @@ def abbreviation_pre(_):
 
         # todo glossary terms as explanation?
         explanation_file = []
-        for node in rst_walker.iter_node(document.body, ("role",), enter_pos=False):
+        for node in rst_walker.iter_node(document.body, "role", enter_pos=False):
             if not rst_walker.is_of(node, "role", "abbr"):
                 continue
 
@@ -105,8 +104,8 @@ def abbreviation_pre(_):
     return args
 
 
-def abbreviation(document, reports, data, config):
-    toolname = "abbreviation"
+def abbreviation(toolname, document, reports, data, config):
+    """Search for abbreviation/acronyms without an explanation."""
 
     for part in rst_walker.iter_nodeparts_instr(document.body, config[0], config[1]):
         for word in Segmenter.iter_word(part.code):
@@ -172,33 +171,19 @@ def indefinite_article_pre(_):
     re_lib = dict()
     re_lib["vowel"] = re.compile(r"[aeiouAEIOU]")
     re_lib["digit"] = re.compile(r"\d")
+    re_lib["letterhyphen"] = re.compile(r".\b")
 
     args["re_lib"] = re_lib
 
     return args
 
 
-def indefinite_article(document, reports, re_lib, data):
+def indefinite_article(toolname, document, reports, re_lib, data):
     """Check correct use of indefinite articles (a and an)."""
-    toolname = "indefinite-article"
-
-    def is_fp(word, word_str, data):
-        """Check if is not a false positive."""
-        if len(word) == 1 or POS.isacr(word):
-            if word_str[0].lower() in data["letter"]:
-                if len(word) == 1 or word_str not in data["acronym"]:
-                    return False
-        else:
-            word_lower = word_str.lower()
-            for entry in data["syllable"]:
-                if word_lower.startswith(entry):
-                    return False
-
-        return True
-
 
     vowel_re = re_lib["vowel"]
     digit_re = re_lib["digit"]
+    letterhyphen_re = re_lib["letterhyphen"]
 
     instr_pos = {
         "sect": {"*": ["name"]},
@@ -220,48 +205,51 @@ def indefinite_article(document, reports, re_lib, data):
     }
 
     buf = None
-
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
         if part.child_nodes.is_empty():
-            for word in Segmenter.iter_wordsub(part.code, False):
+            for word in Segmenter.iter_word(part.code, filter_numbers=False):
                 word_str = str(word).strip()
-                if buf is None:
+                if len(word) < 3 and word_str in {"a", "A", "an", "An"}:
                     buf = word_str
-                else:
-                    if buf in ("a", "A"):
-                        if re.match(vowel_re, word_str):
-                            if is_fp(word, word_str, data["an"]):
-                                message = Report.existing(what="a", where="before vowel")
-                                line = getline_punc(document.body.code, word.start_pos,
-                                                    len(word_str), 50, 30)
-                                reports.append(Report('E', toolname, word, message, line))
-                        else:
-                            if not is_fp(word, word_str, data["a"]):
-                                message = Report.existing(what="a", where="before vowel sound")
-                                line = getline_punc(document.body.code, word.start_pos,
-                                                    len(word_str), 50, 30)
-                                reports.append(Report('E', toolname, word, message, line))
-
-                    elif buf in ("an", "An"):
-                        if re.match(digit_re, word_str):
+                elif buf:
+                    is_a = bool(buf in {"a", "A"})
+                    if re.match(digit_re, word_str):
+                        if not is_a:
                             message = Report.existing(what="an", where="before digit")
                             line = getline_punc(document.body.code, word.start_pos,
                                                 len(word_str), 50, 30)
                             reports.append(Report('E', toolname, word, message, line))
+                    else:
+                        is_cons =  bool(not re.match(vowel_re, word_str))
+                        is_cons_sound = is_cons
+                        key = "a" if is_cons else "an"
+                        if (len(word) == 1 or re.match(letterhyphen_re, word_str) or
+                                POS.isacr(word) or POS.isabbr(word)):
+                            if word_str[0].lower() in data[key]["letter"]:
+                                if len(word) == 1 or word_str not in data[key]["acronym"]:
+                                    is_cons_sound = not is_cons
                         else:
-                            if re.match(vowel_re, word_str):
-                                if not is_fp(word, word_str, data["an"]):
-                                    message = Report.existing(what="an",
-                                                              where="before consonant sound")
-                                    line = getline_punc(document.body.code, word.start_pos,
-                                                        len(word_str), 50, 30)
-                                    reports.append(Report('E', toolname, word, message, line))
-                            else:
-                                if is_fp(word, word_str, data["a"]):
-                                    message = Report.existing(what="an", where="before consonant")
-                                    line = getline_punc(document.body.code, word.start_pos,
-                                                        len(word_str), 50, 30)
-                                    reports.append(Report('E', toolname, word, message, line))
+                            for entry in data[key]["syllable"]:
+                                if re.match(entry, word_str, re.IGNORECASE):
+                                    key = "a" if not is_cons else "an"
+                                    for entry_converse in data[key]["syllable"]:
+                                        if re.match(entry_converse, word_str, re.IGNORECASE):
+                                            if not entry_converse.startswith(entry):
+                                                is_cons_sound = not is_cons
+                                            break
+                                    else:
+                                        is_cons_sound =  not is_cons
+                                    break
+
+                        # print(word_str, is_a, is_cons)
+                        if is_a != is_cons_sound:
+                            where = " ".join(("before", "consonant" if is_cons_sound else "vowel",
+                                              "sound" if is_cons_sound != is_cons else ""))
+                            message = Report.existing(what="a" if is_a else "an",
+                                                      where=where)
+                            line = getline_punc(document.body.code, word.start_pos,
+                                                len(word_str), 50, 30)
+                            reports.append(Report('E', toolname, word, message, line))
 
                     buf = None
 
@@ -269,7 +257,7 @@ def indefinite_article(document, reports, re_lib, data):
                 buf = None
 
         else:
-            if part.parent_node.node_name in ("def", "bullet", "enum", "field", "line"):
+            if part.parent_node.node_name in {"def", "bullet", "enum", "field", "line"}:
                 buf = None
 
     return reports
@@ -310,7 +298,7 @@ def collocation_pre(_):
         return None
 
     # prefixes, file extensions (containing a vowel)
-    ignore = ('ad', 'al', 'ati', 'de', 'ed', 'eg', 'el', 'es', 'ing', 'po', 'py', 're', 'un')
+    ignore = {'ad', 'al', 'ati', 'de', 'ed', 'eg', 'el', 'es', 'ing', 'po', 'py', 're', 'un'}
 
     lexicon_new = []
     for word, _ in lexicon:
@@ -347,13 +335,11 @@ def collocation_pre(_):
     return args
 
 
-def collocation(document, reports, data, config):
-    return listsearch.search(document, reports, data, config)
+def collocation(toolname, document, reports, data, config):
+    return listsearch.search(toolname, document, reports, data, config)
 
 
 def grammar_pre(_):
-    toolname = "grammar"
-
     re_lib = dict()
     pattern_str = r"s's"
     pattern = re.compile(pattern_str)
@@ -380,7 +366,7 @@ def grammar_pre(_):
 
     args = dict()
     args["re_lib"] = re_lib
-    args["config"] = {"severity": 'W', "toolname": toolname}
+    args["config"] = {"severity": 'W'}
 
     return args
 
@@ -428,13 +414,11 @@ def hyphen_pre(_):
     return args
 
 
-def hyphen(document, reports, data, config):
-    return listsearch.search(document, reports, data, config)
+def hyphen(toolname, document, reports, data, config):
+    return listsearch.search(toolname, document, reports, data, config)
 
 
 def passive_pre(_):
-    toolname = "passive"
-
     re_lib = dict()
     pattern_str = (r"(\b", r"\b|\b".join(("be", "being", "been", "am", "is",
                                           "are", "was", "were")), r"\b|",
@@ -449,12 +433,12 @@ def passive_pre(_):
 
     args = dict()
     args["re_lib"] = re_lib
-    args["config"] = {"severity": 'I', "toolname": toolname}
+    args["config"] = {"severity": 'I'}
 
     return args
 
 
-def search_pure(document, reports, re_lib, config):
+def search_pure(toolname, document, reports, re_lib, config):
     """Iterate regex tools."""
     instr_pos = {
         "sect": {"*": ["name"]},
@@ -482,15 +466,14 @@ def search_pure(document, reports, re_lib, config):
                 output = part.code.slice_match_obj(m, 0, True)
                 line = getline_punc(document.body.code, output.start_pos,
                                     output.span_len(True), 50, 0)
-                reports.append(Report(config.get("severity"), config.get("toolname"),
+                reports.append(Report(config.get("severity"), toolname,
                                       output, message, line))
 
     return reports
 
 
-def metric(document, reports):
+def metric(toolname, document, reports):
     """Measure length of segments like paragraphs, sentences and words."""
-    toolname = "metric"
 
     # source: https://www.gov.uk/guidance/content-design/writing-for-gov-uk
     conf = {
@@ -576,21 +559,20 @@ def metric(document, reports):
                     counter["para"] += 1
                 node_prev = node_cur
                 is_last = bool(rst_walker.is_of(node_cur.parent_node,
-                                                ("def", "dir", "enum", "bullet", "field")) and
+                                                {"def", "dir", "enum", "bullet", "field"}) and
                                node_cur.next is None)
                 reports = compare(node_cur, sen_full, counter, reports, is_last=is_last)
                 if is_last:
                     counter["para_short"] = 0
                     node_prev = None
 
-                if (rst_walker.is_of(part, "dir", ("code-block", "default")) or
+                if (rst_walker.is_of(part, "dir", {"code-block", "default"}) or
                         rst_walker.is_of(part, "comment")):
                     counter["para_short"] = 0
                     continue
 
             if (part.parent_node.node_name == "sect" or
-                    (part.parent_node.node_name == "text" and
-                     not rst_walker.is_of(part.parent_node.parent_node, "text"))):
+                    (part.parent_node.node_name == "text" and part.parent_node.indent)):
                 node_cur = part.parent_node
             else:
                 node_cur = None
@@ -602,7 +584,7 @@ def metric(document, reports):
             if (node_cur and node_prev and
                     (node_cur.node_name == "sect" or
                      (rst_walker.is_of(node_cur.parent_node,
-                                       ("def", "dir", "enum", "bullet", "field")) and
+                                       {"def", "dir", "enum", "bullet", "field"}) and
                       node_cur.prev is None))):
                 reports = compare(node_prev, sen_full, counter, reports, is_last=True)
                 counter["para_short"] = 0
@@ -649,10 +631,9 @@ def metric(document, reports):
     return reports
 
 
-def overuse(document, reports):
+def overuse(toolname, document, reports):
     """Overuse of words. Filter with markup, subjects after an determiner,
        transitions at sentence start, the file path and stopwords."""
-    toolname = "overuse"
     threshold_min = 1.8
     threshold_severe = 3.1
     distance_min = 5
@@ -818,24 +799,23 @@ def overuse(document, reports):
     return reports
 
 
-def repeated_words_pre(_):
+def repeated_words_pre(op):
     config = dict()
     # Number of the word within to run the detection.
-    config["buf_size"] = monostylestd.get_override(__file__, "repeated", "buf_size", 4)
+    config["buf_size"] = monostylestd.get_override(__file__, op[0], "buf_size", 4)
     return {"config": config}
 
 
-def repeated_words(document, reports, config):
+def repeated_words(toolname, document, reports, config):
     """Find repeated words e.g. the the example."""
-    toolname = "repeated-words"
 
     def porter_stemmer_patch(word_lower):
         """Distinguish some words."""
         # on vs. one
-        if word_lower in ("one", "ones"):
+        if word_lower in {"one", "ones"}:
             return "one"
         # us vs. use
-        if word_lower in ("use", "uses", "used"):
+        if word_lower in {"use", "uses", "used"}:
             return "use"
 
         return PorterStemmer.stem(word_lower, 0, len(word_lower)-1)
@@ -866,8 +846,8 @@ def repeated_words(document, reports, config):
 
     buf = []
     # config: min distance from where on to apply filter
-    ignore_article = (("a", "an", "the"), 2)
-    ignore_pre_pro = (("and", "or", "to", "as", "of"), 1)
+    ignore_article = ({"a", "an", "the"}, 2)
+    ignore_pre_pro = ({"and", "or", "to", "as", "of"}, 1)
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
         if part.child_nodes.is_empty():
@@ -901,12 +881,11 @@ def repeated_words(document, reports, config):
                 if not is_open:
                     buf.clear()
 
-            if (rst_walker.is_of(part, "text") and
-                    not rst_walker.is_of(part.parent_node.parent_node, "text")):
+            if rst_walker.is_of(part, "text") and part.parent_node.indent:
                 buf.clear()
 
         else:
-            if rst_walker.is_of(part, ("sect", "bullet", "enum", "line", "def", "field")):
+            if rst_walker.is_of(part, {"sect", "bullet", "enum", "line", "def", "field"}):
                 buf.clear()
 
     return reports

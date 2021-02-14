@@ -268,10 +268,10 @@ def exec_command(cmd_args):
     cmd = ["svn"]
     cmd.extend(cmd_args)
 
-    silent = bool(cmd_args[0] in ("info", "propget", "proplist"))
+    silent = bool(cmd_args[0] in {"info", "propget", "proplist"})
     try:
         if not silent:
-            print_over("fetching" if cmd_args[0] in ("status", "diff", "update")
+            print_over("fetching" if cmd_args[0] in {"status", "diff", "update"}
                        else "applying", cmd_args[0], ellipsis="...")
         output = subprocess.check_output(cmd)
     except OSError as err:
@@ -309,7 +309,7 @@ def run_diff(from_vsn, is_internal, path, rev, cached=None):
     if from_vsn:
         print("Current revision:", get_revision(path))
 
-    binary_ext = (".png", ".jpg", ".jpeg", ".gif", ".pyc")
+    binary_ext = {".png", ".jpg", ".jpeg", ".gif", ".pyc"}
     if from_vsn and is_internal:
         for filename in unversioned_files(path, binary_ext):
             try:

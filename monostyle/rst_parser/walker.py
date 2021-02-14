@@ -10,6 +10,15 @@ from monostyle.rst_parser.rst_node import NodeRST
 
 
 def iter_node(root, names=None, enter_pos=True, leafs_only=False, output_root=False):
+    """Iterate over nodes.
+    names -- node.node_name must positive match.
+    enter_pos -- iterate child nodes of positive matches.
+    leafs_only -- yield only leaf nodes.
+    output_root -- yield the root as first.
+    """
+    if isinstance(names, str):
+        names = {names,}
+
     if isinstance(root, NodeRST):
         if output_root:
             yield root
@@ -37,6 +46,15 @@ def iter_node(root, names=None, enter_pos=True, leafs_only=False, output_root=Fa
 
 
 def iter_nodeparts(root, names=None, enter_pos=True, leafs_only=True, output_root=False):
+    """Iterate over node parts.
+    names -- part.node_name must positive match.
+    enter_pos -- iterate child nodes of positive matches.
+    leafs_only -- yield only leaf nodes.
+    output_root -- yield the root as first.
+    """
+    if isinstance(names, str):
+        names = {names,}
+
     if not isinstance(root, NodeRST):
         for node in root.child_nodes:
             yield from iter_nodeparts(node, names, enter_pos, leafs_only)

@@ -294,10 +294,10 @@ class RSTParser:
         newnode.append_part("body", node.code)
         node.child_nodes.append(newnode)
 
-        recorder = ((("literal", "strong", "emphasis", "int-target"), self.inline),
-            (("role-ft", "role-bk"), self.role),
-            (("hyperlink", "dftrole", "subst", "foot", "cit"), self.inline),
-            (("standalone", "mail", "int-target-sw", "hyperlink-sw"), self.single))
+        recorder = (({"literal", "strong", "emphasis", "int-target"}, self.inline),
+            ({"role-ft", "role-bk"}, self.role),
+            ({"hyperlink", "dftrole", "subst", "foot", "cit"}, self.inline),
+            ({"standalone", "mail", "int-target-sw", "hyperlink-sw"}, self.single))
         if name:
             for names, node_typ in recorder:
                 if name in names:
@@ -1307,7 +1307,7 @@ class RSTParser:
                 node.active.body.code = fg_before
                 node.active.code = fg_before
 
-                if name in ("int-target-sw", "hyperlink-sw"):
+                if name in {"int-target-sw", "hyperlink-sw"}:
                     newnode = NodeRST(name[:-3], fg_code)
                     if name in "int-target-sw":
                         newnode.append_part("body_start", code.slice_match_obj(m, 1, True))

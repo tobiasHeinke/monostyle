@@ -11,14 +11,13 @@ import monostyle.util.monostylestd as monostylestd
 from monostyle.util.report import Report
 
 
-def check_pre(_):
+def check_pre(op):
     args = dict()
-    args["data"] = monostylestd.get_override(__file__, "check", "fns", [])
+    args["data"] = monostylestd.get_override(__file__, op[0], "fns", [])
     return args
 
 
-def check(document, reports, data):
-    toolname = "monitor"
+def check(toolname, document, reports, data):
 
     if len(data) == 0:
         return reports
@@ -55,4 +54,4 @@ def check(document, reports, data):
 
 check.reg = []
 
-OPS = (("check", check, check_pre),)
+OPS = (("monitor", check, check_pre),)

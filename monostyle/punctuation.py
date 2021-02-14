@@ -52,8 +52,8 @@ def number_pre(_):
     re_lib["writtenoutspace"] = (pattern, message)
 
     # FP: math, code
-    pattern_str = r"(?:\w |^)([0-9]|1[0-2])(?: \w|$)"
-    pattern = re.compile(pattern_str)
+    pattern_str = r"(?:(?<=\w )|^)([0-9]|1[0-2])(?:(?= \w)|$)"
+    pattern = re.compile(pattern_str, re.MULTILINE)
     message = Report.existing(what="low digit", where="in continuous text")
     re_lib["lowdigit"] = (pattern, message)
 
@@ -125,9 +125,8 @@ def number_pre(_):
     return args
 
 
-def number(document, reports, re_lib):
+def number(toolname, document, reports, re_lib):
     """Check for numbers and units formatting."""
-    toolname = "number"
 
     instr_pos = {
         "field": {"*": ["body"]},
@@ -162,9 +161,7 @@ def number(document, reports, re_lib):
     return reports
 
 
-def pairs_pre(_):
-    toolname = "pairs"
-
+def pairs_pre(op):
     args = dict()
     re_lib = dict()
 
@@ -177,15 +174,14 @@ def pairs_pre(_):
     args["re_lib"] = re_lib
 
     # Max number of lines between the open and close mark.
-    line_span = monostylestd.get_override(__file__, toolname, "max_line_span", 2)
+    line_span = monostylestd.get_override(__file__, op[0], "max_line_span", 2)
     args["config"] = {"max_line_span": line_span}
 
     return args
 
 
-def pairs(document, reports, re_lib, config):
+def pairs(toolname, document, reports, re_lib, config):
     """Check if pairs of inline markup, brackets, quote marks are closed."""
-    toolname = "pairs"
 
     instr_pos = {
         "sect": {"*": ["name"]},
@@ -384,9 +380,8 @@ def mark_pre(_):
     return args
 
 
-def mark(document, reports, re_lib):
+def mark(toolname, document, reports, re_lib):
     """Check for punctuation marks and parenthesis."""
-    toolname = "mark"
     threshold_space = 2
 
     def is_sentence(part, par_node, instr_pos, instr_neg, space_re):
@@ -480,8 +475,8 @@ def mark(document, reports, re_lib):
 
                     # refbox parts
                     if (rst_walker.is_of(par_node, "field",
-                                         ("Hotkey", "Menu", "Panel", "Mode",
-                                          "Tool", "Editor", "Header", "Type"))):
+                                         {"Hotkey", "Menu", "Panel", "Mode",
+                                          "Tool", "Editor", "Header", "Type"})):
                         continue
                     if (rst_walker.is_of(part.next_leaf(), "dir", "default") and
                              not part_str.endswith(" ")):
@@ -501,7 +496,7 @@ def mark(document, reports, re_lib):
                                            " " + part.node_name))
                         reports.append(Report('W', toolname, output, message))
 
-        elif rst_walker.is_of(part, ("role", "hyperlink"), "*", "head"):
+        elif rst_walker.is_of(part, {"role", "hyperlink"}, "*", "head"):
             if re.search(noend_re, str(part.code)):
                 output = part.code.copy().clear(False)
                 message = (re_lib["nopuncend"][1]
@@ -546,9 +541,8 @@ def whitespace_pre(_):
     return args
 
 
-def whitespace(document, reports, re_lib):
+def whitespace(toolname, document, reports, re_lib):
     """Check whitespace chars."""
-    toolname = "whitespace"
 
     text = str(document.code)
     for key, value in re_lib.items():

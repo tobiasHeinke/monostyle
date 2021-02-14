@@ -335,10 +335,10 @@ class EditorSession:
     def __init__(self, mode="text"):
         if mode == "text":
             self._editor_class = Editor
-        elif mode in ("filename", "filename"):
+        elif mode in {"filename", "filename"}:
             self._editor_class = FNEditor
-        elif mode in ("prop", "props", "property", "properties",
-                      "conf", "config", "configuration"):
+        elif mode in {"prop", "props", "property", "properties",
+                      "conf", "config", "configuration"}:
             self._editor_class = PropEditor
         else:
             print("Unknown EditorSession mode:", mode)

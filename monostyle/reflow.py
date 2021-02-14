@@ -178,7 +178,7 @@ def process_para(node, ind_offset, options):
         if node.child_nodes.is_empty():
             yield node
         else:
-            yield from rst_walker.iter_nodeparts(node, ("head", "body", "id_start"),
+            yield from rst_walker.iter_nodeparts(node, {"head", "body", "id_start"},
                                                  leafs_only=True)
 
     boxes = LinkedList()
@@ -506,12 +506,12 @@ def measure_indent(node):
             ind_first = ind_cur
             if not ind_m:
                 par_node = node.parent_node
-                while par_node and par_node.node_name in ("text", "body"):
+                while par_node and par_node.node_name in {"text", "body"}:
                     par_node = par_node.parent_node
 
                 # indent style
                 if (rst_walker.is_of(par_node,
-                        ("dir", "target", "substdef", "footdef", "citdef"), "*", "head")):
+                        {"dir", "target", "substdef", "footdef", "citdef"}, "*", "head")):
                     ind_cur = par_node.parent_node.name_start.code.start_lincol[1] + 3
                 else:
                     ind_cur = node.code.start_lincol[1]

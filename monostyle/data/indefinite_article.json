@@ -4,15 +4,18 @@
   "a":{
 		"syllable": [
 			"hom",
-			"hon",
+			"honest",
+			"hono",
+			"horr",
 			"hotel",
-			"hour"
+			"hour",
+			"uni[dmn]"
 	  ],
 	  "letter": [
 			"f", "h", "l", "m", "n", "r", "s", "x"
 	  ],
 		"acronym": [
-			"NURBS"
+			"NURBS", "RAM"
 		]
   },
   "an":{
@@ -21,12 +24,10 @@
 			"once",
 			"one",
 			"ubi",
-			"una",
+			"una[nr]",
 			"uni",
 			"ur",
-			"usa",
-			"use",
-			"usu",
+			"us[aeu]",
 			"ut"
 	  ],
 	  "letter": [

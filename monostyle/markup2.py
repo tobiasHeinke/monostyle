@@ -24,16 +24,15 @@ def simple_stem(word):
     return word
 
 
-def page_name(document, reports):
+def page_name(toolname, document, reports):
     """Compare page title and file name."""
-    toolname = "page-name"
 
     page = re.search(r"/([\w\-_]+?)(?:/index)?\.rst$", document.code.filename).group(1)
     page_split = []
     for word in re.split(r"[_-]", page):
         page_split.append(simple_stem(word))
 
-    for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
+    for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
         head = str(node.name.code).lower().strip()
         head = re.sub(r"\b(\w)\-", r"\1", head)
         head = re.sub(r"[&/,-]", " ", head)
@@ -45,7 +44,7 @@ def page_name(document, reports):
         match_count = 0
         was_kind = True
         for word in reversed(head_split):
-            if word in ("the", "a", "an", "to", "in", "on", "from"):
+            if word in {"the", "a", "an", "to", "in", "on", "from"}:
                 match_count += 1
                 continue
 
@@ -53,8 +52,8 @@ def page_name(document, reports):
 
             if was_kind:
                 found = False
-                for kind in ("node", "texture", "strip", "effect", "constraint", "modifier",
-                             "physics", "editor", "panel"):
+                for kind in {"node", "texture", "strip", "effect", "constraint", "modifier",
+                             "physics", "editor", "panel"}:
                     if kind.startswith(word):
                         match_count += 1
                         found = True
@@ -96,7 +95,7 @@ def unused_targets_pre(_):
 
     for filename, text in monostylestd.rst_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
-        for node in rst_walker.iter_node(document.body, ("target", "role", "subst")):
+        for node in rst_walker.iter_node(document.body, {"target", "role", "subst"}):
             if node.node_name == "target":
                 if (document.code.filename.endswith("index.rst") or
                         str(node.id.code).startswith("bpy.")):
@@ -112,9 +111,8 @@ def unused_targets_pre(_):
     return args
 
 
-def unused_targets(reports, data):
+def unused_targets(toolname, reports, data):
     """Find unused internal (ref) targets."""
-    toolname = "unused-targets"
 
     for node in data["targets"]:
         if str(node.id.code).strip() not in data["links"]:
@@ -131,7 +129,7 @@ def local_targets_pre(_):
 
     for filename, text in monostylestd.rst_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
-        for node in rst_walker.iter_node(document.body, ("target", "role")):
+        for node in rst_walker.iter_node(document.body, {"target", "role"}):
             if node.node_name == "target":
                 if (document.code.filename.endswith("index.rst") or
                         str(node.id.code).startswith("bpy.")):
@@ -145,9 +143,8 @@ def local_targets_pre(_):
     return args
 
 
-def local_targets(reports, data):
+def local_targets(toolname, reports, data):
     """Find internal (ref) links used on same page only."""
-    toolname = "local--targets"
 
     for node in data["targets"]:
         is_same_file = False
@@ -176,11 +173,10 @@ def link_titles_pre(_):
     return {"data": targets}
 
 
-def link_titles(document, reports, data):
+def link_titles(toolname, document, reports, data):
     """Find internal (ref) links title mismatches the heading title."""
-    toolname = "links-titles"
 
-    for node in rst_walker.iter_node(document.body, ("role",)):
+    for node in rst_walker.iter_node(document.body, "role"):
         if rst_walker.is_of(node, "*", "ref") and node.head:
             id_str = str(node.id.code).strip()
             for target, title_head in data.items():
@@ -221,16 +217,15 @@ def glossary_pre(_):
     return args
 
 
-def glossary(document, reports, data):
+def glossary(toolname, document, reports, data):
     """Unused glossary terms or within glossary only."""
-    toolname = "glossary"
 
     if document.code.filename not in data["glossary_fns"]:
         return reports
 
-    for node in rst_walker.iter_node(document.body, ("dir",), enter_pos=False):
+    for node in rst_walker.iter_node(document.body, "dir", enter_pos=False):
         if rst_walker.is_of(node, "*", "glossary"):
-            for def_node in rst_walker.iter_node(node.body, ("def",), enter_pos=False):
+            for def_node in rst_walker.iter_node(node.body, "def", enter_pos=False):
                 for line in def_node.head.code.splitlines():
                     line_strip = str(line).strip()
                     if line_strip in data["terms_glossary"]:
@@ -246,11 +241,11 @@ def glossary(document, reports, data):
     return reports
 
 
-def tool_title(document, reports):
+def tool_title(toolname, document, reports):
     """Check if a heading matches the tool name in the ref box."""
-    toolname = "tool-title"
+
     last_re = re.compile(r"(?:\-> |\A)([^>]*?)(?:\.\.\.)?\Z")
-    for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
+    for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
         node_next = node.next
         if node_next.node_name == "text" and node.code.isspace():
             node_next = node_next.next

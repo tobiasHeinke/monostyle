@@ -2,7 +2,7 @@
 {
 	"tool_selection": {
 		"markup": {
-			"tools": ["directive", "heading-level", "indent", "kbd", "leak"],
+			"tools": ["directive", "heading-level", "indention", "kbd", "leak"],
 			"ext": ".rst"
 		},
 		"listsearch": {
@@ -10,11 +10,11 @@
 			"ext": ".rst"
 		},
 		"spelling": {
-			"tools": ["search"],
+			"tools": ["new-word"],
 			"ext": ".rst"
 		},
 		"capitalization": {
-			"tools": ["heading", "starting", "pos", "ui"],
+			"tools": ["heading-caps", "start-case", "pos-case", "ui"],
 			"ext": ".rst"
 		},
 		"punctuation": {
@@ -34,7 +34,7 @@
 			"ext": ".rst"
 		},
 		"monitor": {
-			"tools": ["check"],
+			"tools": ["monitor"],
 			"ext": ""
 		}
 	},
@@ -61,17 +61,17 @@
 		"format_str": "{filename}{location} {severity} {output} {message} {fix}{line}",
 		"show_filename": true,
 		"absolute_path": true,
-		"filename_sep": ":",
+		"filename_separator": ":",
 
 		"show_end": false,
-		"loc_end_sep": " - ",
-		"loc_column_sep": ":",
+		"location_span_separator": " - ",
+		"location_column_separator": ":",
 
 		// options: 'long', 'letter', 'ascii', 'icon', 'emoji', 'color', 'shape'
 		"severity_display": "long",
 
-		"output_sep_start": "´",
-		"output_sep_end": "´",
+		"output_separator_start": "´",
+		"output_separator_end": "´",
 		"output_limit": 100,
 		"output_ellipsis": "…",
 

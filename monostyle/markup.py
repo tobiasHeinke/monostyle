@@ -13,15 +13,14 @@ import monostyle.rst_parser.walker as rst_walker
 from monostyle.rst_parser.core import RSTParser
 
 
-def heading_level(document, reports):
+def heading_level(toolname, document, reports):
     """Heading hierarchy defined by the under/overline char."""
-    toolname = "heading-level"
 
     level_chars = ('%', '#', '*', '=', '-', '^', '"', "'")
     levels = {level_char: index for index, level_char in enumerate(level_chars)}
     title_count = 0
     level_prev = 0
-    for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
+    for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
         heading_char = str(node.name_end.code)[0]
 
         level_cur = -1
@@ -82,9 +81,8 @@ def heading_level(document, reports):
     return reports
 
 
-def indention(document, reports):
+def indention(toolname, document, reports):
     """Check RST code line indention."""
-    toolname = "indention"
 
     default_indent = 3
     field_ind_hanging = 3
@@ -249,11 +247,11 @@ def indention(document, reports):
         else:
             if (node.node_name.endswith("-list") or
                     node.node_name.endswith("-table") or
-                    rst_walker.is_of(node, ("sect", "comment", "field", "option", "row", "cell")) or
+                    rst_walker.is_of(node, {"sect", "comment", "field", "option", "row", "cell"}) or
                     rst_walker.is_of(node.parent_node, "text")):
                 continue
 
-            is_code = bool(rst_walker.is_of(node, "dir", ("code-block", "default", "math")))
+            is_code = bool(rst_walker.is_of(node, "dir", {"code-block", "default", "math"}))
             offset = 0
             if ((not node.parent_node and node.node_name == "snippet") or
                     (not node.prev and
@@ -378,14 +376,13 @@ def role_kbd_pre(_):
     return args
 
 
-def role_kbd(document, reports, re_lib):
+def role_kbd(toolname, document, reports, re_lib):
     """Report non-conforming uses of the :kbd: role."""
-    toolname = "role-kbd"
 
     valid_kbd = re_lib["valid_kbd"]
     repeat_kbd = re_lib["repeat_kbd"]
 
-    for node in rst_walker.iter_node(document.body, ("role",), enter_pos=False):
+    for node in rst_walker.iter_node(document.body, "role", enter_pos=False):
         if rst_walker.is_of(node, "role", "kbd"):
             content = str(node.body.code)
 
@@ -598,7 +595,7 @@ def leak_pre(_):
     message = Report.existing(what="unnecessary escape")
     re_lib["escape"] = (pattern, message, False)
 
-    markup_keys.update(("arrow", "arrowlen", "dash", "escape"))
+    markup_keys.update({"arrow", "arrowlen", "dash", "escape"})
 
     # Merge Conflict
     # FP = transition
@@ -629,9 +626,8 @@ def leak_pre(_):
     return args
 
 
-def leak(document, reports, re_lib, data):
+def leak(toolname, document, reports, re_lib, data):
     """Find pieces of leaked markup and suspicious patterns."""
-    toolname = "leak"
 
     names = set(data[0].keys()) if not "*" in data[0].keys() else None
     for node in rst_walker.iter_node(document.body, names, leafs_only=True):
@@ -690,9 +686,9 @@ def leak(document, reports, re_lib, data):
                         message = "leaked "
                         if is_text:
                             direction = None
-                            if m.group(2)[-1] in ("_", ":"):
+                            if m.group(2)[-1] in {"_", ":"}:
                                 direction = False
-                            elif m.group(2)[0] in ("_", ":"):
+                            elif m.group(2)[0] in {"_", ":"}:
                                 direction = True
                             delim = (bool(re.match(r"[\W\s]", m.group(1))),
                                       bool(re.match(r"[\W\s]", m.group(3))))
@@ -724,9 +720,8 @@ def leak(document, reports, re_lib, data):
     return reports
 
 
-def search_directive(document, reports):
+def search_directive(toolname, document, reports):
     """Find unknown/uncommon role and directive names."""
-    toolname = "directive"
 
     roles = (
         'abbr', 'class', 'doc', 'download', 'guilabel', 'index', 'kbd', 'math',
@@ -746,7 +741,7 @@ def search_directive(document, reports):
         'vimeo', 'youtube'
     )
 
-    for node in rst_walker.iter_node(document.body, ("dir", "role", "block-quote")):
+    for node in rst_walker.iter_node(document.body, {"dir", "role", "block-quote"}):
         if node.node_name == "role":
             if node.name:
                 node_name_str = str(node.name.code).strip()
@@ -781,7 +776,7 @@ def search_directive(document, reports):
 OPS = (
     ("directive", search_directive, None),
     ("heading-level", heading_level, None),
-    ("indent", indention, None),
+    ("indention", indention, None),
     ("kbd", role_kbd, role_kbd_pre),
     ("leak", leak, leak_pre)
 )

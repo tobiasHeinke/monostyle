@@ -25,9 +25,8 @@ Segmenter = Segmenter()
 POS = PartofSpeech()
 
 
-def search(document, reports, re_lib, data, config):
+def search(toolname, document, reports, re_lib, data, config):
     """Search for rare or new words."""
-    toolname = "new-word"
     # compare words in the text.
     text_words = []
     for word in word_filtered(document):
@@ -197,7 +196,7 @@ def word_filtered(document):
 
         # refbox parts
         if (par_node.node_name == "field" and
-                (str(par_node.name.code) in ("File", "Maintainer") or
+                (str(par_node.name.code) in {"File", "Maintainer"} or
                     re.match(r"Author(?:[\(/]?s\)?)?", str(par_node.name.code)))):
             continue
 
@@ -301,7 +300,7 @@ def compile_lib():
     return re_lib
 
 
-def search_pre(_):
+def search_pre(op):
     def add_charset(lexicon):
         for entry in lexicon:
             entry.append(set(ord(c) for c in entry[0].lower()))
@@ -324,7 +323,7 @@ def search_pre(_):
         else:
             return None
 
-    threshold = monostylestd.get_override(__file__, "search", "threshold", 3)
+    threshold = monostylestd.get_override(__file__, op[0], "threshold", 3)
     args = dict()
     args["re_lib"] = re_lib
     args["data"] = split_lexicon(add_charset(data))
@@ -334,7 +333,7 @@ def search_pre(_):
 
 
 OPS = (
-    ("search", search, search_pre),
+    ("new-word", search, search_pre),
 )
 
 

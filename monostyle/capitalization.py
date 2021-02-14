@@ -42,7 +42,7 @@ def titlecase(word, is_first_word, is_last_word, name):
     tag = POS.tag(word_str.lower())
     if (word_str[0].islower() !=
             (len(tag) != 0 and
-             (tag[0] in ("preposition", "conjunction", "pronoun", "auxiliary") or
+             (tag[0] in {"preposition", "conjunction", "pronoun", "auxiliary"} or
               tag[0] == "determiner" and tag[1] == "article"))):
         message = Report.misformatted(what="lowercase" if word_str[0].islower() else "uppercase",
                                       where="in " + name)
@@ -56,12 +56,11 @@ def titlecase(word, is_first_word, is_last_word, name):
         return message, fix
 
 
-def admonition_title(document, reports):
+def admonition_title(toolname, document, reports):
     """Case of admonition titles."""
-    toolname = "admonition-title"
     threshold = 0.2
 
-    for node in rst_walker.iter_node(document.body, ("dir",)):
+    for node in rst_walker.iter_node(document.body, "dir"):
         if rst_walker.is_of(node, "*", ('admonition', 'hint', 'important',
                                         'note', 'tip', 'warning')):
             if node.head and node.body:
@@ -82,7 +81,7 @@ def admonition_title(document, reports):
     return reports
 
 
-def heading_cap_pre(_):
+def heading_caps_pre(_):
     re_lib = dict()
 
     pattern_str = r"\-[a-z]"
@@ -108,9 +107,8 @@ def heading_cap_pre(_):
     return {"re_lib": re_lib}
 
 
-def heading_cap(document, reports, re_lib):
+def heading_caps(toolname, document, reports, re_lib):
     """Check the heading title capitalization."""
-    toolname = "heading-capitalization"
 
     instr_pos = {
         "*": {"*": ["head", "body"]}
@@ -122,7 +120,7 @@ def heading_cap(document, reports, re_lib):
         "literal": "*", "standalone": "*"
     }
 
-    for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
+    for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
         is_first_word = True
         is_faq = bool(re.search(r"\?\n", str(node.name.child_nodes.last().code)))
         for part in rst_walker.iter_nodeparts_instr(node.name, instr_pos, instr_neg, False):
@@ -157,9 +155,8 @@ def heading_cap(document, reports, re_lib):
     return reports
 
 
-def pos_case(document, reports):
+def pos_case(toolname, document, reports):
     """Find Capitalized non-nouns (i.a.) which can be a typo or missing punctuation."""
-    toolname = "pos-case"
 
     instr_pos = {
         "field": {"*": ["name", "body"]},
@@ -189,11 +186,11 @@ def pos_case(document, reports):
                     continue
 
                 word_str = str(word)
-                if word_str[0].islower() or word_str in ("I", "Y"):
+                if word_str[0].islower() or word_str in {"I", "Y"}:
                     continue
 
                 tag = POS.tag(word_str.lower())
-                if len(tag) != 0 and tag[0] not in ("noun", "abbreviation", "adjective", "verb"):
+                if len(tag) != 0 and tag[0] not in {"noun", "abbreviation", "adjective", "verb"}:
                     message = Report.misformatted(what="uppercase " + tag[0])
                     reports.append(Report('W', toolname, word, message, sen))
 
@@ -206,7 +203,7 @@ def pos_case(document, reports):
     return reports
 
 
-def starting_pre(_):
+def start_case_pre(_):
     re_lib = dict()
     punc_sent = CharCatalog.data["terminal"]["final"] + ':'
     pare_open = CharCatalog.data["bracket"]["left"]["normal"]
@@ -237,9 +234,8 @@ def starting_pre(_):
     return args
 
 
-def starting(document, reports, re_lib):
+def start_case(toolname, document, reports, re_lib):
     """Check case at the start of paragraphs, sentences and parenthesis."""
-    toolname = "starting"
 
     instr_pos = {
         "field": {"*": ["name", "body"]},
@@ -357,9 +353,8 @@ def property_noun_pre(_):
     return args
 
 
-def property_noun(document, reports, data, config):
+def property_noun(toolname, document, reports, data, config):
     """Find in minority lowercase words."""
-    toolname = "property-noun"
 
     for part in rst_walker.iter_nodeparts_instr(document.body, config["instr_pos"],
                                                 config["instr_neg"]):
@@ -379,7 +374,7 @@ def property_noun(document, reports, data, config):
     return reports
 
 
-def typ_caps_pre(_):
+def typ_case_pre(_):
     """Find lowercase types."""
     global listsearch
     import monostyle.listsearch as listsearch
@@ -387,7 +382,7 @@ def typ_caps_pre(_):
 
     def typ_titles(document, b_type, searchlist):
         """Get page title and create versions where one word is not uppercase."""
-        for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
+        for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
             head = str(node.name.code).strip()
             head = head.replace('\n', '')
 
@@ -466,13 +461,12 @@ def typ_caps_pre(_):
     return args
 
 
-def typ_caps(document, reports, data, config):
-    return listsearch.search(document, reports, data, config)
+def typ_case(toolname, document, reports, data, config):
+    return listsearch.search(toolname, document, reports, data, config)
 
 
-def ui_case(document, reports):
-    """Check caps in definition list terms."""
-    toolname = "ui-case"
+def ui_case(toolname, document, reports):
+    """Check the capitalization in definition list terms."""
 
     instr_pos = {
         "*": {"*": ["head", "body"]}
@@ -484,7 +478,7 @@ def ui_case(document, reports):
         "standalone": "*", "literal": "*", "substitution": "*"
     }
     icon_re = re.compile(r"\([^\)]*?\)\s*\Z")
-    for node in rst_walker.iter_node(document.body, ("def",)):
+    for node in rst_walker.iter_node(document.body, "def"):
         is_first_word = True
         for part in rst_walker.iter_nodeparts_instr(node.head.child_nodes.first().body,
                                                     instr_pos, instr_neg, False):
@@ -519,11 +513,11 @@ def ui_case(document, reports):
 
 OPS = (
     ("admonition-title", admonition_title, None),
-    ("heading", heading_cap, heading_cap_pre),
-    ("pos", pos_case, None),
-    ("property", property_noun, property_noun_pre),
-    ("starting", starting, starting_pre),
-    ("type", typ_caps, typ_caps_pre),
+    ("heading-caps", heading_caps, heading_caps_pre),
+    ("pos-case", pos_case, None),
+    ("property-noun", property_noun, property_noun_pre),
+    ("start-case", start_case, start_case_pre),
+    ("type", typ_case, typ_case_pre),
     ("ui", ui_case, None),
 )
 

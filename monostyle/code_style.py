@@ -18,9 +18,8 @@ POS = PartofSpeech()
 CharCatalog = CharCatalog()
 
 
-def flavor(document, reports):
+def flavor(toolname, document, reports):
     """Check if the preferred markup is used."""
-    toolname = "flavor"
 
     dash_re = re.compile(r"(?:\D |\A)\-(?= \D|$|\Z)")
     emdash_re = re.compile(r"(?:[^-]|\A)\-{3}(?=[^-]|\Z)")
@@ -42,7 +41,7 @@ def flavor(document, reports):
                 message = Report.misformatted(what="wrong char", where="horizontal line")
                 reports.append(Report('W', toolname, output, message))
 
-        if node.node_name in ("bullet", "enum"):
+        if node.node_name in {"bullet", "enum"}:
             if node.node_name == "bullet":
                 if not str(node.name_start.code).startswith('-'):
                     par_node = node.parent_node.parent_node.parent_node.parent_node
@@ -61,7 +60,7 @@ def flavor(document, reports):
         if node.node_name == "enum-list":
             first_node = node.body.child_nodes.first()
             if (str(first_node.name.code).strip() != "#" and
-                    not rst_walker.is_of(node.parent_node, "dir", ("figure", "image"), "body")):
+                    not rst_walker.is_of(node.parent_node, "dir", {"figure", "image"}, "body")):
                 output = first_node.name.code.copy().clear(True)
                 message = Report.misformatted(what="not auto-named", where="enumerated list")
                 reports.append(Report('W', toolname, output, message))
@@ -82,8 +81,6 @@ def flavor(document, reports):
 
 
 def line_style_pre(_):
-    toolname = "linestyle"
-
     pare_close = CharCatalog.data["bracket"]["right"]["normal"]
     word_inter = CharCatalog.data["connector"]["hyphen"]
     word_inter += CharCatalog.data["connector"]["apostrophe"]
@@ -116,15 +113,14 @@ def line_style_pre(_):
 
     args = dict()
     args["re_lib"] = re_lib
-    args["config"] = {"severity": 'I', "toolname": toolname}
 
     return args
 
 
-def line_style(document, reports, re_lib, config):
+def line_style(toolname, document, reports, re_lib):
     """Check line wrapping."""
-    for node in rst_walker.iter_node(document.body, ("text", "block-quote"), enter_pos=False):
-        if node.parent_node.parent_node.node_name == "sect":
+    for node in rst_walker.iter_node(document.body, {"text", "block-quote"}, enter_pos=False):
+        if rst_walker.is_of(node.parent_node, {"sect", "def"}):
             continue
 
         text = str(node.code)
@@ -146,15 +142,13 @@ def line_style(document, reports, re_lib, config):
                 output = node.code.slice_match_obj(m, 0, True)
                 line = getline_punc(node.code, output.start_pos,
                                     output.span_len(True), 50, 0)
-                reports.append(Report(config.get("severity"), config.get("toolname"), output,
-                                      message, line, "reflow"))
+                reports.append(Report('I', toolname, output, message, line, "reflow"))
 
     return reports
 
 
-def long_line(document, reports):
+def long_line(toolname, document, reports):
     """Finds overly long lines."""
-    toolname = "long-line"
     limit = 118
 
     instr_pos = {
@@ -178,7 +172,7 @@ def long_line(document, reports):
                     if rst_walker.is_of(part, "text") and re.match(r".?\n", str(line)):
                         prev_node = part.parent_node.prev
                         if prev_node and prev_node.code.end_lincol[0] == part.code.start_lincol[0]:
-                            if prev_node.node_name in ("hyperlink", "standalone", "role"):
+                            if prev_node.node_name in {"hyperlink", "standalone", "role"}:
                                 if (prev_node.id and
                                         prev_node.id.code.span_len(True) + 4 > limit):
                                     line = None
@@ -198,11 +192,10 @@ def long_line(document, reports):
     return reports
 
 
-def heading_lines(document, reports):
+def heading_lines(toolname, document, reports):
     """Heading over/underline char count and indent."""
-    toolname = "heading-line-length"
 
-    for node in rst_walker.iter_node(document.body, ("sect",), enter_pos=False):
+    for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
         heading_char = str(node.name_end.code)[0]
         ind = 0 if heading_char not in {'%', '#'} else 2
         title_len = len(str(node.name.code).strip()) + ind * 2
@@ -261,9 +254,8 @@ def is_blank_node(node):
     return False
 
 
-def blank_line(document, reports):
+def blank_line(toolname, document, reports):
     """Blank line markup formatting."""
-    toolname = "blank-line"
 
     def counter(node, skip=False, stop_cond=None, invert=False):
         count = 0
@@ -405,9 +397,8 @@ def blank_line(document, reports):
     return reports
 
 
-def style_add(document, reports):
+def style_add(toolname, document, reports):
     """Check for additional markup style."""
-    toolname = "styleadd"
 
     for node in rst_walker.iter_node(document.body):
         if node.node_name == "hyperlink":
@@ -424,19 +415,19 @@ def style_add(document, reports):
             while next_node and (next_node.node_name == "target" or is_blank_node(next_node)):
                 next_node = next_node.next
 
-            if rst_walker.is_of(next_node, "dir", ("figure", "image", "list-table")):
+            if rst_walker.is_of(next_node, "dir", {"figure", "image", "list-table"}):
                 is_tab = False
                 if rst_walker.is_of(next_node, "*", "list-table"):
                     is_tab = True
                     first_node = None
                     if next_node.body:
                         first_node = next_node.body.child_nodes.first()
-                        while first_node and first_node.node_name in ("bullet", "bullet-list"):
+                        while first_node and first_node.node_name in {"bullet", "bullet-list"}:
                             if first_node.body.child_nodes.is_empty():
                                 break
                             first_node = first_node.body.child_nodes.first()
 
-                    is_fig = bool(rst_walker.is_of(first_node, "dir", ("figure", "image")))
+                    is_fig = bool(rst_walker.is_of(first_node, "dir", {"figure", "image"}))
                 else:
                     is_fig = True
 

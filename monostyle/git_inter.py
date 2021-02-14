@@ -196,10 +196,10 @@ def move(src, dst):
 def exec_command(cmd_args, cwd=None):
     cmd = ["git"]
     cmd.extend(cmd_args)
-    silent = bool(cmd_args[0] in ("show",))
+    silent = bool(cmd_args[0] == "show")
     try:
         if not silent:
-            print_over("fetching" if cmd_args[0] in ("status", "diff", "update", "remote")
+            print_over("fetching" if cmd_args[0] in {"status", "diff", "update", "remote"}
                        else "applying", cmd_args[0], ellipsis="...")
         output = subprocess.check_output(cmd, cwd=cwd)
     except OSError as err:
@@ -239,7 +239,7 @@ def run_diff(from_vsn, is_internal, path, rev, cached):
         print("Current revision:", get_revision(path))
 
     if from_vsn and is_internal:
-        binary_ext = (".png", ".jpg", ".jpeg", ".gif", ".pyc")
+        binary_ext = {".png", ".jpg", ".jpeg", ".gif", ".pyc"}
         for filename in unversioned_files(path, binary_ext):
             try:
                 with open(filename, "r", encoding="utf-8") as f:

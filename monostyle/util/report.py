@@ -184,8 +184,8 @@ class Report():
     conditional = MessageTemplate("{what} {?where} should be {with_what} {when}").substitute
     option = MessageTemplate("{what} {?where} should be either {with_what}").substitute
 
-    message_templates = ("quantity", "existing", "missing", "under", "over",
-                     "misplaced", "misformatted", "substitution", "conditional", "option")
+    message_templates = {"quantity", "existing", "missing", "under", "over",
+                     "misplaced", "misformatted", "substitution", "conditional", "option"}
 
 
     def override_templates(new_templates):
@@ -248,20 +248,22 @@ class Report():
     def repr(self, options=None):
         if options is None:
             options = {}
+
+        format_str = "{filename}{location} {severity} {output} {message}{line}"
         options = {
-            "format_str": "{filename}{location} {severity} {output} {message}{line}",
+            "format_str": format_str,
             "show_filename": True,
             "absolute_path": False,
-            "filename_sep": ":",
+            "filename_separator": ":",
 
             "show_end": False,
-            "loc_end_sep": " - ",
-            "loc_column_sep": ":",
+            "location_span_separator": " - ",
+            "location_column_separator": ":",
 
             "severity_display": "long",
 
-            "output_sep_start": "'",
-            "output_sep_end": "'",
+            "output_separator_start": "'",
+            "output_separator_end": "'",
             "output_limit": 100,
             "output_ellipsis": "…",
 
@@ -279,9 +281,10 @@ class Report():
 
         if not options.get("file_title", False) and options["show_filename"]:
             if options["absolute_path"]:
-                entries["filename"] = self.output.filename + options["filename_sep"]
+                entries["filename"] = self.output.filename
             else:
-                entries["filename"] = path_to_rel(self.output.filename) + options["filename_sep"]
+                entries["filename"] = path_to_rel(self.output.filename)
+            entries["filename"] += options["filename_separator"]
 
         sev_map = self.severity_maps.get(options["severity_display"], self.severity_maps["letter"])
         entries["severity"] = sev_map.get(self.severity, sev_map["U"])
@@ -290,27 +293,27 @@ class Report():
 
         if self.output.start_lincol and self.output.start_lincol[0] != -1:
             entries["location"] = "".join((str(self.output.start_lincol[0] + 1),
-                                           options["loc_column_sep"],
+                                           options["location_column_separator"],
                                            str(self.output.start_lincol[1] + 1)))
             if options["show_end"] and self.output.start_lincol != self.output.end_lincol:
-                entries["location"] += "".join((options["loc_end_sep"],
+                entries["location"] += "".join((options["location_span_separator"],
                                                 str(self.output.end_lincol[0] + 1),
-                                                options["loc_column_sep"],
+                                                options["location_column_separator"],
                                                 str(self.output.end_lincol[1] + 1)))
 
         elif self.output.start_pos != -1:
             entries["location"] = str(self.output.start_pos)
 
             if options["show_end"] and self.output.start_pos != self.output.end_pos:
-                entries["location"] += options["loc_end_sep"] + str(self.output.end_pos)
+                entries["location"] += options["location_span_separator"] + str(self.output.end_pos)
 
         if len(self.output) != 0:
             entries["output"] = str(self.output).replace("\n", '¶')
             if len(entries["output"]) > options["output_limit"]:
                 entries["output"] = entries["output"][:options["output_limit"]]
                 entries["output"] += options["output_ellipsis"]
-            entries["output"] = options["output_sep_start"] + entries["output"] + \
-                                options["output_sep_end"]
+            entries["output"] = options["output_separator_start"] + entries["output"] + \
+                                options["output_separator_end"]
 
         entries["message"] = self.message
 
@@ -324,7 +327,11 @@ class Report():
         if options["show_autofix"] and self.fix is not None:
             entries["fix"] = self.fix_mark_map.get(options["autofix_display"],
                                                    self.fix_mark_map["long"])
-        return options["format_str"].format(**entries)
+
+        try:
+            return options["format_str"].format(**entries)
+        except KeyError:
+            return format_str.format(**entries)
 
 
     def __repr__(self):

@@ -18,14 +18,14 @@ def get_link_titles(rst_parser):
     for filename, text in monostylestd.rst_texts():
         doc = rst_parser.document(filename, text)
         doc.body = rst_parser.parse_block(doc.body)
-        for node in rst_walker.iter_node(doc.body, ("sect",)):
+        for node in rst_walker.iter_node(doc.body, "sect"):
             filename = monostylestd.path_to_rel(filename, "rst")
             filename = '/' + filename[:-4]
 
             titles[filename] = node.name
             break
 
-        for node in rst_walker.iter_node(doc.body, ("target",)):
+        for node in rst_walker.iter_node(doc.body, "target"):
             node_next = node.next
             while node_next:
                 if (node_next.node_name in {"target", "comment", "substdef"} or
@@ -45,7 +45,7 @@ def get_link_titles(rst_parser):
 
 def resolve_link_title(document, titles, targets):
     """Insert the link title if it is not set in the role."""
-    for node in rst_walker.iter_node(document.body, ("role",)):
+    for node in rst_walker.iter_node(document.body, "role"):
         name = str(node.name.code).strip() if node.name else ""
         if name in {"doc", "ref", "any"} and not node.head:
             link_content = str(node.id.code).strip()
@@ -81,7 +81,7 @@ def resolve_subst(document, gobal_substdef):
                  for key, value in gobal_substdef.items())
 
     refs = {}
-    for node in rst_walker.iter_node(document.body, ("substdef", "subst")):
+    for node in rst_walker.iter_node(document.body, {"substdef", "subst"}):
         id_str = str(node.id.code).strip() if node.id else ""
         if node.node_name == "subst":
             if id_str not in refs.keys():
@@ -89,7 +89,7 @@ def resolve_subst(document, gobal_substdef):
             refs[id_str].append(node)
         else:
             deps = set()
-            for node_subst in rst_walker.iter_node(node.head, ("subst",)):
+            for node_subst in rst_walker.iter_node(node.head, "subst"):
                 sub_id_str = str(node_subst.id.code).strip() if node.id else ""
                 if sub_id_str not in refs.keys():
                     refs.setdefault(sub_id_str, [])

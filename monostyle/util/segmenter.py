@@ -37,10 +37,10 @@ class Segmenter:
         apostrophe = CC.data["connector"]["apostrophe"]
         # abbreviation
         pattern_str = (
-            r"(\b(?:(?:[", CC.unicode_set("A-Za-z", 0, 7), r"]\.){2,})|",
+            r"(\b(?:(?:[", CC.unicode_set("A-Za-z0-9", 0, 7), r"]\.){2,})|",
             # compound: dash with letters on both sides and
             # one at start and end (for pre-/suffixes).
-            r"(?:[", hyphen, r"]|\b)[", CC.unicode_set("A-Za-z", 0, 7), r"](?:\w*",
+            r"(?:[", hyphen, r"]|\b)[", CC.unicode_set("A-Za-z0-9", 0, 7), r"](?:\w*",
             # contraction: with letters on both sides and after s at word end.
             r"(?<=\w)[", apostrophe, hyphen, r"]?(?=\w)\w*)*",
             r"(?:(?<=s)[" + apostrophe + r"](?!\w)|\b)",
@@ -50,7 +50,7 @@ class Segmenter:
         self.word_re = re.compile(''.join(pattern_str))
         # word only
         self.wordsub_re = re.compile(r"\b(\w+?)\b")
-        self.numbersub_re = re.compile(r"\A\d+\Z")
+        self.number_filter_re = re.compile(r"\A[+-]?\d[\d,.]*\Z")
 
         # number
         pattern_str = (
@@ -201,19 +201,21 @@ class Segmenter:
             yield fg.slice(fg.loc_to_abs(buf_start), after_inner=True)
 
 
-    def iter_word(self, fg):
+    def iter_word(self, fg, filter_numbers=True):
         word_re = self.word_re
+        number_filter_re = self.number_filter_re
         fg_str = str(fg)
         for word_m in re.finditer(word_re, fg_str):
-            yield fg.slice_match_obj(word_m, 1, True)
+            if not filter_numbers or not re.match(number_filter_re, word_m.group(0)):
+                yield fg.slice_match_obj(word_m, 1, True)
 
 
     def iter_wordsub(self, fg, filter_numbers=True):
         wordsub_re = self.wordsub_re
-        nbrsub_re = self.numbersub_re
+        number_filter_re = self.number_filter_re
         fg_str = str(fg)
         for wordsub_m in re.finditer(wordsub_re, fg_str):
-            if not filter_numbers or not re.match(nbrsub_re, wordsub_m.group(0)):
+            if not filter_numbers or not re.match(number_filter_re, wordsub_m.group(0)):
                 yield fg.slice_match_obj(wordsub_m, 0, True)
 
 
