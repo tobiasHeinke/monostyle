@@ -250,10 +250,10 @@ def search(toolname, document, reports, data, config):
 
 
 OPS = (
-    ("blender/UI", search, search_pre, True, "I"),
+    ("avoid/*", search, search_pre, True, "BI"),
     ("blender/Editors", search, search_pre, True, ""),
     ("blender/Modes", search, search_pre, True, ""),
-    ("avoid/*", search, search_pre, True, "BI"),
+    ("blender/UI", search, search_pre, True, "I"),
     ("dev/*", search, search_pre, True, "BI"),
     ("simplify", search, search_pre, True, "BI")
 )

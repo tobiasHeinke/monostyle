@@ -19,244 +19,6 @@ POS = PartofSpeech()
 CharCatalog = CharCatalog()
 
 
-def number_pre(_):
-    re_lib = dict()
-    # FP: code, literal, Years
-    start = r"(?:(?<=[^\d,.])|\A)"
-    pattern_str = start + r"[\d,]*\d{4}"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="separator", where="between four digits")
-    re_lib["digitsep"] = (pattern, message)
-
-    pattern_str = start + r"\d,\d{1,2}\b"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="separator", where="between less than four digits")
-    re_lib["digitsepless"] = (pattern, message)
-
-    pattern_str = start + r"0,\d"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="separator", where="after zero")
-    re_lib["digitsepzero"] = (pattern, message)
-
-    pattern_str = r"\d \d"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="space", where="between digits")
-    re_lib["digitspace"] = (pattern, message)
-
-    written_out = r"\b" + r"\b|\b".join(POS.data["determiner"]["numeral"]["cardinal"])
-    written_out += r"\b|" + r"\b|\b".join(POS.data["determiner"]["numeral"]["ordinal"])
-    written_out += r"\b|" + r"\b|\b".join(("half", "halves", "thirds?"))
-    pattern_str = r"(?:" + written_out + r") (?:" + written_out + r")"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="hyphen", where="between written-out numbers")
-    re_lib["writtenoutspace"] = (pattern, message)
-
-    # FP: math, code
-    pattern_str = r"(?:(?<=\w )|^)([0-9]|1[0-2])(?:(?= \w)|$)"
-    pattern = re.compile(pattern_str, re.MULTILINE)
-    message = Report.existing(what="low digit", where="in continuous text")
-    re_lib["lowdigit"] = (pattern, message)
-
-    pattern_str = start + r"\.\d"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="zero", where="in front of a decimal point")
-    re_lib["nozero"] = (pattern, message)
-
-    pattern_str = start + r"0[1-9]"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="zero", where="at number start")
-    re_lib["zeronodot"] = (pattern, message)
-
-    pattern_str = start + r"\d\.\d*0{2,}(?=\D|\Z)"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="zeros", where="at number end")
-    re_lib["zerotrail"] = (pattern, message)
-
-
-    pattern_str = r"\d ?x( ?\d)?"
-    pattern = re.compile(pattern_str)
-    message = Report.option(what="x letter", with_what="times or × sign")
-    re_lib["times"] = (pattern, message)
-
-    pattern_str = r"\d\.\.+\d"
-    pattern = re.compile(pattern_str)
-    message = Report.option(what="range separator", with_what="to or dash")
-    re_lib["range"] = (pattern, message)
-
-    pattern_str = r"\D(?:0|100)%"
-    pattern = re.compile(pattern_str)
-    message = Report.option(what="percentage limits", with_what="written out no or fully")
-    re_lib["percentlimit"] = (pattern, message)
-
-    #-----------------
-
-    pattern_str = r"\b[0-9]d\b"
-    pattern = re.compile(pattern_str)
-    message = Report.misformatted(what="lowercase dimension letter")
-    re_lib["dimension"] = (pattern, message)
-
-    pattern_str = r"\d [%‰‱]"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="space", where="before percentage sign")
-    re_lib["percent"] = (pattern, message)
-
-    pattern_str = r"\d °(?! ?C\b)"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="space", where="before degree sign")
-    re_lib["degree"] = (pattern, message)
-
-    pattern_str = r"\d° ?C\b|° C\b"
-    pattern = re.compile(pattern_str)
-    message = Report.substitution(what="Celsius", with_what="°C")
-    re_lib["celsius"] = (pattern, message)
-
-    units = (
-        'D', 'th', 'nd', 'st', 'rd', # math
-        'px', 'p', 'bit', r'ki?', r'Mi?B', r'Gi?B', r'Ti?B' # digital
-    )
-    pattern_str = r"\d(?!\W|\d|" + r'\b|'.join(units) + r"\b|\Z)"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="space", where="before physics unit")
-    re_lib["nospaceunit"] = (pattern, message)
-
-    args = dict()
-    args["re_lib"] = re_lib
-
-    return args
-
-
-def number(toolname, document, reports, re_lib):
-    """Check for numbers and units formatting."""
-
-    instr_pos = {
-        "field": {"*": ["body"]},
-        "*": {"*": ["head", "body"]}
-    }
-    instr_neg = {
-        "dir": {
-            "figure": ["head"],
-            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
-        },
-        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*", "comment": "*",
-        "role": {"kbd": "*"},
-        "literal": "*", "standalone": "*", "footref": "*", "citref": "*"
-    }
-
-    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        part_str = str(part.code)
-        for key, value in re_lib.items():
-            pattern = value[0]
-            for m in re.finditer(pattern, part_str):
-                if (key == "lowdigit" and
-                        (rst_walker.is_of(part, "role", {"math", "sub", "sup"}) or
-                         rst_walker.is_of(part, "dir", "math"))):
-                    continue
-
-                output = part.code.slice_match_obj(m, 0, True)
-                line = getline_punc(document.body.code, output.start_pos,
-                                    output.span_len(True), 50, 0)
-                reports.append(Report('W', toolname, output, value[1], line))
-
-    return reports
-
-
-def pairs_pre(op):
-    args = dict()
-    re_lib = dict()
-
-    # FP/FN: s' closing
-    # FP: cut heading line
-    pattern_str = r"[\(\[\{\)\]\}\]\"]|(?<!\w)'|(?<![sS])'(?!\w)"
-    pattern = re.compile(pattern_str)
-    re_lib["pairchar"] = pattern
-
-    args["re_lib"] = re_lib
-
-    # Max number of lines between the open and close mark.
-    line_span = monostylestd.get_override(__file__, op[0], "max_line_span", 2)
-    args["config"] = {"max_line_span": line_span}
-
-    return args
-
-
-def pairs(toolname, document, reports, re_lib, config):
-    """Check if pairs of inline markup, brackets, quote marks are closed."""
-
-    instr_pos = {
-        "sect": {"*": ["name"]},
-        "field": {"*": ["name", "body"]},
-        "*": {"*": ["head", "body"]}
-    }
-    instr_neg = {
-        "dir": {"code-block": "*", "default": "*", "math": "*", "youtube": "*", "vimeo": "*"},
-        "substdef": {"unicode": "*", "replace": "*"},
-        "doctest": "*", "target": "*", "comment": "*",
-        "role": {"kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"},
-        "literal": "*", "standalone": "*"
-    }
-
-    max_line_span = config.get("max_line_span")
-    stack = []
-    pair_re = re_lib["pairchar"]
-    pairs_map = {')': '(', ']': '[', '}': '{'}
-
-    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        for line in part.code.splitlines():
-            line_str = str(line)
-            for pair_m in re.finditer(pair_re, line_str):
-                pair_char = pair_m.group(0)
-                for index, entry in enumerate(reversed(stack)):
-                    if (entry[0] == pair_char or
-                            (pair_char in pairs_map and entry[0] == pairs_map[pair_char])):
-
-                        if (max_line_span is not None and
-                                line.start_lincol[0] - entry[1][0] > max_line_span):
-                            lincol_abs = line.loc_to_abs((0, pair_m.start(0)))
-                            message = "long span"
-                            message += " - " + str(lincol_abs[0] + 1) + ","
-                            message += str(lincol_abs[1] + 1)
-                            output = Fragment(document.code.filename, entry[0], -1,
-                                              start_lincol=entry[1])
-                            reports.append(Report('W', toolname, output, message))
-
-                        # invert index
-                        index = len(stack) - 1 - index
-                        stack.pop(index)
-                        break
-
-                else:
-                    stack.append((pair_char, line.loc_to_abs((0, pair_m.start(0)))))
-
-    if len(stack) != 0:
-        message = "unclosed pairs"
-        for entry in stack:
-            output = Fragment(document.code.filename, entry[0], -1, start_lincol=entry[1])
-            reports.append(Report('W', toolname, output, message))
-
-    if max_line_span is not None:
-        for node in rst_walker.iter_node(document.body,
-                                         ("literal", "strong", "emphasis", "int-target",
-                                          "role", "hyperlink")):
-
-            if not node.body_start or not node.body_end:
-                # single word int-target or hyperlink
-                continue
-
-            if (node.body_start.code.end_lincol[0] - node.body_end.code.start_lincol[0] >
-                    max_line_span):
-                message = "long span"
-                message += " - " + str(node.body_start.code.end_lincol[0] + 1)
-                message += "," + str(node.body_end.code.start_lincol[1] + 1)
-                reports.append(Report('W', toolname, node.body_start.code, message))
-
-            if node.body_start.code.end_pos == node.body_end.code.start_pos:
-                message = "zero span"
-                reports.append(Report('W', toolname, node.code, message))
-
-    return reports
-
-
 def mark_pre(_):
     re_lib = dict()
     punc = CharCatalog.data["terminal"]["final"] + CharCatalog.data["secondary"]["final"]
@@ -507,6 +269,244 @@ def mark(toolname, document, reports, re_lib):
     return reports
 
 
+def number_pre(_):
+    re_lib = dict()
+    # FP: code, literal, Years
+    start = r"(?:(?<=[^\d,.])|\A)"
+    pattern_str = start + r"[\d,]*\d{4}"
+    pattern = re.compile(pattern_str)
+    message = Report.missing(what="separator", where="between four digits")
+    re_lib["digitsep"] = (pattern, message)
+
+    pattern_str = start + r"\d,\d{1,2}\b"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="separator", where="between less than four digits")
+    re_lib["digitsepless"] = (pattern, message)
+
+    pattern_str = start + r"0,\d"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="separator", where="after zero")
+    re_lib["digitsepzero"] = (pattern, message)
+
+    pattern_str = r"\d \d"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="space", where="between digits")
+    re_lib["digitspace"] = (pattern, message)
+
+    written_out = r"\b" + r"\b|\b".join(POS.data["determiner"]["numeral"]["cardinal"])
+    written_out += r"\b|" + r"\b|\b".join(POS.data["determiner"]["numeral"]["ordinal"])
+    written_out += r"\b|" + r"\b|\b".join(("half", "halves", "thirds?"))
+    pattern_str = r"(?:" + written_out + r") (?:" + written_out + r")"
+    pattern = re.compile(pattern_str)
+    message = Report.missing(what="hyphen", where="between written-out numbers")
+    re_lib["writtenoutspace"] = (pattern, message)
+
+    # FP: math, code
+    pattern_str = r"(?:(?<=\w )|^)([0-9]|1[0-2])(?:(?= \w)|$)"
+    pattern = re.compile(pattern_str, re.MULTILINE)
+    message = Report.existing(what="low digit", where="in continuous text")
+    re_lib["lowdigit"] = (pattern, message)
+
+    pattern_str = start + r"\.\d"
+    pattern = re.compile(pattern_str)
+    message = Report.missing(what="zero", where="in front of a decimal point")
+    re_lib["nozero"] = (pattern, message)
+
+    pattern_str = start + r"0[1-9]"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="zero", where="at number start")
+    re_lib["zeronodot"] = (pattern, message)
+
+    pattern_str = start + r"\d\.\d*0{2,}(?=\D|\Z)"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="zeros", where="at number end")
+    re_lib["zerotrail"] = (pattern, message)
+
+
+    pattern_str = r"\d ?x( ?\d)?"
+    pattern = re.compile(pattern_str)
+    message = Report.option(what="x letter", with_what="times or × sign")
+    re_lib["times"] = (pattern, message)
+
+    pattern_str = r"\d\.\.+\d"
+    pattern = re.compile(pattern_str)
+    message = Report.option(what="range separator", with_what="to or dash")
+    re_lib["range"] = (pattern, message)
+
+    pattern_str = r"\D(?:0|100)%"
+    pattern = re.compile(pattern_str)
+    message = Report.option(what="percentage limits", with_what="written out no or fully")
+    re_lib["percentlimit"] = (pattern, message)
+
+    #-----------------
+
+    pattern_str = r"\b[0-9]d\b"
+    pattern = re.compile(pattern_str)
+    message = Report.misformatted(what="lowercase dimension letter")
+    re_lib["dimension"] = (pattern, message)
+
+    pattern_str = r"\d [%‰‱]"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="space", where="before percentage sign")
+    re_lib["percent"] = (pattern, message)
+
+    pattern_str = r"\d °(?! ?C\b)"
+    pattern = re.compile(pattern_str)
+    message = Report.existing(what="space", where="before degree sign")
+    re_lib["degree"] = (pattern, message)
+
+    pattern_str = r"\d° ?C\b|° C\b"
+    pattern = re.compile(pattern_str)
+    message = Report.substitution(what="Celsius", with_what="°C")
+    re_lib["celsius"] = (pattern, message)
+
+    units = (
+        'D', 'th', 'nd', 'st', 'rd', # math
+        'px', 'p', 'bit', r'ki?', r'Mi?B', r'Gi?B', r'Ti?B' # digital
+    )
+    pattern_str = r"\d(?!\W|\d|" + r'\b|'.join(units) + r"\b|\Z)"
+    pattern = re.compile(pattern_str)
+    message = Report.missing(what="space", where="before physics unit")
+    re_lib["nospaceunit"] = (pattern, message)
+
+    args = dict()
+    args["re_lib"] = re_lib
+
+    return args
+
+
+def number(toolname, document, reports, re_lib):
+    """Check for numbers and units formatting."""
+
+    instr_pos = {
+        "field": {"*": ["body"]},
+        "*": {"*": ["head", "body"]}
+    }
+    instr_neg = {
+        "dir": {
+            "figure": ["head"],
+            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
+        },
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
+        "doctest": "*", "comment": "*",
+        "role": {"kbd": "*"},
+        "literal": "*", "standalone": "*", "footref": "*", "citref": "*"
+    }
+
+    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
+        part_str = str(part.code)
+        for key, value in re_lib.items():
+            pattern = value[0]
+            for m in re.finditer(pattern, part_str):
+                if (key == "lowdigit" and
+                        (rst_walker.is_of(part, "role", {"math", "sub", "sup"}) or
+                         rst_walker.is_of(part, "dir", "math"))):
+                    continue
+
+                output = part.code.slice_match_obj(m, 0, True)
+                line = getline_punc(document.body.code, output.start_pos,
+                                    output.span_len(True), 50, 0)
+                reports.append(Report('W', toolname, output, value[1], line))
+
+    return reports
+
+
+def pairs_pre(op):
+    args = dict()
+    re_lib = dict()
+
+    # FP/FN: s' closing
+    # FP: cut heading line
+    pattern_str = r"[\(\[\{\)\]\}\]\"]|(?<!\w)'|(?<![sS])'(?!\w)"
+    pattern = re.compile(pattern_str)
+    re_lib["pairchar"] = pattern
+
+    args["re_lib"] = re_lib
+
+    # Max number of lines between the open and close mark.
+    line_span = monostylestd.get_override(__file__, op[0], "max_line_span", 2)
+    args["config"] = {"max_line_span": line_span}
+
+    return args
+
+
+def pairs(toolname, document, reports, re_lib, config):
+    """Check if pairs of inline markup, brackets, quote marks are closed."""
+
+    instr_pos = {
+        "sect": {"*": ["name"]},
+        "field": {"*": ["name", "body"]},
+        "*": {"*": ["head", "body"]}
+    }
+    instr_neg = {
+        "dir": {"code-block": "*", "default": "*", "math": "*", "youtube": "*", "vimeo": "*"},
+        "substdef": {"unicode": "*", "replace": "*"},
+        "doctest": "*", "target": "*", "comment": "*",
+        "role": {"kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"},
+        "literal": "*", "standalone": "*"
+    }
+
+    max_line_span = config.get("max_line_span")
+    stack = []
+    pair_re = re_lib["pairchar"]
+    pairs_map = {')': '(', ']': '[', '}': '{'}
+
+    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
+        for line in part.code.splitlines():
+            line_str = str(line)
+            for pair_m in re.finditer(pair_re, line_str):
+                pair_char = pair_m.group(0)
+                for index, entry in enumerate(reversed(stack)):
+                    if (entry[0] == pair_char or
+                            (pair_char in pairs_map and entry[0] == pairs_map[pair_char])):
+
+                        if (max_line_span is not None and
+                                line.start_lincol[0] - entry[1][0] > max_line_span):
+                            lincol_abs = line.loc_to_abs((0, pair_m.start(0)))
+                            message = "long span"
+                            message += " - " + str(lincol_abs[0] + 1) + ","
+                            message += str(lincol_abs[1] + 1)
+                            output = Fragment(document.code.filename, entry[0], -1,
+                                              start_lincol=entry[1])
+                            reports.append(Report('W', toolname, output, message))
+
+                        # invert index
+                        index = len(stack) - 1 - index
+                        stack.pop(index)
+                        break
+
+                else:
+                    stack.append((pair_char, line.loc_to_abs((0, pair_m.start(0)))))
+
+    if len(stack) != 0:
+        message = "unclosed pairs"
+        for entry in stack:
+            output = Fragment(document.code.filename, entry[0], -1, start_lincol=entry[1])
+            reports.append(Report('W', toolname, output, message))
+
+    if max_line_span is not None:
+        for node in rst_walker.iter_node(document.body,
+                                         ("literal", "strong", "emphasis", "int-target",
+                                          "role", "hyperlink")):
+
+            if not node.body_start or not node.body_end:
+                # single word int-target or hyperlink
+                continue
+
+            if (node.body_start.code.end_lincol[0] - node.body_end.code.start_lincol[0] >
+                    max_line_span):
+                message = "long span"
+                message += " - " + str(node.body_start.code.end_lincol[0] + 1)
+                message += "," + str(node.body_end.code.start_lincol[1] + 1)
+                reports.append(Report('W', toolname, node.body_start.code, message))
+
+            if node.body_start.code.end_pos == node.body_end.code.start_pos:
+                message = "zero span"
+                reports.append(Report('W', toolname, node.code, message))
+
+    return reports
+
+
 def whitespace_pre(_):
     re_lib = dict()
     pattern_str = r"(\t)"
@@ -582,9 +582,9 @@ def whitespace(toolname, document, reports, re_lib):
 
 
 OPS = (
+    ("mark", mark, mark_pre),
     ("number", number, number_pre),
     ("pairs", pairs, pairs_pre),
-    ("mark", mark, mark_pre),
     ("whitespace", whitespace, whitespace_pre)
 )
 

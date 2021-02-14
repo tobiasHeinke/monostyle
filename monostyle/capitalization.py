@@ -203,83 +203,6 @@ def pos_case(toolname, document, reports):
     return reports
 
 
-def start_case_pre(_):
-    re_lib = dict()
-    punc_sent = CharCatalog.data["terminal"]["final"] + ':'
-    pare_open = CharCatalog.data["bracket"]["left"]["normal"]
-
-    # FP: code, container
-    pattern_str = r"[" + pare_open + r"]?[a-z]"
-    pattern = re.compile(pattern_str)
-    message = Report.misformatted(what="lowercase", where="at paragraph start")
-    re_lib["lowerpara"] = (pattern, message)
-
-    # todo? split sentence
-    # limitation: not nested parenthesis
-    # not match abbr
-    pattern_str = r"(?<!\w\.\w)[" + punc_sent + r"]\s+?" + r"[" + pare_open + r"]?[a-z]"
-    pattern = re.compile(pattern_str, re.MULTILINE | re.DOTALL)
-    message = Report.misformatted(what="lowercase", where="after sentence start")
-    re_lib["punclower"] = (pattern, message)
-
-    # FP: abbr, menu, heading, code
-    pattern_str = r"[^.\s]\s*?[" + pare_open + r"][A-Z][a-z ]"
-    pattern = re.compile(pattern_str, re.MULTILINE)
-    message = Report.misformatted(what="uppercase", where="at bracket start")
-    re_lib["upperbracket"] = (pattern, message)
-
-    args = dict()
-    args["re_lib"] = re_lib
-
-    return args
-
-
-def start_case(toolname, document, reports, re_lib):
-    """Check case at the start of paragraphs, sentences and parenthesis."""
-
-    instr_pos = {
-        "field": {"*": ["name", "body"]},
-        "*": {"*": ["head", "body"]}
-    }
-    instr_neg = {
-        "dir": {
-            "figure": ["head"], "toctree": "*", "include": "*", "index": "*",
-            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
-        },
-        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*",
-        "literal": "*", "standalone": "*"
-    }
-
-    start_re = re_lib["lowerpara"][0]
-    was_empty = False
-    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        if not part.parent_node.prev or was_empty:
-            if (part.parent_node.node_name == "text" or
-                    part.parent_node.parent_node.parent_node.node_name == "text"):
-
-                if re.match(start_re, str(part.code)):
-                    output = part.code.copy().clear(True)
-                    line = getline_punc(document.body.code, output.start_pos, 0, 50, 0)
-                    reports.append(Report('W', toolname, output, re_lib["lowerpara"][1], line))
-
-                was_empty = bool(len(part.code) == 0)
-
-        if part.parent_node.node_name == "text":
-            part_str = str(part.code)
-            for key, value in re_lib.items():
-                if key == "lowerpara":
-                    continue
-                pattern = value[0]
-                for m in re.finditer(pattern, part_str):
-                    output = part.code.slice_match_obj(m, 0, True)
-                    line = getline_punc(document.body.code, output.start_pos,
-                                        output.span_len(True), 50, 0)
-                    reports.append(Report('W', toolname, output, value[1], line))
-
-    return reports
-
-
 def property_noun_pre(_):
     """Build lexicon with lower/uppercase counts."""
     threshold = 0.8
@@ -370,6 +293,83 @@ def property_noun(toolname, document, reports, data, config):
                                         word.span_len(True), 50, 30)
                     reports.append(Report('W', toolname, word, message, line))
                     break
+
+    return reports
+
+
+def start_case_pre(_):
+    re_lib = dict()
+    punc_sent = CharCatalog.data["terminal"]["final"] + ':'
+    pare_open = CharCatalog.data["bracket"]["left"]["normal"]
+
+    # FP: code, container
+    pattern_str = r"[" + pare_open + r"]?[a-z]"
+    pattern = re.compile(pattern_str)
+    message = Report.misformatted(what="lowercase", where="at paragraph start")
+    re_lib["lowerpara"] = (pattern, message)
+
+    # todo? split sentence
+    # limitation: not nested parenthesis
+    # not match abbr
+    pattern_str = r"(?<!\w\.\w)[" + punc_sent + r"]\s+?" + r"[" + pare_open + r"]?[a-z]"
+    pattern = re.compile(pattern_str, re.MULTILINE | re.DOTALL)
+    message = Report.misformatted(what="lowercase", where="after sentence start")
+    re_lib["punclower"] = (pattern, message)
+
+    # FP: abbr, menu, heading, code
+    pattern_str = r"[^.\s]\s*?[" + pare_open + r"][A-Z][a-z ]"
+    pattern = re.compile(pattern_str, re.MULTILINE)
+    message = Report.misformatted(what="uppercase", where="at bracket start")
+    re_lib["upperbracket"] = (pattern, message)
+
+    args = dict()
+    args["re_lib"] = re_lib
+
+    return args
+
+
+def start_case(toolname, document, reports, re_lib):
+    """Check case at the start of paragraphs, sentences and parenthesis."""
+
+    instr_pos = {
+        "field": {"*": ["name", "body"]},
+        "*": {"*": ["head", "body"]}
+    }
+    instr_neg = {
+        "dir": {
+            "figure": ["head"], "toctree": "*", "include": "*", "index": "*",
+            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
+        },
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
+        "doctest": "*",
+        "literal": "*", "standalone": "*"
+    }
+
+    start_re = re_lib["lowerpara"][0]
+    was_empty = False
+    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
+        if not part.parent_node.prev or was_empty:
+            if (part.parent_node.node_name == "text" or
+                    part.parent_node.parent_node.parent_node.node_name == "text"):
+
+                if re.match(start_re, str(part.code)):
+                    output = part.code.copy().clear(True)
+                    line = getline_punc(document.body.code, output.start_pos, 0, 50, 0)
+                    reports.append(Report('W', toolname, output, re_lib["lowerpara"][1], line))
+
+                was_empty = bool(len(part.code) == 0)
+
+        if part.parent_node.node_name == "text":
+            part_str = str(part.code)
+            for key, value in re_lib.items():
+                if key == "lowerpara":
+                    continue
+                pattern = value[0]
+                for m in re.finditer(pattern, part_str):
+                    output = part.code.slice_match_obj(m, 0, True)
+                    line = getline_punc(document.body.code, output.start_pos,
+                                        output.span_len(True), 50, 0)
+                    reports.append(Report('W', toolname, output, value[1], line))
 
     return reports
 

@@ -2,11 +2,11 @@
 {
 	"tool_selection": {
 		"markup": {
-			"tools": ["directive", "heading-level", "indention", "kbd", "leak"],
+			"tools": ["indention", "kbd", "leak", "markup-names", "heading-level"],
 			"ext": ".rst"
 		},
 		"listsearch": {
-			"tools": ["simplify", "blender/UI", "blender/Editors", "blender/Modes", "avoid/*", "dev/*"],
+			"tools": ["avoid/*", "blender/Editors", "blender/Modes", "blender/UI", "dev/*", "simplify"],
 			"ext": ".rst"
 		},
 		"spelling": {
@@ -14,11 +14,11 @@
 			"ext": ".rst"
 		},
 		"capitalization": {
-			"tools": ["heading-caps", "start-case", "pos-case", "ui"],
+			"tools": ["heading-caps", "pos-case", "start-case", "ui"],
 			"ext": ".rst"
 		},
 		"punctuation": {
-			"tools": ["number", "pairs", "mark", "whitespace"],
+			"tools": ["mark", "number", "pairs", "whitespace"],
 			"ext": ".rst"
 		},
 		"char": {
@@ -30,7 +30,7 @@
 			"ext": ".rst"
 		},
 		"code_style": {
-			"tools": ["heading-line-length", "flavor", "line-style", "long-line", "blank-line", "style-add"],
+			"tools": ["blank-line", "flavor", "heading-line-length", "line-style", "long-line", "style-extra"],
 			"ext": ".rst"
 		},
 		"monitor": {

@@ -18,235 +18,6 @@ POS = PartofSpeech()
 CharCatalog = CharCatalog()
 
 
-def flavor(toolname, document, reports):
-    """Check if the preferred markup is used."""
-
-    dash_re = re.compile(r"(?:\D |\A)\-(?= \D|$|\Z)")
-    emdash_re = re.compile(r"(?:[^-]|\A)\-{3}(?=[^-]|\Z)")
-
-    for node in rst_walker.iter_node(document.body):
-        if node.node_name == "trans":
-            trans_len = len(str(node.name_start.code).strip())
-            if trans_len < 12 and trans_len > 30:
-                output = node.name_start.code.copy().clear(True)
-                if trans_len < 12:
-                    message = Report.under(what="dashes", where="in horizontal line")
-                else:
-                    message = Report.over(what="dashes", where="in horizontal line")
-
-                reports.append(Report('W', toolname, output, message))
-
-            if not str(node.name_start.code).startswith('-'):
-                output = node.name_start.code.copy().clear(True)
-                message = Report.misformatted(what="wrong char", where="horizontal line")
-                reports.append(Report('W', toolname, output, message))
-
-        if node.node_name in {"bullet", "enum"}:
-            if node.node_name == "bullet":
-                if not str(node.name_start.code).startswith('-'):
-                    par_node = node.parent_node.parent_node.parent_node.parent_node
-                    if not rst_walker.is_of(par_node, "dir", "list-table"):
-                        output = node.name_start.code.copy().clear(True)
-                        message = Report.misformatted(what="wrong char", where="bullet list")
-                        reports.append(Report('W', toolname, output, message))
-
-            if (len(node.body.code) == 1 and
-                    node.body.child_nodes.first().node_name == "text" and
-                    is_blank_node(node.body.child_nodes.first())):
-                output = node.name_start.code.copy().clear(True)
-                message = Report.missing(what="empty comment", where="in empty list item")
-                reports.append(Report('W', toolname, output, message))
-
-        if node.node_name == "enum-list":
-            first_node = node.body.child_nodes.first()
-            if (str(first_node.name.code).strip() != "#" and
-                    not rst_walker.is_of(node.parent_node, "dir", {"figure", "image"}, "body")):
-                output = first_node.name.code.copy().clear(True)
-                message = Report.misformatted(what="not auto-named", where="enumerated list")
-                reports.append(Report('W', toolname, output, message))
-
-        if node.node_name == "text" and node.body.child_nodes.is_empty():
-            node_content = str(node.body.code)
-            for dash_m in re.finditer(dash_re, node_content):
-                output = node.body.code.slice_match_obj(dash_m, 0, True)
-                message = Report.substitution(what="dash", with_what="en-dash")
-                reports.append(Report('W', toolname, output, message))
-
-            for emdash_m in re.finditer(emdash_re, node_content):
-                output = node.body.code.slice_match_obj(emdash_m, 0, True)
-                message = Report.substitution(what="em-dash", with_what="en-dash")
-                reports.append(Report('W', toolname, output, message))
-
-    return reports
-
-
-def line_style_pre(_):
-    pare_close = CharCatalog.data["bracket"]["right"]["normal"]
-    word_inter = CharCatalog.data["connector"]["hyphen"]
-    word_inter += CharCatalog.data["connector"]["apostrophe"]
-
-    re_lib = dict()
-    eol = r"\s*$"
-    pattern_str = (r"(?<=[", CharCatalog.data["terminal"]["final"], r"] )",
-                   r"([\w" + word_inter + r"]+?)", eol)
-    pattern = re.compile(''.join(pattern_str), re.MULTILINE)
-    message = Report.existing(what="first word of a sentence", where="at line end")
-    re_lib["sentorphan"] = (pattern, message)
-
-    # not match when oxford comma
-    pattern_str = r"(?<!,)\b(?:and|or) ([\w" + word_inter + r"]+?)" + eol
-    pattern = re.compile(pattern_str, re.MULTILINE | re.IGNORECASE)
-    message = Report.existing(what="first word of a clause", where="at line end")
-    re_lib["clauseorphan"] = (pattern, message)
-
-    pattern_str = (r"(\b[a-z][\w", CharCatalog.data["connector"]["apostrophe"], r"]*?)", eol,
-                   r"(?! *?[", pare_close, r"])")
-    pattern = re.compile(''.join(pattern_str), re.MULTILINE)
-    message = Report.existing(what="{0}", where="at line end")
-    re_lib["lastword"] = (pattern, message)
-
-    pattern_str = (r"(^[A-Za-z][\w", word_inter, r"]*?)",
-                   r"(?=[", CharCatalog.data["terminal"]["final"], r"]\W)")
-    pattern = re.compile(''.join(pattern_str), re.MULTILINE)
-    message = Report.existing(what="last word of a sentence", where="at line start")
-    re_lib["sentwidow"] = (pattern, message)
-
-    args = dict()
-    args["re_lib"] = re_lib
-
-    return args
-
-
-def line_style(toolname, document, reports, re_lib):
-    """Check line wrapping."""
-    for node in rst_walker.iter_node(document.body, {"text", "block-quote"}, enter_pos=False):
-        if rst_walker.is_of(node.parent_node, {"sect", "def"}):
-            continue
-
-        text = str(node.code)
-        for key, value in re_lib.items():
-            is_lw = bool(key == "lastword")
-            for m in re.finditer(value[0], text):
-                message = value[1]
-                if is_lw:
-                    tag = POS.tag(str(m.group(1).lower()))
-                    if (len(tag) != 0 and
-                            (tag[0] == "adjective" or
-                             (tag[0] == "determiner" and tag[1] == "article"))):
-                        message = message.format(tag[-1])
-                    else:
-                        continue
-                if m.start() == 0 and (key == "sentwidow" or is_lw):
-                    continue
-
-                output = node.code.slice_match_obj(m, 0, True)
-                line = getline_punc(node.code, output.start_pos,
-                                    output.span_len(True), 50, 0)
-                reports.append(Report('I', toolname, output, message, line, "reflow"))
-
-    return reports
-
-
-def long_line(toolname, document, reports):
-    """Finds overly long lines."""
-    limit = 118
-
-    instr_pos = {
-        "*": "*"
-    }
-    instr_neg = {
-        "dir": {
-            "figure": ["head"], "include": ["head"], "parsed-literal": "*",
-            "code-block": "*", "default": "*",
-        },
-        "substdef": {"image": ["head"]},
-        "doctest": "*",
-    }
-    line = None
-    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        is_last = bool(not part.parent_node.next and not part.next_leaf())
-        for buf in part.code.splitlines(buffered=True):
-            if (line and ((buf and buf.end_lincol[0] != line.end_lincol[0]) or
-                          (not buf and is_last))):
-                if line.end_lincol[1] > limit:
-                    if rst_walker.is_of(part, "text") and re.match(r".?\n", str(line)):
-                        prev_node = part.parent_node.prev
-                        if prev_node and prev_node.code.end_lincol[0] == part.code.start_lincol[0]:
-                            if prev_node.node_name in {"hyperlink", "standalone", "role"}:
-                                if (prev_node.id and
-                                        prev_node.id.code.span_len(True) + 4 > limit):
-                                    line = None
-                                    continue
-                                if (prev_node.body and
-                                        prev_node.body.code.span_len(True) + 4 > limit):
-                                    line = None
-                                    continue
-
-                    output = line.copy().clear(False)
-                    message = "long line"
-                    reports.append(Report('W', toolname, output, message, line, "reflow"))
-
-            if buf or is_last:
-                line = buf
-
-    return reports
-
-
-def heading_lines(toolname, document, reports):
-    """Heading over/underline char count and indent."""
-
-    for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
-        heading_char = str(node.name_end.code)[0]
-        ind = 0 if heading_char not in {'%', '#'} else 2
-        title_len = len(str(node.name.code).strip()) + ind * 2
-
-        if heading_char in {'%', '#', '*'} and not node.name_start:
-            output = node.name_end.code.copy().replace_fill(heading_char)
-            message = Report.missing(what="overline")
-            fix = node.name.code.copy().replace_fill([heading_char * title_len + "\n"])
-            fix = fix.clear(True)
-            reports.append(Report('W', toolname, output, message, fix=fix))
-
-        if (len(str(node.name_end.code).strip()) != title_len or
-                (node.name_start and
-                 len(str(node.name_start.code).strip()) != title_len)):
-            output = node.name_end.code.copy().replace_fill(heading_char)
-            if len(str(node.name_end.code).strip()) != title_len:
-                message = Report.quantity(what="wrong underline length",
-                                          how=": {:+}".format(
-                                              title_len - len(str(node.name_end.code).strip())))
-            else:
-                message = Report.quantity(what="wrong overline length",
-                                          how=": {:+}".format(
-                                              title_len - len(str(node.name_start.code).strip())))
-
-            bd = FragmentBundle()
-            if node.name_start:
-                lineno = node.name_start.code.start_lincol[0]
-                fix_over = node.name_start.code.slice((lineno, 0), (lineno + 1, 0), True)
-                fix_over = fix_over.to_fragment()
-                fix_over.replace_fill([heading_char * title_len + "\n"])
-                bd.bundle.append(fix_over)
-            lineno = node.name_end.code.start_lincol[0]
-            fix_under = node.name_end.code.slice((lineno, 0), (lineno + 1, 0), True)
-            fix_under = fix_under.to_fragment()
-            fix_under.replace_fill([heading_char * title_len + "\n"])
-            bd.bundle.append(fix_under)
-            reports.append(Report('W', toolname, output, message, fix=bd))
-
-        titel_ind_m = re.match(r" *", str(node.name.code))
-        if titel_ind_m and len(titel_ind_m.group(0)) != ind:
-            output = node.name.code.copy().clear(True)
-            message = Report.quantity(what="wrong title indent",
-                                      how=": {:+}".format(ind - len(titel_ind_m.group(0))))
-
-            fix = node.name.code.slice_match_obj(titel_ind_m, 0, True)
-            fix.replace_fill([" " * ind])
-            reports.append(Report('W', toolname, output, message, fix=fix))
-
-    return reports
-
-
 def is_blank_node(node):
     """The node is empty or contains only whitespaces."""
     if node.node_name == "text":
@@ -397,7 +168,236 @@ def blank_line(toolname, document, reports):
     return reports
 
 
-def style_add(toolname, document, reports):
+def flavor(toolname, document, reports):
+    """Check if the preferred markup is used."""
+
+    dash_re = re.compile(r"(?:\D |\A)\-(?= \D|$|\Z)")
+    emdash_re = re.compile(r"(?:[^-]|\A)\-{3}(?=[^-]|\Z)")
+
+    for node in rst_walker.iter_node(document.body):
+        if node.node_name == "trans":
+            trans_len = len(str(node.name_start.code).strip())
+            if trans_len < 12 and trans_len > 30:
+                output = node.name_start.code.copy().clear(True)
+                if trans_len < 12:
+                    message = Report.under(what="dashes", where="in horizontal line")
+                else:
+                    message = Report.over(what="dashes", where="in horizontal line")
+
+                reports.append(Report('W', toolname, output, message))
+
+            if not str(node.name_start.code).startswith('-'):
+                output = node.name_start.code.copy().clear(True)
+                message = Report.misformatted(what="wrong char", where="horizontal line")
+                reports.append(Report('W', toolname, output, message))
+
+        if node.node_name in {"bullet", "enum"}:
+            if node.node_name == "bullet":
+                if not str(node.name_start.code).startswith('-'):
+                    par_node = node.parent_node.parent_node.parent_node.parent_node
+                    if not rst_walker.is_of(par_node, "dir", "list-table"):
+                        output = node.name_start.code.copy().clear(True)
+                        message = Report.misformatted(what="wrong char", where="bullet list")
+                        reports.append(Report('W', toolname, output, message))
+
+            if (len(node.body.code) == 1 and
+                    node.body.child_nodes.first().node_name == "text" and
+                    is_blank_node(node.body.child_nodes.first())):
+                output = node.name_start.code.copy().clear(True)
+                message = Report.missing(what="empty comment", where="in empty list item")
+                reports.append(Report('W', toolname, output, message))
+
+        if node.node_name == "enum-list":
+            first_node = node.body.child_nodes.first()
+            if (str(first_node.name.code).strip() != "#" and
+                    not rst_walker.is_of(node.parent_node, "dir", {"figure", "image"}, "body")):
+                output = first_node.name.code.copy().clear(True)
+                message = Report.misformatted(what="not auto-named", where="enumerated list")
+                reports.append(Report('W', toolname, output, message))
+
+        if node.node_name == "text" and node.body.child_nodes.is_empty():
+            node_content = str(node.body.code)
+            for dash_m in re.finditer(dash_re, node_content):
+                output = node.body.code.slice_match_obj(dash_m, 0, True)
+                message = Report.substitution(what="dash", with_what="en-dash")
+                reports.append(Report('W', toolname, output, message))
+
+            for emdash_m in re.finditer(emdash_re, node_content):
+                output = node.body.code.slice_match_obj(emdash_m, 0, True)
+                message = Report.substitution(what="em-dash", with_what="en-dash")
+                reports.append(Report('W', toolname, output, message))
+
+    return reports
+
+
+def heading_lines(toolname, document, reports):
+    """Heading over/underline char count and indent."""
+
+    for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
+        heading_char = str(node.name_end.code)[0]
+        ind = 0 if heading_char not in {'%', '#'} else 2
+        title_len = len(str(node.name.code).strip()) + ind * 2
+
+        if heading_char in {'%', '#', '*'} and not node.name_start:
+            output = node.name_end.code.copy().replace_fill(heading_char)
+            message = Report.missing(what="overline")
+            fix = node.name.code.copy().replace_fill([heading_char * title_len + "\n"])
+            fix = fix.clear(True)
+            reports.append(Report('W', toolname, output, message, fix=fix))
+
+        if (len(str(node.name_end.code).strip()) != title_len or
+                (node.name_start and
+                 len(str(node.name_start.code).strip()) != title_len)):
+            output = node.name_end.code.copy().replace_fill(heading_char)
+            if len(str(node.name_end.code).strip()) != title_len:
+                message = Report.quantity(what="wrong underline length",
+                                          how=": {:+}".format(
+                                              title_len - len(str(node.name_end.code).strip())))
+            else:
+                message = Report.quantity(what="wrong overline length",
+                                          how=": {:+}".format(
+                                              title_len - len(str(node.name_start.code).strip())))
+
+            bd = FragmentBundle()
+            if node.name_start:
+                lineno = node.name_start.code.start_lincol[0]
+                fix_over = node.name_start.code.slice((lineno, 0), (lineno + 1, 0), True)
+                fix_over = fix_over.to_fragment()
+                fix_over.replace_fill([heading_char * title_len + "\n"])
+                bd.bundle.append(fix_over)
+            lineno = node.name_end.code.start_lincol[0]
+            fix_under = node.name_end.code.slice((lineno, 0), (lineno + 1, 0), True)
+            fix_under = fix_under.to_fragment()
+            fix_under.replace_fill([heading_char * title_len + "\n"])
+            bd.bundle.append(fix_under)
+            reports.append(Report('W', toolname, output, message, fix=bd))
+
+        titel_ind_m = re.match(r" *", str(node.name.code))
+        if titel_ind_m and len(titel_ind_m.group(0)) != ind:
+            output = node.name.code.copy().clear(True)
+            message = Report.quantity(what="wrong title indent",
+                                      how=": {:+}".format(ind - len(titel_ind_m.group(0))))
+
+            fix = node.name.code.slice_match_obj(titel_ind_m, 0, True)
+            fix.replace_fill([" " * ind])
+            reports.append(Report('W', toolname, output, message, fix=fix))
+
+    return reports
+
+
+def line_style_pre(_):
+    pare_close = CharCatalog.data["bracket"]["right"]["normal"]
+    word_inter = CharCatalog.data["connector"]["hyphen"]
+    word_inter += CharCatalog.data["connector"]["apostrophe"]
+
+    re_lib = dict()
+    eol = r"\s*$"
+    pattern_str = (r"(?<=[", CharCatalog.data["terminal"]["final"], r"] )",
+                   r"([\w" + word_inter + r"]+?)", eol)
+    pattern = re.compile(''.join(pattern_str), re.MULTILINE)
+    message = Report.existing(what="first word of a sentence", where="at line end")
+    re_lib["sentorphan"] = (pattern, message)
+
+    # not match when oxford comma
+    pattern_str = r"(?<!,)\b(?:and|or) ([\w" + word_inter + r"]+?)" + eol
+    pattern = re.compile(pattern_str, re.MULTILINE | re.IGNORECASE)
+    message = Report.existing(what="first word of a clause", where="at line end")
+    re_lib["clauseorphan"] = (pattern, message)
+
+    pattern_str = (r"(\b[a-z][\w", CharCatalog.data["connector"]["apostrophe"], r"]*?)", eol,
+                   r"(?! *?[", pare_close, r"])")
+    pattern = re.compile(''.join(pattern_str), re.MULTILINE)
+    message = Report.existing(what="{0}", where="at line end")
+    re_lib["lastword"] = (pattern, message)
+
+    pattern_str = (r"(^[A-Za-z][\w", word_inter, r"]*?)",
+                   r"(?=[", CharCatalog.data["terminal"]["final"], r"]\W)")
+    pattern = re.compile(''.join(pattern_str), re.MULTILINE)
+    message = Report.existing(what="last word of a sentence", where="at line start")
+    re_lib["sentwidow"] = (pattern, message)
+
+    args = dict()
+    args["re_lib"] = re_lib
+
+    return args
+
+
+def line_style(toolname, document, reports, re_lib):
+    """Check line wrapping."""
+    for node in rst_walker.iter_node(document.body, {"text", "block-quote"}, enter_pos=False):
+        if rst_walker.is_of(node.parent_node, {"sect", "def"}):
+            continue
+
+        text = str(node.code)
+        for key, value in re_lib.items():
+            is_lw = bool(key == "lastword")
+            for m in re.finditer(value[0], text):
+                message = value[1]
+                if is_lw:
+                    tag = POS.tag(str(m.group(1).lower()))
+                    if (len(tag) != 0 and
+                            (tag[0] == "adjective" or
+                             (tag[0] == "determiner" and tag[1] == "article"))):
+                        message = message.format(tag[-1])
+                    else:
+                        continue
+                if m.start() == 0 and (key == "sentwidow" or is_lw):
+                    continue
+
+                output = node.code.slice_match_obj(m, 0, True)
+                line = getline_punc(node.code, output.start_pos,
+                                    output.span_len(True), 50, 0)
+                reports.append(Report('I', toolname, output, message, line, "reflow"))
+
+    return reports
+
+
+def long_line(toolname, document, reports):
+    """Finds overly long lines."""
+    limit = 118
+
+    instr_pos = {
+        "*": "*"
+    }
+    instr_neg = {
+        "dir": {
+            "figure": ["head"], "include": ["head"], "parsed-literal": "*",
+            "code-block": "*", "default": "*",
+        },
+        "substdef": {"image": ["head"]},
+        "doctest": "*",
+    }
+    line = None
+    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
+        is_last = bool(not part.parent_node.next and not part.next_leaf())
+        for buf in part.code.splitlines(buffered=True):
+            if (line and ((buf and buf.end_lincol[0] != line.end_lincol[0]) or
+                          (not buf and is_last))):
+                if line.end_lincol[1] > limit:
+                    if rst_walker.is_of(part, "text") and re.match(r".?\n", str(line)):
+                        prev_node = part.parent_node.prev
+                        if prev_node and prev_node.code.end_lincol[0] == part.code.start_lincol[0]:
+                            if prev_node.node_name in {"hyperlink", "standalone", "role"}:
+                                if (prev_node.id and
+                                        prev_node.id.code.span_len(True) + 4 > limit):
+                                    line = None
+                                    continue
+                                if (prev_node.body and
+                                        prev_node.body.code.span_len(True) + 4 > limit):
+                                    line = None
+                                    continue
+
+                    output = line.copy().clear(False)
+                    message = "long line"
+                    reports.append(Report('W', toolname, output, message, line, "reflow"))
+
+            if buf or is_last:
+                line = buf
+
+    return reports
+
+
+def style_extra(toolname, document, reports):
     """Check for additional markup style."""
 
     for node in rst_walker.iter_node(document.body):
@@ -449,7 +449,7 @@ OPS = (
     ("heading-line-length", heading_lines, None),
     ("line-style", line_style, line_style_pre),
     ("long-line", long_line, None),
-    ("style-add", style_add, None)
+    ("style-extra", style_extra, None)
 )
 
 

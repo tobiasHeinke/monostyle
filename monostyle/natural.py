@@ -164,7 +164,7 @@ def abbreviation(toolname, document, reports, data, config):
     return reports
 
 
-def indefinite_article_pre(_):
+def article_pre(_):
     args = dict()
     args["data"] = monostylestd.get_data_file("indefinite_article")
 
@@ -178,7 +178,7 @@ def indefinite_article_pre(_):
     return args
 
 
-def indefinite_article(toolname, document, reports, re_lib, data):
+def article(toolname, document, reports, re_lib, data):
     """Check correct use of indefinite articles (a and an)."""
 
     vowel_re = re_lib["vowel"]
@@ -204,15 +204,14 @@ def indefinite_article(toolname, document, reports, re_lib, data):
         "literal": "*", "standalone": "*"
     }
 
-    buf = None
+    is_a = None
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
         if part.child_nodes.is_empty():
             for word in Segmenter.iter_word(part.code, filter_numbers=False):
                 word_str = str(word).strip()
                 if len(word) < 3 and word_str in {"a", "A", "an", "An"}:
-                    buf = word_str
-                elif buf:
-                    is_a = bool(buf in {"a", "A"})
+                    is_a = bool(word_str in {"a", "A"})
+                elif is_a is not None:
                     if re.match(digit_re, word_str):
                         if not is_a:
                             message = Report.existing(what="an", where="before digit")
@@ -241,7 +240,6 @@ def indefinite_article(toolname, document, reports, re_lib, data):
                                         is_cons_sound =  not is_cons
                                     break
 
-                        # print(word_str, is_a, is_cons)
                         if is_a != is_cons_sound:
                             where = " ".join(("before", "consonant" if is_cons_sound else "vowel",
                                               "sound" if is_cons_sound != is_cons else ""))
@@ -251,14 +249,14 @@ def indefinite_article(toolname, document, reports, re_lib, data):
                                                 len(word_str), 50, 30)
                             reports.append(Report('E', toolname, word, message, line))
 
-                    buf = None
+                    is_a = None
 
             if part.parent_node.node_name == "role":
-                buf = None
+                is_a = None
 
         else:
             if part.parent_node.node_name in {"def", "bullet", "enum", "field", "line"}:
-                buf = None
+                is_a = None
 
     return reports
 
@@ -416,60 +414,6 @@ def hyphen_pre(_):
 
 def hyphen(toolname, document, reports, data, config):
     return listsearch.search(toolname, document, reports, data, config)
-
-
-def passive_pre(_):
-    re_lib = dict()
-    pattern_str = (r"(\b", r"\b|\b".join(("be", "being", "been", "am", "is",
-                                          "are", "was", "were")), r"\b|",
-                   r"\bg[eo]t(?:s|ten)?\b)", # get
-                   r"\s+",
-                   r"(\b[\w-]+e[dn]\b|\b",
-                   r"\b|\b".join(monostylestd.get_data_file("irregular_participle")), r"\b)")
-
-    pattern = re.compile(''.join(pattern_str), re.DOTALL)
-    message = Report.existing(what="passive voice")
-    re_lib["passive"] = (pattern, message)
-
-    args = dict()
-    args["re_lib"] = re_lib
-    args["config"] = {"severity": 'I'}
-
-    return args
-
-
-def search_pure(toolname, document, reports, re_lib, config):
-    """Iterate regex tools."""
-    instr_pos = {
-        "sect": {"*": ["name"]},
-        "field": {"*": ["name", "body"]},
-        "*": {"*": ["head", "body"]}
-    }
-    instr_neg = {
-        "dir": {
-            "figure": ["head"],
-            "code-block": "*", "default": "*", "include": "*", "index": "*",
-            "math": "*", "youtube": "*", "vimeo": "*"
-        },
-        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*", "target": "*",
-        "role": {
-            "kbd": "*", "class": "*", "mod": "*", "math": "*"
-        },
-        "literal": "*", "standalone": "*"
-    }
-
-    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        for pattern, message in re_lib.values():
-            part_str = str(part.code)
-            for m in re.finditer(pattern, part_str):
-                output = part.code.slice_match_obj(m, 0, True)
-                line = getline_punc(document.body.code, output.start_pos,
-                                    output.span_len(True), 50, 0)
-                reports.append(Report(config.get("severity"), toolname,
-                                      output, message, line))
-
-    return reports
 
 
 def metric(toolname, document, reports):
@@ -799,14 +743,68 @@ def overuse(toolname, document, reports):
     return reports
 
 
-def repeated_words_pre(op):
+def passive_pre(_):
+    re_lib = dict()
+    pattern_str = (r"(\b", r"\b|\b".join(("be", "being", "been", "am", "is",
+                                          "are", "was", "were")), r"\b|",
+                   r"\bg[eo]t(?:s|ten)?\b)", # get
+                   r"\s+",
+                   r"(\b[\w-]+e[dn]\b|\b",
+                   r"\b|\b".join(monostylestd.get_data_file("irregular_participle")), r"\b)")
+
+    pattern = re.compile(''.join(pattern_str), re.DOTALL)
+    message = Report.existing(what="passive voice")
+    re_lib["passive"] = (pattern, message)
+
+    args = dict()
+    args["re_lib"] = re_lib
+    args["config"] = {"severity": 'I'}
+
+    return args
+
+
+def search_pure(toolname, document, reports, re_lib, config):
+    """Iterate regex tools."""
+    instr_pos = {
+        "sect": {"*": ["name"]},
+        "field": {"*": ["name", "body"]},
+        "*": {"*": ["head", "body"]}
+    }
+    instr_neg = {
+        "dir": {
+            "figure": ["head"],
+            "code-block": "*", "default": "*", "include": "*", "index": "*",
+            "math": "*", "youtube": "*", "vimeo": "*"
+        },
+        "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
+        "doctest": "*", "target": "*",
+        "role": {
+            "kbd": "*", "class": "*", "mod": "*", "math": "*"
+        },
+        "literal": "*", "standalone": "*"
+    }
+
+    for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
+        for pattern, message in re_lib.values():
+            part_str = str(part.code)
+            for m in re.finditer(pattern, part_str):
+                output = part.code.slice_match_obj(m, 0, True)
+                line = getline_punc(document.body.code, output.start_pos,
+                                    output.span_len(True), 50, 0)
+                reports.append(Report(config.get("severity"), toolname,
+                                      output, message, line))
+
+    return reports
+
+
+def repeated_pre(op):
     config = dict()
     # Number of the word within to run the detection.
     config["buf_size"] = monostylestd.get_override(__file__, op[0], "buf_size", 4)
     return {"config": config}
 
 
-def repeated_words(toolname, document, reports, config):
+def repeated(toolname, document, reports, config):
     """Find repeated words e.g. the the example."""
 
     def porter_stemmer_patch(word_lower):
@@ -893,14 +891,14 @@ def repeated_words(toolname, document, reports, config):
 
 OPS = (
     ("abbreviation", abbreviation, abbreviation_pre, True),
-    ("article", indefinite_article, indefinite_article_pre),
+    ("article", article, article_pre),
     ("collocation", collocation, collocation_pre),
     ("grammar", search_pure, grammar_pre),
     ("hyphen", hyphen, hyphen_pre),
     ("metric", metric, None),
     ("overuse", overuse, None),
     ("passive", search_pure, passive_pre),
-    ("repeated", repeated_words, repeated_words_pre),
+    ("repeated", repeated, repeated_pre),
 )
 
 

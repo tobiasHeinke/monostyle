@@ -51,10 +51,6 @@ Explicit search for terms and capitalization.
 
 ## Markup
 
-### directive
-
-Find markup (directives and roles) that should not be used in the project.
-
 ### heading-level
 
 Check the heading hierarchy.
@@ -70,6 +66,10 @@ Check the conformity of keyboard shortcuts.
 ### leak
 
 Find parts of incomplete markup and versioning merge conflicts.
+
+### markup-names
+
+Find directives and roles types that should not be used in the project.
 
 
 ## Code Style
@@ -94,7 +94,7 @@ Find badly wrapped lines.
 
 Find long lines.
 
-### style-add
+### style-extra
 
 Additional markup conventions.
 
@@ -141,6 +141,10 @@ Repeated words inside a small range of words.
 
 ## Punctuation
 
+### mark
+
+Check punctuation marks placing, spacing and usage of specific marks like ampersand.
+
 ### number
 
 Number and unit formatting.
@@ -148,10 +152,6 @@ Number and unit formatting.
 ### pairs
 
 Check pairs of parenthesis/brackets, quote marks for not being matched.
-
-### mark
-
-Check punctuation marks placing, spacing and usage of specific marks like ampersand.
 
 ### whitespace
 

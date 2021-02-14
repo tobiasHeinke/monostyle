@@ -315,7 +315,7 @@ def indention(toolname, document, reports):
     return reports
 
 
-def role_kbd_pre(_):
+def kbd_pre(_):
     re_lib = dict()
     # config: allow "Regular key pressed as a modifier"
     regular_as_mod = True
@@ -376,7 +376,7 @@ def role_kbd_pre(_):
     return args
 
 
-def role_kbd(toolname, document, reports, re_lib):
+def kbd(toolname, document, reports, re_lib):
     """Report non-conforming uses of the :kbd: role."""
 
     valid_kbd = re_lib["valid_kbd"]
@@ -720,7 +720,7 @@ def leak(toolname, document, reports, re_lib, data):
     return reports
 
 
-def search_directive(toolname, document, reports):
+def markup_names(toolname, document, reports):
     """Find unknown/uncommon role and directive names."""
 
     roles = (
@@ -774,11 +774,11 @@ def search_directive(toolname, document, reports):
 
 
 OPS = (
-    ("directive", search_directive, None),
     ("heading-level", heading_level, None),
     ("indention", indention, None),
-    ("kbd", role_kbd, role_kbd_pre),
-    ("leak", leak, leak_pre)
+    ("kbd", kbd, kbd_pre),
+    ("leak", leak, leak_pre),
+    ("markup-names", markup_names, None),
 )
 
 

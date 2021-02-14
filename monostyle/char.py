@@ -48,7 +48,7 @@ def char_search(toolname, document, reports):
     return reports
 
 
-def file_encoding(toolname, reports):
+def encoding(toolname, reports):
     """Check text encoding."""
 
     # standard Unicode replace char <?>
@@ -96,7 +96,7 @@ def eol(toolname, document, reports):
 
 OPS = (
     ("char-search", char_search, None),
-    ("encoding", file_encoding, None, False),
+    ("encoding", encoding, None, False),
     ("EOF", eol, None),
 )
 

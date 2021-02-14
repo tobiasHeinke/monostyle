@@ -24,6 +24,125 @@ def simple_stem(word):
     return word
 
 
+def glossary_pre(_):
+    rst_parser = RSTParser()
+    terms = set()
+    terms_glossary = set()
+    glossary_code = None
+    glossary_fns = []
+    for filename, text in monostylestd.rst_texts():
+        document = rst_parser.parse(rst_parser.document(filename, text))
+
+        for node in rst_walker.iter_node(document.body, ("dir", "role",)):
+            if rst_walker.is_of(node, "*", "glossary"):
+                glossary_code = node.code
+                glossary_fns.append(glossary_code.filename)
+
+            elif rst_walker.is_of(node, "*", "term"):
+                if glossary_code and glossary_code.is_in_span(node.code.start_pos):
+                    terms_glossary.add(str(node.head).strip())
+                else:
+                    terms.add(str(node.head).strip())
+
+    terms_glossary -= terms
+    terms.update(terms_glossary)
+    args = dict()
+    args["data"] = dict(terms=terms, terms_glossary=terms_glossary, glossary_fns=glossary_fns)
+    return args
+
+
+def glossary(toolname, document, reports, data):
+    """Unused glossary terms or within glossary only."""
+
+    if document.code.filename not in data["glossary_fns"]:
+        return reports
+
+    for node in rst_walker.iter_node(document.body, "dir", enter_pos=False):
+        if rst_walker.is_of(node, "*", "glossary"):
+            for def_node in rst_walker.iter_node(node.body, "def", enter_pos=False):
+                for line in def_node.head.code.splitlines():
+                    line_strip = str(line).strip()
+                    if line_strip in data["terms_glossary"]:
+                        message = "term used only within glossary"
+                        reports.append(Report('I', toolname, def_node.head.code, message))
+                        break
+                    if line_strip in data["terms"]:
+                        break
+                else:
+                    message = "unused term"
+                    reports.append(Report('I', toolname, def_node.head.code, message))
+
+    return reports
+
+
+def link_titles_pre(_):
+    _, targets = env.get_link_titles(RSTParser())
+
+    return {"data": targets}
+
+
+def link_titles(toolname, document, reports, data):
+    """Find internal (ref) links title mismatches the heading title."""
+
+    for node in rst_walker.iter_node(document.body, "role"):
+        if rst_walker.is_of(node, "*", "ref") and node.head:
+            id_str = str(node.id.code).strip()
+            for target, title_head in data.items():
+                if target == id_str:
+                    sim = SequenceMatcher(lambda x: x == " ", str(title_head).lower(),
+                                          str(node.head.code).lower()).ratio()
+                    if sim < 0.9:
+                        message = "link title mismatches heading title: {:4.0%}".format(sim)
+                        reports.append(Report('W', toolname, node.head.code, message, title_head))
+
+    return reports
+
+
+def local_targets_pre(_):
+    links = []
+    targets = []
+    rst_parser = RSTParser()
+
+    for filename, text in monostylestd.rst_texts():
+        document = rst_parser.parse(rst_parser.document(filename, text))
+        for node in rst_walker.iter_node(document.body, {"target", "role"}):
+            if node.node_name == "target":
+                if (document.code.filename.endswith("index.rst") or
+                        str(node.id.code).startswith("bpy.")):
+                    continue
+                targets.append(node)
+            elif rst_walker.is_of(node, "role", "ref"):
+                links.append(node.id.code)
+
+    args = dict()
+    args["data"] = dict(targets=targets, links=links)
+    return args
+
+
+def local_targets(toolname, reports, data):
+    """Find internal (ref) links used on same page only."""
+
+    for node in data["targets"]:
+        is_same_file = False
+        is_multi = False
+        id_str = str(node.id.code).strip()
+        for link_code in data["links"]:
+            if id_str == str(link_code).strip():
+                if node.code.filename == link_code.filename:
+                    is_same_file = True
+                else:
+                    is_multi = True
+                    break
+
+        # false positives: non heading targets, title not heading
+        if is_same_file and not is_multi:
+            if not id_str.startswith("fig-") and not id_str.startswith("tab-"):
+                message = "local target"
+                reports.append(Report('I', toolname, node.id.code, message))
+
+    return reports
+
+
 def page_name(toolname, document, reports):
     """Compare page title and file name."""
 
@@ -88,159 +207,6 @@ def page_name(toolname, document, reports):
     return reports
 
 
-def unused_targets_pre(_):
-    links = []
-    targets = []
-    rst_parser = RSTParser()
-
-    for filename, text in monostylestd.rst_texts():
-        document = rst_parser.parse(rst_parser.document(filename, text))
-        for node in rst_walker.iter_node(document.body, {"target", "role", "subst"}):
-            if node.node_name == "target":
-                if (document.code.filename.endswith("index.rst") or
-                        str(node.id.code).startswith("bpy.")):
-                    continue
-                targets.append(node)
-            elif (rst_walker.is_of(node, "role", "ref") or
-                    (node.node_name == "subst" and
-                     str(node.body_end.code).strip().endswith("_"))):
-                links.append(str(node.id.code).strip())
-
-    args = dict()
-    args["data"] = dict(targets=targets, links=links)
-    return args
-
-
-def unused_targets(toolname, reports, data):
-    """Find unused internal (ref) targets."""
-
-    for node in data["targets"]:
-        if str(node.id.code).strip() not in data["links"]:
-            message = "unused target"
-            reports.append(Report('W', toolname, node.id.code, message))
-
-    return reports
-
-
-def local_targets_pre(_):
-    links = []
-    targets = []
-    rst_parser = RSTParser()
-
-    for filename, text in monostylestd.rst_texts():
-        document = rst_parser.parse(rst_parser.document(filename, text))
-        for node in rst_walker.iter_node(document.body, {"target", "role"}):
-            if node.node_name == "target":
-                if (document.code.filename.endswith("index.rst") or
-                        str(node.id.code).startswith("bpy.")):
-                    continue
-                targets.append(node)
-            elif rst_walker.is_of(node, "role", "ref"):
-                links.append(node.id.code)
-
-    args = dict()
-    args["data"] = dict(targets=targets, links=links)
-    return args
-
-
-def local_targets(toolname, reports, data):
-    """Find internal (ref) links used on same page only."""
-
-    for node in data["targets"]:
-        is_same_file = False
-        is_multi = False
-        id_str = str(node.id.code).strip()
-        for link_code in data["links"]:
-            if id_str == str(link_code).strip():
-                if node.code.filename == link_code.filename:
-                    is_same_file = True
-                else:
-                    is_multi = True
-                    break
-
-        # false positives: non heading targets, title not heading
-        if is_same_file and not is_multi:
-            if not id_str.startswith("fig-") and not id_str.startswith("tab-"):
-                message = "local target"
-                reports.append(Report('I', toolname, node.id.code, message))
-
-    return reports
-
-
-def link_titles_pre(_):
-    _, targets = env.get_link_titles(RSTParser())
-
-    return {"data": targets}
-
-
-def link_titles(toolname, document, reports, data):
-    """Find internal (ref) links title mismatches the heading title."""
-
-    for node in rst_walker.iter_node(document.body, "role"):
-        if rst_walker.is_of(node, "*", "ref") and node.head:
-            id_str = str(node.id.code).strip()
-            for target, title_head in data.items():
-                if target == id_str:
-                    sim = SequenceMatcher(lambda x: x == " ", str(title_head).lower(),
-                                          str(node.head.code).lower()).ratio()
-                    if sim < 0.9:
-                        message = "link title mismatches heading title: {:4.0%}".format(sim)
-                        reports.append(Report('W', toolname, node.head.code, message, title_head))
-
-    return reports
-
-
-def glossary_pre(_):
-    rst_parser = RSTParser()
-    terms = set()
-    terms_glossary = set()
-    glossary_code = None
-    glossary_fns = []
-    for filename, text in monostylestd.rst_texts():
-        document = rst_parser.parse(rst_parser.document(filename, text))
-
-        for node in rst_walker.iter_node(document.body, ("dir", "role",)):
-            if rst_walker.is_of(node, "*", "glossary"):
-                glossary_code = node.code
-                glossary_fns.append(glossary_code.filename)
-
-            elif rst_walker.is_of(node, "*", "term"):
-                if glossary_code and glossary_code.is_in_span(node.code.start_pos):
-                    terms_glossary.add(str(node.head).strip())
-                else:
-                    terms.add(str(node.head).strip())
-
-    terms_glossary -= terms
-    terms.update(terms_glossary)
-    args = dict()
-    args["data"] = dict(terms=terms, terms_glossary=terms_glossary, glossary_fns=glossary_fns)
-    return args
-
-
-def glossary(toolname, document, reports, data):
-    """Unused glossary terms or within glossary only."""
-
-    if document.code.filename not in data["glossary_fns"]:
-        return reports
-
-    for node in rst_walker.iter_node(document.body, "dir", enter_pos=False):
-        if rst_walker.is_of(node, "*", "glossary"):
-            for def_node in rst_walker.iter_node(node.body, "def", enter_pos=False):
-                for line in def_node.head.code.splitlines():
-                    line_strip = str(line).strip()
-                    if line_strip in data["terms_glossary"]:
-                        message = "term used only within glossary"
-                        reports.append(Report('I', toolname, def_node.head.code, message))
-                        break
-                    if line_strip in data["terms"]:
-                        break
-                else:
-                    message = "unused term"
-                    reports.append(Report('I', toolname, def_node.head.code, message))
-
-    return reports
-
-
 def tool_title(toolname, document, reports):
     """Check if a heading matches the tool name in the ref box."""
 
@@ -272,6 +238,40 @@ def tool_title(toolname, document, reports):
             message = Report.missing(what="tool name match", where="in ref box")
             message += ":{:4.0%}".format(sim_max)
             reports.append(Report('W', toolname, node.name.code, message, tool_max))
+
+    return reports
+
+
+def unused_targets_pre(_):
+    links = []
+    targets = []
+    rst_parser = RSTParser()
+
+    for filename, text in monostylestd.rst_texts():
+        document = rst_parser.parse(rst_parser.document(filename, text))
+        for node in rst_walker.iter_node(document.body, {"target", "role", "subst"}):
+            if node.node_name == "target":
+                if (document.code.filename.endswith("index.rst") or
+                        str(node.id.code).startswith("bpy.")):
+                    continue
+                targets.append(node)
+            elif (rst_walker.is_of(node, "role", "ref") or
+                    (node.node_name == "subst" and
+                     str(node.body_end.code).strip().endswith("_"))):
+                links.append(str(node.id.code).strip())
+
+    args = dict()
+    args["data"] = dict(targets=targets, links=links)
+    return args
+
+
+def unused_targets(toolname, reports, data):
+    """Find unused internal (ref) targets."""
+
+    for node in data["targets"]:
+        if str(node.id.code).strip() not in data["links"]:
+            message = "unused target"
+            reports.append(Report('W', toolname, node.id.code, message))
 
     return reports
 
