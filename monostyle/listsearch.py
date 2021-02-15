@@ -153,8 +153,7 @@ def search_free(toolname, document, reports, comlist):
         for pattern, message in comlist:
             for m in re.finditer(pattern, part_str):
                 output = part.code.slice_match_obj(m, 0, True)
-                line = getline_punc(document.body.code, output.start_pos,
-                                    output.span_len(True), 50, 30)
+                line = getline_punc(document.body.code, output, 50, 30)
                 reports.append(Report('I', toolname, output, message, line))
 
     return reports
@@ -203,8 +202,7 @@ def search_word(toolname, document, reports, comlist, config):
                 if pattern != word_str:
                     continue
 
-                line = getline_punc(document.body.code, word.start_pos,
-                                    word.span_len(True), 50, 30)
+                line = getline_punc(document.body.code, word, 50, 30)
                 reports.append(Report('I', toolname, word, message, line))
 
     return reports

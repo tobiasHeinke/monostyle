@@ -8,7 +8,7 @@ RST code style.
 
 import re
 
-from monostyle.util.report import Report, getline_punc
+from monostyle.util.report import Report, getline_offset
 from monostyle.util.fragment import FragmentBundle
 from monostyle.util.pos import PartofSpeech
 from monostyle.util.char_catalog import CharCatalog
@@ -345,8 +345,7 @@ def line_style(toolname, document, reports, re_lib):
                     continue
 
                 output = node.code.slice_match_obj(m, 0, True)
-                line = getline_punc(node.code, output.start_pos,
-                                    output.span_len(True), 50, 0)
+                line = getline_offset(node.code, output, 100)
                 reports.append(Report('I', toolname, output, message, line, "reflow"))
 
     return reports

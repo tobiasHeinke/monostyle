@@ -120,7 +120,7 @@ def abbreviation(toolname, document, reports, data, config):
                 if re.match(word_re, entry):
                     if word.start_pos < loc:
                         msg = "abbreviation before its explanation"
-                        line = getline_punc(part.code, word.start_pos, len(word), 50, 30)
+                        line = getline_punc(part.code, word, 50, 30)
                         reports.append(Report('I', toolname, word, msg, line))
                     break
 
@@ -158,7 +158,7 @@ def abbreviation(toolname, document, reports, data, config):
                     msg = "no explanation"
                     severity = 'W'
 
-                line = getline_punc(part.code, word.start_pos, len(word), 50, 30)
+                line = getline_punc(part.code, word, 50, 30)
                 reports.append(Report(severity, toolname, word, msg, line))
 
     return reports
@@ -215,8 +215,7 @@ def article(toolname, document, reports, re_lib, data):
                     if re.match(digit_re, word_str):
                         if not is_a:
                             message = Report.existing(what="an", where="before digit")
-                            line = getline_punc(document.body.code, word.start_pos,
-                                                len(word_str), 50, 30)
+                            line = getline_punc(document.body.code, word, 50, 30)
                             reports.append(Report('E', toolname, word, message, line))
                     else:
                         is_cons =  bool(not re.match(vowel_re, word_str))
@@ -245,8 +244,7 @@ def article(toolname, document, reports, re_lib, data):
                                               "sound" if is_cons_sound != is_cons else ""))
                             message = Report.existing(what="a" if is_a else "an",
                                                       where=where)
-                            line = getline_punc(document.body.code, word.start_pos,
-                                                len(word_str), 50, 30)
+                            line = getline_punc(document.body.code, word, 50, 30)
                             reports.append(Report('E', toolname, word, message, line))
 
                     is_a = None
@@ -592,7 +590,7 @@ def overuse(toolname, document, reports):
     def evaluate(document, reports, words):
         def add_report(document, reports, word, is_severe, count):
             msg = Report.existing(what="overused word {} times ".format(count))
-            line = getline_punc(document.code, word.start_pos, len(word), 50, 30)
+            line = getline_punc(document.code, word, 50, 30)
             reports.append(Report('I' if not is_severe else 'W', toolname, word, msg, line))
 
             return reports
@@ -789,8 +787,7 @@ def search_pure(toolname, document, reports, re_lib, config):
             part_str = str(part.code)
             for m in re.finditer(pattern, part_str):
                 output = part.code.slice_match_obj(m, 0, True)
-                line = getline_punc(document.body.code, output.start_pos,
-                                    output.span_len(True), 50, 0)
+                line = getline_punc(document.body.code, output, 50, 30)
                 reports.append(Report(config.get("severity"), toolname,
                                       output, message, line))
 
@@ -866,8 +863,7 @@ def repeated(toolname, document, reports, config):
                             sev = 'W' if distance == 0 else 'I'
                             message = Report.quantity(what="repeated words",
                                                       how=str(distance) + " words in between")
-                            line = getline_punc(document.body.code, word.start_pos,
-                                                word.span_len(True), 50, 30)
+                            line = getline_punc(document.body.code, word, 50, 30)
                             reports.append(Report(sev, toolname, word, message, line))
                             break
 

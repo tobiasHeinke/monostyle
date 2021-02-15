@@ -158,6 +158,19 @@ class Fragment():
         return self
 
 
+    def is_overlapped(self, fg, pos_lincol):
+        """Check if two fragments overlap."""
+        if pos_lincol or not self.end_lincol or not fg.start_lincol:
+            if (self.is_in_span(fg.start_pos, True, False) or
+                    self.is_in_span(fg.end_pos, True, False)):
+                return True
+        else:
+            if (self.is_in_span(fg.start_lincol, True, False) or
+                    self.is_in_span(fg.end_lincol, True, False)):
+                return True
+        return False
+
+
     def is_aligned(self, fg, pos_lincol):
         """Check if two fragments are aligned."""
         if pos_lincol or not self.end_lincol or not fg.start_lincol:
@@ -578,14 +591,14 @@ class FragmentBundle():
         self.bundle = bundle
 
 
-    def get_fn(self):
+    def get_filename(self):
         return self.bundle[0].filename if self else None
 
-    def set_fn(self, value):
+    def set_filename(self, value):
         for fg in self:
             fg.filename = value
 
-    filename = property(get_fn, set_fn)
+    filename = property(get_filename, set_filename)
 
 
     def get_start_pos(self):
@@ -719,7 +732,7 @@ class FragmentBundle():
                 bundle[-1].end_lincol = self.bundle[-1].end_lincol
 
         if merge and self:
-            if self.is_aligned(bd, pos_lincol):
+            if not self.is_overlapped(bd, pos_lincol):
                 self.bundle[-1].combine(bundle[0])
                 self.bundle.extend(bundle[1:])
         else:
@@ -733,7 +746,6 @@ class FragmentBundle():
         prev = None
         new_bundle = []
         for fg in self:
-            print(type(fg))
             if prev and prev.is_aligned(fg, pos_lincol):
                 prev.combine(fg)
             else:
@@ -741,6 +753,19 @@ class FragmentBundle():
                 prev = fg
         self.bundle = new_bundle
         return self
+
+
+    def is_overlapped(self, bd, pos_lincol):
+        """Check if two fragments overlap."""
+        if pos_lincol or not self.end_lincol or not bd.start_lincol:
+            if (self.is_in_span(bd.start_pos, True, False) or
+                    self.is_in_span(bd.end_pos, True, False)):
+                return True
+        else:
+            if (self.is_in_span(bd.start_lincol, True, False) or
+                    self.is_in_span(bd.end_lincol, True, False)):
+                return True
+        return False
 
 
     def is_aligned(self, bd, pos_lincol):
@@ -842,7 +867,6 @@ class FragmentBundle():
             at_end = self.pos_to_lincol(at_end)
         result = FragmentBundle([])
         for fg in self:
-            print(fg.repr(False))
             result.combine(fg.slice_block(at_start, at_end))
         return result
 

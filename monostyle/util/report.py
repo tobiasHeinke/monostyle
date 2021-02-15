@@ -423,33 +423,33 @@ def reports_summary(reports, options):
 #------------------------
 
 
-def getline_lineno(fg, lineno):
-    """Extracts single line selected by its line number."""
-    return fg.slice((lineno, 0), (lineno+1, 0), True)
-
-
-def getline_newline(fg, loc, n):
-    """Extracts line including lines around it.
-
-    loc -- position within the line.
-    n -- number of lines to include around the line (odds below).
+def getline_lineno(code, fg, start_end=True):
+    """Extract a single line.
+    start_end -- use start or end as location.
     """
-    start = (loc[0] - ceil(n / 2), 0)
-    end = (loc[0] + (n // 2) + 1, 0)
-    return fg.slice(start, end, True)
+    lineno = fg.start(False)[0] if start_end else fg.end(False)[0]
+    return code.slice((lineno, 0), (lineno+1, 0), True)
 
 
-def getline_punc(fg, pos, match_len, min_chars, margin):
+def getline_newline(code, fg, n, start_end=True):
+    """Extract a line including lines around it.
+    n -- number of lines to include around the line (odds below).
+    start_end -- use start or end as location.
+    """
+    lineno = fg.start(False)[0] if start_end else fg.end(False)[0]
+    start = (lineno - ceil(n / 2), 0)
+    end = (lineno + (n // 2) + 1, 0)
+    return code.slice(start, end, True)
+
+
+def getline_punc(code, fg, min_chars, margin):
     """Extracts line limited by punctuation.
-
-    pos -- position within the line.
-    match_len -- length of the output.
     min_chars -- minimal amount of chars to extract on both sides.
     margin -- length of the outer margin within to search for punctuation marks.
     """
-    start = pos - min_chars - margin
-    end = pos + match_len + min_chars + margin
-    buf = fg.slice(start, end, True)
+    start = fg.start_pos - min_chars - margin
+    end = fg.end_pos + min_chars + margin
+    buf = code.slice(start, end, True)
 
     margin_start, _, margin_end = buf.slice(start + margin, end - margin)
 
@@ -466,3 +466,34 @@ def getline_punc(fg, pos, match_len, min_chars, margin):
             end = margin_end.loc_to_abs(end_m.end(0))
 
     return buf.slice(start, end, True)
+
+
+def getline_offset(code, fg, offset, after_before=None):
+    """Extracts a lines limited by an offset.
+    offset -- span to include.
+    after_before -- offset after end, before start or half on both sides.
+    """
+    is_pos = isinstance(offset, int)
+    start = fg.get_start(is_pos)
+    end = fg.get_end(is_pos)
+    if after_before is None:
+        if is_pos:
+            diff = offset // 2
+            start -= diff
+            end += diff
+        else:
+            diff = tuple(map(lambda e: e // 2 if e != 0 else 0, offset))
+            start = tuple(a - b for a, b in zip(start, diff))
+            end = tuple(a + b for a, b in zip(end, diff))
+    elif after_before:
+        if is_pos:
+            end += offset
+        else:
+            end = tuple(a + b for a, b in zip(end, offset))
+    else:
+        if is_pos:
+            start -= offset
+        else:
+            start = tuple(a - b for a, b in zip(start, offset))
+
+    return code.slice(start, end, True)

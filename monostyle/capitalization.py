@@ -9,7 +9,7 @@ Capitalization tools.
 import re
 
 import monostyle.util.monostyle_io as monostyle_io
-from monostyle.util.report import Report, getline_punc
+from monostyle.util.report import Report, getline_punc, getline_offset
 from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.char_catalog import CharCatalog
@@ -289,8 +289,7 @@ def property_noun(toolname, document, reports, data, config):
             for entry in data[first_letter]:
                 if entry[0] == word_str:
                     message = "property noun: {:4.0%}".format(entry[1])
-                    line = getline_punc(document.code, word.start_pos,
-                                        word.span_len(True), 50, 30)
+                    line = getline_punc(document.code, word, 50, 30)
                     reports.append(Report('W', toolname, word, message, line))
                     break
 
@@ -354,7 +353,7 @@ def start_case(toolname, document, reports, re_lib):
 
                 if re.match(start_re, str(part.code)):
                     output = part.code.copy().clear(True)
-                    line = getline_punc(document.body.code, output.start_pos, 0, 50, 0)
+                    line = getline_offset(document.body.code, output, 100, True)
                     reports.append(Report('W', toolname, output, re_lib["lowerpara"][1], line))
 
                 was_empty = bool(len(part.code) == 0)
@@ -367,8 +366,7 @@ def start_case(toolname, document, reports, re_lib):
                 pattern = value[0]
                 for m in re.finditer(pattern, part_str):
                     output = part.code.slice_match_obj(m, 0, True)
-                    line = getline_punc(document.body.code, output.start_pos,
-                                        output.span_len(True), 50, 0)
+                    line = getline_offset(document.body.code, output, 100, True)
                     reports.append(Report('W', toolname, output, value[1], line))
 
     return reports

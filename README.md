@@ -100,12 +100,12 @@ For external revisions the "change" syntax is used for single arguments "ARG".
 ```
 test.rst:
 ---------
-1,20 ⚠️ 'static' repeated words 0 words in between
-   Linter is a static static code analysis tool `source <https://en.wikipedia.org/wiki/Lint_(software)
+1:20 ⚠️ 'static' repeated words 0 words in between
+   Linter is a static static code analysis tool `source <https://en.wikipedia.org/wiki/Lint_(software)> `
 
-2,9 ℹ️ 'flag' CS technical term
-  org/wiki/Lint_(software)> `__¶used to flag programming errors, bugs, stylistic errors, and
+2:9 ℹ️ 'flag' CS technical term
+   en.wikipedia.org/wiki/Lint_(software)> `__¶used to flag programming errors, bugs, stylistic errors, and
 
-1,100 🛑 ' `__' space before body end of hyperlink
-   )> `__¶used to flag programming errors, bugs, stylistic
+1:100 🛑 ' `__' space before body end of hyperlink
+   ce <https://en.wikipedia.org/wiki/Lint_(software)> `__¶used to flag programming errors, bugs, stylistic
 ```
