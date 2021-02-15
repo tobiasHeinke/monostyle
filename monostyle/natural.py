@@ -8,7 +8,7 @@ Tools for natural language and style.
 
 import re
 
-import monostyle.util.monostylestd as monostylestd
+import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.report import Report, getline_punc
 from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.walker as rst_walker
@@ -33,7 +33,7 @@ def abbreviation_pre(_):
 
     rst_parser = RSTParser()
     explanations = dict()
-    ignore = monostylestd.get_data_file("common_abbr")
+    ignore = monostyle_io.get_data_file("common_abbr")
 
     for entry in POS.get(("abbreviation",), joined=True):
         if POS.isabbr(entry + "."):
@@ -64,7 +64,7 @@ def abbreviation_pre(_):
     after_test_re = re.compile(r"\A\s*?\(")
     after_re = re.compile(r"\A\s*?\(([^\)]+?)\)")
 
-    for filename, text in monostylestd.rst_texts():
+    for filename, text in monostyle_io.rst_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
 
         # todo glossary terms as explanation?
@@ -166,7 +166,7 @@ def abbreviation(toolname, document, reports, data, config):
 
 def article_pre(_):
     args = dict()
-    args["data"] = monostylestd.get_data_file("indefinite_article")
+    args["data"] = monostyle_io.get_data_file("indefinite_article")
 
     re_lib = dict()
     re_lib["vowel"] = re.compile(r"[aeiouAEIOU]")
@@ -646,7 +646,7 @@ def overuse(toolname, document, reports):
         "literal": "*", "standalone": "*"
     }
     topics = {'and', 'or'}
-    for word in re.split(r"[/._-]", monostylestd.path_to_rel(document.code.filename, 'rst')
+    for word in re.split(r"[/._-]", monostyle_io.path_to_rel(document.code.filename, 'rst')
                                                 .replace(".rst", "")):
         topics.add(word)
     words = dict()
@@ -750,7 +750,7 @@ def passive_pre(_):
                    r"\bg[eo]t(?:s|ten)?\b)", # get
                    r"\s+",
                    r"(\b[\w-]+e[dn]\b|\b",
-                   r"\b|\b".join(monostylestd.get_data_file("irregular_participle")), r"\b)")
+                   r"\b|\b".join(monostyle_io.get_data_file("irregular_participle")), r"\b)")
 
     pattern = re.compile(''.join(pattern_str), re.DOTALL)
     message = Report.existing(what="passive voice")
@@ -800,7 +800,7 @@ def search_pure(toolname, document, reports, re_lib, config):
 def repeated_pre(op):
     config = dict()
     # Number of the word within to run the detection.
-    config["buf_size"] = monostylestd.get_override(__file__, op[0], "buf_size", 4)
+    config["buf_size"] = monostyle_io.get_override(__file__, op[0], "buf_size", 4)
     return {"config": config}
 
 

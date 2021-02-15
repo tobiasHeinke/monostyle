@@ -8,7 +8,7 @@ Project configuration.
 
 import os
 import json
-from monostyle.util.monostylestd import override_typecheck
+from monostyle.util.monostyle_io import override_typecheck
 
 
 tool_selection = None

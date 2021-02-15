@@ -12,7 +12,7 @@ import os
 import re
 import subprocess
 
-from monostyle.util.monostylestd import print_over
+from monostyle.util.monostyle_io import print_over
 from monostyle.util.fragment import Fragment
 
 

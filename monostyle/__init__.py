@@ -19,7 +19,7 @@ import os
 import importlib.util
 
 from . import config
-from .util import monostylestd
+from .util import monostyle_io
 from .util.report import (Report, print_reports, print_report,
                           options_overide, reports_summary)
 from .rst_parser.core import RSTParser
@@ -95,8 +95,8 @@ def get_reports_version(mods, rst_parser, from_vsn, is_internal, path, rev=None,
             continue
 
         if show_current:
-            monostylestd.print_over("processing:",
-                                    "{0}[{1}-{2}]".format(monostylestd.path_to_rel(fg.filename),
+            monostyle_io.print_over("processing:",
+                                    "{0}[{1}-{2}]".format(monostyle_io.path_to_rel(fg.filename),
                                                           fg.start_lincol[0], fg.end_lincol[0]),
                                     is_temp=True)
 
@@ -108,7 +108,7 @@ def get_reports_version(mods, rst_parser, from_vsn, is_internal, path, rev=None,
         reports_summary(reports, print_options)
 
     if show_current:
-        monostylestd.print_over("processing: done")
+        monostyle_io.print_over("processing: done")
 
     return reports
 
@@ -132,17 +132,17 @@ def get_reports_file(mods, rst_parser, path, parse_options):
     print_options = options_overide()
     show_current = bool(path)
     if path:
-        path = monostylestd.path_to_abs(path, "rst")
+        path = monostyle_io.path_to_abs(path, "rst")
     filename_prev = None
     if parse_options["resolve"]:
         titles, targets = env.get_link_titles(rst_parser)
         parse_options["titles"] = titles
         parse_options["targets"] = targets
-    for filename, text in monostylestd.rst_texts(path):
+    for filename, text in monostyle_io.rst_texts(path):
         doc = rst_parser.document(filename, text)
         if show_current:
-            monostylestd.print_over("processing:",
-                                    "{0}[{1}-{2}]".format(monostylestd.path_to_rel(filename),
+            monostyle_io.print_over("processing:",
+                                    "{0}[{1}-{2}]".format(monostyle_io.path_to_rel(filename),
                                                           0, doc.code.end_lincol[0]),
                                     is_temp=True)
 
@@ -153,7 +153,7 @@ def get_reports_file(mods, rst_parser, path, parse_options):
         reports_summary(reports, print_options)
 
     if show_current:
-        monostylestd.print_over("processing: done")
+        monostyle_io.print_over("processing: done")
 
     return reports
 
@@ -249,7 +249,7 @@ def setup(root, patch=None):
 
     config_dir = os.path.normpath(os.path.join(root, "monostyle"))
     if not os.path.isdir(config_dir):
-        if not monostylestd.ask_user(("Create user config folder in '", root, "'",
+        if not monostyle_io.ask_user(("Create user config folder in '", root, "'",
                                       "" if is_repo else " even though it's not the top folder "
                                       "of a repository")):
             # run with default config
@@ -345,7 +345,7 @@ def main(descr=None, mod_selection=None, parse_options=None):
             print('Error: root {0} does not exists'.format(args.root))
             return 2
 
-    root_dir = monostylestd.replace_windows_path_sep(root_dir)
+    root_dir = monostyle_io.replace_windows_path_sep(root_dir)
     setup_sucess = setup(root_dir, args.patch)
     if not setup_sucess:
         return 2
@@ -374,16 +374,16 @@ def main(descr=None, mod_selection=None, parse_options=None):
             return 2
 
         reports = get_reports_version(mods, rst_parser, False, True,
-                                      monostylestd.replace_windows_path_sep(args.patch))
+                                      monostyle_io.replace_windows_path_sep(args.patch))
         for report in reports:# custom root
-            report.output.filename = monostylestd.path_to_abs(report.output.filename)
+            report.output.filename = monostyle_io.path_to_abs(report.output.filename)
     else:
         if not parse_options:
             parse_options = {"parse": True, "resolve": False, "post": False}
         if is_selection and args.do_resolve:
             parse_options["resolve"] = args.do_resolve
         reports = get_reports_file(mods, rst_parser,
-                                   monostylestd.replace_windows_path_sep(args.filename)
+                                   monostyle_io.replace_windows_path_sep(args.filename)
                                    if args.filename else None,
                                    parse_options)
 
@@ -394,9 +394,9 @@ def main(descr=None, mod_selection=None, parse_options=None):
 
     if args.auto:
         if ((is_selection or not ((args.external and rev) or args.patch) or
-                monostylestd.ask_user(("Apply autofix on possibly altered sources"))) and
+                monostyle_io.ask_user(("Apply autofix on possibly altered sources"))) and
                 (not is_selection or args.filename or
-                 monostylestd.ask_user(("Apply autofix on full project")))):
+                 monostyle_io.ask_user(("Apply autofix on full project")))):
             autofix.run(reports, rst_parser, fns_conflicted)
     if args.min_severity:
         file_opener.open_reports_files(reports, args.min_severity)

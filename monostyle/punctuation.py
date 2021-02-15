@@ -8,7 +8,7 @@ Punctuation style checks and number formatting.
 
 import re
 
-import monostyle.util.monostylestd as monostylestd
+import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.report import Report, getline_punc
 from monostyle.util.fragment import Fragment
 import monostyle.rst_parser.walker as rst_walker
@@ -424,7 +424,7 @@ def pairs_pre(op):
     args["re_lib"] = re_lib
 
     # Max number of lines between the open and close mark.
-    line_span = monostylestd.get_override(__file__, op[0], "max_line_span", 2)
+    line_span = monostyle_io.get_override(__file__, op[0], "max_line_span", 2)
     args["config"] = {"max_line_span": line_span}
 
     return args

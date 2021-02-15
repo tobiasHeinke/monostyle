@@ -7,7 +7,7 @@ Data-driven part of speech tagging.
 """
 
 import re
-from monostyle.util.monostylestd import get_data_file, get_branch
+from monostyle.util.monostyle_io import get_data_file, get_branch
 from monostyle.util.char_catalog import CharCatalog
 
 class PartofSpeech:

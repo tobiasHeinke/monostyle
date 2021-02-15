@@ -9,7 +9,7 @@ RST markup tools.
 import re
 from difflib import SequenceMatcher
 
-import monostyle.util.monostylestd as monostylestd
+import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.fragment import Fragment
 from monostyle.util.report import Report
 from monostyle.rst_parser.core import RSTParser
@@ -30,7 +30,7 @@ def glossary_pre(_):
     terms_glossary = set()
     glossary_code = None
     glossary_fns = []
-    for filename, text in monostylestd.rst_texts():
+    for filename, text in monostyle_io.rst_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
 
         for node in rst_walker.iter_node(document.body, ("dir", "role",)):
@@ -103,7 +103,7 @@ def local_targets_pre(_):
     targets = []
     rst_parser = RSTParser()
 
-    for filename, text in monostylestd.rst_texts():
+    for filename, text in monostyle_io.rst_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
         for node in rst_walker.iter_node(document.body, {"target", "role"}):
             if node.node_name == "target":
@@ -247,7 +247,7 @@ def unused_targets_pre(_):
     targets = []
     rst_parser = RSTParser()
 
-    for filename, text in monostylestd.rst_texts():
+    for filename, text in monostyle_io.rst_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
         for node in rst_walker.iter_node(document.body, {"target", "role", "subst"}):
             if node.node_name == "target":

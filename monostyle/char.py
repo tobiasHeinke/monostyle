@@ -8,7 +8,7 @@ Tools on char level and encoding.
 
 import re
 
-import monostyle.util.monostylestd as monostylestd
+import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.report import Report
 from monostyle.util.fragment import Fragment
 from monostyle.util.char_catalog import CharCatalog
@@ -53,7 +53,7 @@ def encoding(toolname, reports):
 
     # standard Unicode replace char <?>
     repchar_re = re.compile("\uFFFD")
-    for filename in monostylestd.rst_files():
+    for filename in monostyle_io.rst_files():
         with open(filename, "r", encoding="utf-8", errors="replace") as f:
             try:
                 text = f.read()

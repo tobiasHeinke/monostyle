@@ -11,7 +11,7 @@ import re
 import csv
 from difflib import SequenceMatcher
 
-import monostyle.util.monostylestd as monostylestd
+import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.report import Report
 from monostyle.util.fragment import Fragment
 
@@ -117,7 +117,7 @@ def build_lexicon(re_lib):
     """Build lexicon by looping over files."""
     rst_parser = RSTParser()
     lexicon = dict()
-    for filename, text in monostylestd.rst_texts():
+    for filename, text in monostyle_io.rst_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
         lexicon = populate_lexicon(document, lexicon, re_lib)
 
@@ -247,7 +247,7 @@ def lower_first_reverse(word, ref):
 
 def read_csv_lexicon():
     lexicon = []
-    lex_filename = monostylestd.path_to_abs("monostyle/lexicon.csv")
+    lex_filename = monostyle_io.path_to_abs("monostyle/lexicon.csv")
     try:
         with open(lex_filename, newline='', encoding='utf-8') as csvfile:
             csv_reader = csv.reader(csvfile)
@@ -262,7 +262,7 @@ def read_csv_lexicon():
 
 
 def write_csv_lexicon(lexicon):
-    lex_filename = monostylestd.path_to_abs("monostyle/lexicon.csv")
+    lex_filename = monostyle_io.path_to_abs("monostyle/lexicon.csv")
     count = 0
     try:
         with open(lex_filename, 'w', newline='', encoding='utf-8') as csvfile:
@@ -282,11 +282,11 @@ def difference(lex_stored, lex_new):
     lex_stored = set(entry[0] for entry in lex_stored)
     lex_new = set(entry[0] for entry in lex_new)
 
-    monostylestd.print_title("Added", True)
+    monostyle_io.print_title("Added", True)
     for word in sorted(lex_new.difference(lex_stored)):
         print(word)
 
-    monostylestd.print_title("Removed", True)
+    monostyle_io.print_title("Removed", True)
     for word in sorted(lex_stored.difference(lex_new)):
         print(word)
 
@@ -306,7 +306,7 @@ def search_pre(op):
             entry.append(set(ord(c) for c in entry[0].lower()))
         return lexicon
 
-    config_dir = monostylestd.path_to_abs("monostyle")
+    config_dir = monostyle_io.path_to_abs("monostyle")
     if not os.path.isdir(config_dir):
         print("No user config found skipping spell checking")
         return None
@@ -315,7 +315,7 @@ def search_pre(op):
 
     data = read_csv_lexicon()
     if data is None:
-        if monostylestd.ask_user(("The lexicon does not exist in the user config folder ",
+        if monostyle_io.ask_user(("The lexicon does not exist in the user config folder ",
                                   "do you want to build it")):
             lex_new = build_lexicon(re_lib)
             write_csv_lexicon(lex_new)
@@ -323,7 +323,7 @@ def search_pre(op):
         else:
             return None
 
-    threshold = monostylestd.get_override(__file__, op[0], "threshold", 3)
+    threshold = monostyle_io.get_override(__file__, op[0], "threshold", 3)
     args = dict()
     args["re_lib"] = re_lib
     args["data"] = split_lexicon(add_charset(data))
@@ -364,7 +364,7 @@ def main():
             print('Error: root {0} does not exists'.format(args.root))
             return 2
 
-    root_dir = monostylestd.replace_windows_path_sep(root_dir)
+    root_dir = monostyle_io.replace_windows_path_sep(root_dir)
     setup_sucess = setup(root_dir)
     if not setup_sucess:
         return 2

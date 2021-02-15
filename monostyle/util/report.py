@@ -10,7 +10,7 @@ import re
 from math import ceil
 
 import monostyle.config as config
-from monostyle.util.monostylestd import print_over, print_title, path_to_rel
+from monostyle.util.monostyle_io import print_over, print_title, path_to_rel
 
 
 class MessageTemplate():
@@ -330,8 +330,14 @@ class Report():
 
         try:
             return options["format_str"].format(**entries)
-        except KeyError:
+        except KeyError as err:
+            if not Report.repr.user_notified:
+                print("Report format_str key error: {} in \"{}\"".format(err, options["format_str"]))
+                Report.repr.user_notified = True
+
             return format_str.format(**entries)
+
+    repr.user_notified = False
 
 
     def __repr__(self):

@@ -10,7 +10,7 @@ import os
 import sys
 import subprocess
 
-from monostyle.util.monostylestd import print_over, path_to_rel
+from monostyle.util.monostyle_io import print_over, path_to_rel
 from monostyle.util.report import Report
 
 

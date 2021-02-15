@@ -1,9 +1,9 @@
 
 """
-util.monostylestd
+util.monostyle_io
 ~~~~~~~~~~~~~~~~~
 
-Common utility for Monostyle.
+Input/Output utility for Monostyle.
 """
 
 import sys
@@ -12,6 +12,10 @@ import re
 import json
 
 import monostyle.config as config
+
+
+#------------------------
+# Console
 
 
 def print_over(*text, is_temp=False, ellipsis=None):
@@ -71,7 +75,7 @@ def ask_user(question):
 
 
 #------------------------
-# IO & data
+# Files & data
 
 
 def path_to_rel(filename, base=None):

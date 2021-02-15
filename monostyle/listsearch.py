@@ -8,7 +8,7 @@ List based search tools.
 
 import re
 
-import monostyle.util.monostylestd as monostylestd
+import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.report import Report, getline_punc
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.segmenter import Segmenter
@@ -220,12 +220,12 @@ def search_pre(op):
 
     config = parse_config(op[4])
     if not op[0].endswith("/*"):
-        data_src = monostylestd.get_data_file(op[0])
+        data_src = monostyle_io.get_data_file(op[0])
         # last path segment as default message.
         config["message"] = op[0].split('/')[-1]
         data_comp = compile_searchlist(data_src, config)
     else:
-        data_src = monostylestd.get_data_file(op[0][:-2])
+        data_src = monostyle_io.get_data_file(op[0][:-2])
         data_comp = []
         for key, value in wildcard_leaf(data_src):
             # key as default message.

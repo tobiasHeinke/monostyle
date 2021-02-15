@@ -12,7 +12,7 @@ Fragment or FragmentBundle.
 
 import monostyle.reflow
 
-import monostyle.util.monostylestd as monostylestd
+import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.editor import Editor
 from monostyle.util.fragment import Fragment, FragmentBundle
 from monostyle.util.report import print_reports
@@ -20,7 +20,7 @@ from monostyle.util.report import print_reports
 
 def run(reports, rst_parser, fns_conflicted=None):
     """Sort reports into groups for each fix tool."""
-    monostylestd.print_over("autofix", ellipsis="...")
+    monostyle_io.print_over("autofix", ellipsis="...")
 
     group_fix = []
     for report in reports:
@@ -28,7 +28,7 @@ def run(reports, rst_parser, fns_conflicted=None):
             group_fix.append(report)
 
     if len(group_fix) == 0:
-        monostylestd.print_over("done")
+        monostyle_io.print_over("done")
         return None
 
     group_file = {}
@@ -51,9 +51,9 @@ def run(reports, rst_parser, fns_conflicted=None):
             for reports_tool in tools.values():
                 reports_unfixed.extend(reports_tool)
 
-    monostylestd.print_over("done")
+    monostyle_io.print_over("done")
     if len(reports_unfixed) != 0:
-        monostylestd.print_title("Conflicted/Unlocated Reports", underline='-')
+        monostyle_io.print_title("Conflicted/Unlocated Reports", underline='-')
         print_reports(reports_unfixed)
 
 
@@ -82,7 +82,7 @@ def apply(filename, tools, reports_unfixed, rst_parser):
         new_changes.extend(changes)
         return new_changes
 
-    filename, text = monostylestd.single_text(filename)
+    filename, text = monostyle_io.single_text(filename)
     if text is None:
         return reports_unfixed.extend(tools[1])
 

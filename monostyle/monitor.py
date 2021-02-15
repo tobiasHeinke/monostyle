@@ -7,13 +7,13 @@ Monitor files for changes.
 """
 
 import re
-import monostyle.util.monostylestd as monostylestd
+import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.report import Report
 
 
 def check_pre(op):
     args = dict()
-    args["data"] = monostylestd.get_override(__file__, op[0], "fns", [])
+    args["data"] = monostyle_io.get_override(__file__, op[0], "fns", [])
     return args
 
 
@@ -22,7 +22,7 @@ def check(toolname, document, reports, data):
     if len(data) == 0:
         return reports
 
-    filename = monostylestd.path_to_rel(document.code.filename)
+    filename = monostyle_io.path_to_rel(document.code.filename)
     if filename.startswith('/'):
         filename = filename[1:]
 
