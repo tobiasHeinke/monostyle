@@ -161,8 +161,8 @@ def get_reports_file(mods, rst_parser, path, parse_options):
 def filter_reports(report, context):
     """Filter out reports in the diff context."""
     return bool(report.tool in
-                {"mark", "blank-line", "directive", "indention", "heading-level",
-                 "heading-line-length", "start-case", "flavor"} and # "search-word",
+                {"blank-line", "flavor", "indention", "heading-level", "heading-line-length",
+                 "mark", "markup-names", "start-case"} and # "search-word",
                 report.output.start_lincol is not None and context is not None and
                 report.output.start_lincol[0] in context)
 
@@ -249,9 +249,9 @@ def setup(root, patch=None):
 
     config_dir = os.path.normpath(os.path.join(root, "monostyle"))
     if not os.path.isdir(config_dir):
-        if not monostyle_io.ask_user(("Create user config folder in '", root, "'",
-                                      "" if is_repo else " even though it's not the top folder "
-                                      "of a repository")):
+        if not monostyle_io.ask_user("Create user config folder in '", root, "'",
+                                     "" if is_repo else " even though it's not the top folder "
+                                     "of a repository"):
             # run with default config
             return True
 
@@ -331,7 +331,8 @@ def main(descr=None, mod_selection=None, parse_options=None):
                         action="store_true", dest="auto", default=False,
                         help="apply autofixes")
     parser.add_argument("-o", "--open",
-                        dest="min_severity", choices=Report.severities,
+                        dest="min_severity", nargs='?',
+                        choices=Report.severities, const=Report.severities[-1],
                         help="open files with report severity above")
 
     args = parser.parse_args()
@@ -394,9 +395,9 @@ def main(descr=None, mod_selection=None, parse_options=None):
 
     if args.auto:
         if ((is_selection or not ((args.external and rev) or args.patch) or
-                monostyle_io.ask_user(("Apply autofix on possibly altered sources"))) and
+                monostyle_io.ask_user("Apply autofix on possibly altered sources")) and
                 (not is_selection or args.filename or
-                 monostyle_io.ask_user(("Apply autofix on full project")))):
+                 monostyle_io.ask_user("Apply autofix on full project"))):
             autofix.run(reports, rst_parser, fns_conflicted)
     if args.min_severity:
         file_opener.open_reports_files(reports, args.min_severity)

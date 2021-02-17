@@ -536,7 +536,7 @@ class RSTParser:
                             prime = node.child_nodes.last()
                         else:
                             prime = NodeRST("def-list", None)
-                            prime.append_part("indent", node.active.indent.code.clear(True))
+                            prime.append_part("indent", node.active.indent.code.copy().clear(True))
                             prime.append_part("body", None)
                             node.append_child(prime)
 
@@ -630,7 +630,7 @@ class RSTParser:
 
                 if node.parent_node.node_name != newnode.node_name + "-list":
                     prime = NodeRST(newnode.node_name + "-list", None)
-                    prime.append_part("indent", newnode.indent.code.clear(True))
+                    prime.append_part("indent", newnode.indent.code.copy().clear(True))
                     prime.append_part("body", None)
                     node.append_child(prime)
                     node = prime.body
@@ -656,7 +656,7 @@ class RSTParser:
 
                 if line_info["is_block_start"] and node.parent_node.node_name != "line-list":
                     prime = NodeRST(newnode.node_name + "-list", None)
-                    prime.append_part("indent", newnode.indent.code.clear(True))
+                    prime.append_part("indent", newnode.indent.code.copy().clear(True))
                     prime.append_part("body", None)
                     node.append_child(prime)
                     node = prime.body
@@ -690,7 +690,7 @@ class RSTParser:
 
                 if line_info["is_block_start"] and node.parent_node.node_name != "field-list":
                     prime = NodeRST(newnode.node_name + "-list", None)
-                    prime.append_part("indent", newnode.indent.code.clear(True))
+                    prime.append_part("indent", newnode.indent.code.copy().clear(True))
                     prime.append_part("body", None)
                     node.append_child(prime)
                     node = prime.body
@@ -728,7 +728,7 @@ class RSTParser:
 
                 if line_info["is_block_start"] and node.parent_node.node_name != "option-list":
                     prime = NodeRST(newnode.node_name + "-list", None)
-                    prime.append_part("indent", newnode.indent.code.clear(True))
+                    prime.append_part("indent", newnode.indent.code.copy().clear(True))
                     prime.append_part("body", None)
                     node.append_child(prime)
                     node = prime.body
@@ -1041,7 +1041,7 @@ class RSTParser:
                 newnode.append_part("body", after)
 
                 prime = NodeRST("grid-table", None)
-                prime.append_part("indent", newnode.indent.code.clear(True))
+                prime.append_part("indent", newnode.indent.code.copy().clear(True))
                 prime.append_part("head", None)
                 prime.head.active = newnode
 
@@ -1169,7 +1169,7 @@ class RSTParser:
                 newnode.append_part("body", after)
 
                 prime = NodeRST("simple-table", None)
-                prime.append_part("indent", newnode.indent.code.clear(True))
+                prime.append_part("indent", newnode.indent.code.copy().clear(True))
                 prime.append_part("head", None)
                 prime.head.active = newnode
 

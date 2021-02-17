@@ -30,26 +30,29 @@ def search(toolname, document, reports, re_lib, data, config):
     # compare words in the text.
     text_words = []
     for word in word_filtered(document):
-        word_cont = str(word)
-        word_cont = norm_punc(word_cont, re_lib)
+        word_str = str(word)
+        word_str = norm_punc(word_str, re_lib)
         if not POS.isacr(word) and not POS.isabbr(word):
-            word_cont = lower_first(word_cont)
+            word_str = lower_first(word_str)
         for entry in text_words:
-            if word_cont == entry[1]:
+            if word_str == entry[1]:
                 entry[2] += 1
                 break
         else:
-            text_words.append([word, word_cont, 0])
+            text_words.append([word, word_str, 0])
 
 
     threshold = config["threshold"]
     # compare words against the lexicon.
-    for word, word_cont, hunk_count in text_words:
+    lex_keys = data.keys()
+    for word, word_str, hunk_count in text_words:
         found_count = -1
-        for stored_word, count, _ in data[word_cont[0]]:
-            if word_cont == str(stored_word):
-                found_count = int(count)
-                break
+        first_char = word_str[0]
+        if first_char in lex_keys:
+            for stored_word, count, _ in data[first_char]:
+                if word_str == str(stored_word):
+                    found_count = int(count)
+                    break
 
         if found_count < threshold:
             line = None
@@ -61,37 +64,38 @@ def search(toolname, document, reports, re_lib, data, config):
                 severity = 'W'
                 message = "new word: hunk: " + str(hunk_count + 1)
                 line = Fragment(word.filename, ", ".join(find_similar(norm_punc(str(word), re_lib),
-                                                                word_cont, data, 5, 0.6)))
+                                                                word_str, data, 5, 0.6)))
 
             reports.append(Report(severity, toolname, word, message, line))
 
     return reports
 
 
-def find_similar(word_str, word_cont, lexicon, count, sim_threshold):
+def find_similar(word_normed, word_str, lexicon, count, sim_threshold):
     """Find similar words within a lexicon with adaptive filtering."""
-    def iter_lexicon(word_cont, lexicon):
-        first_char = word_cont[0]
-        value = lexicon[first_char]
-        yield from reversed(value)
+    def iter_lexicon(word_str, lexicon):
+        first_char = word_str[0]
+        if first_char in lexicon.keys():
+            value = lexicon[first_char]
+            yield from reversed(value)
         for key, value in lexicon.items():
             if key != first_char:
                 yield from reversed(value)
 
     similars = []
-    word_chars = set(ord(c) for c in word_cont)
-    for stored_word, _, stored_chars in iter_lexicon(word_cont, lexicon):
-        len_deviation = abs(len(word_cont) - len(stored_word)) / len(word_cont)
+    word_chars = set(ord(c) for c in word_str)
+    for stored_word, _, stored_chars in iter_lexicon(word_str, lexicon):
+        len_deviation = abs(len(word_str) - len(stored_word)) / len(word_str)
         if len_deviation >= 2:
             continue
         sim_rough = len(word_chars.intersection(stored_chars)) / len(word_chars) - len_deviation
         is_not_full = bool(len(similars) < count)
         if is_not_full or sim_rough >= min_rough:
-            matcher = SequenceMatcher(None, word_cont, stored_word)
+            matcher = SequenceMatcher(None, word_str, stored_word)
             sim_quick = matcher.quick_ratio()
             if is_not_full or sim_quick >= min_quick:
                 sim_slow = matcher.ratio()
-                if sim_slow == 1 and word_cont == stored_word:
+                if sim_slow == 1 and word_str == stored_word:
                     continue
                 if is_not_full:
                     similars.append((stored_word, sim_slow, sim_quick, sim_rough))
@@ -109,7 +113,7 @@ def find_similar(word_str, word_cont, lexicon, count, sim_threshold):
                 min_rough = min(s[3] for s in similars)
 
     similars.sort(key=lambda key: key[1], reverse=True)
-    return tuple(lower_first_reverse(entry[0], word_str) for entry in similars
+    return tuple(lower_first_reverse(entry[0], word_normed) for entry in similars
                  if entry[1] >= sim_threshold)
 
 
@@ -134,21 +138,21 @@ def build_lexicon(re_lib):
 def populate_lexicon(document, lexicon, re_lib):
     """Populate lexicon with transformed words."""
     for word in word_filtered(document):
-        word_cont = str(word)
-        word_cont = norm_punc(word_cont, re_lib)
+        word_str = str(word)
+        word_str = norm_punc(word_str, re_lib)
         if not POS.isacr(word) and not POS.isabbr(word):
-            word_cont = lower_first(word_cont)
-        first_char = word_cont[0].lower()
+            word_str = lower_first(word_str)
+        first_char = word_str[0].lower()
         # tree with leafs for each first char.
         if first_char not in lexicon.keys():
             lexicon.setdefault(first_char, [])
         leaf = lexicon[first_char]
         for entry in leaf:
-            if entry[0] == word_cont:
+            if entry[0] == word_str:
                 entry[1] += 1
                 break
         else:
-            new_word = [word_cont, 0]
+            new_word = [word_str, 0]
             leaf.append(new_word)
 
     return lexicon
@@ -208,11 +212,11 @@ def word_filtered(document):
             yield word
 
 
-def norm_punc(word_cont, re_lib):
+def norm_punc(word_str, re_lib):
     """Normalize the word's punctuation."""
-    word_cont = re.sub(re_lib["hyphen"], '-', word_cont)
-    word_cont = re.sub(re_lib["apostrophe"], '\'', word_cont)
-    return word_cont
+    word_str = re.sub(re_lib["hyphen"], '-', word_str)
+    word_str = re.sub(re_lib["apostrophe"], '\'', word_str)
+    return word_str
 
 
 def lower_first(word):
@@ -315,8 +319,8 @@ def search_pre(op):
 
     data = read_csv_lexicon()
     if data is None:
-        if monostyle_io.ask_user(("The lexicon does not exist in the user config folder ",
-                                  "do you want to build it")):
+        if monostyle_io.ask_user("The lexicon does not exist in the user config folder ",
+                                 "do you want to build it"):
             lex_new = build_lexicon(re_lib)
             write_csv_lexicon(lex_new)
             data = lex_new

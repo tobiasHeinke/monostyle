@@ -158,16 +158,22 @@ class Fragment():
         return self
 
 
-    def is_overlapped(self, fg, pos_lincol):
+    def is_overlapped(self, fg, pos_lincol, is_recursive=False):
         """Check if two fragments overlap."""
-        if pos_lincol or not self.end_lincol or not fg.start_lincol:
-            if (self.is_in_span(fg.start_pos, True, False) or
-                    self.is_in_span(fg.end_pos, True, False)):
+        if not is_recursive and fg.is_bundle():
+            return fg.is_overlapped(self, pos_lincol)
+
+        if not self.end_lincol or not fg.start_lincol:
+            pos_lincol = True
+        if fg.get_start(pos_lincol) == fg.get_end(pos_lincol):
+            if self.is_in_span(fg.get_start(pos_lincol), False, False):
                 return True
-        else:
-            if (self.is_in_span(fg.start_lincol, True, False) or
-                    self.is_in_span(fg.end_lincol, True, False)):
-                return True
+        elif (self.is_in_span(fg.get_start(pos_lincol), True, False) or
+                self.is_in_span(fg.get_end(pos_lincol), False, True)):
+            return True
+
+        if not is_recursive and fg.is_overlapped(self, pos_lincol, is_recursive=True):
+            return True
         return False
 
 
@@ -270,7 +276,7 @@ class Fragment():
             at_start = self.pos_to_lincol(at_start)
         if isinstance(at_end, int):
             at_end = self.pos_to_lincol(at_end)
-        result = FragmentBundle([])
+        result = FragmentBundle()
         for line in self.slice(at_start, at_end, True).splitlines():
             result.combine(line.slice((line.start_lincol[0], at_start[1]),
                                       (line.start_lincol[0], at_end[1]), True))
@@ -481,6 +487,11 @@ class Fragment():
     def __bool__(self):
         """Returns is not None."""
         return True
+
+
+    def is_bundle(self):
+        """Returns is FragmentBundle."""
+        return False
 
 
     def __eq__(self, other):
@@ -724,7 +735,7 @@ class FragmentBundle():
         if not bd:
             return self
 
-        bundle = bd.bundle if isinstance(bd, FragmentBundle) else [bd]
+        bundle = bd.bundle if bd.is_bundle() else [bd]
 
         if keep_end:
             bundle[-1].end_pos = self.bundle[-1].end_pos
@@ -756,15 +767,15 @@ class FragmentBundle():
 
 
     def is_overlapped(self, bd, pos_lincol):
-        """Check if two fragments overlap."""
-        if pos_lincol or not self.end_lincol or not bd.start_lincol:
-            if (self.is_in_span(bd.start_pos, True, False) or
-                    self.is_in_span(bd.end_pos, True, False)):
-                return True
-        else:
-            if (self.is_in_span(bd.start_lincol, True, False) or
-                    self.is_in_span(bd.end_lincol, True, False)):
-                return True
+        if not self or not bd:
+            return False
+
+        bd = bd.bundle if bd.is_bundle() else [bd]
+
+        for fg in self:
+            for fg_bd in bd:
+                if fg.is_overlapped(fg_bd, pos_lincol):
+                    return True
         return False
 
 
@@ -772,7 +783,7 @@ class FragmentBundle():
         if not self or not bd:
             return True
 
-        fg = bd.bundle[0] if isinstance(bd, FragmentBundle) else bd
+        fg = bd.bundle[0] if bd.is_bundle() else bd
 
         return self.bundle[-1].is_aligned(fg, pos_lincol)
 
@@ -865,7 +876,7 @@ class FragmentBundle():
             at_start = self.pos_to_lincol(at_start)
         if isinstance(at_end, int):
             at_end = self.pos_to_lincol(at_end)
-        result = FragmentBundle([])
+        result = FragmentBundle()
         for fg in self:
             result.combine(fg.slice_block(at_start, at_end))
         return result
@@ -1097,9 +1108,13 @@ class FragmentBundle():
         return bool(self.bundle)
 
 
+    def is_bundle(self):
+        return True
+
+
     def __eq__(self, other):
         """Returns if the Bundle are the same."""
-        if type(other) != FragmentBundle:
+        if not other.is_bundle():
             return False
 
         if self is other:

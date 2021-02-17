@@ -10,7 +10,7 @@ import os
 import sys
 import subprocess
 
-from monostyle.util.monostyle_io import print_over, path_to_rel
+from monostyle.util.monostyle_io import ask_user, print_over, path_to_rel
 from monostyle.util.report import Report
 
 
@@ -50,6 +50,8 @@ def open_reports_files(reports, min_severity=None):
 
 def open_files(files, show_current=False):
     nonexistents = []
+    warning_limit = 100
+    count = 0
     for filename, lincol in files:
         if show_current:
             print_over("opening: {0}".format(path_to_rel(filename)), is_temp=True)
@@ -59,6 +61,14 @@ def open_files(files, show_current=False):
             exitcode = run(filename, lincol)
             if exitcode is None:
                 break
+
+            if count > warning_limit:
+                if ask_user("Opened more than {0} files ".format(warning_limit),
+                            "do you want to continue"):
+                    count = 0
+                else:
+                    break
+            count += 1
         else:
             nonexistents.append(filename + ":" + str(lincol[0] + 1) + ":" + str(lincol[1] + 1))
 

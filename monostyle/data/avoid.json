@@ -193,7 +193,8 @@
 ],
 "syntactic expletive":[
 	"it (is|was)",
-	"there (is|was)"
+	"there (is|was)",
+	"what (is|was)"
 ],
 "informal":[
 	"# only ambiguous or spaced compounds",
@@ -206,7 +207,7 @@
 	"get(ting|s)? rid",
 	["go(ing)? in(to)?", ["switch to", "enter", "open"]],
 	"going(?! to)",
-	"just about",
+	"just (about|in|so|that|to)",
 	[["kinds? of", "sorts? of"], "type of"],
 	"neat", "nicely",
 	"now,? (that|this|to)",

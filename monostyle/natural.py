@@ -171,7 +171,7 @@ def article_pre(_):
     re_lib = dict()
     re_lib["vowel"] = re.compile(r"[aeiouAEIOU]")
     re_lib["digit"] = re.compile(r"\d")
-    re_lib["letterhyphen"] = re.compile(r".\b")
+    re_lib["token"] = re.compile(r"(\w+?)(?:_|\b)(?!\Z)")
 
     args["re_lib"] = re_lib
 
@@ -183,7 +183,7 @@ def article(toolname, document, reports, re_lib, data):
 
     vowel_re = re_lib["vowel"]
     digit_re = re_lib["digit"]
-    letterhyphen_re = re_lib["letterhyphen"]
+    token_re = re_lib["token"]
 
     instr_pos = {
         "sect": {"*": ["name"]},
@@ -221,8 +221,10 @@ def article(toolname, document, reports, re_lib, data):
                         is_cons =  bool(not re.match(vowel_re, word_str))
                         is_cons_sound = is_cons
                         key = "a" if is_cons else "an"
-                        if (len(word) == 1 or re.match(letterhyphen_re, word_str) or
-                                POS.isacr(word) or POS.isabbr(word)):
+                        token = word
+                        if token_m := re.match(token_re, word_str):
+                            token = word.slice_match_obj(token_m, 1, True)
+                        if len(token) == 1 or POS.isacr(token) or POS.isabbr(token):
                             if word_str[0].lower() in data[key]["letter"]:
                                 if len(word) == 1 or word_str not in data[key]["acronym"]:
                                     is_cons_sound = not is_cons
@@ -714,15 +716,15 @@ def overuse(toolname, document, reports):
 
                 if is_first or word_str not in topics:
                     weight = 1
-                    if not is_first:
-                        if word_str in stopwords:
-                            weight -= 0.4
-                        else:
+                    if not is_first and word_str in stopwords:
+                        weight -= 0.4
+                    else:
+                        if not is_first:
                             weight -= 0.2
-                            if not tag:
-                                weight -= 0.1
-                            elif tag[0] in {"noun", "verb", "participle", "pronoun"}:
-                                weight -= 0.2
+                        if not tag:
+                            weight -= 0.1
+                        elif tag[0] in {"noun", "verb", "participle", "pronoun"}:
+                            weight -= 0.2
 
                     if word_str in words:
                         words[word_str].append((word, weight, counter))

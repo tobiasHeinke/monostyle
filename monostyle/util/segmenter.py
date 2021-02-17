@@ -35,9 +35,9 @@ class Segmenter:
         # word
         hyphen = CC.data["connector"]["hyphen"]
         apostrophe = CC.data["connector"]["apostrophe"]
-        # abbreviation
         pattern_str = (
-            r"(\b(?:(?:[", CC.unicode_set("A-Za-z0-9", 0, 7), r"]\.){2,})|",
+            # abbreviation
+            r"(\b(?:(?:[", CC.unicode_set("A-Za-z", 0, 7), r"]\.){2,})|",
             # compound: dash with letters on both sides and
             # one at start and end (for pre-/suffixes).
             r"(?:[", hyphen, r"]|\b)[", CC.unicode_set("A-Za-z0-9", 0, 7), r"](?:\w*",
@@ -50,7 +50,8 @@ class Segmenter:
         self.word_re = re.compile(''.join(pattern_str))
         # word only
         self.wordsub_re = re.compile(r"\b(\w+?)\b")
-        self.number_filter_re = re.compile(r"\A[+-]?\d[\d,.]*\Z")
+        # numbers and ranges
+        self.number_filter_re = re.compile(r"\A[+-]?\d[\d,." + hyphen + r"]*\Z")
 
         # number
         pattern_str = (

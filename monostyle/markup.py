@@ -125,21 +125,23 @@ def indention(toolname, document, reports):
                    next_node.code.isspace()):
                 next_node = next_node.next
             if next_node:
-                next_child = next_node.child_nodes.first()
-                ind_trg_next = None
-                if next_child:
-                    if next_child.node_name == "indent":
-                        next_child = next_child.next
-                        if next_child:
-                            ind_trg_next = next_child.code.start_lincol[1]
-                    else:
-                        # todo first line only
-                        ind_trg_next = len(re.match(r" *", str(next_child.code)).group(0))
+                next_node = next_node.indent
+                ind_trg_next = next_node
+                # lists
+                while (next_node and next_node.node_name == "indent"
+                        and next_node.code.start_lincol[0] == ind_trg_next.code.start_lincol[0]):
+                    ind_trg_next = next_node
+                    next_node = next_node.next_leaf()
 
                 if (ind_trg_next is not None and
-                        node.name_start.code.start_lincol[1] != ind_trg_next):
+                        node.indent.code.end_lincol[1] != ind_trg_next.code.end_lincol[1]):
+                    # further intended
                     message = Report.existing(what="target", where="not on same indent level")
                     reports.append(Report('W', toolname, node.id.code, message))
+            else:
+                # unintended
+                message = Report.missing(what="target", where="on same indent level")
+                reports.append(Report('W', toolname, node.id.code, message))
 
         # limit: groups of aligned fields, todo favor fix on refbox
         elif node.node_name == "field-list":
@@ -759,12 +761,12 @@ def markup_names(toolname, document, reports):
 
             if name == "raw":
                 message = "raw directive"
-                reports.append(Report('E', toolname, node.name.code, message))
+                reports.append(Report('F', toolname, node.name.code, message))
 
         else:
-            # not at diff hunk can be cut off def list
+            # not at diff hunk start can be cut off def list.
             if node.code.start_lincol[0] != document.code.start_lincol[0]:
-                output = node.code.copy().clear(True)
+                output = node.indent.code.copy().clear(False)
                 message = "block quote"
                 reports.append(Report('W', toolname, output, message))
 

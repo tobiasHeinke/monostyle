@@ -120,6 +120,12 @@ def blank_line(toolname, document, reports):
                 elif rst_walker.is_of(node, "dir", "include"):
                     aim_alt = 0
 
+                elif (rst_walker.is_of(node, "dir", {"figure", "image"}) and
+                        not node_over.body and
+                        rst_walker.is_of(node_over, "dir", {"figure", "image"}) and
+                        (not node.body or node.body.code.isspace())):
+                    aim_alt = 0
+
         if is_proxy or (node is not prime and is_sect(node)):
             if not prime:
                 prime = node

@@ -60,7 +60,7 @@ def print_title(title, to_upper=False, underline='='):
         print_over(underline * max(len(l) for l in title))
 
 
-def ask_user(question):
+def ask_user(*question):
     """Get user confirmation via console input."""
     pos = ("y", "yes")
     neg = ("n", "no")
