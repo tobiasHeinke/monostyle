@@ -345,7 +345,7 @@ class Porterstemmer:
 
 
 if __name__ == '__main__':
-    p = PorterStemmer()
+    p = Porterstemmer()
     if len(sys.argv) > 1:
         for f in sys.argv[1:]:
             infile = open(f, 'r')

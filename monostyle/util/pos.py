@@ -13,28 +13,37 @@ from monostyle.util.char_catalog import CharCatalog
 class PartofSpeech:
     """Part of speech tagging."""
 
-    def __init__(self):
-        CC = CharCatalog()
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super().__new__(cls)
+            cls.instance.init()
+        else:
+            cls.instance.reset()
+        return cls.instance
+
+
+    def init(self):
+        char_catalog= CharCatalog()
         self.data = get_data_file("pos")
         self.remove_comments(self.data)
         self.prev = None
 
         # acronym
         pattern_str = (
-            r"\b[", CC.unicode_set("A-Z", 0, 7), r"]{2,}s?",
+            r"\b[", char_catalog.unicode_set("A-Z", 0, 7), r"]{2,}s?",
             # contraction
-            r"(?:[", CC.data["connector"]["apostrophe"], r"]",
+            r"(?:[", char_catalog.data["connector"]["apostrophe"], r"]",
             r"(?:", '|'.join(('ed', 's')), r"))?",
-            r"(?:(?<=s)[", CC.data["connector"]["apostrophe"], r"](?!\w)|\b)"
+            r"(?:(?<=s)[", char_catalog.data["connector"]["apostrophe"], r"](?!\w)|\b)"
         )
         self.acr_re = re.compile(''.join(pattern_str))
 
         # abbreviation
-        pattern_str = r"\b([" + CC.unicode_set("A-Za-z", 0, 7) + r"]\.){2,}(?:(?!\w)|\Z)"
+        pattern_str = r"\b([" + char_catalog.unicode_set("A-Za-z", 0, 7) + r"]\.){2,}(?:(?!\w)|\Z)"
         self.abbr_re = re.compile(pattern_str)
 
 
-    def clear(self):
+    def reset(self):
         """Empty buffer."""
         self.prev = None
 

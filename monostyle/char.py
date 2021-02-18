@@ -13,19 +13,18 @@ from monostyle.util.report import Report
 from monostyle.util.fragment import Fragment
 from monostyle.util.char_catalog import CharCatalog
 
-CharCatalog = CharCatalog()
-
 
 def char_search(toolname, document, reports):
     """All chars outside of the defined Unicode region or explicit search."""
 
+    char_catalog = CharCatalog()
     text = str(document.code)
     chars = (
         (r"\uFFFD", "replace char", None),
-        (CharCatalog.data["quote"]["initial"]["single"], "initial quote", "'"),
-        (CharCatalog.data["quote"]["initial"]["double"], "initial quote", "\""),
-        (CharCatalog.data["quote"]["final"]["single"], "final quote", "'"),
-        (CharCatalog.data["quote"]["final"]["double"], "final quote", "\""),
+        (char_catalog.data["quote"]["initial"]["single"], "initial quote", "'"),
+        (char_catalog.data["quote"]["initial"]["double"], "initial quote", "\""),
+        (char_catalog.data["quote"]["final"]["single"], "final quote", "'"),
+        (char_catalog.data["quote"]["final"]["double"], "final quote", "\""),
         (r"–", "en-dash", "--"),
         (r"—", "em-dash", "--"),
     )

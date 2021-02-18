@@ -15,16 +15,15 @@ import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.pos import PartofSpeech
 from monostyle.util.char_catalog import CharCatalog
 
-POS = PartofSpeech()
-CharCatalog = CharCatalog()
-
 
 def mark_pre(_):
+    char_catalog = CharCatalog()
+
     re_lib = dict()
-    punc = CharCatalog.data["terminal"]["final"] + CharCatalog.data["secondary"]["final"]
-    punc_sent = CharCatalog.data["terminal"]["final"] + ':'
-    pare_open = CharCatalog.data["bracket"]["left"]["normal"]
-    pare_close = CharCatalog.data["bracket"]["right"]["normal"]
+    punc = char_catalog.data["terminal"]["final"] + char_catalog.data["secondary"]["final"]
+    punc_sent = char_catalog.data["terminal"]["final"] + ':'
+    pare_open = char_catalog.data["bracket"]["left"]["normal"]
+    pare_close = char_catalog.data["bracket"]["right"]["normal"]
 
     # limitation: not nested parenthesis
     # FN: inline markup
@@ -92,12 +91,12 @@ def mark_pre(_):
     re_lib["unbracket"] = (pattern, message)
 
     # Line
-    pattern_str = r"^\s*[" + punc + CharCatalog.get(("quote", "final")) + r"]"
+    pattern_str = r"^\s*[" + punc + char_catalog.get(("quote", "final")) + r"]"
     pattern = re.compile(pattern_str, re.MULTILINE)
     message = Report.existing(what="closing punctuation", where="at line start")
     re_lib["closesol"] = (pattern, message)
 
-    pattern_str = r"[" + pare_open + CharCatalog.get(("quote", "initial")) + r"]\s*?\n"
+    pattern_str = r"[" + pare_open + char_catalog.get(("quote", "initial")) + r"]\s*?\n"
     pattern = re.compile(pattern_str)
     message = Report.existing(what="opening punctuation", where="at line end")
     re_lib["openeol"] = (pattern, message)
@@ -269,7 +268,9 @@ def mark(toolname, document, reports, re_lib):
 
 
 def number_pre(_):
+    part_of_speech = PartofSpeech()
     re_lib = dict()
+
     # FP: code, literal, Years
     start = r"(?:(?<=[^\d,.])|\A)"
     pattern_str = start + r"[\d,]*\d{4}"
@@ -292,8 +293,8 @@ def number_pre(_):
     message = Report.existing(what="space", where="between digits")
     re_lib["digitspace"] = (pattern, message)
 
-    written_out = r"\b" + r"\b|\b".join(POS.data["determiner"]["numeral"]["cardinal"])
-    written_out += r"\b|" + r"\b|\b".join(POS.data["determiner"]["numeral"]["ordinal"])
+    written_out = r"\b" + r"\b|\b".join(part_of_speech.data["determiner"]["numeral"]["cardinal"])
+    written_out += r"\b|" + r"\b|\b".join(part_of_speech.data["determiner"]["numeral"]["ordinal"])
     written_out += r"\b|" + r"\b|\b".join(("half", "halves", "thirds?"))
     pattern_str = r"(?:" + written_out + r") (?:" + written_out + r")"
     pattern = re.compile(pattern_str)

@@ -21,18 +21,17 @@ from monostyle.util.segmenter import Segmenter
 from monostyle.util.pos import PartofSpeech
 from monostyle.util.char_catalog import CharCatalog
 
-Segmenter = Segmenter()
-POS = PartofSpeech()
-
 
 def search(toolname, document, reports, re_lib, data, config):
     """Search for rare or new words."""
+    part_of_speech = PartofSpeech()
+
     # compare words in the text.
     text_words = []
     for word in word_filtered(document):
         word_str = str(word)
         word_str = norm_punc(word_str, re_lib)
-        if not POS.isacr(word) and not POS.isabbr(word):
+        if not part_of_speech.isacr(word) and not part_of_speech.isabbr(word):
             word_str = lower_first(word_str)
         for entry in text_words:
             if word_str == entry[1]:
@@ -137,10 +136,12 @@ def build_lexicon(re_lib):
 
 def populate_lexicon(document, lexicon, re_lib):
     """Populate lexicon with transformed words."""
+    part_of_speech = PartofSpeech()
+
     for word in word_filtered(document):
         word_str = str(word)
         word_str = norm_punc(word_str, re_lib)
-        if not POS.isacr(word) and not POS.isabbr(word):
+        if not part_of_speech.isacr(word) and not part_of_speech.isabbr(word):
             word_str = lower_first(word_str)
         first_char = word_str[0].lower()
         # tree with leafs for each first char.
@@ -172,6 +173,7 @@ def split_lexicon(lexicon_flat):
 
 def word_filtered(document):
     """Iterate over words in the filtered text."""
+    segmenter = Segmenter()
     dev_re = re.compile(r"^(rBM|t)\d+?$", re.IGNORECASE)
 
     instr_pos = {
@@ -204,7 +206,7 @@ def word_filtered(document):
                     re.match(r"Author(?:[\(/]?s\)?)?", str(par_node.name.code)))):
             continue
 
-        for word in Segmenter.iter_word(part.code):
+        for word in segmenter.iter_word(part.code):
             if len(word) < 2:
                 continue
             if re.search(dev_re, str(word)):

@@ -31,8 +31,6 @@ from monostyle.util.pos import PartofSpeech
 from monostyle.util.nodes import Node, LinkedList
 import monostyle.rst_parser.walker as rst_walker
 
-POS = PartofSpeech()
-
 
 def reflow_trial(boxes, optimum, maximum, options):
     """Find best breaks."""
@@ -250,6 +248,7 @@ class Box(Node):
 
 def reflow_penalties(boxes, options):
     """Add spaces to ends of sentences and calculate @extra array of penalties."""
+    part_of_speech = PartofSpeech()
     pare_open_re = re.compile(r"[\(\[\{]")
     pare_close_re = re.compile(r"[\)\]\}]")
     pare_level = 0
@@ -278,7 +277,7 @@ def reflow_penalties(boxes, options):
 
         # Period or colon
         if punc_m := re.match(r"^([A-Za-z0-9-]+)[\"')]*([\.\:])[\"')]*$", box.content):
-            tag = pos_weight(punc_m.group(1))
+            tag = pos_weight(part_of_speech, punc_m.group(1))
             # End of sentence
             if (not tag or tag[0] != "abbreviation") or punc_m.group(2) == ":":
                 box.demerits += options["sentence"] / 2
@@ -334,7 +333,7 @@ def reflow_penalties(boxes, options):
                 box.demerits -= options["math"]
                 if box.prev: box.prev.demerits -= options["math"]
 
-        tag = pos_weight(box.content)
+        tag = pos_weight(part_of_speech, box.content)
         if tag and tag[0] != "abbreviation":
             box.demerits += tag[-1][1] * options["connpenalty"]
             if box.prev: box.prev.demerits += tag[-1][0] * options["connpenalty"]
@@ -342,7 +341,7 @@ def reflow_penalties(boxes, options):
     return boxes
 
 
-def pos_weight(word):
+def pos_weight(part_of_speech, word):
     """ Discourage a break have the value 1
     The value is the relative effort to avoid breaking
     a line before/after this part of speech tag,
@@ -393,7 +392,7 @@ def pos_weight(word):
             "doc": [0, -3]
         }
     }
-    if tag := POS.tag(word):
+    if tag := part_of_speech.tag(word):
         weight = weights.copy()
         for seg in tag:
             if seg in weight:

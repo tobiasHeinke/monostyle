@@ -428,7 +428,7 @@ class RSTParser:
                     node.append_child(node.active)
                     node.active = None
                     return node
-                elif not re.match(self.re_lib["trans"], line_info["line_str_next"]):
+                if not re.match(self.re_lib["trans"], line_info["line_str_next"]):
                     # only if short overline else warn
                     node.active.node_name = "text"
                     node.active.indent.code.combine(node.active.name_start.code)

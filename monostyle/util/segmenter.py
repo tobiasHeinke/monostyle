@@ -12,15 +12,23 @@ from monostyle.util.pos import PartofSpeech
 
 class Segmenter:
 
-    def __init__(self):
-        CC = CharCatalog()
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super().__new__(cls)
+            cls.instance.init()
+        return cls.instance
+
+
+    def init(self):
+        char_catalog = CharCatalog()
         pos = PartofSpeech()
         # paragraph
         self.para_re = re.compile(r"\n\s*\n", re.MULTILINE)
 
         # sentence
-        pattern_str = r"([\w\.]+)?(?<!\.\.)([" + CC.data["terminal"]["final"] + r"])([\W\D]|\Z)"
-        self.sent_re = re.compile(pattern_str)
+        pattern_str = (r"([\w\.]+)?(?<!\.\.)([", char_catalog.data["terminal"]["final"],
+                       r"])([\W\D]|\Z)")
+        self.sent_re = re.compile("".join(pattern_str))
 
         self.linewrap_re = re.compile(r" *?\n *", re.MULTILINE)
 
@@ -33,14 +41,14 @@ class Segmenter:
         self.parenthesis_re = re.compile(r"\([^)]+?(\).?\s*|\Z)")
 
         # word
-        hyphen = CC.data["connector"]["hyphen"]
-        apostrophe = CC.data["connector"]["apostrophe"]
+        hyphen = char_catalog.data["connector"]["hyphen"]
+        apostrophe = char_catalog.data["connector"]["apostrophe"]
         pattern_str = (
             # abbreviation
-            r"(\b(?:(?:[", CC.unicode_set("A-Za-z", 0, 7), r"]\.){2,})|",
+            r"(\b(?:(?:[", char_catalog.unicode_set("A-Za-z", 0, 7), r"]\.){2,})|",
             # compound: dash with letters on both sides and
             # one at start and end (for pre-/suffixes).
-            r"(?:[", hyphen, r"]|\b)[", CC.unicode_set("A-Za-z0-9", 0, 7), r"](?:\w*",
+            r"(?:[", hyphen, r"]|\b)[", char_catalog.unicode_set("A-Za-z0-9", 0, 7), r"](?:\w*",
             # contraction: with letters on both sides and after s at word end.
             r"(?<=\w)[", apostrophe, hyphen, r"]?(?=\w)\w*)*",
             r"(?:(?<=s)[" + apostrophe + r"](?!\w)|\b)",
@@ -56,7 +64,7 @@ class Segmenter:
         # number
         pattern_str = (
             r"(?:(?<=[\W\D])|\A)",
-            r"[", CC.data["math"]["operator"]["sign"], r"]?\d(?:\d|[,.]\d)*",
+            r"[", char_catalog.data["math"]["operator"]["sign"], r"]?\d(?:\d|[,.]\d)*",
             r"(?:(?=\D)|\Z)"
         )
         self.number_re = re.compile(''.join(pattern_str))

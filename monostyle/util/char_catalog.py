@@ -12,7 +12,14 @@ from monostyle.util.monostyle_io import get_data_file, get_branch
 class CharCatalog:
     """Unicode character categories."""
 
-    def __init__(self):
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super().__new__(cls)
+            cls.instance.init()
+        return cls.instance
+
+
+    def init(self):
         self.data = get_data_file("char_catalog")
 
 

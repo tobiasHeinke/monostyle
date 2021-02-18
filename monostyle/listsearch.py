@@ -14,9 +14,6 @@ import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.segmenter import Segmenter
 from monostyle.util.porter_stemmer import Porterstemmer
 
-PorterStemmer = Porterstemmer()
-Segmenter = Segmenter()
-
 
 def compile_searchlist(searchlist, re_conf):
     """Make search list one dimensional.
@@ -36,6 +33,7 @@ def compile_searchlist(searchlist, re_conf):
         overline -- match over whitespace including line wraps.
         boundary -- pattern start and end with word boundaries.
     """
+    porter_stemmer = Porterstemmer()
     comlist = []
     flags = 0
     if re_conf["ignorecase"]:
@@ -85,7 +83,7 @@ def compile_searchlist(searchlist, re_conf):
 
             if re_conf["stem"]:
                 if not pattern_str.endswith('|'):
-                    pattern_str = PorterStemmer.stem(pattern_str, 0, len(pattern_str)-1)
+                    pattern_str = porter_stemmer.stem(pattern_str, 0, len(pattern_str)-1)
                 else:
                     pattern_str = pattern_str[:-1]
             else:
@@ -162,6 +160,8 @@ def search_free(toolname, document, reports, comlist):
 def search_word(toolname, document, reports, comlist, config):
     """Search terms in document within word boundaries."""
     toolname = "search-word"
+    segmenter = Segmenter()
+    porter_stemmer = Porterstemmer()
 
     instr_pos = {
         "sect": {"*": ["name"]},
@@ -183,12 +183,12 @@ def search_word(toolname, document, reports, comlist, config):
     }
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        for word in Segmenter.iter_word(part.code):
+        for word in segmenter.iter_word(part.code):
             word_str = str(word)
             if config["ignorecase"]:
                 word_str = word_str.lower()
             if config["stem"]:
-                word_stem = PorterStemmer.stem(word_str, 0, len(word_str)-1)
+                word_stem = porter_stemmer.stem(word_str, 0, len(word_str)-1)
 
             for pattern, message in comlist:
                 if config["stem"]:

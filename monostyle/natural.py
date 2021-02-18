@@ -16,9 +16,6 @@ from monostyle.util.segmenter import Segmenter
 from monostyle.util.pos import PartofSpeech
 from monostyle.util.porter_stemmer import Porterstemmer
 
-PorterStemmer = Porterstemmer()
-Segmenter = Segmenter()
-POS = PartofSpeech()
 
 
 def abbreviation_pre(_):
@@ -32,11 +29,13 @@ def abbreviation_pre(_):
         return "".join(desc_split).upper().endswith(abbr.rstrip('s').upper())
 
     rst_parser = RSTParser()
+    segmenter = Segmenter()
+    part_of_speech = PartofSpeech()
     explanations = dict()
     ignore = monostyle_io.get_data_file("common_abbr")
 
-    for entry in POS.get(("abbreviation",), joined=True):
-        if POS.isabbr(entry + "."):
+    for entry in part_of_speech.get(("abbreviation",), joined=True):
+        if part_of_speech.isabbr(entry + "."):
             ignore.append(entry + ".")
 
     ignore = list(entry.upper() for entry in ignore)
@@ -79,8 +78,8 @@ def abbreviation_pre(_):
 
         # Plain text/no markup explanations.
         for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-            for word in Segmenter.iter_word(part.code):
-                if not POS.isacr(word) and not POS.isabbr(word):
+            for word in segmenter.iter_word(part.code):
+                if not part_of_speech.isacr(word) and not part_of_speech.isabbr(word):
                     continue
 
                 word_str = str(word).strip()
@@ -106,10 +105,12 @@ def abbreviation_pre(_):
 
 def abbreviation(toolname, document, reports, data, config):
     """Search for abbreviation/acronyms without an explanation."""
+    segmenter = Segmenter()
+    part_of_speech = PartofSpeech()
 
     for part in rst_walker.iter_nodeparts_instr(document.body, config[0], config[1]):
-        for word in Segmenter.iter_word(part.code):
-            if not POS.isacr(word) and not POS.isabbr(word):
+        for word in segmenter.iter_word(part.code):
+            if not part_of_speech.isacr(word) and not part_of_speech.isabbr(word):
                 continue
             if str(word).upper() in data["ignore"]:
                 continue
@@ -180,7 +181,8 @@ def article_pre(_):
 
 def article(toolname, document, reports, re_lib, data):
     """Check correct use of indefinite articles (a and an)."""
-
+    segmenter = Segmenter()
+    part_of_speech = PartofSpeech()
     vowel_re = re_lib["vowel"]
     digit_re = re_lib["digit"]
     token_re = re_lib["token"]
@@ -207,7 +209,7 @@ def article(toolname, document, reports, re_lib, data):
     is_a = None
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
         if part.child_nodes.is_empty():
-            for word in Segmenter.iter_word(part.code, filter_numbers=False):
+            for word in segmenter.iter_word(part.code, filter_numbers=False):
                 word_str = str(word).strip()
                 if len(word) < 3 and word_str in {"a", "A", "an", "An"}:
                     is_a = bool(word_str in {"a", "A"})
@@ -224,7 +226,8 @@ def article(toolname, document, reports, re_lib, data):
                         token = word
                         if token_m := re.match(token_re, word_str):
                             token = word.slice_match_obj(token_m, 1, True)
-                        if len(token) == 1 or POS.isacr(token) or POS.isabbr(token):
+                        if (len(token) == 1 or part_of_speech.isacr(token) or
+                                part_of_speech.isabbr(token)):
                             if word_str[0].lower() in data[key]["letter"]:
                                 if len(word) == 1 or word_str not in data[key]["acronym"]:
                                     is_cons_sound = not is_cons
@@ -291,6 +294,7 @@ def collocation_pre(_):
 
         return result
 
+    part_of_speech = PartofSpeech()
     lexicon = spelling.read_csv_lexicon()
     if not lexicon:
         return None
@@ -300,7 +304,7 @@ def collocation_pre(_):
 
     lexicon_new = []
     for word, _ in lexicon:
-        if "-" in word or "." in word or POS.isacr(word):
+        if "-" in word or "." in word or part_of_speech.isacr(word):
             continue
         if re.search(r"\d", word):
             continue
@@ -473,6 +477,7 @@ def metric(toolname, document, reports):
 
         return reports
 
+    segmenter = Segmenter()
     instr_pos = {
         "sect": {"*": ["name"]},
         "*": {"*": ["head", "body"]}
@@ -539,8 +544,8 @@ def metric(toolname, document, reports):
                 if node_cur.node_name == "sect":
                     counter["sect"] += len(part.code)
                 else:
-                    for sen, is_open in Segmenter.iter_sentence(part.code, output_openess=True):
-                        for word in Segmenter.iter_word(sen):
+                    for sen, is_open in segmenter.iter_sentence(part.code, output_openess=True):
+                        for word in segmenter.iter_word(sen):
                             counter["sen"] += 1
                             if len(word) >= conf["word_len"]:
                                 message = Report.quantity(what="long word",
@@ -627,6 +632,8 @@ def overuse(toolname, document, reports):
         words.clear()
         return reports
 
+    segmenter = Segmenter()
+    part_of_speech = PartofSpeech()
     instr_pos = {
         "sect": {"*": ["name"]},
         "field": {"*": ["name", "body"]},
@@ -677,11 +684,11 @@ def overuse(toolname, document, reports):
         if word:
             # add per average word length in skipped code
             counter += (part.code.start_pos - word.end_pos) // 6
-        for sen, is_open in Segmenter.iter_sentence(part.code, output_openess=True):
-            for word in Segmenter.iter_word(sen):
+        for sen, is_open in segmenter.iter_sentence(part.code, output_openess=True):
+            for word in segmenter.iter_word(sen):
                 counter += 1
                 word_str = str(word).lower()
-                tag = POS.tag(word_str)
+                tag = part_of_speech.tag(word_str)
                 is_determiner = bool(tag and tag[0] == "determiner")
 
                 if tag:
@@ -806,7 +813,7 @@ def repeated_pre(op):
 def repeated(toolname, document, reports, config):
     """Find repeated words e.g. the the example."""
 
-    def porter_stemmer_patch(word_lower):
+    def stemmer_patch(porter_stemmer, word_lower):
         """Distinguish some words."""
         # on vs. one
         if word_lower in {"one", "ones"}:
@@ -815,8 +822,10 @@ def repeated(toolname, document, reports, config):
         if word_lower in {"use", "uses", "used"}:
             return "use"
 
-        return PorterStemmer.stem(word_lower, 0, len(word_lower)-1)
+        return porter_stemmer.stem(word_lower, 0, len(word_lower)-1)
 
+    porter_stemmer = Porterstemmer()
+    segmenter = Segmenter()
     buf_size = config["buf_size"]
     if buf_size < 2:
         print(toolname, ": 'buf_size' has to be 2 or higher")
@@ -848,10 +857,10 @@ def repeated(toolname, document, reports, config):
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
         if part.child_nodes.is_empty():
-            for sen, is_open in Segmenter.iter_sentence(part.code, output_openess=True):
-                for word in Segmenter.iter_word(sen):
+            for sen, is_open in segmenter.iter_sentence(part.code, output_openess=True):
+                for word in segmenter.iter_word(sen):
                     word_lower = str(word).lower()
-                    word_stem = porter_stemmer_patch(word_lower)
+                    word_stem = stemmer_patch(porter_stemmer, word_lower)
 
                     for distance, word_buf in enumerate(reversed(buf)):
                         if word_buf == word_stem:

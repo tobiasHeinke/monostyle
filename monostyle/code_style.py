@@ -14,9 +14,6 @@ from monostyle.util.pos import PartofSpeech
 from monostyle.util.char_catalog import CharCatalog
 import monostyle.rst_parser.walker as rst_walker
 
-POS = PartofSpeech()
-CharCatalog = CharCatalog()
-
 
 def is_blank_node(node):
     """The node is empty or contains only whitespaces."""
@@ -292,13 +289,15 @@ def heading_lines(toolname, document, reports):
 
 
 def line_style_pre(_):
-    pare_close = CharCatalog.data["bracket"]["right"]["normal"]
-    word_inter = CharCatalog.data["connector"]["hyphen"]
-    word_inter += CharCatalog.data["connector"]["apostrophe"]
+    char_catalog = CharCatalog()
+
+    pare_close = char_catalog.data["bracket"]["right"]["normal"]
+    word_inter = char_catalog.data["connector"]["hyphen"]
+    word_inter += char_catalog.data["connector"]["apostrophe"]
 
     re_lib = dict()
     eol = r"\s*$"
-    pattern_str = (r"(?<=[", CharCatalog.data["terminal"]["final"], r"] )",
+    pattern_str = (r"(?<=[", char_catalog.data["terminal"]["final"], r"] )",
                    r"([\w" + word_inter + r"]+?)", eol)
     pattern = re.compile(''.join(pattern_str), re.MULTILINE)
     message = Report.existing(what="first word of a sentence", where="at line end")
@@ -310,14 +309,14 @@ def line_style_pre(_):
     message = Report.existing(what="first word of a clause", where="at line end")
     re_lib["clauseorphan"] = (pattern, message)
 
-    pattern_str = (r"(\b[a-z][\w", CharCatalog.data["connector"]["apostrophe"], r"]*?)", eol,
+    pattern_str = (r"(\b[a-z][\w", char_catalog.data["connector"]["apostrophe"], r"]*?)", eol,
                    r"(?! *?[", pare_close, r"])")
     pattern = re.compile(''.join(pattern_str), re.MULTILINE)
     message = Report.existing(what="{0}", where="at line end")
     re_lib["lastword"] = (pattern, message)
 
     pattern_str = (r"(^[A-Za-z][\w", word_inter, r"]*?)",
-                   r"(?=[", CharCatalog.data["terminal"]["final"], r"]\W)")
+                   r"(?=[", char_catalog.data["terminal"]["final"], r"]\W)")
     pattern = re.compile(''.join(pattern_str), re.MULTILINE)
     message = Report.existing(what="last word of a sentence", where="at line start")
     re_lib["sentwidow"] = (pattern, message)
@@ -330,6 +329,8 @@ def line_style_pre(_):
 
 def line_style(toolname, document, reports, re_lib):
     """Check line wrapping."""
+    part_of_speech = PartofSpeech()
+
     for node in rst_walker.iter_node(document.body, {"text", "block-quote"}, enter_pos=False):
         if rst_walker.is_of(node.parent_node, {"sect", "def"}):
             continue
@@ -340,7 +341,7 @@ def line_style(toolname, document, reports, re_lib):
             for m in re.finditer(value[0], text):
                 message = value[1]
                 if is_lw:
-                    tag = POS.tag(str(m.group(1).lower()))
+                    tag = part_of_speech.tag(str(m.group(1).lower()))
                     if (len(tag) != 0 and
                             (tag[0] == "adjective" or
                              (tag[0] == "determiner" and tag[1] == "article"))):

@@ -33,7 +33,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "monostyle = monostyle.__init__:main",
+            "monostyle = monostyle.__main__:main",
         ],
     },
     classifiers=[

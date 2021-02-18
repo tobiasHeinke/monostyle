@@ -28,43 +28,33 @@ def heading_level(toolname, document, reports):
         if heading_char in levels.keys():
             level_cur = levels[heading_char]
 
+        severity = 'W'
+        message = None
         if level_cur == -1:
-            output = node.name_end.code.copy().replace_fill(heading_char)
+            severity = 'E'
             message = Report.existing(what="unknown level")
-            reports.append(Report('W', toolname, output, message))
 
         elif level_cur <= 2:
             if level_cur == 0:
-
                 if not document.code.filename.endswith("manual/index.rst"):
-                    output = node.name_end.code.copy().replace_fill(heading_char)
                     message = Report.existing(what="main index title", where="not on main")
-                    reports.append(Report('W', toolname, output, message))
 
             elif level_cur == 1:
                 if not document.code.filename.endswith("index.rst"):
-                    output = node.name_end.code.copy().replace_fill(heading_char)
                     message = Report.existing(what="index title", where="on page")
-                    reports.append(Report('W', toolname, output, message))
 
             elif document.code.filename.endswith("index.rst"):
-                output = node.name_end.code.copy().replace_fill(heading_char)
                 message = Report.existing(what="page title", where="on index")
-                reports.append(Report('W', toolname, output, message))
 
             title_count += 1
             if title_count > 1:
                 message = Report.over(what="title headings: " + str(title_count))
-                output = node.name_end.code.copy().replace_fill(heading_char)
-                reports.append(Report('W', toolname, output, message))
 
             level_prev = 2
         else:
             if title_count == 0:
-                if document.body.code.start_lincol[0] == 0:
-                    output = node.name_end.code.copy().replace_fill(heading_char)
+                if document.code.start_lincol[0] == 0:
                     message = Report.missing(what="title heading")
-                    reports.append(Report('W', toolname, output, message))
                     # report only once
                     title_count = 1
 
@@ -73,10 +63,11 @@ def heading_level(toolname, document, reports):
                                               level_chars[level_prev], heading_char),
                                               with_what=level_chars[level_prev + 1])
 
-                output = node.name_end.code.copy().replace_fill(heading_char)
-                reports.append(Report('W', toolname, output, message))
-
             level_prev = level_cur
+
+        if message is not None:
+            output = node.name_end.code.copy().replace_fill(heading_char)
+            reports.append(Report(severity, toolname, output, message))
 
     return reports
 

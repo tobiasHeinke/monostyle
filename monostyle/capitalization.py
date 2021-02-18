@@ -17,12 +17,7 @@ from monostyle.util.pos import PartofSpeech
 from monostyle.util.segmenter import Segmenter
 
 
-Segmenter = Segmenter()
-POS = PartofSpeech()
-CharCatalog = CharCatalog()
-
-
-def titlecase(word, is_first_word, is_last_word, name):
+def titlecase(part_of_speech, word, is_first_word, is_last_word, name):
     """Chicago style titlecase."""
     word_str = str(word)
     if is_first_word or is_last_word:
@@ -39,7 +34,7 @@ def titlecase(word, is_first_word, is_last_word, name):
             return message, fix
         return None
 
-    tag = POS.tag(word_str.lower())
+    tag = part_of_speech.tag(word_str.lower())
     if (word_str[0].islower() !=
             (len(tag) != 0 and
              (tag[0] in {"preposition", "conjunction", "pronoun", "auxiliary"} or
@@ -58,6 +53,7 @@ def titlecase(word, is_first_word, is_last_word, name):
 
 def admonition_title(toolname, document, reports):
     """Case of admonition titles."""
+    segmenter = Segmenter()
     threshold = 0.2
 
     for node in rst_walker.iter_node(document.body, "dir"):
@@ -67,7 +63,7 @@ def admonition_title(toolname, document, reports):
                 word_all = 0
                 word_low = 0
 
-                for word in Segmenter.iter_word(node.head.code):
+                for word in segmenter.iter_word(node.head.code):
                     word_str = str(word)
                     if len(word_str) >= 4:
                         word_all += 1
@@ -110,6 +106,8 @@ def heading_caps_pre(_):
 def heading_caps(toolname, document, reports, re_lib):
     """Check the heading title capitalization."""
 
+    segmenter = Segmenter()
+    part_of_speech = PartofSpeech()
     instr_pos = {
         "*": {"*": ["head", "body"]}
     }
@@ -128,9 +126,10 @@ def heading_caps(toolname, document, reports, re_lib):
                 is_first_word = False
 
             buf = None
-            for word in Segmenter.iter_word(part.code):
+            for word in segmenter.iter_word(part.code):
                 if buf:
-                    if message_repl := titlecase(buf, is_first_word, False, "heading"):
+                    if message_repl := titlecase(part_of_speech, buf, is_first_word,
+                                                 False, "heading"):
                         reports.append(Report('W', toolname, buf, message_repl[0], node.name.code,
                                               message_repl[1]))
                     if is_faq:
@@ -141,7 +140,8 @@ def heading_caps(toolname, document, reports, re_lib):
             if buf and not is_faq:
                 # ignore part.next, one part per node
                 is_last_word = bool(part.parent_node.next is None)
-                if message_repl := titlecase(buf, is_first_word, is_last_word, "heading"):
+                if message_repl := titlecase(part_of_speech, buf, is_first_word,
+                                             is_last_word, "heading"):
                     reports.append(Report('W', toolname, buf, message_repl[0], node.name.code,
                                           message_repl[1]))
                 is_first_word = False
@@ -157,6 +157,8 @@ def heading_caps(toolname, document, reports, re_lib):
 
 def pos_case(toolname, document, reports):
     """Find Capitalized non-nouns (i.a.) which can be a typo or missing punctuation."""
+    segmenter = Segmenter()
+    part_of_speech = PartofSpeech()
 
     instr_pos = {
         "field": {"*": ["name", "body"]},
@@ -178,9 +180,9 @@ def pos_case(toolname, document, reports):
     }
     was_open = False
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        for sen, is_open in Segmenter.iter_sentence(part.code, output_openess=True):
+        for sen, is_open in segmenter.iter_sentence(part.code, output_openess=True):
             is_first_word = not was_open
-            for word in Segmenter.iter_word(sen):
+            for word in segmenter.iter_word(sen):
                 if is_first_word:
                     is_first_word = False
                     continue
@@ -189,7 +191,7 @@ def pos_case(toolname, document, reports):
                 if word_str[0].islower() or word_str in {"I", "Y"}:
                     continue
 
-                tag = POS.tag(word_str.lower())
+                tag = part_of_speech.tag(word_str.lower())
                 if len(tag) != 0 and tag[0] not in {"noun", "abbreviation", "adjective", "verb"}:
                     message = Report.misformatted(what="uppercase " + tag[0])
                     reports.append(Report('W', toolname, word, message, sen))
@@ -205,6 +207,8 @@ def pos_case(toolname, document, reports):
 
 def property_noun_pre(_):
     """Build lexicon with lower/uppercase counts."""
+    segmenter = Segmenter()
+
     threshold = 0.8
     instr_pos = {
         "field": {"*": ["name", "body"]},
@@ -231,8 +235,8 @@ def property_noun_pre(_):
 
         first = True
         for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-            for sen in Segmenter.iter_sentence(part.code):
-                for word in Segmenter.iter_word(sen):
+            for sen in segmenter.iter_sentence(part.code):
+                for word in segmenter.iter_word(sen):
                     if first:
                         first = False
                         continue
@@ -278,10 +282,11 @@ def property_noun_pre(_):
 
 def property_noun(toolname, document, reports, data, config):
     """Find in minority lowercase words."""
+    segmenter = Segmenter()
 
     for part in rst_walker.iter_nodeparts_instr(document.body, config["instr_pos"],
                                                 config["instr_neg"]):
-        for word in Segmenter.iter_word(part.code):
+        for word in segmenter.iter_word(part.code):
             word_str = str(word)
             first_letter = word_str[0].lower()
             if first_letter not in data.keys():
@@ -297,9 +302,11 @@ def property_noun(toolname, document, reports, data, config):
 
 
 def start_case_pre(_):
+    char_catalog = CharCatalog()
+
     re_lib = dict()
-    punc_sent = CharCatalog.data["terminal"]["final"] + ':'
-    pare_open = CharCatalog.data["bracket"]["left"]["normal"]
+    punc_sent = char_catalog.data["terminal"]["final"] + ':'
+    pare_open = char_catalog.data["bracket"]["left"]["normal"]
 
     # FP: code, container
     pattern_str = r"[" + pare_open + r"]?[a-z]"
@@ -310,8 +317,8 @@ def start_case_pre(_):
     # todo? split sentence
     # limitation: not nested parenthesis
     # not match abbr
-    pattern_str = r"(?<!\w\.\w)[" + punc_sent + r"]\s+?" + r"[" + pare_open + r"]?[a-z]"
-    pattern = re.compile(pattern_str, re.MULTILINE | re.DOTALL)
+    pattern_str = (r"(?<!\w\.\w)[", punc_sent, r"]\s+?", r"[", pare_open, r"]?[a-z]")
+    pattern = re.compile("".join(pattern_str), re.MULTILINE | re.DOTALL)
     message = Report.misformatted(what="lowercase", where="after sentence start")
     re_lib["punclower"] = (pattern, message)
 
@@ -465,7 +472,9 @@ def typ_case(toolname, document, reports, data, config):
 
 def ui_case(toolname, document, reports):
     """Check the capitalization in definition list terms."""
+    segmenter = Segmenter()
 
+    part_of_speech = PartofSpeech()
     instr_pos = {
         "*": {"*": ["head", "body"]}
     }
@@ -489,9 +498,10 @@ def ui_case(toolname, document, reports):
                                             part.code.loc_to_abs(icon_m.start(0)), True)
 
             buf = None
-            for word in Segmenter.iter_word(part_code):
+            for word in segmenter.iter_word(part_code):
                 if buf:
-                    if message_repl := titlecase(buf, is_first_word, False, "definition term"):
+                    if message_repl := titlecase(part_of_speech, buf, is_first_word,
+                                                 False, "definition term"):
                         reports.append(Report('W', toolname, buf, message_repl[0], node.head.code,
                                               message_repl[1]))
                     is_first_word = False
@@ -501,7 +511,8 @@ def ui_case(toolname, document, reports):
                 # ignore part.next, one part per node
                 is_last_word = bool(part.parent_node.next is None or
                                     rst_walker.is_of(part.parent_node.next, "role", "kbd"))
-                if message_repl := titlecase(buf, is_first_word, is_last_word, "definition term"):
+                if message_repl := titlecase(part_of_speech, buf, is_first_word,
+                                             is_last_word, "definition term"):
                     reports.append(Report('W', toolname, buf, message_repl[0], node.head.code,
                                           message_repl[1]))
                 is_first_word = False
