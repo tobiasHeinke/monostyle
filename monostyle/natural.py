@@ -14,6 +14,7 @@ from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.segmenter import Segmenter
 from monostyle.util.pos import PartofSpeech
+from monostyle.util.lexicon import Lexicon
 from monostyle.util.porter_stemmer import Porterstemmer
 
 
@@ -268,7 +269,6 @@ def collocation_pre(_):
     """Find spaced versions of joined compounds."""
     global listsearch
     import monostyle.listsearch as listsearch
-    import monostyle.spelling as spelling
 
     def split_rec(lexicon, word, is_first_level, result=None, branch=None):
         if result is None:
@@ -276,34 +276,32 @@ def collocation_pre(_):
         if branch is None:
             branch = []
 
-        c = word[0]
-        if c in lexicon.keys():
-            for word_rec in lexicon[c]:
-                if len(word_rec) > len(word) or not word.startswith(word_rec):
-                    continue
+        for word_rec in lexicon.iter_leaf(word[0]):
+            if len(word_rec) > len(word) or not word.startswith(word_rec):
+                continue
 
-                if len(word_rec) != len(word):
-                    branch_copy = branch.copy()
-                    branch_copy.append(word_rec)
-                    result = split_rec(lexicon, word[len(word_rec):], False, result, branch_copy)
+            if len(word_rec) != len(word):
+                branch_copy = branch.copy()
+                branch_copy.append(word_rec)
+                result = split_rec(lexicon, word[len(word_rec):], False, result, branch_copy)
 
-                else:
-                    if not is_first_level:
-                        branch.append(word_rec)
-                        result.append(branch)
+            else:
+                if not is_first_level:
+                    branch.append(word_rec)
+                    result.append(branch)
 
         return result
 
     part_of_speech = PartofSpeech()
-    lexicon = spelling.read_csv_lexicon()
+    lexicon = Lexicon(False)
     if not lexicon:
         return None
 
     # prefixes, file extensions (containing a vowel)
     ignore = {'ad', 'al', 'ati', 'de', 'ed', 'eg', 'el', 'es', 'ing', 'po', 'py', 're', 'un'}
 
-    lexicon_new = []
-    for word, _ in lexicon:
+    lexicon_new = Lexicon()
+    for word, _, __ in lexicon:
         if "-" in word or "." in word or part_of_speech.isacr(word):
             continue
         if re.search(r"\d", word):
@@ -314,21 +312,20 @@ def collocation_pre(_):
         if word in ignore:
             continue
 
-        lexicon_new.append(word)
+        lexicon_new.add(word)
 
-    lexicon = spelling.split_lexicon(lexicon_new)
+    lexicon = lexicon_new.split(lexicon_new)
     del lexicon_new
 
     searchlist = []
-    for value in lexicon.values():
-        for word in value:
-            if len(word) <= 4:
-                continue
+    for word in lexicon:
+        if len(word) <= 4:
+            continue
 
-            result = split_rec(lexicon, word, True)
-            if result:
-                terms = list(" ".join(group) for group in result)
-                searchlist.append([terms, word])
+        result = split_rec(lexicon, word, True)
+        if result:
+            terms = list(" ".join(group) for group in result)
+            searchlist.append([terms, word])
 
     args = dict()
     args["config"] = listsearch.parse_config("BIO")
@@ -377,26 +374,25 @@ def hyphen_pre(_):
     """Find spaced or joined versions of hyphened compounds."""
     global listsearch
     import monostyle.listsearch as listsearch
-    import monostyle.spelling as spelling
+    lexicon = Lexicon(False)
+    if not lexicon:
+        return None
 
     ratio_threshold = 0.55
     count_threshold_joined = 3
     # can be lower if the spelling is uniform
     count_threshold_spaced = 6
 
-    lexicon = spelling.read_csv_lexicon()
-    if not lexicon:
-        return None
 
     searchlist = []
     dash_re = re.compile(r"(?<!\A)\-(?!\Z)")
-    for word, count in lexicon:
+    for word, count, _ in lexicon:
         if not re.search(dash_re, word):
             continue
 
         word_join = re.sub(r"\-", "", word)
         count = int(count) + 1
-        for word_rec, count_rec in lexicon:
+        for word_rec, count_rec, _ in lexicon:
             if word_join != word_rec:
                 continue
 
@@ -910,5 +906,5 @@ OPS = (
 
 
 if __name__ == "__main__":
-    from monostyle import main_mod
+    from monostyle.__main__ import main_mod
     main_mod(__doc__, OPS, __file__)

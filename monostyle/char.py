@@ -100,5 +100,5 @@ OPS = (
 )
 
 if __name__ == "__main__":
-    from monostyle import main_mod
+    from monostyle.__main__ import main_mod
     main_mod(__doc__, OPS, __file__, do_parse=False)

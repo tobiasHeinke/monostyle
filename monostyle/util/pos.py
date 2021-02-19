@@ -23,7 +23,7 @@ class PartofSpeech:
 
 
     def init(self):
-        char_catalog= CharCatalog()
+        char_catalog = CharCatalog()
         self.data = get_data_file("pos")
         self.remove_comments(self.data)
         self.prev = None
