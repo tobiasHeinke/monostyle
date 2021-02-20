@@ -276,7 +276,7 @@ def collocation_pre(_):
         if branch is None:
             branch = []
 
-        for word_rec in lexicon.iter_leaf(word[0]):
+        for word_rec, _ in lexicon.iter_section(word[0]):
             if len(word_rec) > len(word) or not word.startswith(word_rec):
                 continue
 
@@ -300,25 +300,19 @@ def collocation_pre(_):
     # prefixes, file extensions (containing a vowel)
     ignore = {'ad', 'al', 'ati', 'de', 'ed', 'eg', 'el', 'es', 'ing', 'po', 'py', 're', 'un'}
 
-    lexicon_new = Lexicon()
-    for word, _, __ in lexicon:
-        if "-" in word or "." in word or part_of_speech.isacr(word):
-            continue
-        if re.search(r"\d", word):
-            continue
-        # non ASCII vowels
-        if len(word) < 4 and not re.search(r"[aeiou]", word):
-            continue
-        if word in ignore:
-            continue
+    removals = set()
+    for word, _ in lexicon:
+        if ("-" in word or "." in word or part_of_speech.isacr(word) or
+                re.search(r"\d", word) or
+                (len(word) < 4 and not re.search(r"[aeiou]", word)) or
+                word in ignore):
+            removals.add(word)
 
-        lexicon_new.add(word)
-
-    lexicon = lexicon_new.split(lexicon_new)
-    del lexicon_new
+    for word in removals:
+        lexicon.remove(word)
 
     searchlist = []
-    for word in lexicon:
+    for word, _ in lexicon:
         if len(word) <= 4:
             continue
 
@@ -386,17 +380,17 @@ def hyphen_pre(_):
 
     searchlist = []
     dash_re = re.compile(r"(?<!\A)\-(?!\Z)")
-    for word, count, _ in lexicon:
+    for word, entry in lexicon:
         if not re.search(dash_re, word):
             continue
 
         word_join = re.sub(r"\-", "", word)
-        count = int(count) + 1
-        for word_rec, count_rec, _ in lexicon:
+        count = int(entry["_counter"]) + 1
+        for word_rec, entry_rec in lexicon:
             if word_join != word_rec:
                 continue
 
-            count_rec = int(count_rec) + 1
+            count_rec = int(entry_rec["_counter"]) + 1
             if (count_rec / (count_rec + count) < ratio_threshold and
                     (count_rec + count / 2) > count_threshold_joined):
                 searchlist.append([word_rec, word])
@@ -587,8 +581,7 @@ def overuse(toolname, document, reports):
 
     def add_topic(topics, word_str, words):
         topics.add(word_str)
-        if word_str in words:
-            del words[word_str]
+        words.remove(word_str)
 
     def evaluate(document, reports, words):
         def add_report(document, reports, word, is_severe, count):
@@ -598,7 +591,8 @@ def overuse(toolname, document, reports):
 
             return reports
 
-        for value in words.values():
+        for _, entry in words:
+            value = entry["value"]
             if len(value) == 1:
                 continue
             buf = None
@@ -625,7 +619,7 @@ def overuse(toolname, document, reports):
             if score >= threshold_min:
                 reports = add_report(document, reports, instance[0],
                                      bool(score >= threshold_severe), index - index_last + 1)
-        words.clear()
+        words.reset()
         return reports
 
     segmenter = Segmenter()
@@ -652,7 +646,7 @@ def overuse(toolname, document, reports):
     for word in re.split(r"[/._-]", monostyle_io.path_to_rel(document.code.filename, 'rst')
                                                 .replace(".rst", "")):
         topics.add(word)
-    words = dict()
+    words = Lexicon()
     stopwords = {'to', 'of', 'in', 'as', 'on', 'by'}
 
     is_first = True
@@ -729,10 +723,10 @@ def overuse(toolname, document, reports):
                         elif tag[0] in {"noun", "verb", "participle", "pronoun"}:
                             weight -= 0.2
 
-                    if word_str in words:
-                        words[word_str].append((word, weight, counter))
-                    else:
-                        words[word_str] = [(word, weight, counter)]
+                    entry = words.add(word_str)
+                    if "value" not in entry.keys():
+                        entry["value"] = []
+                    entry["value"].append((word, weight, counter))
 
                 is_first = False
 

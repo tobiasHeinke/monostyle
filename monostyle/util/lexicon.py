@@ -5,6 +5,7 @@ util.lexicon
 
 List of words.
 """
+
 import re
 import csv
 from difflib import SequenceMatcher
@@ -22,7 +23,7 @@ class Lexicon:
         if not blank and not cls.__default__:
             lexicon_flat = cls.read_csv(cls)
             if lexicon_flat:
-                cls.__default__ = cls.split(cls, cls.add_charset(cls, lexicon_flat))
+                cls.__default__ = cls.add_charset(cls, cls.split(cls, lexicon_flat))
 
         if not hasattr(cls, 'inited'):
             char_catalog = CharCatalog()
@@ -38,12 +39,17 @@ class Lexicon:
         if blank:
             self.data = dict()
         else:
-            self.data = self.__default__
+            self.data = self.__default__.copy()
 
 
     def __bool__(self):
         """Has data."""
         return bool(self.data)
+
+
+    def reset(self):
+        """Clear data."""
+        self.data.clear()
 
 
     def read_csv(self):
@@ -82,10 +88,10 @@ class Lexicon:
         """Split lexicon by first char."""
         lexicon = dict()
         for entry in lexicon_flat:
-            first_char = entry[0][0]
+            first_char = entry[0][0].lower()
             if first_char not in lexicon.keys():
-                lexicon.setdefault(first_char, [])
-            lexicon[first_char].append(entry)
+                lexicon.setdefault(first_char, dict())
+            lexicon[first_char][entry[0]] = {"_counter": entry[1]}
 
         return lexicon
 
@@ -93,77 +99,94 @@ class Lexicon:
     def join(self, do_sort=False):
         """Join lexicon to a list."""
         lexicon_flat = []
-        for value in self.data.values():
-            lexicon_flat.extend(value)
+        for section in self.data.values():
+            for word, entry in section.items():
+                lexicon_flat.append((word, entry["_counter"]))
 
         if do_sort:
             # Sort list by highest occurrence.
-            lexicon_flat.sort(key=lambda word: word[1], reverse=True)
+            lexicon_flat.sort(key=lambda word: word[1],
+                              reverse=True)
 
         return lexicon_flat
 
 
-    def add_charset(self, lexicon):
-        for entry in lexicon:
-            entry.append(set(ord(c) for c in entry[0].lower()))
-        return lexicon
+    def add_charset(self, lexicon_split):
+        for section in lexicon_split.values():
+            for word, entry in section.items():
+                entry["_charset"] = set(ord(c) for c in word.lower())
+        return lexicon_split
 
 
     def __iter__(self):
-        for leaf in self.data.values():
-            for entry in leaf:
-                yield entry
+        for section in self.data.values():
+            yield from section.items()
 
 
-    def iter_leaf(self, first_char):
+    def iter_section(self, first_char):
+        first_char = first_char.lower()
         if first_char in self.data.keys():
-            for entry in self.data[first_char]:
-                yield entry
+            yield from self.data[first_char].items()
 
 
-    def add(self, word_str):
+    def add(self, word_str, do_norm=True):
         """Adds a word to the lexicon."""
-        word_str = self.norm_punc(word_str)
-        word_str = self.norm_case(word_str)
+        if do_norm:
+            word_str = self.norm_punc(word_str)
+            word_str = self.norm_case(word_str)
         first_char = word_str[0].lower()
-        # tree with leafs for each first char.
+        # tree with sections for each first char.
         if first_char not in self.data.keys():
-            self.data.setdefault(first_char, [])
+            self.data.setdefault(first_char, dict())
 
-        for entry in self.iter_leaf(first_char):
-            if entry[0] == word_str:
-                entry[1] += 1
-                break
+        if entry := self.find(word_str):
+            entry["_counter"] += 1
         else:
-            new_word = [word_str, 0]
-            self.data[first_char].append(new_word)
+            entry = {"_counter": 0}
+            self.data[first_char][word_str] = entry
+        return entry
+
+
+    def remove(self, word_str):
+        """Removes a word from the lexicon."""
+        first_char = word_str[0].lower()
+        if first_char not in self.data.keys():
+            return
+        section = self.data[first_char]
+        if word_str not in section:
+            return
+        del section[word_str]
+        if len(section) == 0:
+            del self.data[first_char]
 
 
     def find(self, word_str):
-        """Adds a word to the lexicon."""
-        for entry in self.iter_leaf(word_str[0]):
-            if word_str == str(entry[0]):
-                return entry
+        """Find exact word in lexicon."""
+        first_char = word_str[0].lower()
+        if (first_char in self.data.keys() and
+                word_str in self.data[first_char].keys()):
+            return self.data[first_char][word_str]
 
 
     def find_similar(self, word_normed, word_str, count, sim_threshold):
-        """Find similar words with adaptive filtering."""
+        """Fuzzy search with adaptive filtering."""
         def iter_lexicon(word_str):
-            first_char = word_str[0]
+            first_char = word_str[0].lower()
             if first_char in self.data.keys():
                 value = self.data[first_char]
-                yield from reversed(value)
+                yield from reversed(value.items())
             for key, value in self.data.items():
                 if key != first_char:
-                    yield from reversed(value)
+                    yield from reversed(value.items())
 
         similars = []
         word_chars = set(ord(c) for c in word_str)
-        for stored_word, _, stored_chars in iter_lexicon(word_str):
+        for stored_word, stored_entry in iter_lexicon(word_str):
             len_deviation = abs(len(word_str) - len(stored_word)) / len(word_str)
             if len_deviation >= 2:
                 continue
-            sim_rough = len(word_chars.intersection(stored_chars)) / len(word_chars) - len_deviation
+            sim_rough = len(word_chars.intersection(stored_entry["_charset"])) / (len(word_chars) -
+                                                                                  len_deviation)
             is_not_full = bool(len(similars) < count)
             if is_not_full or sim_rough >= min_rough:
                 matcher = SequenceMatcher(None, word_str, stored_word)

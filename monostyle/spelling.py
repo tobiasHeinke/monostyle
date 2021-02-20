@@ -46,40 +46,33 @@ def search(toolname, document, reports, config):
     lexicon = Lexicon(False)
 
     # compare words in the text.
-    text_words = []
+    text_words = Lexicon()
     for word in word_filtered(document):
-        word_str = str(word)
-        word_str = lexicon.norm_punc(word_str)
-        word_str = lexicon.norm_case(word_str)
-        for entry in text_words:
-            if word_str == entry[1]:
-                entry[2] += 1
-                break
-        else:
-            text_words.append([word, word_str, 0])
-
+        entry_hunk = text_words.add(str(word))
+        if "word" not in entry_hunk.keys():
+            entry_hunk["word"] = word
 
     threshold = config["threshold"]
     # compare words against the lexicon.
-    for word, word_str, hunk_count in text_words:
+    for word_str, entry_hunk in text_words:
         found_count = -1
         if entry := lexicon.find(word_str):
-            found_count = int(entry[1])
+            found_count = int(entry["_counter"])
 
         if found_count < threshold:
             line = None
             if found_count != -1:
                 severity = 'I'
-                message = "rare word: hunk: {0} lex: {1}".format(str(hunk_count + 1),
+                message = "rare word: hunk: {0} lex: {1}".format(str(entry_hunk["_counter"] + 1),
                                                                  str(found_count + 1))
             else:
                 severity = 'W'
-                message = "new word: hunk: " + str(hunk_count + 1)
+                message = "new word: hunk: " + str(entry_hunk["_counter"] + 1)
                 line = Fragment(word.filename,
-                                ", ".join(lexicon.find_similar(lexicon.norm_punc(str(word)),
+                                ", ".join(lexicon.find_similar(lexicon.norm_punc(word_str),
                                                                word_str, 5, 0.6)))
 
-            reports.append(Report(severity, toolname, word, message, line))
+            reports.append(Report(severity, toolname, entry_hunk["word"], message, line))
 
     return reports
 

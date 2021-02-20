@@ -395,7 +395,7 @@ def main(descr=None, mod_selection=None, parse_options=None):
         if ((is_selection or not ((args.external and rev) or args.patch) or
                 monostyle_io.ask_user("Apply autofix on possibly altered sources")) and
                 (not is_selection or args.filename or
-                 monostyle_io.ask_user("Apply autofix on full project"))):
+                 monostyle_io.ask_user("Apply autofix on the entire project"))):
             autofix.run(reports, rst_parser, fns_conflicted)
     if args.min_severity:
         file_opener.open_reports_files(reports, args.min_severity)

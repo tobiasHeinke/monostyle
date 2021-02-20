@@ -15,6 +15,7 @@ import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.char_catalog import CharCatalog
 from monostyle.util.pos import PartofSpeech
 from monostyle.util.segmenter import Segmenter
+from monostyle.util.lexicon import Lexicon
 
 
 def titlecase(part_of_speech, word, is_first_word, is_last_word, name):
@@ -228,7 +229,7 @@ def property_noun_pre(_):
         "literal": "*", "standalone": "*"
     }
 
-    lexicon = dict()
+    lexicon = Lexicon()
     rst_parser = RSTParser()
     for filename, text in monostyle_io.rst_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
@@ -242,36 +243,30 @@ def property_noun_pre(_):
                         continue
 
                     word_str = str(word)
-                    word_lower = word_str.lower()
-                    first_letter = word_lower[0]
-                    # tree with leafs for each first char
-                    if first_letter not in lexicon.keys():
-                        lexicon.setdefault(first_letter, [])
-                    leaf = lexicon[first_letter]
-                    for entry in leaf:
-                        if entry[0] == word_lower:
-                            break
-                    else:
-                        entry = [word_lower, 0, 0]
-                        leaf.append(entry)
-
-                    if word_str[0].isupper():
-                        entry[1] += 1
-                    else:
-                        entry[2] += 1
+                    entry = lexicon.add(word_str)
+                    if "up" not in entry.keys():
+                        entry.update((("up", 0), ("low", 0)))
+                    entry["up" if word_str[0].isupper() else "low"] += 1
 
                 first = True
             first = True
 
-    for key, value in lexicon.items():
-        new = []
-        for entry in value:
-            if entry[2] != 0:
-                ratio = entry[1] / (entry[1] + entry[2])
-                if ratio >= threshold:
-                    new.append((entry[0], ratio))
+    removals = set()
+    for word, entry in lexicon:
+        if entry["up"] == 0:
+            removals.add(word)
+            continue
 
-        lexicon[key] = new
+        ratio = entry["up"] / (entry["up"] + entry["low"])
+        if ratio < threshold:
+            removals.add(word)
+            continue
+
+        entry["ratio"] = ratio
+        del entry["up"], entry["low"]
+
+    for word in removals:
+        lexicon.remove(word)
 
     args = dict()
     args["config"] = {"instr_pos": instr_pos, "instr_neg": instr_neg}
@@ -287,16 +282,10 @@ def property_noun(toolname, document, reports, data, config):
     for part in rst_walker.iter_nodeparts_instr(document.body, config["instr_pos"],
                                                 config["instr_neg"]):
         for word in segmenter.iter_word(part.code):
-            word_str = str(word)
-            first_letter = word_str[0].lower()
-            if first_letter not in data.keys():
-                continue
-            for entry in data[first_letter]:
-                if entry[0] == word_str:
-                    message = "property noun: {:4.0%}".format(entry[1])
-                    line = getline_punc(document.code, word, 50, 30)
-                    reports.append(Report('W', toolname, word, message, line))
-                    break
+            if entry := data.find(str(word)):
+                message = "property noun: {:4.0%}".format(entry["ratio"])
+                line = getline_punc(document.code, word, 50, 30)
+                reports.append(Report('W', toolname, word, message, line))
 
     return reports
 
