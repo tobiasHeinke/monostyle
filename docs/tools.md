@@ -77,6 +77,9 @@ Find directives and roles types that should not be used in the project.
 ### blank-line
 
 Blank line convention.
+Note, this tool has to be run over the entire project from time to time
+because the default context is too small for detected errors in any case
+(especially since the context is not extended further by blank line changes).
 
 ### flavor
 

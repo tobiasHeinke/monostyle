@@ -61,24 +61,28 @@
 		"format_str": "{filename}{location} {severity} {output} {message} {fix}{line}",
 		"show_filename": true,
 		"absolute_path": true,
-		"filename_separator": ":",
+		"filename_end": ":",
 
-		"show_end": false,
-		"location_span_separator": " - ",
-		"location_column_separator": ":",
+		"location_column": ":",
+		"show_location_end": false,
+		"location_span": " - ",
 
 		// options: 'long', 'letter', 'ascii', 'icon', 'emoji', 'color', 'shape'
 		"severity_display": "long",
 
-		"output_separator_start": "´",
-		"output_separator_end": "´",
+		"output_start": "´",
+		"output_end": "´",
 		"output_limit": 100,
 		"output_ellipsis": "…",
 
 		"show_line": true,
 		"line_limit": 200,
-		"line_indent": ">>>",
+		"line_start": ">>>",
 		"line_ellipsis": "…",
+		"show_marker": false,
+		"marker_start": "▕",
+		"marker_end": "▏",
+		"marker_both": "▌",
 
 		"show_autofix": true,
 		// options: same as severity_display

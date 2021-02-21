@@ -9,7 +9,7 @@ Punctuation style checks and number formatting.
 import re
 
 import monostyle.util.monostyle_io as monostyle_io
-from monostyle.util.report import Report, getline_punc, getline_offset
+from monostyle.util.report import Report
 from monostyle.util.fragment import Fragment
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.pos import PartofSpeech
@@ -196,7 +196,7 @@ def mark(toolname, document, reports, re_lib):
                     if m.start() == 0 and key == "closesol" and part.parent_node.prev:
                         continue
                     output = part.code.slice_match_obj(m, 0, True)
-                    line = getline_punc(document.body.code, output, 50, 30)
+                    line = Report.getline_punc(document.body.code, output, 50, 30)
                     reports.append(Report('W', toolname, output, value[1], line))
 
 
@@ -245,7 +245,7 @@ def mark(toolname, document, reports, re_lib):
                         continue
                     output = part.code.copy().clear(False)
                     message = re_lib["nopuncend"][1].format("paragraph")
-                    line = getline_offset(document.body.code, output, 100, False)
+                    line = Report.getline_offset(document.body.code, output, 100, False)
                     reports.append(Report('W', toolname, output, message, line))
 
                 else:
@@ -404,7 +404,7 @@ def number(toolname, document, reports, re_lib):
                     continue
 
                 output = part.code.slice_match_obj(m, 0, True)
-                line = getline_punc(document.body.code, output, 50, 30)
+                line = Report.getline_punc(document.body.code, output, 50, 30)
                 reports.append(Report('W', toolname, output, value[1], line))
 
     return reports
@@ -550,7 +550,7 @@ def whitespace(toolname, document, reports, re_lib):
         pattern = value[0]
         for m in re.finditer(pattern, text):
             output = document.body.code.slice_match_obj(m, 0, True)
-            line = getline_punc(document.body.code, output, 50, 30)
+            line = Report.getline_punc(document.body.code, output, 50, 30)
             fix = document.body.code.slice_match_obj(m, 1, True)
             fix.replace_fill(value[2])
             reports.append(Report('W', toolname, output, value[1], line, fix))
@@ -562,14 +562,14 @@ def whitespace(toolname, document, reports, re_lib):
         if node.prev:
             if multi_start_m := re.match(multi_start_re, node_str):
                 output = node.code.slice_match_obj(multi_start_m, 1, True)
-                line = getline_punc(document.body.code, output, 50, 30)
+                line = Report.getline_punc(document.body.code, output, 50, 30)
                 fix = output.copy().replace_fill(value[2])
                 reports.append(Report('W', toolname, output, re_lib["multispacestart"][1],
                                       line, fix))
 
         for multi_m in re.finditer(multi_re, node_str):
             output = node.code.slice_match_obj(multi_m, 1, True)
-            line = getline_punc(document.body.code, output, 50, 30)
+            line = Report.getline_punc(document.body.code, output, 50, 30)
             fix = output.copy().replace_fill(value[2])
             reports.append(Report('W', toolname, output, re_lib["multispace"][1],
                                   line, fix))

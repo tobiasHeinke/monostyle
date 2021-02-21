@@ -88,10 +88,13 @@ class Lexicon:
         """Split lexicon by first char."""
         lexicon = dict()
         for entry in lexicon_flat:
-            first_char = entry[0][0].lower()
+            word = entry[0]
+            if len(word) == 0:
+                continue
+            first_char = word[0].lower()
             if first_char not in lexicon.keys():
                 lexicon.setdefault(first_char, dict())
-            lexicon[first_char][entry[0]] = {"_counter": entry[1]}
+            lexicon[first_char][word] = {"_counter": entry[1]}
 
         return lexicon
 
@@ -124,6 +127,8 @@ class Lexicon:
 
 
     def iter_section(self, first_char):
+        if len(first_char) == 0:
+            return
         first_char = first_char.lower()
         if first_char in self.data.keys():
             yield from self.data[first_char].items()
@@ -131,6 +136,8 @@ class Lexicon:
 
     def add(self, word_str, do_norm=True):
         """Adds a word to the lexicon."""
+        if len(word_str) == 0:
+            return
         if do_norm:
             word_str = self.norm_punc(word_str)
             word_str = self.norm_case(word_str)
@@ -149,6 +156,8 @@ class Lexicon:
 
     def remove(self, word_str):
         """Removes a word from the lexicon."""
+        if len(word_str) == 0:
+            return
         first_char = word_str[0].lower()
         if first_char not in self.data.keys():
             return
@@ -160,17 +169,24 @@ class Lexicon:
             del self.data[first_char]
 
 
-    def find(self, word_str):
+    def find(self, word_str, do_norm=True):
         """Find exact word in lexicon."""
+        if len(word_str) == 0:
+            return
         first_char = word_str[0].lower()
-        if (first_char in self.data.keys() and
-                word_str in self.data[first_char].keys()):
-            return self.data[first_char][word_str]
+        if first_char in self.data.keys():
+            if do_norm:
+                word_str = self.norm_punc(word_str)
+                word_str = self.norm_case(word_str)
+            if word_str in self.data[first_char].keys():
+                return self.data[first_char][word_str]
 
 
     def find_similar(self, word_normed, word_str, count, sim_threshold):
         """Fuzzy search with adaptive filtering."""
         def iter_lexicon(word_str):
+            if len(word_str) == 0:
+                return
             first_char = word_str[0].lower()
             if first_char in self.data.keys():
                 value = self.data[first_char]

@@ -9,7 +9,7 @@ List based search tools.
 import re
 
 import monostyle.util.monostyle_io as monostyle_io
-from monostyle.util.report import Report, getline_punc
+from monostyle.util.report import Report
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.segmenter import Segmenter
 from monostyle.util.porter_stemmer import Porterstemmer
@@ -151,7 +151,7 @@ def search_free(toolname, document, reports, comlist):
         for pattern, message in comlist:
             for m in re.finditer(pattern, part_str):
                 output = part.code.slice_match_obj(m, 0, True)
-                line = getline_punc(document.body.code, output, 50, 30)
+                line = Report.getline_punc(document.body.code, output, 50, 30)
                 reports.append(Report('I', toolname, output, message, line))
 
     return reports
@@ -202,7 +202,7 @@ def search_word(toolname, document, reports, comlist, config):
                 if pattern != word_str:
                     continue
 
-                line = getline_punc(document.body.code, word, 50, 30)
+                line = Report.getline_punc(document.body.code, word, 50, 30)
                 reports.append(Report('I', toolname, word, message, line))
 
     return reports

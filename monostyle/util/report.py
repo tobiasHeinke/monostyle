@@ -254,23 +254,27 @@ class Report():
             "format_str": format_str,
             "show_filename": True,
             "absolute_path": False,
-            "filename_separator": ":",
+            "filename_end": ":",
 
-            "show_end": False,
-            "location_span_separator": " - ",
-            "location_column_separator": ":",
+            "location_column": ":",
+            "show_location_end": False,
+            "location_span": " - ",
 
             "severity_display": "long",
 
-            "output_separator_start": "'",
-            "output_separator_end": "'",
+            "output_start": "'",
+            "output_end": "'",
             "output_limit": 100,
             "output_ellipsis": "…",
 
             "show_line": True,
             "line_limit": 200,
-            "line_indent": ">>>",
+            "line_start": ">>>",
             "line_ellipsis": "…",
+            "show_marker": False,
+            "marker_start": "¦",
+            "marker_end": "¦",
+            "marker_both": "¤",
 
             "show_autofix": False,
             "autofix_display": "long",
@@ -284,7 +288,7 @@ class Report():
                 entries["filename"] = self.output.filename
             else:
                 entries["filename"] = path_to_rel(self.output.filename)
-            entries["filename"] += options["filename_separator"]
+            entries["filename"] += options["filename"]
 
         sev_map = self.severity_maps.get(options["severity_display"], self.severity_maps["letter"])
         entries["severity"] = sev_map.get(self.severity, sev_map["U"])
@@ -293,36 +297,47 @@ class Report():
 
         if self.output.start_lincol and self.output.start_lincol[0] != -1:
             entries["location"] = "".join((str(self.output.start_lincol[0] + 1),
-                                           options["location_column_separator"],
+                                           options["location_column"],
                                            str(self.output.start_lincol[1] + 1)))
-            if options["show_end"] and self.output.start_lincol != self.output.end_lincol:
-                entries["location"] += "".join((options["location_span_separator"],
+            if options["show_location_end"] and self.output.start_lincol != self.output.end_lincol:
+                entries["location"] += "".join((options["location_span"],
                                                 str(self.output.end_lincol[0] + 1),
-                                                options["location_column_separator"],
+                                                options["location_column"],
                                                 str(self.output.end_lincol[1] + 1)))
 
         elif self.output.start_pos != -1:
             entries["location"] = str(self.output.start_pos)
 
-            if options["show_end"] and self.output.start_pos != self.output.end_pos:
-                entries["location"] += options["location_span_separator"] + str(self.output.end_pos)
+            if options["show_location_end"] and self.output.start_pos != self.output.end_pos:
+                entries["location"] += options["location_span"] + str(self.output.end_pos)
 
         if len(self.output) != 0:
             entries["output"] = str(self.output).replace("\n", '¶')
             if len(entries["output"]) > options["output_limit"]:
                 entries["output"] = entries["output"][:options["output_limit"]]
                 entries["output"] += options["output_ellipsis"]
-            entries["output"] = options["output_separator_start"] + entries["output"] + \
-                                options["output_separator_end"]
+            entries["output"] = options["output_start"] + entries["output"] + \
+                                options["output_end"]
 
         entries["message"] = self.message
 
         if options["show_line"] and self.line:
-            entries["line"] = str(self.line).replace('\n', '¶')
+            if (not options["show_marker"] or
+                    (not self.line.is_in_span(self.output.start_pos) and
+                     not self.line.is_in_span(self.output.end_pos))):
+                line_str = str(self.line)
+            else:
+                before, inner, after = self.line.slice(self.output.start_pos, self.output.end_pos)
+                if len(inner) == 0:
+                    inner = (options["marker_both"],)
+                else:
+                    inner = (options["marker_start"], str(inner), options["marker_end"])
+                line_str = "".join((str(before), *inner, str(after)))
+            entries["line"] = line_str.replace('\n', '¶')
             if len(entries["line"]) > options["line_limit"]:
                 entries["line"] = entries["line"][:options["line_limit"]]
                 entries["line"] += options["line_ellipsis"]
-            entries["line"] = "\n" + options["line_indent"] + entries["line"]
+            entries["line"] = "\n" + options["line_start"] + entries["line"]
 
         if options["show_autofix"] and self.fix is not None:
             entries["fix"] = self.fix_mark_map.get(options["autofix_display"],
@@ -347,6 +362,88 @@ class Report():
     def copy(self):
         return type(self)(self.severity, self.tool, self.output.copy(), self.message,
                           self.line.copy(), self.fix.copy())
+
+
+    #------------------------
+
+
+    def getline_lineno(code, fg, start_end=True):
+        """Extract a single line.
+        start_end -- use start or end as location.
+        """
+        lineno = fg.start(False)[0] if start_end else fg.end(False)[0]
+        return code.slice((lineno, 0), (lineno+1, 0), True)
+
+
+    def getline_newline(code, fg, n, start_end=True):
+        """Extract a line including lines around it.
+        n -- number of lines to include around the line (odds below).
+        start_end -- use start or end as location.
+        """
+        lineno = fg.start(False)[0] if start_end else fg.end(False)[0]
+        start = (lineno - ceil(n / 2), 0)
+        end = (lineno + (n // 2) + 1, 0)
+        return code.slice(start, end, True)
+
+
+    def getline_punc(code, fg, min_chars, margin):
+        """Extracts line limited by punctuation.
+        min_chars -- minimal amount of chars to extract on both sides.
+        margin -- length of the outer margin within to search for punctuation marks.
+        """
+        start = fg.start_pos - min_chars - margin
+        end = fg.end_pos + min_chars + margin
+        buf = code.slice(start, end, True)
+
+        margin_start, _, margin_end = buf.slice(start + margin, end - margin)
+
+        if margin_start and len(margin_start) != 0:
+            margin_start_str = str(margin_start)
+            start_m = None
+            for start_m in re.finditer(r"[.?!:,;]", margin_start_str):
+                pass
+            if start_m:
+                start = margin_start.loc_to_abs(start_m.end(0))
+
+        if margin_end and len(margin_end) != 0:
+            if end_m := re.search(r"[.?!:,;]", str(margin_end)):
+                end = margin_end.loc_to_abs(end_m.end(0))
+
+        return buf.slice(start, end, True)
+
+
+    def getline_offset(code, fg, offset, after_before=None):
+        """Extracts a lines limited by an offset.
+        offset -- span to include.
+        after_before -- offset after end, before start or half on both sides.
+        """
+        is_pos = isinstance(offset, int)
+        start = fg.get_start(is_pos)
+        end = fg.get_end(is_pos)
+        if after_before is None:
+            if is_pos:
+                diff = offset // 2
+                start -= diff
+                end += diff
+            else:
+                diff = tuple(map(lambda e: e // 2 if e != 0 else 0, offset))
+                start = tuple(a - b for a, b in zip(start, diff))
+                end = tuple(a + b for a, b in zip(end, diff))
+        elif after_before:
+            if is_pos:
+                end += offset
+            else:
+                end = tuple(a + b for a, b in zip(end, offset))
+        else:
+            if is_pos:
+                start -= offset
+            else:
+                start = tuple(a - b for a, b in zip(start, offset))
+
+        return code.slice(start, end, True)
+
+
+#------------------------
 
 
 def options_overide(options=None):
@@ -418,82 +515,3 @@ def reports_summary(reports, options):
     if options["summary_overline"]:
         print_over(options["summary_overline"] * len(", ".join(summary_text)))
     print_over(", ".join(summary_text))
-
-
-#------------------------
-
-
-def getline_lineno(code, fg, start_end=True):
-    """Extract a single line.
-    start_end -- use start or end as location.
-    """
-    lineno = fg.start(False)[0] if start_end else fg.end(False)[0]
-    return code.slice((lineno, 0), (lineno+1, 0), True)
-
-
-def getline_newline(code, fg, n, start_end=True):
-    """Extract a line including lines around it.
-    n -- number of lines to include around the line (odds below).
-    start_end -- use start or end as location.
-    """
-    lineno = fg.start(False)[0] if start_end else fg.end(False)[0]
-    start = (lineno - ceil(n / 2), 0)
-    end = (lineno + (n // 2) + 1, 0)
-    return code.slice(start, end, True)
-
-
-def getline_punc(code, fg, min_chars, margin):
-    """Extracts line limited by punctuation.
-    min_chars -- minimal amount of chars to extract on both sides.
-    margin -- length of the outer margin within to search for punctuation marks.
-    """
-    start = fg.start_pos - min_chars - margin
-    end = fg.end_pos + min_chars + margin
-    buf = code.slice(start, end, True)
-
-    margin_start, _, margin_end = buf.slice(start + margin, end - margin)
-
-    if margin_start and len(margin_start) != 0:
-        margin_start_str = str(margin_start)
-        start_m = None
-        for start_m in re.finditer(r"[.?!:,;]", margin_start_str):
-            pass
-        if start_m:
-            start = margin_start.loc_to_abs(start_m.end(0))
-
-    if margin_end and len(margin_end) != 0:
-        if end_m := re.search(r"[.?!:,;]", str(margin_end)):
-            end = margin_end.loc_to_abs(end_m.end(0))
-
-    return buf.slice(start, end, True)
-
-
-def getline_offset(code, fg, offset, after_before=None):
-    """Extracts a lines limited by an offset.
-    offset -- span to include.
-    after_before -- offset after end, before start or half on both sides.
-    """
-    is_pos = isinstance(offset, int)
-    start = fg.get_start(is_pos)
-    end = fg.get_end(is_pos)
-    if after_before is None:
-        if is_pos:
-            diff = offset // 2
-            start -= diff
-            end += diff
-        else:
-            diff = tuple(map(lambda e: e // 2 if e != 0 else 0, offset))
-            start = tuple(a - b for a, b in zip(start, diff))
-            end = tuple(a + b for a, b in zip(end, diff))
-    elif after_before:
-        if is_pos:
-            end += offset
-        else:
-            end = tuple(a + b for a, b in zip(end, offset))
-    else:
-        if is_pos:
-            start -= offset
-        else:
-            start = tuple(a - b for a, b in zip(start, offset))
-
-    return code.slice(start, end, True)

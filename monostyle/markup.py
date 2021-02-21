@@ -8,7 +8,7 @@ RST markup tools.
 
 import re
 
-from monostyle.util.report import Report, getline_offset
+from monostyle.util.report import Report
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.rst_parser.core import RSTParser
 
@@ -646,7 +646,7 @@ def leak(toolname, document, reports, re_lib, data):
                     if on_mc_trans:
                         continue
                     output = part.code.slice_match_obj(m, 0, True)
-                    line = getline_offset(part.parent_node.code, output, 100)
+                    line = Report.getline_offset(part.parent_node.code, output, 100)
                     reports.append(Report('F', toolname, output, re_lib[key][1], line))
 
 
@@ -705,7 +705,7 @@ def leak(toolname, document, reports, re_lib, data):
                         message += rst_walker.write_out(re_lib[key][1][0], re_lib[key][1][1])
                     else:
                         message = re_lib[key][1]
-                    line = getline_offset(part.parent_node.parent_node.code, output, 100)
+                    line = Report.getline_offset(part.parent_node.parent_node.code, output, 100)
                     reports.append(Report('F', toolname, output, message, line))
 
     return reports
