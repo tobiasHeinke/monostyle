@@ -62,16 +62,26 @@ def print_title(title, to_upper=False, underline='='):
 
 def ask_user(*question):
     """Get user confirmation via console input."""
-    pos = ("y", "yes")
-    neg = ("n", "no")
-    ip = input("".join(question) + " (y/n)?")
-    while (True):
-        if ip in ("h", "help"):
-            print("confirm by entering:", "'" + "', '".join(pos) + "'")
-            print("or chancel with:", "'" + "', '".join(neg) + "'")
-            ip = input("input: ")
+    keys = {"pos": "yes", "neg": "nope", "help": "help"}
+    retries = 0
+    while True:
+        ip = input("".join((*question, " ", keys["pos"][0], "/", keys["neg"][0], "?")))
+        if not ip or keys["help"].startswith(ip) or ip in ("?", "¿"):
+            print("confirm by entering:",
+                  "'" + "', '".join(keys["pos"][:n] for n in range(1, len(keys["pos"]) + 1)) + "'")
+            print("or chancel with:",
+                  "'" + "', '".join(keys["neg"][:n] for n in range(1, len(keys["neg"]) + 1)) + "'")
         else:
-            return ip in pos
+            if keys["pos"].startswith(ip):
+                return True
+            if keys["neg"].startswith(ip):
+                return False
+            if retries > 3:
+                break
+            print("Invalid input, please try again! (or type '" + keys["help"] + "')")
+            retries += 1
+
+    return False
 
 
 #------------------------

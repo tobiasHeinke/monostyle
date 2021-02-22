@@ -844,9 +844,17 @@ def repeated(toolname, document, reports, config):
     # config: min distance from where on to apply filter
     ignore_article = ({"a", "an", "the"}, 2)
     ignore_pre_pro = ({"and", "or", "to", "as", "of"}, 1)
+    prev_parent = None
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
         if part.child_nodes.is_empty():
+            # add one placeholder word for skipped code
+            if len(buf) != 0 and part.parent_node.prev is not prev_parent:
+                if len(buf) == buf_size:
+                    buf.pop(0)
+
+                buf.append("")
+
             for sen, is_open in segmenter.iter_sentence(part.code, output_openess=True):
                 for word in segmenter.iter_word(sen):
                     word_lower = str(word).lower()
@@ -868,7 +876,7 @@ def repeated(toolname, document, reports, config):
                             reports.append(Report(sev, toolname, word, message, line))
                             break
 
-                    if len(buf) == buf_size - 1:
+                    if len(buf) == buf_size:
                         buf.pop(0)
 
                     buf.append(word_stem)
@@ -878,6 +886,8 @@ def repeated(toolname, document, reports, config):
 
             if rst_walker.is_of(part, "text") and part.parent_node.indent:
                 buf.clear()
+
+            prev_parent = part.parent_node
 
         else:
             if rst_walker.is_of(part, {"sect", "bullet", "enum", "line", "def", "field"}):

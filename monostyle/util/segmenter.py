@@ -14,74 +14,64 @@ class Segmenter:
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
+            char_catalog = CharCatalog()
+            pos = PartofSpeech()
+            # paragraph
+            cls.para_re = re.compile(r"\n\s*\n", re.MULTILINE)
+
+            # sentence
+            pattern_str = (r"([\w\.]+)?(?<!\.\.)([", char_catalog.data["terminal"]["final"],
+                           r"])([\W\D]|\Z)")
+            cls.sent_re = re.compile("".join(pattern_str))
+
+            cls.linewrap_re = re.compile(r" *?\n *", re.MULTILINE)
+
+            # clause
+            cls.clause_re = re.compile(r"(,(?:\s+|\Z)(?!(?:and|or)))|(\s(?:and|or)\s)")
+            cls.non_oxford_re = re.compile(r"")
+            cls.ellipsis_re = re.compile(r"\b(etc\.|\.\.\.)\s*\Z")
+
+            # parenthesis
+            cls.parenthesis_re = re.compile(r"\([^)]+?(\).?\s*|\Z)")
+
+            # word
+            hyphen = char_catalog.data["connector"]["hyphen"]
+            apostrophe = char_catalog.data["connector"]["apostrophe"]
+            pattern_str = (
+                # abbreviation
+                r"(\b(?:(?:[", char_catalog.unicode_set("A-Za-z", 0, 7), r"]\.){2,})|",
+                # compound: dash with letters on both sides and
+                # one at start and end (for pre-/suffixes).
+                r"(?:[", hyphen, r"]|\b)",
+                r"[", char_catalog.unicode_set("A-Za-z0-9", 0, 7), r"](?:\w*",
+                # contraction: with letters on both sides and after s at word end.
+                r"(?<=\w)[", apostrophe, hyphen, r"]?(?=\w)\w*)*",
+                r"(?:(?<=s)[" + apostrophe + r"](?!\w)|\b)",
+                r"[", hyphen, r"]?)"
+            )
+
+            cls.word_re = re.compile(''.join(pattern_str))
+            # word only
+            cls.wordsub_re = re.compile(r"\b(\w+?)\b")
+            # numbers and ranges
+            cls.number_filter_re = re.compile(r"\A[+-]?\d[\d,." + hyphen + r"]*\Z")
+
+            # number
+            pattern_str = (
+                r"(?:(?<=[\W\D])|\A)",
+                r"[", char_catalog.data["math"]["operator"]["sign"], r"]?\d(?:\d|[,.]\d)*",
+                r"(?:(?=\D)|\Z)"
+            )
+            cls.number_re = re.compile(''.join(pattern_str))
+
+            cls.abbr_re = pos.abbr_re
+            cls.abbrs = []
+            for entry in pos.get(("abbreviation",), joined=True):
+                if not re.match(cls.abbr_re, entry):
+                    cls.abbrs.append(entry)
+
             cls.instance = super().__new__(cls)
-            cls.instance.init()
         return cls.instance
-
-
-    def init(self):
-        char_catalog = CharCatalog()
-        pos = PartofSpeech()
-        # paragraph
-        self.para_re = re.compile(r"\n\s*\n", re.MULTILINE)
-
-        # sentence
-        pattern_str = (r"([\w\.]+)?(?<!\.\.)([", char_catalog.data["terminal"]["final"],
-                       r"])([\W\D]|\Z)")
-        self.sent_re = re.compile("".join(pattern_str))
-
-        self.linewrap_re = re.compile(r" *?\n *", re.MULTILINE)
-
-        # clause
-        self.clause_re = re.compile(r"(,(?:\s+|\Z)(?!(?:and|or)))|(\s(?:and|or)\s)")
-        self.non_oxford_re = re.compile(r"")
-        self.ellipsis_re = re.compile(r"\b(etc\.|\.\.\.)\s*\Z")
-
-        # parenthesis
-        self.parenthesis_re = re.compile(r"\([^)]+?(\).?\s*|\Z)")
-
-        # word
-        hyphen = char_catalog.data["connector"]["hyphen"]
-        apostrophe = char_catalog.data["connector"]["apostrophe"]
-        pattern_str = (
-            # abbreviation
-            r"(\b(?:(?:[", char_catalog.unicode_set("A-Za-z", 0, 7), r"]\.){2,})|",
-            # compound: dash with letters on both sides and
-            # one at start and end (for pre-/suffixes).
-            r"(?:[", hyphen, r"]|\b)[", char_catalog.unicode_set("A-Za-z0-9", 0, 7), r"](?:\w*",
-            # contraction: with letters on both sides and after s at word end.
-            r"(?<=\w)[", apostrophe, hyphen, r"]?(?=\w)\w*)*",
-            r"(?:(?<=s)[" + apostrophe + r"](?!\w)|\b)",
-            r"[", hyphen, r"]?)"
-        )
-
-        self.word_re = re.compile(''.join(pattern_str))
-        # word only
-        self.wordsub_re = re.compile(r"\b(\w+?)\b")
-        # numbers and ranges
-        self.number_filter_re = re.compile(r"\A[+-]?\d[\d,." + hyphen + r"]*\Z")
-
-        # number
-        pattern_str = (
-            r"(?:(?<=[\W\D])|\A)",
-            r"[", char_catalog.data["math"]["operator"]["sign"], r"]?\d(?:\d|[,.]\d)*",
-            r"(?:(?=\D)|\Z)"
-        )
-        self.number_re = re.compile(''.join(pattern_str))
-
-        self.abbr_re = pos.abbr_re
-        self.abbrs = self._filter_abbr_data(pos.get(("abbreviation",), joined=True))
-
-
-    def _filter_abbr_data(self, data):
-        abbrs = []
-        for entry in data:
-            if not re.match(self.abbr_re, entry):
-                abbrs.append(entry)
-        return abbrs
-
-
-    # -----------------
 
 
     def iter_paragraph(self, fg, output_openess=False):

@@ -24,19 +24,18 @@ def setup_config(root):
     """Create user config file or override config."""
     global root_dir
     root_dir = root
-    filename_default = os.path.normpath(os.path.join(os.path.dirname(__file__), "data", "config.json"))
-    config_default, source_default = load_config(filename_default)
+    config_default, source_default = load_config(root, True)
     for key, value in config_default.items():
         globals()[key] = value
 
-    filename_user = os.path.normpath(os.path.join(root, "monostyle", "config.json"))
-    if not os.path.isfile(filename_user):
-        write_config_file(filename_user, source_default)
+    try:
+        config_user, _ = load_config(root, False)
+    except IOError:
+        write_config_file(root, source_default)
+    except ValueError as err:
+        print(err)
+        return False
     else:
-        config_user, _ = load_config(filename_user)
-        if config_user is None:
-            return False
-
         for key, value in config_user.items():
             if key in config_default.keys() and value is not None:
                 globals()[key] = override_typecheck(value, globals()[key], "monostyle config")
@@ -44,7 +43,7 @@ def setup_config(root):
     return True
 
 
-def load_config(filename):
+def load_config(root, from_default):
     """Load default/user config file."""
     def remove_comments(text):
         lines = []
@@ -55,28 +54,24 @@ def load_config(filename):
                 lines.append("")
         return '\n'.join(lines)
 
-    try:
-        text = read_config_file(filename)
-        if text is not None:
-            return json.loads(remove_comments(text)), text
+    if from_default:
+        filename = os.path.normpath(os.path.join(os.path.dirname(__file__), "data", "config.json"))
+    else:
+        filename = os.path.normpath(os.path.join(root, "monostyle", "config.json"))
 
+    with open(filename, 'r', encoding='utf-8') as config_file:
+        text = config_file.read()
+
+    text = remove_comments(text)
+    try:
+        return json.loads(text), text
     except json.JSONDecodeError as err:
-        print("{0}: cannot decode user config: {1}".format(filename, err))
-
-    return None, None
+        raise ValueError("{0}: cannot decode user config: {1}".format(filename, err)) from err
 
 
-def read_config_file(filename):
-    try:
-        with open(filename, 'r', encoding='utf-8') as config_file:
-            text = config_file.read()
-            return text
+def write_config_file(root, text):
+    filename = os.path.normpath(os.path.join(root, "monostyle", "config.json"))
 
-    except IOError:
-        print("config.json not found:", filename)
-
-
-def write_config_file(filename, text):
     try:
         with open(filename, 'w', encoding='utf-8') as config_file:
             config_file.write(text)

@@ -25,12 +25,12 @@ class Lexicon:
             if lexicon_flat:
                 cls.__default__ = cls.add_charset(cls, cls.split(cls, lexicon_flat))
 
-        if not hasattr(cls, 'inited'):
+        if not hasattr(cls, '__loaded'):
+            cls.__loaded = True
             char_catalog = CharCatalog()
             cls.hyphen_re = re.compile(r"[" + char_catalog.data["connector"]["hyphen"] + r"]")
             cls.apostrophe_re = re.compile(r"[" + char_catalog.data["connector"]["apostrophe"] + r"]")
             cls.part_of_speech = PartofSpeech()
-            cls.inited = True
 
         return super().__new__(cls)
 

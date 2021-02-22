@@ -14,13 +14,9 @@ class CharCatalog:
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
+            cls.data = get_data_file("char_catalog")
             cls.instance = super().__new__(cls)
-            cls.instance.init()
         return cls.instance
-
-
-    def init(self):
-        self.data = get_data_file("char_catalog")
 
 
     def get(self, branch, index=0, joined=True):

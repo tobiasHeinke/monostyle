@@ -14,47 +14,45 @@ class PartofSpeech:
     """Part of speech tagging."""
 
     def __new__(cls):
-        if not hasattr(cls, 'instance'):
-            cls.instance = super().__new__(cls)
-            cls.instance.init()
-        else:
-            cls.instance.reset()
-        return cls.instance
+        if not hasattr(cls, '__loaded'):
+            cls.__loaded = True
+            char_catalog = CharCatalog()
+            cls.data = get_data_file("pos")
+            cls.remove_comments(cls, cls.data)
+
+            # acronym
+            pattern_str = (
+                r"\b[", char_catalog.unicode_set("A-Z", 0, 7), r"]{2,}s?",
+                # contraction
+                r"(?:[", char_catalog.data["connector"]["apostrophe"], r"]",
+                r"(?:", '|'.join(('ed', 's')), r"))?",
+                r"(?:(?<=s)[", char_catalog.data["connector"]["apostrophe"], r"](?!\w)|\b)"
+            )
+            cls.acr_re = re.compile(''.join(pattern_str))
+
+            # abbreviation
+            cls.abbr_re = re.compile(r"\b([" + char_catalog.unicode_set("A-Za-z", 0, 7) +
+                                     r"]\.){2,}(?:(?!\w)|\Z)")
+
+        return super().__new__(cls)
 
 
-    def init(self):
-        char_catalog = CharCatalog()
-        self.data = get_data_file("pos")
-        self.remove_comments(self.data)
+    def __init__(self):
         self.prev = None
-
-        # acronym
-        pattern_str = (
-            r"\b[", char_catalog.unicode_set("A-Z", 0, 7), r"]{2,}s?",
-            # contraction
-            r"(?:[", char_catalog.data["connector"]["apostrophe"], r"]",
-            r"(?:", '|'.join(('ed', 's')), r"))?",
-            r"(?:(?<=s)[", char_catalog.data["connector"]["apostrophe"], r"](?!\w)|\b)"
-        )
-        self.acr_re = re.compile(''.join(pattern_str))
-
-        # abbreviation
-        pattern_str = r"\b([" + char_catalog.unicode_set("A-Za-z", 0, 7) + r"]\.){2,}(?:(?!\w)|\Z)"
-        self.abbr_re = re.compile(pattern_str)
 
 
     def reset(self):
         """Empty buffer."""
-        self.prev = None
+        self.__init__()
 
 
-    def remove_comments(self, obj):
+    def remove_comments(cls, obj):
         rem_keys = []
         for key, value in obj.items():
             if key.startswith("#"):
                 rem_keys.append(key)
             elif isinstance(value, dict):
-                self.remove_comments(value)
+                cls.remove_comments(cls, value)
 
         for key in rem_keys:
             del obj[key]

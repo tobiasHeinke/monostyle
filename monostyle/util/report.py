@@ -288,7 +288,7 @@ class Report():
                 entries["filename"] = self.output.filename
             else:
                 entries["filename"] = path_to_rel(self.output.filename)
-            entries["filename"] += options["filename"]
+            entries["filename"] += options["filename_end"]
 
         sev_map = self.severity_maps.get(options["severity_display"], self.severity_maps["letter"])
         entries["severity"] = sev_map.get(self.severity, sev_map["U"])
