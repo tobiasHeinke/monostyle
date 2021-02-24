@@ -11,7 +11,7 @@ import csv
 from difflib import SequenceMatcher
 
 import monostyle.util.monostyle_io as monostyle_io
-from monostyle.util.pos import PartofSpeech
+from monostyle.util.part_of_speech import PartofSpeech
 from monostyle.util.char_catalog import CharCatalog
 
 class Lexicon:

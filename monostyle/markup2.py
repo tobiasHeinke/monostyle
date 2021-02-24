@@ -29,14 +29,14 @@ def glossary_pre(_):
     terms = set()
     terms_glossary = set()
     glossary_code = None
-    glossary_fns = []
+    glossary_filenames = []
     for filename, text in monostyle_io.rst_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
 
         for node in rst_walker.iter_node(document.body, ("dir", "role",)):
             if rst_walker.is_of(node, "*", "glossary"):
                 glossary_code = node.code
-                glossary_fns.append(glossary_code.filename)
+                glossary_filenames.append(glossary_code.filename)
 
             elif rst_walker.is_of(node, "*", "term"):
                 if glossary_code and glossary_code.is_in_span(node.code.start_pos):
@@ -47,14 +47,14 @@ def glossary_pre(_):
     terms_glossary -= terms
     terms.update(terms_glossary)
     args = dict()
-    args["data"] = dict(terms=terms, terms_glossary=terms_glossary, glossary_fns=glossary_fns)
+    args["data"] = dict(terms=terms, terms_glossary=terms_glossary, glossary_filenames=glossary_filenames)
     return args
 
 
 def glossary(toolname, document, reports, data):
     """Unused glossary terms or within glossary only."""
 
-    if document.code.filename not in data["glossary_fns"]:
+    if document.code.filename not in data["glossary_filenames"]:
         return reports
 
     for node in rst_walker.iter_node(document.body, "dir", enter_pos=False):

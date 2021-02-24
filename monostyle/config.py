@@ -20,18 +20,18 @@ config_override = None
 template_override = None
 
 
-def setup_config(root):
+def init(root):
     """Create user config file or override config."""
     global root_dir
     root_dir = root
-    config_default, source_default = load_config(root, True)
+    config_default, source_default = read_file(root, True)
     for key, value in config_default.items():
         globals()[key] = value
 
     try:
-        config_user, _ = load_config(root, False)
+        config_user, _ = read_file(root, False)
     except IOError:
-        write_config_file(root, source_default)
+        write_file(root, source_default)
     except ValueError as err:
         print(err)
         return False
@@ -43,7 +43,7 @@ def setup_config(root):
     return True
 
 
-def load_config(root, from_default):
+def read_file(root, from_default):
     """Load default/user config file."""
     def remove_comments(text):
         lines = []
@@ -69,7 +69,7 @@ def load_config(root, from_default):
         raise ValueError("{0}: cannot decode user config: {1}".format(filename, err)) from err
 
 
-def write_config_file(root, text):
+def write_file(root, text):
     filename = os.path.normpath(os.path.join(root, "monostyle", "config.json"))
 
     try:

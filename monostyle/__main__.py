@@ -200,12 +200,12 @@ def apply(rst_parser, mods, reports, document, parse_options, print_options,
 
 def update(path, rev=None):
     """Update the working copy."""
-    fns_conflicted = []
+    filenames_conflicted = []
     for filename, conflict, rev_up in vsn_inter.update_files(path, rev):
         # A conflict will be resolvable with versioning's command interface.
-        if conflict and filename not in fns_conflicted:
-            fns_conflicted.append(filename)
-    return fns_conflicted
+        if conflict and filename not in filenames_conflicted:
+            filenames_conflicted.append(filename)
+    return filenames_conflicted
 
 #------------------------
 
@@ -260,7 +260,7 @@ def setup(root, patch=None):
             print("{0}: cannot create: {1}".format(config_dir, err))
             return False
 
-    success = config.setup_config(root)
+    success = config.init(root)
     if success:
         Report.override_templates(config.template_override)
     return success
@@ -344,7 +344,7 @@ def main(descr=None, mod_selection=None, parse_options=None):
             print('Error: root {0} does not exists'.format(args.root))
             return 2
 
-    root_dir = monostyle_io.replace_windows_path_sep(root_dir)
+    root_dir = monostyle_io.norm_path_sep(root_dir)
     setup_sucess = setup(root_dir, args.patch)
     if not setup_sucess:
         return 2
@@ -373,7 +373,7 @@ def main(descr=None, mod_selection=None, parse_options=None):
             return 2
 
         reports = get_reports_version(mods, rst_parser, False, True,
-                                      monostyle_io.replace_windows_path_sep(args.patch))
+                                      monostyle_io.norm_path_sep(args.patch))
         for report in reports:# custom root
             report.output.filename = monostyle_io.path_to_abs(report.output.filename)
     else:
@@ -382,21 +382,21 @@ def main(descr=None, mod_selection=None, parse_options=None):
         if is_selection and args.do_resolve:
             parse_options["resolve"] = args.do_resolve
         reports = get_reports_file(mods, rst_parser,
-                                   monostyle_io.replace_windows_path_sep(args.filename)
+                                   monostyle_io.norm_path_sep(args.filename)
                                    if args.filename else None,
                                    parse_options)
 
-    fns_conflicted = None
+    filenames_conflicted = None
     if not is_selection:
         if args.up or (args.auto and args.external is not None):
-            fns_conflicted = update(root_dir, args.up)
+            filenames_conflicted = update(root_dir, args.up)
 
     if args.auto:
         if ((is_selection or not ((args.external and rev) or args.patch) or
                 monostyle_io.ask_user("Apply autofix on possibly altered sources")) and
                 (not is_selection or args.filename or
                  monostyle_io.ask_user("Apply autofix on the entire project"))):
-            autofix.run(reports, rst_parser, fns_conflicted)
+            autofix.run(reports, rst_parser, filenames_conflicted)
     if args.min_severity:
         file_opener.open_reports_files(reports, args.min_severity)
 

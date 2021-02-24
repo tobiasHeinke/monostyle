@@ -12,7 +12,7 @@ import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.report import Report
 from monostyle.util.fragment import Fragment
 import monostyle.rst_parser.walker as rst_walker
-from monostyle.util.pos import PartofSpeech
+from monostyle.util.part_of_speech import PartofSpeech
 from monostyle.util.char_catalog import CharCatalog
 
 
@@ -558,6 +558,8 @@ def whitespace(toolname, document, reports, re_lib):
     multi_start_re = re_lib["multispacestart"][0]
     multi_re = re_lib["multispace"][0]
     for node in rst_walker.iter_node(document.body, "text", leafs_only=True):
+        is_cell = bool(rst_walker.is_of(node.parent_node.parent_node.parent_node, "cell"))
+
         node_str = str(node.code)
         if node.prev:
             if multi_start_m := re.match(multi_start_re, node_str):
@@ -565,14 +567,14 @@ def whitespace(toolname, document, reports, re_lib):
                 line = Report.getline_punc(document.body.code, output, 50, 30)
                 fix = output.copy().replace_fill(value[2])
                 reports.append(Report('W', toolname, output, re_lib["multispacestart"][1],
-                                      line, fix))
+                                      line, fix if not is_cell else None))
 
         for multi_m in re.finditer(multi_re, node_str):
             output = node.code.slice_match_obj(multi_m, 1, True)
             line = Report.getline_punc(document.body.code, output, 50, 30)
             fix = output.copy().replace_fill(value[2])
             reports.append(Report('W', toolname, output, re_lib["multispace"][1],
-                                  line, fix))
+                                  line, fix if not is_cell else None))
 
     return reports
 

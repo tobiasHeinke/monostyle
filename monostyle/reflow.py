@@ -27,7 +27,7 @@ Data model based on https://github.com/bramstein/typeset
 
 
 import re
-from monostyle.util.pos import PartofSpeech
+from monostyle.util.part_of_speech import PartofSpeech
 from monostyle.util.nodes import Node, LinkedList
 import monostyle.rst_parser.walker as rst_walker
 

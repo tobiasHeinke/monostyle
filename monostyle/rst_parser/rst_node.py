@@ -43,21 +43,21 @@ class NodeRST(Node):
 
     def append_part(self, name, code, is_full_line=False):
         if not is_full_line:
-            newpart = NodePartRST(name, code)
+            new_part = NodePartRST(name, code)
         else:
-            newpart = NodePartRST(name, None)
+            new_part = NodePartRST(name, None)
 
-        self.child_nodes.append(newpart)
+        self.child_nodes.append(new_part)
 
         if is_full_line:
-            newpart.append_code(code)
-        setattr(self, name, newpart)
+            new_part.append_code(code)
+        setattr(self, name, new_part)
 
 
     def insert_part(self, name, code, after):
-        newpart = NodePartRST(name, code)
-        self.child_nodes.insert_after(after, newpart)
-        setattr(self, name, newpart)
+        new_part = NodePartRST(name, code)
+        self.child_nodes.insert_after(after, new_part)
+        setattr(self, name, new_part)
 
 
     def append_code(self, code):
@@ -139,19 +139,19 @@ class NodePartRST(Node):
         self.is_parsing = False
 
 
-    def append_child(self, newnode, prop_code=True):
-        self.child_nodes.append(newnode)
+    def append_child(self, new_node, prop_code=True):
+        self.child_nodes.append(new_node)
         if prop_code:
 
             if not self.is_parsing:
-                self.append_code(newnode.code)
+                self.append_code(new_node.code)
 
-            if (newnode.code is not None and
+            if (new_node.code is not None and
                     (self.parent_node.node_name.endswith("-list") or
                      self.parent_node.node_name.endswith("-table")) and
                     self.parent_node.parent_node is not None and not self.parent_node.is_parsing and
                     not self.parent_node.parent_node.is_parsing):
-                self.parent_node.parent_node.append_code(newnode.code)
+                self.parent_node.parent_node.append_code(new_node.code)
 
 
     def append_code(self, code):

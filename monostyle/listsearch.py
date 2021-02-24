@@ -43,24 +43,24 @@ def compile_searchlist(searchlist, re_conf):
     if re_conf["dotall"]:
         flags = flags | re.DOTALL
 
-    for search_ent in searchlist:
-        if isinstance(search_ent, str):
-            terms = search_ent
+    for entry in searchlist:
+        if isinstance(entry, str):
+            terms = entry
             if "message" in re_conf:
                 message = re_conf["message"]
             else:
-                message = search_ent
-        elif len(search_ent) == 1:
-            terms = search_ent[0]
+                message = entry
+        elif len(entry) == 1:
+            terms = entry[0]
             if "message" in re_conf:
                 message = re_conf["message"]
             else:
-                message = search_ent[0]
-        elif len(search_ent) == 2:
-            terms = search_ent[0]
-            message = search_ent[1]
+                message = entry[0]
+        elif len(entry) == 2:
+            terms = entry[0]
+            message = entry[1]
         else:
-            print("list: wrong form:", search_ent)
+            print("list: wrong form:", entry)
             continue
 
         if isinstance(terms, str):

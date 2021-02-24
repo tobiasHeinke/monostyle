@@ -10,7 +10,7 @@ import re
 
 from monostyle.util.report import Report
 from monostyle.util.fragment import FragmentBundle
-from monostyle.util.pos import PartofSpeech
+from monostyle.util.part_of_speech import PartofSpeech
 from monostyle.util.char_catalog import CharCatalog
 import monostyle.rst_parser.walker as rst_walker
 
@@ -337,10 +337,10 @@ def line_style(toolname, document, reports, re_lib):
 
         text = str(node.code)
         for key, value in re_lib.items():
-            is_lw = bool(key == "lastword")
+            is_lastword = bool(key == "lastword")
             for m in re.finditer(value[0], text):
                 message = value[1]
-                if is_lw:
+                if is_lastword:
                     tag = part_of_speech.tag(str(m.group(1).lower()))
                     if (len(tag) != 0 and
                             (tag[0] == "adjective" or
@@ -348,7 +348,7 @@ def line_style(toolname, document, reports, re_lib):
                         message = message.format(tag[-1])
                     else:
                         continue
-                if m.start() == 0 and (key == "sentwidow" or is_lw):
+                if m.start() == 0 and (key == "sentwidow" or is_lastword):
                     continue
 
                 output = node.code.slice_match_obj(m, 0, True)

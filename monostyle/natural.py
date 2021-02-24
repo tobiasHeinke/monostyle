@@ -13,7 +13,7 @@ from monostyle.util.report import Report
 from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.segmenter import Segmenter
-from monostyle.util.pos import PartofSpeech
+from monostyle.util.part_of_speech import PartofSpeech
 from monostyle.util.lexicon import Lexicon
 from monostyle.util.porter_stemmer import Porterstemmer
 
@@ -121,13 +121,13 @@ def abbreviation(toolname, document, reports, data, config):
             for entry, loc in data["explanations"][document.code.filename]:
                 if re.match(word_re, entry):
                     if word.start_pos < loc:
-                        msg = "abbreviation before its explanation"
+                        message = "abbreviation before its explanation"
                         line = Report.getline_punc(part.code, word, 50, 30)
-                        reports.append(Report('I', toolname, word, msg, line))
+                        reports.append(Report('I', toolname, word, message, line))
                     break
 
             else:
-                msg = "no explanation on same page"
+                message = "no explanation on same page"
                 severity = 'I'
                 found = False
                 for key, value in data["explanations"].items():
@@ -146,22 +146,22 @@ def abbreviation(toolname, document, reports, data, config):
 
                         if len(dir_key) <= len(dir_doc):
                             if dir_key == dir_doc:
-                                msg += " (same directory)"
+                                message += " (same directory)"
                             elif dir_doc.startswith(dir_key):
-                                msg += " (above file)"
+                                message += " (above file)"
                             else:
                                 severity = 'W'
                         else:
                             severity = 'W'
                             if dir_key.startswith(dir_doc):
-                                msg += " (below file)"
+                                message += " (below file)"
                         break
                 if not found:
-                    msg = "no explanation"
+                    message = "no explanation"
                     severity = 'W'
 
                 line = Report.getline_punc(part.code, word, 50, 30)
-                reports.append(Report(severity, toolname, word, msg, line))
+                reports.append(Report(severity, toolname, word, message, line))
 
     return reports
 
@@ -585,9 +585,9 @@ def overuse(toolname, document, reports):
 
     def evaluate(document, reports, words):
         def add_report(document, reports, word, is_severe, count):
-            msg = Report.existing(what="overused word {} times ".format(count))
+            message = Report.existing(what="overused word {} times ".format(count))
             line = Report.getline_punc(document.code, word, 50, 30)
-            reports.append(Report('I' if not is_severe else 'W', toolname, word, msg, line))
+            reports.append(Report('I' if not is_severe else 'W', toolname, word, message, line))
 
             return reports
 
@@ -869,11 +869,11 @@ def repeated(toolname, document, reports, config):
                             if distance >= ignore_pre_pro[1] and word_stem in ignore_pre_pro[0]:
                                 continue
 
-                            sev = 'W' if distance == 0 else 'I'
+                            severity = 'W' if distance == 0 else 'I'
                             message = Report.quantity(what="repeated words",
                                                       how=str(distance) + " words in between")
                             line = Report.getline_punc(document.body.code, word, 50, 30)
-                            reports.append(Report(sev, toolname, word, message, line))
+                            reports.append(Report(severity, toolname, word, message, line))
                             break
 
                     if len(buf) == buf_size:

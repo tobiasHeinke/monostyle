@@ -88,35 +88,36 @@ def ask_user(*question):
 # Files & data
 
 
-def path_to_rel(filename, base=None):
+def path_to_rel(path, base=None):
     """Make path relative."""
     rel = config.root_dir
     if base is not None:
         bases = {"root": rel, "rst": config.rst_dir, "po": config.po_dir, "img": config.img_dir}
         if base in bases:
-            rel = rel + '/' + bases[base]
+            rel = '/'.join((rel, bases[base]))
 
-    if filename.startswith(rel):
-        filename = filename[len(rel) + 1:]
+    if path.startswith(rel):
+        path = path[len(rel) + 1:]
 
-    return filename
+    return path
 
 
-def path_to_abs(filename, base=None):
+def path_to_abs(path, base=None):
     """Make path absolute."""
     root = config.root_dir
-    if not filename.startswith(root):
+    if not path.startswith(root):
         bases = {"root": root, "rst": config.rst_dir, "po": config.po_dir, "img": config.img_dir}
-        if base is not None and base in bases and not filename.startswith(bases[base] + '/'):
-            filename = '/'.join((root, bases[base], filename))
+        if base is not None and base in bases and not path.startswith(bases[base] + '/'):
+            path = '/'.join((root, bases[base], path))
         else:
-            filename = '/'.join((root, filename))
-    return filename
+            path = '/'.join((root, path))
+    return path
 
 
-def replace_windows_path_sep(filename):
-    """Replace backslash in Windows path."""
-    return re.sub(r"\\", "/", filename)
+def norm_path_sep(path):
+    """Replace backslash in Windows path and multiple slashes to one."""
+    path = re.sub(r"\\", "/", path)
+    return re.sub(r"//+", "/", path)
 
 
 def get_data_file(path):
@@ -236,7 +237,7 @@ def single_text(filename):
         with open(filename, "r", encoding="utf-8") as f:
             text = f.read()
 
-        filename = replace_windows_path_sep(filename)
+        filename = norm_path_sep(filename)
         return filename, text
 
     except (IOError, OSError) as err:
@@ -248,7 +249,7 @@ def files_recursive(path=None, ext_pos=(), split_output=False):
     """Yield files in the sub-/directories."""
     if path is None:
         path = config.root_dir
-    path = replace_windows_path_sep(path)
+    path = norm_path_sep(path)
 
     if isinstance(ext_pos, str):
         ext_pos = (ext_pos,)
@@ -269,7 +270,7 @@ def files_recursive(path=None, ext_pos=(), split_output=False):
             if dirpath.startswith("."):
                 continue
 
-            dirpath = replace_windows_path_sep(dirpath)
+            dirpath = norm_path_sep(dirpath)
             for filename in filenames:
                 name, ext = os.path.splitext(filename)
                 if len(ext_pos) == 0 or ext.lower() in ext_pos:

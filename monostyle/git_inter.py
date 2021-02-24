@@ -27,7 +27,7 @@ def unversioned_files(path, binary_ext):
     for line in status(path):
         line = line.decode('utf-8')
         if line.startswith('?'):
-            filename = replace_windows_path_sep(line[3:].strip())
+            filename = norm_path_sep(line[3:].strip())
             if filename.startswith('.') or os.path.isdir(filename):
                 continue
             if binary_ext is not None and os.path.splitext(filename)[1] in binary_ext:
@@ -60,7 +60,7 @@ def difference(from_vsn, is_internal, filename_source, rev, cached):
 
         if line.startswith("+++"):
             filename = line[len("+++ b/"):]
-            filename = replace_windows_path_sep(filename)
+            filename = norm_path_sep(filename)
             # skip whole file
             skip = False
             body = False
@@ -229,7 +229,7 @@ def file_diff(filename, rev=None, cached=False):
         print("{0}: cannot open: {1}".format(filename, err))
 
 
-def replace_windows_path_sep(filename):
+def norm_path_sep(filename):
     return re.sub(r"\\", "/", filename)
 
 

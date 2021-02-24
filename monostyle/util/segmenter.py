@@ -8,14 +8,14 @@ Text segmentation and tokenization.
 
 import re
 from monostyle.util.char_catalog import CharCatalog
-from monostyle.util.pos import PartofSpeech
+from monostyle.util.part_of_speech import PartofSpeech
 
 class Segmenter:
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
             char_catalog = CharCatalog()
-            pos = PartofSpeech()
+            part_of_speech = PartofSpeech()
             # paragraph
             cls.para_re = re.compile(r"\n\s*\n", re.MULTILINE)
 
@@ -64,9 +64,9 @@ class Segmenter:
             )
             cls.number_re = re.compile(''.join(pattern_str))
 
-            cls.abbr_re = pos.abbr_re
+            cls.abbr_re = part_of_speech.abbr_re
             cls.abbrs = []
-            for entry in pos.get(("abbreviation",), joined=True):
+            for entry in part_of_speech.get(("abbreviation",), joined=True):
                 if not re.match(cls.abbr_re, entry):
                     cls.abbrs.append(entry)
 

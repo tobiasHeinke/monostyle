@@ -29,7 +29,7 @@ def unversioned_files(path, binary_ext):
     for line in status(True, path):
         line = line.decode('utf-8')
         if line.startswith('?'):
-            filename = replace_windows_path_sep(line[8:].strip())
+            filename = norm_path_sep(line[8:].strip())
             if filename.startswith('.') or os.path.isdir(filename):
                 continue
             if binary_ext is not None and os.path.splitext(filename)[1] in binary_ext:
@@ -94,7 +94,7 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
 
         if line.startswith("Index: "):
             filename = line[len("Index: "):]
-            filename = replace_windows_path_sep(filename)
+            filename = norm_path_sep(filename)
             # skip whole file
             skip = bool(binary_ext is not None and os.path.splitext(filename)[1] in binary_ext)
             body = False
@@ -151,7 +151,7 @@ def update_files(path, rev=None):
             else:
                 conflict = bool(line[0] == 'C')
                 filename = line[5:].rstrip()
-                filename = replace_windows_path_sep(filename)
+                filename = norm_path_sep(filename)
 
                 yield filename, conflict, rev_up
 
@@ -301,8 +301,9 @@ def file_diff(filename, rev=None, is_change=False):
         print("{0}: cannot open: {1}".format(filename, err))
 
 
-def replace_windows_path_sep(filename):
-    return re.sub(r"\\", "/", filename)
+def norm_path_sep(path):
+    path = re.sub(r"\\", "/", path)
+    return re.sub(r"//+", "/", path)
 
 
 def run_diff(from_vsn, is_internal, path, rev, cached=None):

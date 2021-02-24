@@ -176,7 +176,7 @@ def main():
             print('Error: root {0} does not exists'.format(args.root))
             return 2
 
-    root_dir = monostyle_io.replace_windows_path_sep(root_dir)
+    root_dir = monostyle_io.norm_path_sep(root_dir)
     setup_sucess = setup(root_dir)
     if not setup_sucess:
         return 2

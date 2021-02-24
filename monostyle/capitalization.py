@@ -13,7 +13,7 @@ from monostyle.util.report import Report
 from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.char_catalog import CharCatalog
-from monostyle.util.pos import PartofSpeech
+from monostyle.util.part_of_speech import PartofSpeech
 from monostyle.util.segmenter import Segmenter
 from monostyle.util.lexicon import Lexicon
 

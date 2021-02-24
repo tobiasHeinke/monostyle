@@ -18,7 +18,7 @@ from monostyle.util.fragment import Fragment, FragmentBundle
 from monostyle.util.report import print_reports
 
 
-def run(reports, rst_parser, fns_conflicted=None):
+def run(reports, rst_parser, filenames_conflicted=None):
     """Sort reports into groups for each fix tool."""
     monostyle_io.print_over("autofix", ellipsis="...")
 
@@ -45,7 +45,7 @@ def run(reports, rst_parser, fns_conflicted=None):
 
     reports_unfixed = []
     for filename, tools in group_file.items():
-        if not fns_conflicted or filename not in fns_conflicted:
+        if not filenames_conflicted or filename not in filenames_conflicted:
             reports_unfixed = apply(filename, tools, reports_unfixed, rst_parser)
         else:
             for reports_tool in tools.values():

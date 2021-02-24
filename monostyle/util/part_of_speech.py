@@ -1,6 +1,6 @@
 
 """
-util.pos
+util.part_of_speech
 ~~~~~~~~
 
 Data-driven part of speech tagging.
@@ -17,7 +17,7 @@ class PartofSpeech:
         if not hasattr(cls, '__loaded'):
             cls.__loaded = True
             char_catalog = CharCatalog()
-            cls.data = get_data_file("pos")
+            cls.data = get_data_file("part_of_speech")
             cls.remove_comments(cls, cls.data)
 
             # acronym
