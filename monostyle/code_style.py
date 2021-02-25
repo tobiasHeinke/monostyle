@@ -118,8 +118,8 @@ def blank_line(toolname, document, reports):
                     aim_alt = 0
 
                 elif (rst_walker.is_of(node, "dir", {"figure", "image"}) and
-                        not node_over.body and
                         rst_walker.is_of(node_over, "dir", {"figure", "image"}) and
+                        not node_over.body and
                         (not node.body or node.body.code.isspace())):
                     aim_alt = 0
 
@@ -161,8 +161,6 @@ def blank_line(toolname, document, reports):
             reports.append(Report('W', toolname, output, message, node.code, fix))
 
     count_end, _, __ = counter(node, invert=True)
-    if is_blank_node(node) and node.prev:
-        count_end += count
     if count_end >= 2:
         output = node.code.copy().clear(True)
         message = Report.quantity(what="three or more blank lines")
@@ -275,13 +273,13 @@ def heading_lines(toolname, document, reports):
             bd.bundle.append(fix_under)
             reports.append(Report('W', toolname, output, message, fix=bd))
 
-        titel_ind_m = re.match(r" *", str(node.name.code))
-        if titel_ind_m and len(titel_ind_m.group(0)) != ind:
+        title_ind_m = re.match(r" *", str(node.name.code))
+        if title_ind_m and len(title_ind_m.group(0)) != ind:
             output = node.name.code.copy().clear(True)
             message = Report.quantity(what="wrong title indent",
-                                      how=": {:+}".format(ind - len(titel_ind_m.group(0))))
+                                      how=": {:+}".format(ind - len(title_ind_m.group(0))))
 
-            fix = node.name.code.slice_match_obj(titel_ind_m, 0, True)
+            fix = node.name.code.slice_match_obj(title_ind_m, 0, True)
             fix.replace_fill([" " * ind])
             reports.append(Report('W', toolname, output, message, fix=fix))
 

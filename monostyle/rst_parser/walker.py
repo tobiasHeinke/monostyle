@@ -163,7 +163,7 @@ def is_of(node, node_name_rule, name_rule=None, part_node_name_rule=None):
         if not isinstance(rule, str):
             if not("*" in rule or name in rule):
                 return False
-        elif not("*" == rule or name == rule):
+        elif not(rule == "*" or rule == name):
             return False
 
     return True

@@ -24,21 +24,22 @@ def toctree(rst_parser, document):
     node = document.body.child_nodes.first()
     if node.node_name == "text" and node.code.isspace():
         node = node.next
-    if node and node.node_name == "block-quote":
-        node = node.body.child_nodes.first()
+    if not node or node.node_name != "block-quote":
+        return document
 
+    node_child = node.body.child_nodes.first()
     field_node = None
-    if node and node.node_name == "field-list":
-        field_node = node
-        if first_field := node.body.child_nodes.first():
+    if node_child and node_child.node_name == "field-list":
+        field_node = node_child
+        if first_field := node_child.body.child_nodes.first():
             if first_field.indent.code.end_pos == 0:
                 return document
 
-            node = node.next
+            node_child = node_child.next
 
-    if node and node.node_name == "text":
+    if node_child and node_child.node_name == "text":
         is_empty = True
-        for line in node.code.splitlines():
+        for line in node_child.code.splitlines():
             line_str = str(line)
             if len(line_str.strip()) != 0:
                 is_empty = False
@@ -79,22 +80,23 @@ def refbox(rst_parser, document):
     node = document.body.child_nodes.first()
     if node.node_name == "text" and node.code.isspace():
         node = node.next
-    if node and node.node_name == "block-quote":
-        node = node.body.child_nodes.first()
+    if not node or node.node_name != "block-quote":
+        return document
 
-    if node and node.node_name == "field-list":
-        field_node = node.body.child_nodes.first()
+    node_child = node.body.child_nodes.first()
+    if node_child and node_child.node_name == "field-list":
+        field_node = node_child.body.child_nodes.first()
         if (str(field_node.name).strip() == "class" and
                 str(field_node.body).strip() == "refbox"):
             rename(rst_parser, node, False)
-            node.body.child_nodes.shift()
+            node_child.body.child_nodes.shift()
             prime = NodeRST("field-list", None)
             prime.append_part("body", None)
             prime.body.append_child(field_node)
             node.attr = prime
 
         else:
-            for field_node in node.body.child_nodes:
+            for field_node in node_child.body.child_nodes:
                 if (str(field_node.name).strip() not in {"Hotkey", "Menu", "Panel", "Mode", "Tool",
                                                          "Editor", "Header", "Type", "Context"}):
                     break

@@ -73,7 +73,7 @@ def mark_pre(_):
     message = Report.existing(what="space", where="after apostrophe")
     re_lib["spaceapos"] = (pattern, message)
 
-    pattern_str = r"([^\w\d\s\-\.])\1|(?<!\.)(?:\.{2}|\.{4})(?!\.)"
+    pattern_str = r"([^\w\d\s\\.-])\1|(?<!\.)(?:\.{2}|\.{4})(?!\.)"
     pattern = re.compile(pattern_str)
     message = Report.existing(what="double punctuation")
     re_lib["double"] = (pattern, message)
@@ -209,7 +209,7 @@ def mark(toolname, document, reports, re_lib):
             "figure": ["head"], "toctree": "*", "include": "*", "index": "*",
             "admonition": ["head"], "hint": ["head"], "important": ["head"],
             "note": ["head"], "tip": ["head"], "warning": ["head"], "rubric": ["head"],
-            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
+            "code-block": "*", "default": "*", "highlight": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": "*",
         "def": {"*": ["head"]}, "target": {"*": ["head"]},

@@ -201,8 +201,10 @@ class Lexicon:
             len_deviation = abs(len(word_str) - len(stored_word)) / len(word_str)
             if len_deviation >= 2:
                 continue
-            sim_rough = len(word_chars.intersection(stored_entry["_charset"])) / (len(word_chars) -
-                                                                                  len_deviation)
+            len_deviation = len(word_chars) - len_deviation
+            if len_deviation == 0:
+                len_deviation = 1
+            sim_rough = len(word_chars.intersection(stored_entry["_charset"])) / len_deviation
             is_not_full = bool(len(similars) < count)
             if is_not_full or sim_rough >= min_rough:
                 matcher = SequenceMatcher(None, word_str, stored_word)

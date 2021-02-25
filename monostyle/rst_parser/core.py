@@ -165,7 +165,7 @@ class RSTParser:
     # -----------------------------------------------------------------------------
 
 
-    def parse_block(self, node, ind_first_unkown=False):
+    def parse_block(self, node, ind_first_unknown=False):
         lines = []
         block_ind = None
         ind_re = self.re_lib["ind"]
@@ -228,7 +228,7 @@ class RSTParser:
                     line_info["indented"] = False
                 if is_sec and not is_first:
                     # alternative when head first indent as unknown
-                    if ind_first_unkown and (not node.active or node.active.node_name == "text"):
+                    if ind_first_unknown and (not node.active or node.active.node_name == "text"):
                         line_info["indented"] = False
                     is_sec = False
                 is_first = False
@@ -348,13 +348,13 @@ class RSTParser:
                         if not part.child_nodes.is_empty():
                             self.parse_node(part)
                         else:
-                            ind_first_unkown = False
+                            ind_first_unknown = False
                             if part.prev and part.prev.node_name != "indent":
-                                ind_first_unkown = (lambda f, c: f[0] == c[0] and f[1] != c[1])(
+                                ind_first_unknown = (lambda f, c: f[0] == c[0] and f[1] != c[1])(
                                                         node.child_nodes.first().code.start_lincol,
                                                         part.code.start_lincol)
 
-                            part = self.parse_block(part, ind_first_unkown)
+                            part = self.parse_block(part, ind_first_unknown)
                             part.is_parsed = True
                             if not part.child_nodes.is_empty():
                                 self.parse_node(part)
@@ -571,7 +571,8 @@ class RSTParser:
     def block_quote(self, node, line, line_info):
         if line_info["indented"]:
             if node.active and node.active.node_name == "block-quote":
-                if line_info["is_blank"] and line_info["is_block_start"]:
+                if (line_info["is_blank"] and line_info["is_block_start"] and
+                        not line_info["is_block_end"]):
                     node.append_child(node.active)
                     node.active = None
                     node = self.paragraph(node, line, line_info)

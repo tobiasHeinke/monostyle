@@ -15,7 +15,6 @@
 	"#todo",
 	"added in",
 	"at the moment",
-	"cannot handle",
 	"capabilit(ies|y)",
 	"changed in",
 	"correct(ed|ions?|s)?",
@@ -37,6 +36,7 @@
 	"(wont[ -])?fix(es|ing)?",
 	"functionalit(ies|y)",
 	"future",
+	"handl(ed?|ing)",
 	"(re)?implement(ation|ed)?",
 	"improv(ed|ing|ements?)",
 	"in progress",
@@ -81,7 +81,8 @@
 	"validat(e[ds]?|ion)",
 	"verif(ication|y)",
 	"version",
-	"wip", "work[ -]in[ -]progress"
+	"wip", "work[ -]in[ -]progress",
+	"work ?arounds?"
 ],
 "CS technical term":[
 	"#source: https://en.wikipedia.org/wiki/Glossary_of_computer_science",

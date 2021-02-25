@@ -68,9 +68,10 @@ def search(toolname, document, reports, config):
             else:
                 severity = 'W'
                 message = "new word: hunk: " + str(entry_hunk["_counter"] + 1)
-                line = Fragment(word.filename,
+                line = Fragment(document.code.filename,
                                 ", ".join(lexicon.find_similar(lexicon.norm_punc(word_str),
                                                                word_str, 5, 0.6)))
+                line = line.add_offset(-line.end_pos, (-1,0))
 
             reports.append(Report(severity, toolname, entry_hunk["word"], message, line))
 

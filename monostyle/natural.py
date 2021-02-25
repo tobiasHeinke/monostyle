@@ -796,7 +796,7 @@ def search_pure(toolname, document, reports, re_lib, config):
 def repeated_pre(op):
     config = dict()
     # Number of the word within to run the detection.
-    config["buf_size"] = monostyle_io.get_override(__file__, op[0], "buf_size", 4)
+    config["buf_size"] = monostyle_io.get_override(__file__, op[0], "buf_size", 3)
     return {"config": config}
 
 

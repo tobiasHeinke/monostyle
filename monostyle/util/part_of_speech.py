@@ -1,7 +1,7 @@
 
 """
 util.part_of_speech
-~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 Data-driven part of speech tagging.
 """
