@@ -34,11 +34,8 @@ def search_pre(op):
         else:
             return None
 
-    threshold = monostyle_io.get_override(__file__, op[0], "threshold", 3)
-    args = dict()
-    args["config"] = {"threshold": threshold}
-
-    return args
+    config = dict(monostyle_io.get_override(__file__, op[0], "threshold", 3))
+    return {"config": config}
 
 
 def search(toolname, document, reports, config):

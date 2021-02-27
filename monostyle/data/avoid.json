@@ -165,10 +165,12 @@
 	"circumstances?",
 	"commonly",
 	"consider(ed|able)",
+	"eventual(ly)?",
 	"exception(al|ally|s)?",
 	"generally",
 	"guess", "be guessed",
 	"hopefully",
+	"ideally",
 	"maybe",
 	"most of",
 	"mostly",
@@ -210,7 +212,6 @@
 	"going(?! to)",
 	"just (about|in|so|that|to)",
 	[["kinds? of", "sorts? of"], "type of"],
-	"fancy", "neat", "nicely",
 	"now,? (that|this|to)",
 	"pretty much",
 	"(right|for) now",
@@ -222,5 +223,16 @@
 	"whatever", "what ever",
 	"what not",
 	"what so ever"
+],
+"promotional": [
+	"#clean, fine, fit, great",
+	"comprehensive(ly)?",
+	"excellent(ly)?",
+	"fancy",
+	"ideal",
+	"hand(il)?y",
+	"neat(ly)?",
+	"nice(ly)?",
+	"perfect(ly)?"
 ]
 }

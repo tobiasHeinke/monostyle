@@ -12,21 +12,20 @@ from monostyle.util.report import Report
 
 
 def check_pre(op):
-    args = dict()
-    args["data"] = monostyle_io.get_override(__file__, op[0], "fns", [])
-    return args
+    config = monostyle_io.get_override(__file__, op[0], "fns", [])[0]
+    return {"config": config[1]}
 
 
-def check(toolname, document, reports, data):
+def check(toolname, document, reports, config):
 
-    if len(data) == 0:
+    if len(config) == 0:
         return reports
 
     filename = monostyle_io.path_to_rel(document.code.filename)
     if filename.startswith('/'):
         filename = filename[1:]
 
-    for entry in data:
+    for entry in config:
         if entry.startswith('/'):
             entry = entry[1:]
 

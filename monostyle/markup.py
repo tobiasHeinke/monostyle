@@ -240,17 +240,20 @@ def indention(toolname, document, reports):
         else:
             if (node.node_name.endswith("-list") or
                     node.node_name.endswith("-table") or
-                    rst_walker.is_of(node, {"sect", "comment", "field", "option", "row", "cell"}) or
+                    rst_walker.is_of(node, {"sect", "comment", "field",
+                                            "option", "row", "cell"}) or
                     rst_walker.is_of(node.parent_node, "text")):
                 continue
 
             is_code = bool(rst_walker.is_of(node, "dir", {"code-block", "default", "math"}))
             offset = 0
             if ((not node.parent_node and node.node_name == "snippet") or
-                    (not node.prev and
-                     node.code.start_lincol[0] == document.code.start_lincol[0] and
-                     document.node_name == "snippet" and
-                     node.node_name == "block-quote")):
+                    (node.node_name == "block-quote" and document.node_name == "snippet" and
+                     ((not node.prev and
+                       node.code.start_lincol[0] == document.code.start_lincol[0]) or
+                      (node.prev and not node.prev.prev and
+                       node.prev.code.start_lincol[0] == document.code.start_lincol[0] and
+                       node.prev.node_name == "text" and node.prev.code.isspace())))):
                 if node.code.start_lincol[0] != 0:
                     # base indent is unknown
                     continue

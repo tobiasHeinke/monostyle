@@ -18,7 +18,6 @@ from monostyle.util.lexicon import Lexicon
 from monostyle.util.porter_stemmer import Porterstemmer
 
 
-
 def abbreviation_pre(_):
     def is_explanation(abbr, desc):
         """Check if the words start with the letters of the abbreviation."""
@@ -570,11 +569,18 @@ def metric(toolname, document, reports):
     return reports
 
 
-def overuse(toolname, document, reports):
+def overuse_pre(op):
+    config = dict()
+    config.update(monostyle_io.get_override(__file__, op[0], "threshold_min", 2))
+    config.update(monostyle_io.get_override(__file__, op[0], "threshold_severe", 3.1))
+    return {"config": config}
+
+
+def overuse(toolname, document, reports, config):
     """Overuse of words. Filter with markup, subjects after an determiner,
        transitions at sentence start, the file path and stopwords."""
-    threshold_min = 1.8
-    threshold_severe = 3.1
+    threshold_min = config["threshold_min"]
+    threshold_severe = config["threshold_severe"]
     distance_min = 5
     distance_max = 80
     modifier_as_topic = True
@@ -794,9 +800,8 @@ def search_pure(toolname, document, reports, re_lib, config):
 
 
 def repeated_pre(op):
-    config = dict()
     # Number of the word within to run the detection.
-    config["buf_size"] = monostyle_io.get_override(__file__, op[0], "buf_size", 3)
+    config = dict(monostyle_io.get_override(__file__, op[0], "buf_size", 3))
     return {"config": config}
 
 
@@ -903,7 +908,7 @@ OPS = (
     ("grammar", search_pure, grammar_pre),
     ("hyphen", hyphen, hyphen_pre),
     ("metric", metric, None),
-    ("overuse", overuse, None),
+    ("overuse", overuse, overuse_pre),
     ("passive", search_pure, passive_pre),
     ("repeated", repeated, repeated_pre),
 )

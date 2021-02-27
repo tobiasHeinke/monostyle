@@ -423,8 +423,7 @@ def pairs_pre(op):
     args["re_lib"] = re_lib
 
     # Max number of lines between the open and close mark.
-    line_span = monostyle_io.get_override(__file__, op[0], "max_line_span", 2)
-    args["config"] = {"max_line_span": line_span}
+    args["config"] = dict(monostyle_io.get_override(__file__, op[0], "max_line_span", 2))
 
     return args
 

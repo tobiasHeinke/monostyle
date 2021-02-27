@@ -65,7 +65,7 @@ def ask_user(*question):
     keys = {"pos": "yes", "neg": "nope", "help": "help"}
     retries = 0
     while True:
-        ip = input("".join((*question, " ", keys["pos"][0], "/", keys["neg"][0], "?")))
+        ip = input("".join((*question, " ", keys["pos"][0], "/", keys["neg"][0], "?"))).lower()
         if not ip or keys["help"].startswith(ip) or ip in ("?", "¿"):
             print("confirm by entering:",
                   "'" + "', '".join(keys["pos"][:n] for n in range(1, len(keys["pos"]) + 1)) + "'")
@@ -150,7 +150,7 @@ def get_branch(data, path, index=0, silent=False):
     """
     if index < len(path):
         if (data := data.get(path[index])) is not None:
-            return get_branch(data, path, index + 1)
+            return get_branch(data, path, index + 1, silent)
         if not silent:
             print("Cannot find data segment: {0} of {1}".format(path[index], '/'.join(path)))
     else:
@@ -163,9 +163,9 @@ def get_override(file, toolname, varname, default):
 
     if ((seg := get_branch(config.config_override, (file, toolname, varname), silent=True))
             is not None):
-        return config.override_typecheck(seg, default, "tool config override")
+        return ((varname, config.override_typecheck(seg, default, "tool config override")),)
 
-    return default
+    return ((varname, default),)
 
 
 def rst_files(path=None):

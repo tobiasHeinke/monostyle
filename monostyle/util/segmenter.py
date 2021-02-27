@@ -53,8 +53,10 @@ class Segmenter:
             cls.word_re = re.compile(''.join(pattern_str))
             # word only
             cls.wordsub_re = re.compile(r"\b(\w+?)\b")
-            # numbers and ranges
-            cls.number_filter_re = re.compile(r"\A[+-]?\d[\d,." + hyphen + r"]*\Z")
+            # numbers, ranges and units
+            pattern_str = (r"\A[+-]?\d[\d,.", hyphen, r"]*",
+                           r"(?:[", apostrophe, r"]?(?<![", hyphen, r"])\w+)?\Z")
+            cls.number_filter_re = re.compile(''.join(pattern_str))
 
             # number
             pattern_str = (

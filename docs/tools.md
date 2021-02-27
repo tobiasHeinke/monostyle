@@ -34,6 +34,7 @@ Explicit search for terms and capitalization.
   - uncertainty: requires the reader to make an assessment or the writer is unsure.
   - modal verb: same as uncertainty.
   - informal: words and phrases unsuited for docs.
+  - promotional: adjectives that praise the result of the program and thereby advertise for it.
   - syntactic expletive: superficial constructs.
   - style: miscellaneous rules.
 
