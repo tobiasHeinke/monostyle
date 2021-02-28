@@ -96,12 +96,16 @@
 		"as", "for", "from", "of", "on", "per", "than", "to", "with"
 	]
 },
-"contraction": [
-	"-'d", "-'ll", "-'m", "-'re", "-'ve", "-n't",
-	"everybody's", "everyone's", "he's", "how's", "it's", "let's", "ma'am",
-	"o'clock", "she's", "somebody's", "someone's", "something's",
-	"that's", "there's", "what's", "when's", "where's", "which's", "who's", "why's"
-],
+"contraction": {
+	"_irregular": [
+		"everybody's", "everyone's", "he's", "how's", "it's", "let's", "ma'am",
+		"o'clock", "she's", "somebody's", "someone's", "something's",
+		"that's", "there's", "what's", "when's", "where's", "which's", "who's", "why's"
+	],
+	"_suffix": [
+		"'d", "'ll", "'m", "'re", "'ve", "n't"
+	]
+},
 
 "abbreviation": {
 	"#source": "https://metacpan.org/pod/Text::Reflow",
@@ -131,50 +135,69 @@
 		"Fig", "Tab", "al"
 	]
 },
-"noun": [
-	"array", "Bézier", "body", "chest", "client", "collective", "content", "crest",
-	"day", "display", "drive", "energy", "exponent", "family", "fantasy", "forest", "file",
-	"gradient", "hierarchy", "hotkey", "identifier", "interest", "July", "key",
-	"light", "manual", "material", "May", "money", "modifier", "multiplier",
-	"normal", "overlay", "parent", "perspective", "pose", "profile", "property",
-	"proxy", "purpose", "quest", "request", "rest", "ray",
-	"sky", "table", "test", "tile", "tutorial", "way", "west", "vest",
-	"-ancy", "-dom", "-ee", "-ence", "-ency", "-hood", "-ion", "-ism",
-	"-ist", "-ity", "-logy", "-ment", "-ness", "-ry", "-ship"
-],
+"noun": {
+	"_irregular": [
+		"array", "Bézier", "body", "chest", "client", "collective", "content", "crest",
+		"day", "display", "drive", "energy", "exponent", "family", "fantasy", "forest", "file",
+		"gradient", "hierarchy", "hotkey", "identifier", "interest", "July", "key",
+		"light", "manual", "material", "May", "money", "modifier", "multiplier",
+		"normal", "overlay", "parent", "perspective", "pose", "profile", "property",
+		"proxy", "purpose", "quest", "request", "rest", "ray",
+		"sky", "table", "test", "tile", "tutorial", "way", "west", "vest"
+	],
+	"_suffix": [
+		"ancy", "dom", "ee", "ence", "ency", "hood", "ion", "ism",
+		"ist", "ity", "logy", "ment", "ness", "ry", "ship"
+	]
+},
 "#participle": " auxiliary + suffix",
-"participle": ["-ing", "-en"],
-"verb": [
-	"able", "apply", "began", "bent", "choose", "copy", "disable", "enable",
-	"lay", "play", "prevent", "suggest",
-	"-ate", "-en", "-ify", "-ise", "-ize"
-],
-"adverb": [
-	"again", "also", "earlier", "furthermore", "how", "however", "indeed", "instead", "just",
-	"moreover", "never", "not", "now", "quite", "rather", "sometimes", "soon", "still",
-	"then", "therefore", "thus", "too", "whether", "why", "yes",
-	"-ly", "-ward", "-wards", "-ways", "-wise"
-],
-"adjective": [
-	"bad", "best", "better", "big", "black", "bland", "blue", "bold", "brief", "bright", "broad",
-	"calm", "certain", "cheap", "clear", "clever", "coarse", "cold", "common", "cool",
-	"damp", "dark", "dead", "deep", "dense", "difficult", "entire",
-	"faint", "fair", "far", "fast", "few", "fine", "fit", "flat", "free", "fresh", "full", "further",
-	"gentle", "good", "grand", "great", "greater", "green", "gross",
-	"hard", "harsh", "high", "higher", "hot", "huge",
-	"kind", "large", "last", "late", "later", "left", "little", "long", "loud", "low",
-	"main", "major", "mild", "narrow", "near", "neat", "new", "next", "nice",
-	"odd", "off", "old", "open", "other", "own",
-	"past", "plain", "polite", "poor", "popular", "prior", "private", "pure", "quick", "quiet",
-	"rare", "raw", "red", "rich", "right", "ripe", "rough", "rude",
-	"sad", "safe", "same", "shallow", "sharp", "short", "similar", "simple", "sincere",
-	"single", "slim", "slow", "small", "smart", "smooth", "soft",
-	"sore", "sour", "steep", "strange", "strict", "strong", "sure",
-	"tall", "thick", "thin", "tough", "true",
-	"warm", "weak", "weird", "white", "whole", "wide", "wise", "worst", "wrong", "young",
-	"-able", "-ible", "-al", "-ial", "-ful", "-ic", "-ical", "-ish", "-ive", "-ative", "-less",
-	"-eous", "-ious", "-ous", "-ose", "-y", "-ile", "-ant", "-ent", "-an", "-ian", "-ary",
-	"-ier", "-est"
-],
+"participle": {
+	"_irregular": [],
+	"_suffix": ["ing", "en"]
+},
+"verb": {
+	"_irregular": [
+		"able", "apply", "began", "bent", "choose", "copy", "disable", "enable",
+		"lay", "play", "prevent", "suggest"
+	],
+	"_suffix": [
+		"ate", "en", "ify", "ise", "ize"
+	]
+},
+"adverb": {
+	"_irregular": [
+		"again", "also", "earlier", "furthermore", "how", "however", "indeed", "instead", "just",
+		"moreover", "never", "not", "now", "quite", "rather", "sometimes", "soon", "still",
+		"then", "therefore", "thus", "too", "whether", "why", "yes"
+	],
+	"_suffix": [
+		"ly", "ward", "wards", "ways", "wise"
+	]
+},
+"adjective": {
+	"_irregular": [
+		"bad", "best", "better", "big", "black", "bland", "blue", "bold", "brief", "bright", "broad",
+		"calm", "certain", "cheap", "clear", "clever", "coarse", "cold", "common", "cool",
+		"damp", "dark", "dead", "deep", "dense", "difficult", "entire", "faint", "fair",
+		"far", "fast", "few", "fine", "fit", "flat", "free", "fresh", "full", "further",
+		"gentle", "good", "grand", "great", "greater", "green", "gross",
+		"hard", "harsh", "high", "higher", "hot", "huge",
+		"kind", "large", "last", "late", "later", "left", "little", "long", "loud", "low",
+		"main", "major", "mild", "narrow", "near", "neat", "new", "next", "nice",
+		"odd", "off", "old", "open", "other", "own",
+		"past", "plain", "polite", "poor", "popular", "prior", "private", "pure", "quick", "quiet",
+		"rare", "raw", "red", "rich", "right", "ripe", "rough", "rude",
+		"sad", "safe", "same", "shallow", "sharp", "short", "similar", "simple", "sincere",
+		"single", "slim", "slow", "small", "smart", "smooth", "soft",
+		"sore", "sour", "steep", "strange", "strict", "strong", "sure",
+		"tall", "thick", "thin", "tough", "true",
+		"warm", "weak", "weird", "white", "whole", "wide", "wise", "worst", "wrong", "young"
+	],
+	"_suffix": [
+		"able", "ible", "al", "ial", "ful", "ic", "ical", "ish", "ive", "ative", "less",
+		"eous", "ious", "ous", "ose", "y", "ile", "ant", "ent", "an", "ian", "ary",
+		"ier", "est"
+	]
+},
 "interjection": []
 }

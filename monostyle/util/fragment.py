@@ -120,11 +120,18 @@ class Fragment():
         """Removes zero length line starts."""
         if (len(self.content) != 0 and len(self.content[-1]) == 0 and
                 self.start_lincol and self.start_lincol[1] == 0):
-            if len(self.content) == 1:
-                self.end_lincol = self.start_lincol
-            else:
-                self.end_lincol = (max(0, self.end_lincol[0] - 1), len(self.content[-2]))
             self.content = self.content[:-1]
+            self.set_back_end()
+        return self
+
+
+    def set_back_end(self):
+        """Moves the lincol end at column 0 to the previous line end."""
+        if (not self.end_lincol or not self.content or
+                self.end_lincol[1] != 0 or self.end_lincol == self.start_lincol):
+            return self
+        if self.content[-1][-1] == '\n':
+            self.end_lincol = (self.end_lincol[0] - 1, len(self.content[-1]))
 
         return self
 
@@ -731,6 +738,14 @@ class FragmentBundle():
             return self
         if len(self.bundle[-1]) == 0:
             self.bundle = self.bundle[0:-1]
+        return self
+
+
+    def set_back_end(self):
+        if not self:
+            return self
+
+        self.bundle[-1].set_back_end()
         return self
 
 

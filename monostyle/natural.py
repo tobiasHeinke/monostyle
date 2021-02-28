@@ -801,7 +801,7 @@ def search_pure(toolname, document, reports, re_lib, config):
 
 def repeated_pre(op):
     # Number of the word within to run the detection.
-    config = dict(monostyle_io.get_override(__file__, op[0], "buf_size", 3))
+    config = dict(monostyle_io.get_override(__file__, op[0], "buf_size", 3, (1, None)))
     return {"config": config}
 
 
@@ -822,9 +822,6 @@ def repeated(toolname, document, reports, config):
     porter_stemmer = Porterstemmer()
     segmenter = Segmenter()
     buf_size = config["buf_size"]
-    if buf_size < 2:
-        print(toolname, ": 'buf_size' has to be 2 or higher")
-        return reports
 
     instr_pos = {
         "sect": {"*": ["name"]},

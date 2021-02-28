@@ -236,7 +236,6 @@ def indention(toolname, document, reports):
                     output = node_field.name_end.code.copy().clear(False)
                     reports.append(Report('W', toolname, output, message, node_field.name))
 
-        # todo allow nested block-quote, same line nested
         else:
             if (node.node_name.endswith("-list") or
                     node.node_name.endswith("-table") or
@@ -291,7 +290,7 @@ def indention(toolname, document, reports):
                     if child.node_name.endswith("-list"):
                         child = child.body.child_nodes.first()
                     if (node.code.start_lincol[0] == child.code.start_lincol[0] and
-                            child.node_name == "text"):
+                            child.node_name == "text" and not node.node_name == "block-quote"):
                         # hanging indention of the first child
                         if node.node_name != "text":
                             reports = block_indention(reports, child, offset)

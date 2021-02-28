@@ -46,7 +46,7 @@ class Segmenter:
                 r"[", char_catalog.unicode_set("A-Za-z0-9", 0, 7), r"](?:\w*",
                 # contraction: with letters on both sides and after s at word end.
                 r"(?<=\w)[", apostrophe, hyphen, r"]?(?=\w)\w*)*",
-                r"(?:(?<=s)[" + apostrophe + r"](?!\w)|\b)",
+                r"(?:(?<=s)[", apostrophe, r"](?!\w)|\b)",
                 r"[", hyphen, r"]?)"
             )
 

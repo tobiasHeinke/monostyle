@@ -200,11 +200,11 @@ def apply(rst_parser, mods, reports, document, parse_options, print_options,
 
 def update(path, rev=None):
     """Update the working copy."""
-    filenames_conflicted = []
+    filenames_conflicted = set()
     for filename, conflict, rev_up in vsn_inter.update_files(path, rev):
         # A conflict will be resolvable with versioning's command interface.
-        if conflict and filename not in filenames_conflicted:
-            filenames_conflicted.append(filename)
+        if conflict:
+            filenames_conflicted.add(filename)
     return filenames_conflicted
 
 #------------------------

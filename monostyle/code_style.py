@@ -406,14 +406,13 @@ def style_extra(toolname, document, reports):
 
     for node in rst_walker.iter_node(document.body):
         if node.node_name == "hyperlink":
-            proto_re = re.compile(r"https?\:\/\/")
-            if (re.match(proto_re, str(node.id.code)) and
+            if (re.match(r"https?\:\/\/", str(node.id.code)) and
                     not re.match(r"`__", str(node.body_end.code))):
                 message = Report.missing(what="underscore", where="after external link (same tab)")
                 fix = node.body_end.code.copy().clear(True).replace("_")
                 reports.append(Report('W', toolname, node.id.code, message, fix=fix))
 
-        if node.node_name == "target":
+        elif node.node_name == "target":
             next_node = node.next
 
             while next_node and (next_node.node_name == "target" or is_blank_node(next_node)):
@@ -443,6 +442,21 @@ def style_extra(toolname, document, reports):
                         message = Report.missing(what="'tab-' prefix",
                                                  where="at start of table ref.")
                         reports.append(Report('W', toolname, node.id.code, message))
+
+        elif rst_walker.is_of(node, "role", "menuselection"):
+            dash_re = re.compile(r"(?:\A| )(\-{1,3}|\->|\-{3}>)(?: |\Z)")
+            node_str = str(node.body.code)
+            for dash_m in re.finditer(dash_re, node_str):
+                if '>' not in dash_m.group(1):
+                    message = Report.missing(what="arrow peak" ,
+                                             where="in " + rst_walker.write_out(node.node_name,
+                                                                                node.name))
+                else:
+                    message = Report.misformatted(what="arrow length" ,
+                                             where="in " + rst_walker.write_out(node.node_name,
+                                                                                node.name))
+                fix = node.body.code.slice_match_obj(dash_m, 1, True).replace("-->")
+                reports.append(Report('W', toolname, node.body.code, message, fix=fix))
 
     return reports
 

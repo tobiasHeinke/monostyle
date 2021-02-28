@@ -157,13 +157,23 @@ def get_branch(data, path, index=0, silent=False):
         return data
 
 
-def get_override(file, toolname, varname, default):
+def get_override(file, toolname, varname, default, limits=None):
     """Override configuration variables."""
     file = os.path.splitext(os.path.basename(file))[0]
 
     if ((seg := get_branch(config.config_override, (file, toolname, varname), silent=True))
             is not None):
-        return ((varname, config.override_typecheck(seg, default, "tool config override")),)
+        value = config.override_typecheck(seg, default, "tool config override")
+        if limits:
+            if limits[0] is not None and value < limits[0]:
+                value = limits[0]
+                print("{0}.{1}: the '{2}' configuration option has a minimum of {3}."
+                      .format(file, toolname, varname, limits[0]))
+            elif limits[1] is not None and value > limits[1]:
+                value = limits[1]
+                print("{0}.{1}: the '{2}' configuration option has a maximum of {3}."
+                      .format(file, toolname, varname, limits[1]))
+        return ((varname, value),)
 
     return ((varname, default),)
 

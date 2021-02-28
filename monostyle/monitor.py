@@ -12,7 +12,7 @@ from monostyle.util.report import Report
 
 
 def check_pre(op):
-    config = monostyle_io.get_override(__file__, op[0], "fns", [])[0]
+    config = monostyle_io.get_override(__file__, op[0], "files", [])[0]
     return {"config": config[1]}
 
 
