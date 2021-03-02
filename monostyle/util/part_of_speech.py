@@ -98,12 +98,11 @@ class PartofSpeech:
                                  self.prev[0] != "auxiliary")):
                             continue
 
-                        is_splitter = bool(key.startswith("_"))
-                        is_suffix = bool(is_splitter and key == "_suffix")
+                        is_suffix = bool(key == "_suffix")
                         for entry in value:
                             if ((is_suffix and word.endswith(entry)) or
                                     (not is_suffix and word == entry)):
-                                if not is_splitter:
+                                if not key.startswith("_"):
                                     branch.append(key)
                                 return branch
 

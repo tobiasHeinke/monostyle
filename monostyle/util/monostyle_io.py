@@ -8,7 +8,6 @@ Input/Output utility for Monostyle.
 
 import sys
 import os
-import re
 import json
 
 import monostyle.config as config
@@ -90,6 +89,7 @@ def ask_user(*question):
 
 def path_to_rel(path, base=None):
     """Make path relative."""
+    path = norm_path_sep(os.path.normpath(path))
     rel = config.root_dir
     if base is not None:
         bases = {"root": rel, "rst": config.rst_dir, "po": config.po_dir, "img": config.img_dir}
@@ -104,6 +104,7 @@ def path_to_rel(path, base=None):
 
 def path_to_abs(path, base=None):
     """Make path absolute."""
+    path = norm_path_sep(os.path.normpath(path))
     root = config.root_dir
     if not path.startswith(root):
         bases = {"root": root, "rst": config.rst_dir, "po": config.po_dir, "img": config.img_dir}
@@ -116,8 +117,7 @@ def path_to_abs(path, base=None):
 
 def norm_path_sep(path):
     """Replace backslash in Windows path and multiple slashes to one."""
-    path = re.sub(r"\\", "/", path)
-    return re.sub(r"//+", "/", path)
+    return '/'.join(s for s in path.replace("\\", "/").split("/") if len(s) != 0)
 
 
 def get_data_file(path):
@@ -125,7 +125,7 @@ def get_data_file(path):
 
     path -- filename without extension and path through the tree hierarchy. Slash separated.
     """
-    data_path = re.split(r"[\\/]", path)
+    data_path = path.replace("\\", "/").split("/")
     data_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "data"))
     filename = os.path.join(data_dir, data_path[0] + ".json")
     try:
@@ -181,7 +181,7 @@ def get_override(file, toolname, varname, default, limits=None):
 def rst_files(path=None):
     """Yields the filename of RST files."""
     if path is None:
-        path = '/'.join((config.root_dir, config.rst_dir))
+        path = path_to_abs("", "rst")
 
     return files_recursive(path, ext_pos=(".rst",))
 
@@ -189,7 +189,7 @@ def rst_files(path=None):
 def rst_texts(path=None):
     """Yields the filename and text of RST files."""
     if path is None:
-        path = '/'.join((config.root_dir, config.rst_dir))
+        path = path_to_abs("", "rst")
 
     return texts_recursive(path, ext_pos=(".rst",))
 
@@ -197,7 +197,7 @@ def rst_texts(path=None):
 def po_files(path=None):
     """Yields the filename of PO files."""
     if path is None:
-        path = '/'.join((config.root_dir, config.po_dir))
+        path = path_to_abs("", "po")
 
     return files_recursive(path, ext_pos=(".po",))
 
@@ -205,7 +205,7 @@ def po_files(path=None):
 def po_texts(path=None):
     """Yields the filename and text of PO files."""
     if path is None:
-        path = '/'.join((config.root_dir, config.po_dir))
+        path = path_to_abs("", "po")
 
     return texts_recursive(path, ext_pos=(".po",))
 
@@ -213,7 +213,7 @@ def po_texts(path=None):
 def img_files(path=None):
     """Yields the filename and extension of files in (by default) the image directory."""
     if path is None:
-        path = '/'.join((config.root_dir, config.img_dir))
+        path = path_to_abs("", "img")
 
     return files_recursive(path, ext_pos=(), split_output=True)
 
@@ -221,7 +221,7 @@ def img_files(path=None):
 def texts_recursive(path=None, ext_pos=()):
     """Yields the filename and text of files."""
     if path is None:
-        path = config.root_dir
+        path = path_to_abs("", "root")
 
     ext_names = '/'.join(ext[1:] for ext in ext_pos) # strip dot
     if not os.path.isdir(path):
@@ -258,8 +258,9 @@ def single_text(filename):
 def files_recursive(path=None, ext_pos=(), split_output=False):
     """Yield files in the sub-/directories."""
     if path is None:
-        path = config.root_dir
-    path = norm_path_sep(path)
+        path = path_to_abs("", "root")
+    else:
+        path = norm_path_sep(path)
 
     if isinstance(ext_pos, str):
         ext_pos = (ext_pos,)

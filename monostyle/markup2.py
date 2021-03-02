@@ -15,13 +15,7 @@ from monostyle.util.report import Report
 from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.environment as env
 import monostyle.rst_parser.walker as rst_walker
-
-
-def simple_stem(word):
-    suffix = ("ed", "e?s", "e", "ings?", "ations?", "ments?", "age")
-    word = re.sub(r"(.)(?:" + '|'.join(suffix) + r")\Z", r'\1', word)
-    word = re.sub(r"([^aeiouyw])\1\Z", r'\1', word)
-    return word
+from monostyle.util.porter_stemmer import Porterstemmer
 
 
 def glossary_pre(_):
@@ -145,11 +139,12 @@ def local_targets(toolname, reports, data):
 
 def page_name(toolname, document, reports):
     """Compare page title and file name."""
+    porter_stemmer = Porterstemmer()
 
     page = re.search(r"/([\w\-_]+?)(?:/index)?\.rst$", document.code.filename).group(1)
     page_split = []
     for word in re.split(r"[_-]", page):
-        page_split.append(simple_stem(word))
+        page_split.append(porter_stemmer.stem(word, 0, len(word)-1))
 
     for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
         head = str(node.name.code).lower().strip()
@@ -157,9 +152,9 @@ def page_name(toolname, document, reports):
         head = re.sub(r"[&/,-]", " ", head)
         head_split = []
         for word in re.split(r"\s+", head):
-            head_split.append(simple_stem(word))
+            head_split.append(porter_stemmer.stem(word, 0, len(word)-1))
 
-        acr = ""
+        acronym = []
         match_count = 0
         was_kind = True
         for word in reversed(head_split):
@@ -167,7 +162,7 @@ def page_name(toolname, document, reports):
                 match_count += 1
                 continue
 
-            acr = word[0] + acr
+            acronym.insert(0, word[0])
 
             if was_kind:
                 found = False
@@ -187,7 +182,7 @@ def page_name(toolname, document, reports):
                 match_count += 1
 
         sim = match_count / max(1, len(head_split))
-        if page == acr:
+        if page == ''.join(acronym):
             sim = 1
 
         if sim < 0.5:

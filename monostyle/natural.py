@@ -120,13 +120,14 @@ def abbreviation(toolname, document, reports, data, config):
             for entry, loc in data["explanations"][document.code.filename]:
                 if re.match(word_re, entry):
                     if word.start_pos < loc:
-                        message = "abbreviation before its explanation"
+                        message = Report.existing(what="abbreviation",
+                                                  where="before its explanation")
                         line = Report.getline_punc(part.code, word, 50, 30)
                         reports.append(Report('I', toolname, word, message, line))
                     break
 
             else:
-                message = "no explanation on same page"
+                where = "on the same page"
                 severity = 'I'
                 found = False
                 for key, value in data["explanations"].items():
@@ -145,20 +146,21 @@ def abbreviation(toolname, document, reports, data, config):
 
                         if len(dir_key) <= len(dir_doc):
                             if dir_key == dir_doc:
-                                message += " (same directory)"
+                                where += " (same directory)"
                             elif dir_doc.startswith(dir_key):
-                                message += " (above file)"
+                                where += " (above file)"
                             else:
                                 severity = 'W'
                         else:
                             severity = 'W'
                             if dir_key.startswith(dir_doc):
-                                message += " (below file)"
+                                where += " (below file)"
                         break
                 if not found:
-                    message = "no explanation"
+                    where = None
                     severity = 'W'
 
+                message = Report.missing(what="explanation", where=where)
                 line = Report.getline_punc(part.code, word, 50, 30)
                 reports.append(Report(severity, toolname, word, message, line))
 
@@ -591,7 +593,7 @@ def overuse(toolname, document, reports, config):
 
     def evaluate(document, reports, words):
         def add_report(document, reports, word, is_severe, count):
-            message = Report.existing(what="overused word {} times ".format(count))
+            message = Report.quantity(what="overused word", how=str(count) + " times")
             line = Report.getline_punc(document.code, word, 50, 30)
             reports.append(Report('I' if not is_severe else 'W', toolname, word, message, line))
 

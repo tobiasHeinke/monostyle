@@ -290,7 +290,7 @@ def indention(toolname, document, reports):
                     if child.node_name.endswith("-list"):
                         child = child.body.child_nodes.first()
                     if (node.code.start_lincol[0] == child.code.start_lincol[0] and
-                            child.node_name == "text" and not node.node_name == "block-quote"):
+                            child.node_name == "text" and node.node_name != "block-quote"):
                         # hanging indention of the first child
                         if node.node_name != "text":
                             reports = block_indention(reports, child, offset)
@@ -677,7 +677,8 @@ def leak(toolname, document, reports, re_lib, data):
                 for m in re.finditer(re_lib[key][0], part_str):
                     output = part.code.slice_match_obj(m, 0, True)
                     if re_lib[key][2]:
-                        message = "leaked "
+                        where = rst_walker.write_out(re_lib[key][1][0], re_lib[key][1][1])
+                        message = Report.existing(what="leaked", where=where)
                         if is_text:
                             direction = None
                             if m.group(2)[-1] in {"_", ":"}:
@@ -690,21 +691,26 @@ def leak(toolname, document, reports, re_lib, data):
                                       bool(re.match(r"\s", m.group(3))))
                             if direction is True:
                                 if not delim[0]:
-                                    message = "no delimiter at start of "
+                                    message = Report.missing(what="delimiter",
+                                                             where="at start of " + where)
                                 elif whitespace[1]:
-                                    message = "space after body start of "
+                                    message = Report.existing(what="space",
+                                                              where="after body start of " + where)
                             elif direction is False:
                                 if whitespace[0]:
-                                    message = "space before body end of "
+                                    message = Report.existing(what="space",
+                                                              where="before body end of " + where)
                                 elif not delim[1]:
-                                    message = "no delimiter at end of "
+                                    message = Report.missing(what="delimiter",
+                                                             where="at end of " + where)
                             else:
                                 if whitespace[0] and whitespace[1]:
-                                    message = "spaces around "
+                                    message = Report.existing(what="spaces",
+                                                              where="around " + where)
                                 elif not delim[0] and not delim[1]:
-                                    message = "no delimiter around "
+                                    message = Report.missing(what="delimiter",
+                                                             where="around " + where)
 
-                        message += rst_walker.write_out(re_lib[key][1][0], re_lib[key][1][1])
                     else:
                         message = re_lib[key][1]
                     line = Report.getline_offset(part.parent_node.parent_node.code, output, 100)

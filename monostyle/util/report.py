@@ -329,10 +329,11 @@ class Report():
             else:
                 before, inner, after = self.line.slice(self.output.start_pos, self.output.end_pos)
                 if len(inner) == 0:
-                    inner = (options["marker_both"],)
+                    line_str = "".join((str(before), options["marker_both"], str(after)))
                 else:
-                    inner = (options["marker_start"], str(inner), options["marker_end"])
-                line_str = "".join((str(before), *inner, str(after)))
+                    line_str = "".join((str(before), options["marker_start"], str(inner),
+                                        options["marker_end"], str(after)))
+
             entries["line"] = line_str.replace('\n', '¶')
             if len(entries["line"]) > options["line_limit"]:
                 entries["line"] = entries["line"][:options["line_limit"]]

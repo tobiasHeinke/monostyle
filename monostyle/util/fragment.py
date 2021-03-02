@@ -65,6 +65,11 @@ class Fragment():
         return self
 
 
+    def to_bundle(self):
+        """Convert into FragmentBundle."""
+        return FragmentBundle([self])
+
+
     def add_offset(self, offset_pos=None, offset_lincol=None):
         """Adds an offset to the location."""
         if offset_pos:
@@ -690,6 +695,10 @@ class FragmentBundle():
             result.combine(fg, check_align=False)
 
         return result
+
+
+    def to_bundle(self):
+        return self
 
 
     def join(self, filler=None):
