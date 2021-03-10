@@ -68,22 +68,6 @@ class Lexicon:
             return None
 
 
-    def write_csv(self):
-        lex_filename = monostyle_io.path_to_abs("monostyle/lexicon.csv")
-        count = 0
-        try:
-            with open(lex_filename, 'w', newline='', encoding='utf-8') as csvfile:
-                csv_writer = csv.writer(csvfile)
-                for entry in self.join():
-                    csv_writer.writerow(entry)
-                    count += 1
-
-                print("wrote lexicon file with {0} words".format(count))
-
-        except (IOError, OSError) as err:
-            print("{0}: cannot write: {1}".format(lex_filename, err))
-
-
     def split(self, lexicon_flat):
         """Split lexicon by first char."""
         lexicon = dict()

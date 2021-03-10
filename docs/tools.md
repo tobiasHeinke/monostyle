@@ -72,6 +72,10 @@ Find parts of incomplete markup and versioning merge conflicts.
 
 Find directives and roles types that should not be used in the project.
 
+### structure
+
+Inspect the document structure like the order of nodes or missing class attributes.
+
 
 ## Code Style
 

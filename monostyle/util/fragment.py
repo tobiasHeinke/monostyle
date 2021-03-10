@@ -275,7 +275,8 @@ class Fragment():
 
                 pos_abs = max(pos_abs, self.start_pos)
                 if self.start_lincol:
-                    lincol_abs = lincol_abs if lincol_abs > self.start_lincol else self.start_lincol
+                    lincol_abs = (lincol_abs if lincol_abs > self.start_lincol
+                                  else self.start_lincol)
                 else:
                     lincol_abs = None
                 fg = Fragment(self.filename, cont, pos_abs, start_lincol=lincol_abs)

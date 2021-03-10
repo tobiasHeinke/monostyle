@@ -37,8 +37,7 @@ def char_search(toolname, document, reports):
             fix = output.copy().replace_fill(repl) if repl else None
             reports.append(Report('E', toolname, output, message, fix=fix))
 
-    pattern_str = r"[^\n -~À-ʨ" + ''.join(('©', '®', '°', '±', '€', '™', "\t")) + explicits + r"]"
-    char_re = re.compile(pattern_str)
+    char_re = re.compile(r"[^\n -~À-ʨ©®°±€™\t" + explicits + r"]")
     for char_m in re.finditer(char_re, text):
         message = "uncommon char: {0}, 0x{0:04x}".format(ord(char_m.group(0)))
         output = document.code.slice_match_obj(char_m, 0, True)

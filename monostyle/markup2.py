@@ -41,7 +41,8 @@ def glossary_pre(_):
     terms_glossary -= terms
     terms.update(terms_glossary)
     args = dict()
-    args["data"] = dict(terms=terms, terms_glossary=terms_glossary, glossary_filenames=glossary_filenames)
+    args["data"] = dict(terms=terms, terms_glossary=terms_glossary,
+                        glossary_filenames=glossary_filenames)
     return args
 
 

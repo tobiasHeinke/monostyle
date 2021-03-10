@@ -295,29 +295,27 @@ def line_style_pre(_):
 
     re_lib = dict()
     eol = r"\s*$"
-    pattern_str = (r"(?<=[", char_catalog.data["terminal"]["final"], r"] )",
-                   r"([\w" + word_inter + r"]+?)", eol)
-    pattern = re.compile(''.join(pattern_str), re.MULTILINE)
-    message = Report.existing(what="first word of a sentence", where="at line end")
-    re_lib["sentorphan"] = (pattern, message)
+    re_lib["sentorphan"] = (
+        re.compile(''.join((r"(?<=[", char_catalog.data["terminal"]["final"], r"] )",
+                   r"([\w" + word_inter + r"]+?)", eol)), re.MULTILINE),
+        Report.existing(what="first word of a sentence", where="at line end"))
 
     # not match when oxford comma
-    pattern_str = r"(?<!,)\b(?:and|or) ([\w" + word_inter + r"]+?)" + eol
-    pattern = re.compile(pattern_str, re.MULTILINE | re.IGNORECASE)
-    message = Report.existing(what="first word of a clause", where="at line end")
-    re_lib["clauseorphan"] = (pattern, message)
+    re_lib["clauseorphan"] = (
+        re.compile(r"(?<!,)\b(?:and|or) ([\w" + word_inter + r"]+?)" + eol,
+                   re.MULTILINE | re.IGNORECASE),
+        Report.existing(what="first word of a clause", where="at line end"))
 
-    pattern_str = (r"(\b[a-z][\w", char_catalog.data["connector"]["apostrophe"], r"]*?)", eol,
-                   r"(?! *?[", pare_close, r"])")
-    pattern = re.compile(''.join(pattern_str), re.MULTILINE)
-    message = Report.existing(what="{0}", where="at line end")
-    re_lib["lastword"] = (pattern, message)
+    re_lib["lastword"] = (
+        re.compile(''.join((r"(\b[a-z][\w", char_catalog.data["connector"]["apostrophe"],
+                            r"]*?)", eol, r"(?! *?[", pare_close, r"])")), re.MULTILINE),
+        Report.existing(what="{0}", where="at line end"))
 
-    pattern_str = (r"(^[A-Za-z][\w", word_inter, r"]*?)",
-                   r"(?=[", char_catalog.data["terminal"]["final"], r"]\W)")
-    pattern = re.compile(''.join(pattern_str), re.MULTILINE)
-    message = Report.existing(what="last word of a sentence", where="at line start")
-    re_lib["sentwidow"] = (pattern, message)
+    re_lib["sentwidow"] = (
+        re.compile(''.join((r"(^[A-Za-z][\w", word_inter, r"]*?)",
+                            r"(?=[", char_catalog.data["terminal"]["final"], r"]\W)")),
+                   re.MULTILINE),
+        Report.existing(what="last word of a sentence", where="at line start"))
 
     args = dict()
     args["re_lib"] = re_lib

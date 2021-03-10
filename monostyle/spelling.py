@@ -8,6 +8,7 @@ Create or compare words against a lexicon.
 
 import os
 import re
+import csv
 
 import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.report import Report
@@ -30,7 +31,7 @@ def search_pre(op):
         if monostyle_io.ask_user("The lexicon does not exist in the user config folder ",
                                  "do you want to build it"):
             lex_new = build_lexicon()
-            lex_new.write_csv()
+            lexicon_write_csv(lex_new)
         else:
             return None
 
@@ -130,6 +131,23 @@ def word_filtered(document):
             yield word
 
 
+def lexicon_write_csv(lexicon):
+    lex_filename = monostyle_io.path_to_abs("monostyle/lexicon.csv")
+    count = 0
+    try:
+        with open(lex_filename, 'w', newline='', encoding='utf-8') as csvfile:
+            csv_writer = csv.writer(csvfile)
+            for entry in lexicon.join():
+                csv_writer.writerow(entry)
+                count += 1
+
+            print("wrote lexicon file with {0} words".format(count))
+
+    except (IOError, OSError) as err:
+        print("{0}: cannot write: {1}".format(lex_filename, err))
+
+
+
 def difference(lex_stored, lex_new):
     """Show a differential between the current texts and the stored lexicon."""
     added, removed = lex_stored.compare(lex_new)
@@ -181,7 +199,7 @@ def main():
 
     lex_new = build_lexicon()
     if not args.diff:
-        lex_new.write_csv()
+        lexicon_write_csv(lex_new)
     else:
         lex_stored = Lexicon(False)
         if lex_stored is not None:

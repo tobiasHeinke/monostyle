@@ -170,8 +170,10 @@ class LinkedList:
 
 
     def __getitem__(self, at):
-        if at >= self._list_size or at < 0:
-            return None
+        if abs(at) >= self._list_size or not isinstance(at, int):
+            raise IndexError()
+        if at < 0:
+            at = self._list_size - at
 
         for index, node in enumerate(self):
             if at == index:
@@ -179,8 +181,10 @@ class LinkedList:
 
 
     def __setitem__(self, at, new_node):
-        if at >= self._list_size or at < 0:
-            return None #raise IndexError
+        if abs(at) >= self._list_size or not isinstance(at, int):
+            raise IndexError()
+        if at < 0:
+            at = self._list_size - at
 
         node = self.__getitem__(at)
         if node:
@@ -188,8 +192,10 @@ class LinkedList:
 
 
     def __delitem__(self, at):
-        if at >= self._list_size or at < 0:
-            return None #raise IndexError
+        if abs(at) >= self._list_size or not isinstance(at, int):
+            raise IndexError()
+        if at < 0:
+            at = self._list_size - at
 
         node = self.__getitem__(at)
         if node:

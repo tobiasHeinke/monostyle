@@ -348,7 +348,8 @@ class Report():
             return options["format_str"].format(**entries)
         except KeyError as err:
             if not Report.repr.user_notified:
-                print("Report format_str key error: {} in \"{}\"".format(err, options["format_str"]))
+                print("Report format_str key error: {} in \"{}\""
+                      .format(err, options["format_str"]))
                 Report.repr.user_notified = True
 
             return format_str.format(**entries)

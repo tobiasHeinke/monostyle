@@ -335,28 +335,22 @@ def collocation(toolname, document, reports, data, config):
 
 def grammar_pre(_):
     re_lib = dict()
-    pattern_str = r"s's"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="s apostrophe", where="after s")
-    re_lib["sapos"] = (pattern, message)
+    re_lib["sapos"] = (re.compile(r"s's"),
+        Report.existing(what="s apostrophe", where="after s"))
 
-    pattern_str = r"'s\-"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="apostrophe", where="in compound")
-    re_lib["aposcomp"] = (pattern, message)
+    re_lib["aposcomp"] = (re.compile(r"'s\-"),
+        Report.existing(what="apostrophe", where="in compound"))
 
-    pattern_str = (r"(?:'",
-                   '|'.join((r"(?<!numb)er", "more", "less", "different(?:ly)?",
-                             "else", "otherwise")), r")\s+?then")
-    pattern = re.compile(''.join(pattern_str), re.DOTALL)
-    message = Report.substitution(what="then", where="after comparison", with_what="than")
-    re_lib["comparethen"] = (pattern, message)
+    re_lib["comparethen"] = (
+        re.compile(''.join((r"(?:'",
+                            '|'.join((r"(?<!numb)er", "more", "less", "different(?:ly)?",
+                                      "else", "otherwise")), r")\s+?then")), re.DOTALL),
+        Report.substitution(what="then", where="after comparison", with_what="than"))
 
     # FP 'only', not match 'by'
-    pattern_str = (r"\w(.)y\b\s+?\w[\w\-]+\1y\b")
-    pattern = re.compile(''.join(pattern_str), re.DOTALL)
-    message = Report.existing(what="two adverbs/adjectives with the same suffix")
-    re_lib["adsuffix"] = (pattern, message)
+    re_lib["adsuffix"] = (
+        re.compile(''.join((r"\w(.)y\b\s+?\w[\w\-]+\1y\b")), re.DOTALL),
+        Report.existing(what="two adverbs/adjectives with the same suffix"))
 
     args = dict()
     args["re_lib"] = re_lib
@@ -750,16 +744,15 @@ def overuse(toolname, document, reports, config):
 
 def passive_pre(_):
     re_lib = dict()
-    pattern_str = (r"(\b", r"\b|\b".join(("be", "being", "been", "am", "is",
-                                          "are", "was", "were")), r"\b|",
-                   r"\bg[eo]t(?:s|ten)?\b)", # get
-                   r"\s+",
-                   r"(\b[\w-]+e[dn]\b|\b",
-                   r"\b|\b".join(monostyle_io.get_data_file("irregular_participle")), r"\b)")
 
-    pattern = re.compile(''.join(pattern_str), re.DOTALL)
-    message = Report.existing(what="passive voice")
-    re_lib["passive"] = (pattern, message)
+    re_lib["passive"] = (
+        re.compile(''.join((r"(\b", r"\b|\b".join(("be", "being", "been", "am", "is",
+                                                   "are", "was", "were")), r"\b|",
+                            r"\bg[eo]t(?:s|ten)?\b)", # get
+                            r"\s+", r"(\b[\w-]+e[dn]\b|\b",
+                            r"\b|\b".join(monostyle_io.get_data_file("irregular_participle")),
+                            r"\b)")), re.DOTALL),
+        Report.existing(what="passive voice"))
 
     args = dict()
     args["re_lib"] = re_lib

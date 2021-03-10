@@ -169,6 +169,13 @@ def is_of(node, node_name_rule, name_rule=None, part_node_name_rule=None):
     return True
 
 
+def to_node(node):
+    """Return part's parent if it's a part."""
+    if not node:
+        return node
+    return node if isinstance(node, NodeRST) else node.parent_node
+
+
 def get_attr(node, name):
     """Return the first attribute node's body with a matching lowercase name."""
     if node.attr and not node.attr.child_nodes.is_empty():

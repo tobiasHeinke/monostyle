@@ -74,7 +74,7 @@ class PartofSpeech:
                     yield entry
 
         obj = get_branch(self.data, branch, index)
-        if not joined or isinstance(obj, str) or isinstance(obj, list):
+        if not joined or isinstance(obj, (str, list)):
             return obj
 
         return list(value for value in iter_sub(obj))

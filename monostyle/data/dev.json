@@ -25,6 +25,7 @@
 	"deprecated",
 	"designed",
 	"develop(ed|ing|ment|s)?",
+	"diagnos(is|tics)",
 	"(dis)?continued",
 	"draft(ing|s?)?",
 	"drawbacks?",

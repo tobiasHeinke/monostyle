@@ -451,99 +451,75 @@ def leak_pre(_):
 
     # BLOCK
     # Directive
-    pattern_str = r"\A(?:" + r"|".join(RSTParser.directives) + r")\:\s"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="second colon", where="after directive")
-    re_lib["dirsingleend"] = (pattern, message)
+    re_lib["dirsingleend"] = (
+        re.compile(r"\A(?:" + r"|".join(RSTParser.directives) + r")\:\s"),
+        Report.missing(what="second colon", where="after directive"))
 
-    pattern_str = r"(?<=\w)\:\:\w"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="space", where="after directive")
-    re_lib["dirnoend"] = (pattern, message)
+    re_lib["dirnoend"] = (re.compile(r"(?<=\w)\:\:\w"),
+        Report.missing(what="space", where="after directive"))
 
-    pattern_str = start_ind + r"(?:\A|\s)\.\.[A-Za-z]"
-    pattern = re.compile(pattern_str, re.MULTILINE)
-    message = Report.missing(what="space", where="in middle of directive")
-    re_lib["dirmid"] = (pattern, message)
+    re_lib["dirmid"] = (
+        re.compile(start_ind + r"(?:\A|\s)\.\.[A-Za-z]", re.MULTILINE),
+        Report.missing(what="space", where="in middle of directive"))
 
     # Target
-    pattern_str = r"\A[^_]\S*?(?<!\:)\: *?(?:\n|\Z)"
-    pattern = re.compile(pattern_str, re.MULTILINE)
-    message = Report.missing(what="underscore", where="before target")
-    re_lib["targetstart"] = (pattern, message)
+    re_lib["targetstart"] = (
+        re.compile(r"\A[^_]\S*?(?<!\:)\: *?(?:\n|\Z)", re.MULTILINE),
+        Report.missing(what="underscore", where="before target"))
 
-    pattern_str = r"\A_\S*?[^: \n] *?(?:\n|\Z)"
-    pattern = re.compile(pattern_str, re.MULTILINE)
-    message = Report.missing(what="colon", where="after target")
-    re_lib["targetend"] = (pattern, message)
+    re_lib["targetend"] = (
+        re.compile(r"\A_\S*?[^: \n] *?(?:\n|\Z)", re.MULTILINE),
+        Report.missing(what="colon", where="after target"))
 
     # List
-    pattern_str = r"\n *" + rst_parser.re_lib["bullet"].pattern.replace(space_end, r"[A-Za-z]")
-    pattern = re.compile(pattern_str, re.MULTILINE)
-    message = Report.missing(what="space", where="after unordered list")
-    re_lib["unordend"] = (pattern, message)
+    re_lib["unordend"] = (
+        re.compile(r"\n *" + rst_parser.re_lib["bullet"].pattern
+                   .replace(space_end, r"[A-Za-z]"), re.MULTILINE),
+        Report.missing(what="space", where="after unordered list"))
 
-    pattern_str = r"\n *" + rst_parser.re_lib["enum"].pattern.replace(space_end, r"[A-Za-z]") \
-                                                             .replace(r"\w", "")
-    pattern = re.compile(pattern_str, re.MULTILINE)
-    message = Report.missing(what="space", where="after ordered list")
-    re_lib["ordend"] = (pattern, message)
+    re_lib["ordend"] = (
+        re.compile(r"\n *" + rst_parser.re_lib["enum"].pattern
+                   .replace(space_end, r"[A-Za-z]").replace(r"\w", ""), re.MULTILINE),
+        Report.missing(what="space", where="after ordered list"))
 
     # todo add line, field
-    pattern_str = r"\n *(?:" + '|'.join((rst_parser.re_lib["bullet"].pattern,
-                                         rst_parser.re_lib["enum"].pattern)) + r")"
-    pattern = re.compile(pattern_str, re.MULTILINE)
-    message = Report.missing(what="blank line", where="over list")
-    re_lib["overlist"] = (pattern, message)
+    re_lib["overlist"] = (
+        re.compile(r"\n *(?:" + '|'.join((rst_parser.re_lib["bullet"].pattern,
+                                         rst_parser.re_lib["enum"].pattern)) + r")", re.MULTILINE),
+        Report.missing(what="blank line", where="over list"))
 
 
     # INLINE
     # Hyperlink, Internal Target
-    pattern_str = r"(?:_')|(?:'_)"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="wrong mark", where="hyperlink or internal target")
-    re_lib["linkapos"] = (pattern, message)
+    re_lib["linkapos"] = (re.compile(r"(?:_')|(?:'_)"),
+        Report.existing(what="wrong mark", where="hyperlink or internal target"))
 
     # Role
-    pattern_str = r"(\:" + ref_name + r"[;,.|]\Z)|([;,.|]" + ref_name + r"\:\Z)"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="wrong mark", where="role name")
-    re_lib["rolesep"] = (pattern, message)
+    re_lib["rolesep"] = (
+        re.compile(r"(\:" + ref_name + r"[;,.|]\Z)|([;,.|]" + ref_name + r"\:\Z)"),
+        Report.existing(what="wrong mark", where="role name"))
 
-    pattern_str = r"(\:" + ref_name + r"\:')|('\:" + ref_name + r"\:)"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="wrong mark", where="role body")
-    re_lib["roleapos"] = (pattern, message)
+    re_lib["roleapos"] = (
+        re.compile(r"(\:" + ref_name + r"\:')|('\:" + ref_name + r"\:)"),
+        Report.existing(what="wrong mark", where="role body"))
 
-    pattern_str = r"\A\S"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="space", where="after link title")
-    re_lib["linkspace"] = (pattern, message)
+    re_lib["linkspace"] = (re.compile(r"\A\S"),
+        Report.missing(what="space", where="after link title"))
 
-    pattern_str = r"\A[^/\\]"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="slash", where="at internal link start")
-    re_lib["docstart"] = (pattern, message)
+    re_lib["docstart"] = (re.compile(r"\A[^/\\]"),
+        Report.missing(what="slash", where="at internal link start"))
 
-    pattern_str = r"\A[A-Za-z]\:[/\\]"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="drive", where="at internal link start")
-    re_lib["docdrive"] = (pattern, message)
+    re_lib["docdrive"] = (re.compile(r"\A[A-Za-z]\:[/\\]"),
+        Report.existing(what="drive", where="at internal link start"))
 
-    pattern_str = r"\.[A-Za-z0-9]{1,4}\Z"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="file extension", where="at internal link end")
-    re_lib["docext"] = (pattern, message)
+    re_lib["docext"] = (re.compile(r"\.[A-Za-z0-9]{1,4}\Z"),
+        Report.existing(what="file extension", where="at internal link end"))
 
-    pattern_str = r" <[^>]*?\Z"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="closing bracket", where="at internal link end")
-    re_lib["linkclose"] = (pattern, message)
+    re_lib["linkclose"] = (re.compile(r" <[^>]*?\Z"),
+        Report.missing(what="closing bracket", where="at internal link end"))
 
-    pattern_str = r" \([^)]*?\Z"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="closing parenthesis", where="at abbreviation end")
-    re_lib["abbrclose"] = (pattern, message)
+    re_lib["abbrclose"] = (re.compile(r" \([^)]*?\Z"),
+        Report.missing(what="closing parenthesis", where="at abbreviation end"))
 
     # FP: math
     inlines = {
@@ -567,37 +543,27 @@ def leak_pre(_):
                          False if name not in {"dftrole"} else None), True)
 
     # Arrow
-    pattern_str = r"(?:[^ \-`]\-\->)|(?:\->[^ `|])"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="space", where="before/after arrow")
-    re_lib["arrow"] = (pattern, message, False)
+    re_lib["arrow"] = (re.compile(r"(?:[^ \-`]\-\->)|(?:\->[^ `|])"),
+        Report.missing(what="space", where="before/after arrow"), False)
 
-    pattern_str = r"[^\-<]\->"
-    pattern = re.compile(pattern_str)
-    message = Report.under(what="dashes", where="in arrow")
-    re_lib["arrowlen"] = (pattern, message, False)
+    re_lib["arrowlen"] = (re.compile(r"[^\-<]\->"),
+        Report.under(what="dashes", where="in arrow"), False)
 
     # Dash
-    pattern_str = r"(?:\w(\-{2,3})(?![->]))|(?:(?<![<-])(\-{2,3})\w)"
-    pattern = re.compile(pattern_str)
-    message = Report.missing(what="space", where="before/after dash")
-    re_lib["dash"] = (pattern, message, False)
+    re_lib["dash"] = (re.compile(r"(?:\w(\-{2,3})(?![->]))|(?:(?<![<-])(\-{2,3})\w)"),
+        Report.missing(what="space", where="before/after dash"), False)
 
     # Backslash
     # Not at block start/ after inline markup
-    pattern_str = r"(?!\A)[^\\`*|_]\\[^\s\\`*|_]"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="unnecessary escape")
-    re_lib["escape"] = (pattern, message, False)
+    re_lib["escape"] = (re.compile(r"(?!\A)[^\\`*|_]\\[^\s\\`*|_]"),
+        Report.existing(what="unnecessary escape"), False)
 
     markup_keys.update({"arrow", "arrowlen", "dash", "escape"})
 
     # Merge Conflict
     # FP = transition
-    pattern_str = r"(?:[<>|]{7} \.(?:r\d+?|mine))|(?:^={7}\n)"
-    pattern = re.compile(pattern_str, re.MULTILINE)
-    message = Report.existing(what="merge conflict")
-    re_lib["mc"] = (pattern, message)
+    re_lib["mc"] = (re.compile(r"(?:[<>|]{7} \.(?:r\d+?|mine))|(?:^={7}\n)", re.MULTILINE),
+        Report.existing(what="merge conflict"))
 
     node_pattern_map = (
         ("comment", "*", "body", {"dirsingleend", "targetstart", "targetend"}),
@@ -772,12 +738,358 @@ def markup_names(toolname, document, reports):
     return reports
 
 
+def structure_pre(_):
+    """Match a node with a selector and then move to a next node or
+    do a second check with an operator.
+    The match of the last selector or after the == operator will result in a report.
+    Selector: node_node_name(name)#id[attr_key: attr_value].part_node_name
+    and curly brackets for a numeral input.
+    ! to invert the individual selector parts, double !! at the start for the entire selector,
+    * for a wildcard. 'None' for not existing, comma for an 'in' check.
+    Operators need to be space separated on both sides.
+    """
+    # missing: /re group repetitions, greedy switch (always),
+    # /css: child_nodes selection like first-of-type or only
+
+    def new_waypoint(waypoint_str, operator, selector_re):
+        """Parses the selector and creates a waypoint."""
+        positive = bool(not waypoint_str.startswith("!!"))
+        if selector_m := re.match(selector_re, waypoint_str):
+            waypoint = {"operator": operator, "is_input": False}
+            for index, seg in enumerate(("node", "name", "id", "attr", "part", "node")):
+                positive_seg = positive
+                if value := selector_m.group(index+1):
+                    if value.startswith("!"):
+                        positive_seg = False
+                        value = value[1:]
+
+                    value = tuple(re.sub(r"\\,", ",", entry)
+                                  for entry in re.split(r"(?<!\\),\s*", value))
+                    if seg == "attr":
+                        new_value = []
+                        for entry in value:
+                            if (colon_index := entry.find(":")) != -1:
+                                new_value.append((entry[:colon_index].strip(),
+                                                  entry[colon_index:].strip()))
+                            else:
+                                print("invalid attribute in:", waypoint_str)
+                                continue
+                        value = tuple(new_value)
+                    elif seg == "node" and index > 4:
+                        value = tuple(int(entry) if len(entry.strip()) != 0 else None
+                                      for entry in value)
+                        waypoint["is_input"] = True
+                        if operator not in {"/", ">", "&", "&&"}:
+                            print("invalid number input in selector:", waypoint_str)
+                            return None
+
+                    if operator == "/":
+                        waypoint["is_input"] = True
+                else:
+                    if index > 4:
+                        continue
+                    value = "*"
+                    positive_seg = True
+
+                waypoint[seg] = (value, positive_seg)
+        else:
+            print("invalid selector in:", waypoint_str)
+            return None
+        return waypoint
+
+
+    exprs = (
+             ("trans - * == !text, def-list \\ * + !text, def-list",
+              {"output": True, "message": "transition not between text"}),
+             ("dir(figure, list-table) - def-list \\ * + dir(figure, list-table) & def-list",
+              {"output": True, "message": "image splitting definition list"}),
+             ("dir(admonition) == *[None] = *[!class: refbox]",
+              {"severity": 'W', "output": True,
+               "message": "admonition directive without refbox class"}),
+             ("dir(admonition)[class: refbox] - !sect \\ * ++ !None",
+              {"output": True, "message": "refbox admonition not at section start"}),
+             ("sect + dir(figure, admonition, list-table) & !text",
+              {"output": False, "message": "section not starting with text"}),
+             ("bullet-list, enum-list - !text",
+              {"output": True, "message": "list without introductory text"}),
+             ("dir(code) - !text",
+              {"output": True, "message": "code without introductory text"}),
+             ("dir(figure) / body = None",
+              {"output": True, "message": "figure without caption"}),
+             ("strong, emphasis << sect",
+              {"output": True, "message": "font styling in heading"}),
+             ("- {0} & {{1}} = None \\ * + {0} && !None"
+              .format("dir(note, tip, important, hint, warning, seealso)"),
+              {"output": True, "message": "more than three boxes in a row"}),
+             ("+ emphasis, strong || !None",
+              {"output": True, "message": "adjoined inline nodes of same type"}),
+             ("dir(seealso) + !None",
+              {"output": True, "message": "seealso admonition not at section end"}),
+            )
+    operators_start = {
+        "^": " + None \\ *",
+        "^^": " ++ None \\ *",
+        "$": " - None \\ *",
+        "$$": " -- None \\ *",
+    }
+    ref = r"(\!?(?:\*|[\w.+:-]+)(?:, *(?:\*|[\w.+:-]+))*)"
+    selector_re = re.compile("".join((r"(?:\!??", ref, r"(?:\(([^)]*?)\))?(?:#", ref,
+                                      r")?(?:\[([^\]]*?)\])?(?:\.", ref,
+                                      r")?)|(?:\{(\d+?(?: *, *\d*?)?)\})")))
+    operator_re = re.compile(r"(?:\A| +)(([\^$|=/\\+\-<>?&])\2?) +")
+    operators = {"|", "=", "==", "+", "-", "++", "--", "/", ">", ">>",
+                 "<", "<<", "\\", "?", "&", "&&", "||"}
+    pos_names = set()
+    routes = []
+    for expr, report_info in exprs:
+        if operator_m := re.match(operator_re, expr):
+            if operator_m.group(1) in operators_start.keys():
+                expr = expr[operator_m.end(0):]
+                if selector_m := re.match(selector_re, expr):
+                    expr = "".join((expr[:selector_m.end(0)],
+                                    operators_start[operator_m.group(1)],
+                                    expr[selector_m.end(0):]))
+                else:
+                    print("invalid first selector in:", expr)
+                    continue
+
+        route = []
+        operator = None
+        last = 0
+        success = True
+        for operator_m in re.finditer(operator_re, expr):
+            if operator_m.group(1) not in operators:
+                print("invalid operator '{}' in: {}".format(operator_m.group(1), expr))
+                break
+
+            if last != operator_m.start(0):
+                if waypoint := new_waypoint(expr[last:operator_m.start(0)], operator, selector_re):
+                    route.append(waypoint)
+                else:
+                    success = False
+                    break
+
+            operator = operator_m.group(1)
+            last = operator_m.end(0)
+
+        if not success:
+            break
+
+        if last != len(expr):
+            if waypoint := new_waypoint(expr[last:], operator, selector_re):
+                route.append(waypoint)
+            else:
+                break
+
+        for waypoint in route:
+            if waypoint["operator"] not in (None, "|"):
+                break
+            if not waypoint["node"][1]:
+                pos_names = None
+            elif pos_names is not None:
+                pos_names.update(waypoint["node"][0])
+
+        routes.append((route, report_info))
+
+    return {"data": (pos_names, routes)}
+
+
+def structure(toolname, document, reports, data):
+    """Inspect the document structure by matching a path."""
+    def matcher(node, waypoint):
+        """Matches the node with the names in the waypoint."""
+        if node is None or node.code.isspace():
+            return bool(("None" in waypoint["node"][0]) == waypoint["node"][1])
+        if "None" in waypoint["node"][0] and not waypoint["node"][1]:
+            return True
+
+        if not(rst_walker.is_of(node, waypoint["node"][0]) == waypoint["node"][1]):
+            return False
+        if not(rst_walker.is_of(node, "*", waypoint["name"][0]) == waypoint["name"][1]):
+            return False
+        if not(rst_walker.is_of(node, "*", "*", waypoint["part"][0]) == waypoint["part"][1]):
+            return False
+        if waypoint["id"][0] != "*":
+            if (not((node.id and
+                    ("*" in waypoint["id"][0] or
+                     str(node.id.code).strip() in waypoint["id"][0])) == waypoint["id"][1])):
+                return False
+        if waypoint["attr"][0] != "*":
+            for entry in waypoint["attr"][0]:
+                value = rst_walker.get_attr(node, entry[0])
+                if value is None or value.code.isspace():
+                    return bool((entry[1] == "None") == waypoint["node"][1])
+                if (not((entry[1] == "*" and str(value.code).strip() == entry[1]) ==
+                        waypoint["attr"][1])):
+                    return False
+        return True
+
+    def repeat(node_active, waypoint_active, node_con, waypoint_con, span=None):
+        """Repeats the previous the operation while the note matches the waypoint."""
+        if "operation" not in waypoint_con.keys():
+            print(waypoint_con["operator"], " no operation to repeat")
+            return None
+
+        if waypoint_active["is_input"]:
+            span = waypoint_active["node"][0]
+        counter = -1
+        while node_active and (counter == -1 or matcher(node_active, waypoint_con)):
+            if (span and ((len(span) == 1 and counter == span[0]) or
+                    (len(span) != 1 and counter == span[1]))):
+                break
+            node_active = waypoint_con["operation"](node_active, waypoint_active,
+                                                    node_con, waypoint_con)
+            while node_active and node_active.node_name == "text" and node_active.code.isspace():
+                node_active = waypoint_con["operation"](node_active, waypoint_active,
+                                                        node_con, waypoint_con)
+            counter += 1
+
+        if span and counter < span[0]:
+            return None
+
+        return node_active
+
+
+    def duplicate(node_active, waypoint_active, node_con, waypoint_con):
+        """Repeats the previous the operation if the node matches a reference node."""
+        def attr_value(node, key):
+            value = rst_walker.get_attr(node, key)
+            if value is None or value.code.isspace():
+                return None
+            return str(value.code).strip()
+
+        if "operation" not in waypoint_con.keys():
+            print(waypoint_con["operator"], " no operation to repeat")
+            return None
+
+        if node_active is None or node_con is None:
+            return node_active if node_active == node_con else None
+
+        get_value = {
+            "node": lambda node: rst_walker.to_node(node).node_name,
+            "name": lambda node: str(node.name.code).strip() if node.name else None,
+            "id": lambda node: str(node.id.code).strip() if node.id else None,
+            "part": lambda node: node.node_name,
+        }
+        for seg in ("node", "name", "id", "attr", "part"):
+            if waypoint_con[seg][0] == "*":
+                continue
+            if seg != "attr":
+                if get_value[seg](node_active) != get_value[seg](node_con):
+                    return None
+            else:
+                for entry in waypoint_con["attr"][0]:
+                    if entry[1] == "*":
+                        continue
+                    if attr_value(node_active, entry[0]) != attr_value(node_con, entry[0]):
+                        return None
+
+        return node_active
+
+    def get_child_node(node_active, waypoint_active):
+        """Returns child node by name or index."""
+        if not isinstance(waypoint_active["node"][0][0], int):
+            if (waypoint_active["node"][0] != "*" and
+                    hasattr(node_active, waypoint_active["node"][0][0])):
+                return getattr(node_active, waypoint_active["node"][0][0])
+        else:
+            return node_active.child_nodes[waypoint_active["node"][0][0]]
+
+    operators = {
+        "|": lambda node_active, _, __, ___: node_active,
+        "=": lambda node_active, _, __, ___: node_active,
+        "==": lambda node_active, _, __, ___: node_active,
+        # traversals
+        "+": lambda node_active, _, __, ___: node_active.next,
+        "-": lambda node_active, _, __, ___: node_active.prev,
+        "++": lambda node_active, _, __, ___: node_active.next_leaf(),
+        "--": lambda node_active, _, __, ___: node_active.prev_leaf(),
+        "/": lambda node_active, waypoint_active, _, __:
+                            get_child_node(node_active, waypoint_active),
+        ">": lambda node_active, _, __, ___: node_active.child_nodes.first(),
+        ">>": lambda node_active, _, __, ___: node_active.child_nodes.last(),
+        "<": lambda node_active, _, __, ___: node_active.parent_node,
+        "<<": lambda node_active, _, __, ___: node_active.parent_node.parent_node
+                            if node_active.parent_node else None,
+        "\\": lambda _, __, node_con, ___: node_con,
+        # repetitions
+        "?": lambda node_active, waypoint_active, node_con, waypoint_con:
+            repeat(node_active, waypoint_active, node_con, waypoint_con, (0, 1)),
+        "&": lambda node_active, waypoint_active, node_con, waypoint_con:
+            repeat(node_active, waypoint_active, node_con, waypoint_con, (0, None)),
+        "&&": lambda node_active, waypoint_active, node_con, waypoint_con:
+            repeat(node_active, waypoint_active, node_con, waypoint_con, (1, None)),
+        "||": lambda node_active, waypoint_active, node_con, waypoint_con:
+            duplicate(node_active, waypoint_active, node_con, waypoint_con),
+    }
+    routes = data[1]
+    for node in rst_walker.iter_node(document, data[0]):
+        for route, report_info in routes:
+            waypoint_con = None
+            node_con = None
+            for index, waypoint_active in enumerate(route):
+                if index == 0:
+                    node_active = node
+                    node_prev = node
+
+                    if waypoint_active["operator"] is not None:
+                        waypoint_active["operation"] = operators[waypoint_active["operator"]]
+                else:
+                    node_prev = node_active
+                    waypoint_active["operation"] = operators[waypoint_active["operator"]]
+                    node_active = waypoint_active["operation"](node_active, waypoint_active,
+                                                               node_con, waypoint_con)
+                    if node_active is not node_prev and waypoint_active["operator"] != "\\":
+                        while (node_active and
+                               node_active.node_name == "text" and node_active.code.isspace()):
+                            node_active = waypoint_active["operation"](
+                                              node_active, waypoint_active, node_con, waypoint_con)
+
+                operator_next = route[index+1]["operator"] if index != len(route) - 1 else None
+                if not waypoint_active["is_input"]:
+                    if matcher(node_active, waypoint_active):
+                        if (not operator_next or
+                                waypoint_active["operator"] == "==" or
+                                (waypoint_con and waypoint_con["operator"] == "==")):
+                            output = node
+                            if report_info["output"]:
+                                if node_active:
+                                    output = node_active
+                                elif node_con:
+                                    output = node_con
+                            output = output.code.copy().clear(True)
+                            reports.append(Report(report_info.get("severity", 'I'), toolname,
+                                                  output, report_info["message"]))
+
+                            break
+
+                    elif operator_next not in {"|", "?", "&"}:
+                        break
+
+                if operator_next:
+                    if node_active is None and operator_next not in {"|", "=", "==", "\\"}:
+                        break
+                    if operator_next in {"|", "||", "=", "==", "?", "&", "&&", "\\"}:
+                        if waypoint_con is None:
+                            waypoint_con = waypoint_active
+                            if operator_next == "||" or index == 0:
+                                node_con = node_active
+                            else:
+                                node_con = node_prev
+                    elif waypoint_con:
+                        waypoint_con = None
+                        node_con = None
+
+    return reports
+
+
 OPS = (
     ("heading-level", heading_level, None),
     ("indention", indention, None),
     ("kbd", kbd, kbd_pre),
     ("leak", leak, leak_pre),
     ("markup-names", markup_names, None),
+    ("structure", structure, structure_pre),
 )
 
 

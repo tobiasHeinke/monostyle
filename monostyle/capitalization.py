@@ -81,25 +81,17 @@ def admonition_title(toolname, document, reports):
 def heading_caps_pre(_):
     re_lib = dict()
 
-    pattern_str = r"\-[a-z]"
-    pattern = re.compile(pattern_str)
-    message = Report.misformatted(what="lowercase", where="in heading after hyphen")
-    re_lib["hyphen"] = (pattern, message)
+    re_lib["hyphen"] = (re.compile(r"\-[a-z]"),
+        Report.misformatted(what="lowercase", where="in heading after hyphen"))
 
-    pattern_str = r"[^\w \-&/()'\"\\?!:,\n]"
-    pattern = re.compile(pattern_str)
-    message = Report.existing(what="not allowed punctuation", where="in heading")
-    re_lib["nonchar"] = (pattern, message)
+    re_lib["nonchar"] = (re.compile(r"[^\w \-&/()'\"\\?!:,\n]"),
+        Report.existing(what="not allowed punctuation", where="in heading"))
 
-    pattern_str = r"\band\b"
-    pattern = re.compile(pattern_str, re.IGNORECASE)
-    message = Report.substitution(what="and", where="in heading", with_what="an ampersand")
-    re_lib["and"] = (pattern, message)
+    re_lib["and"] = (re.compile(r"\band\b", re.IGNORECASE),
+        Report.substitution(what="and", where="in heading", with_what="an ampersand"))
 
-    pattern_str = r"\bor\b"
-    pattern = re.compile(pattern_str, re.IGNORECASE)
-    message = Report.substitution(what="or", where="in heading", with_what="a slash")
-    re_lib["or"] = (pattern, message)
+    re_lib["or"] = (re.compile(r"\bor\b", re.IGNORECASE),
+        Report.substitution(what="or", where="in heading", with_what="a slash"))
 
     return {"re_lib": re_lib}
 
@@ -298,24 +290,22 @@ def start_case_pre(_):
     pare_open = char_catalog.data["bracket"]["left"]["normal"]
 
     # FP: code, container
-    pattern_str = r"[" + pare_open + r"]?[a-z]"
-    pattern = re.compile(pattern_str)
-    message = Report.misformatted(what="lowercase", where="at paragraph start")
-    re_lib["lowerpara"] = (pattern, message)
+    re_lib["lowerpara"] = (
+        re.compile(r"[" + pare_open + r"]?[a-z]"),
+        Report.misformatted(what="lowercase", where="at paragraph start"))
 
     # todo? split sentence
     # limitation: not nested parenthesis
     # not match abbr
-    pattern_str = (r"(?<!\w\.\w)[", punc_sent, r"]\s+?", r"[", pare_open, r"]?[a-z]")
-    pattern = re.compile("".join(pattern_str), re.MULTILINE | re.DOTALL)
-    message = Report.misformatted(what="lowercase", where="after sentence start")
-    re_lib["punclower"] = (pattern, message)
+    re_lib["punclower"] = (
+        re.compile("".join((r"(?<!\w\.\w)[", punc_sent, r"]\s+?", r"[", pare_open, r"]?[a-z]")),
+                    re.MULTILINE | re.DOTALL),
+        Report.misformatted(what="lowercase", where="after sentence start"))
 
     # FP: abbr, menu, heading, code
-    pattern_str = r"[^.\s]\s*?[" + pare_open + r"][A-Z][a-z ]"
-    pattern = re.compile(pattern_str, re.MULTILINE)
-    message = Report.misformatted(what="uppercase", where="at bracket start")
-    re_lib["upperbracket"] = (pattern, message)
+    re_lib["upperbracket"] = (
+        re.compile(r"[^.\s]\s*?[" + pare_open + r"][A-Z][a-z ]", re.MULTILINE),
+        Report.misformatted(what="uppercase", where="at bracket start"))
 
     args = dict()
     args["re_lib"] = re_lib

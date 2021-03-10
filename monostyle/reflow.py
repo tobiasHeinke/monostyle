@@ -226,7 +226,7 @@ class Box(Node):
         'best_linkbreak', 'word_len', 'space_len')
 
     def __init__(self, content, space, demerits, extra_len=0):
-        super(Box, self).__init__()
+        super().__init__()
 
         self.content = content
         self.space = space
