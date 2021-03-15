@@ -117,7 +117,8 @@ def path_to_abs(path, base=None):
 
 def norm_path_sep(path):
     """Replace backslash in Windows path and multiple slashes to one."""
-    return '/'.join(s for s in path.replace("\\", "/").split("/") if len(s) != 0)
+    return '/'.join(s for s in path.replace("\\", "/").split("/")
+                    if len(s) != 0 and (len(s) != 1 or s != "."))
 
 
 def get_data_file(path):

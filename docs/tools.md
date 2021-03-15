@@ -52,6 +52,11 @@ Explicit search for terms and capitalization.
 
 ## Markup
 
+### highlight
+
+Find overuse of inline markup which change the font weight or color, etc.
+Especially a high amount of style alternations reduce the readability.
+
 ### heading-level
 
 Check the heading hierarchy.

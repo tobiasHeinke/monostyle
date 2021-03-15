@@ -29,9 +29,9 @@ def mark_pre(_):
     # FN: inline markup
     re_lib["bracketpunc"] = (
         re.compile(''.join((r"[", punc_sent, r"]\s*?", r"[", pare_open, r"][^", pare_close, r"]+?",
-            r"[", pare_close, r"][", punc, r"]")), re.MULTILINE | re.DOTALL),
+                            r"[", pare_close, r"][", punc, r"]")), re.MULTILINE | re.DOTALL),
         Report.misplaced(what="punctuation mark", where="after closing bracket",
-                               to_where="before"))
+                         to_where="before"))
 
     # FP: code, literal
     re_lib["spacebracket"] = (
@@ -49,7 +49,7 @@ def mark_pre(_):
     # FP: code, target
     re_lib["puncspaceend"] = (
         re.compile(''.join((r"[", punc.replace('.', '').replace(',', ''), r"][",
-                    pare_close, r"]?\S|\.[A-Z]|,[^\s\d]"))),
+                            pare_close, r"]?\S|\.[A-Z]|,[^\s\d]"))),
         Report.missing(what="space", where="after punctuation mark"))
 
     re_lib["unquote"] = (re.compile(r"\w\"\w"),
@@ -90,8 +90,8 @@ def mark_pre(_):
 
     re_lib["enumslash"] = (re.compile(r"/"),
         Report.conditional(what="Slash", where="in continuous text",
-                                 with_what="written out or/per",
-                                 when="(if it not short for alias)"))
+                           with_what="written out or/per",
+                           when="(if it not short for alias)"))
 
     re_lib["greater"] = (re.compile(r">"),
         Report.substitution(what="greater-than sign", with_what="written out"))

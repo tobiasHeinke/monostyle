@@ -61,7 +61,7 @@ def toctree(rst_parser, document):
                     node.child_nodes.prepend(node.attr)
 
                 fg = Fragment(document.code.filename, [".. toctree::\n"], -1, -1, (-1, 0), (-1, 0))
-                doc = rst_parser.parse(rst_parser.snippet(fg))
+                doc = rst_parser.parse(rst_parser.document(fg=fg))
                 part_transfer(node, doc.body.child_nodes.first())
 
     return document
@@ -74,7 +74,7 @@ def refbox(rst_parser, document):
                       [".. admonition:: Reference\n",
                        "   :class: refbox\n" if add_class else ""],
                       -2, -2, (-2, 0), (-2, 0))
-        doc = rst_parser.parse(rst_parser.snippet(fg))
+        doc = rst_parser.parse(rst_parser.document(fg=fg))
         part_transfer(node, doc.body.child_nodes.first())
 
     node = document.body.child_nodes.first()

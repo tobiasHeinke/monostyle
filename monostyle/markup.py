@@ -8,9 +8,130 @@ RST markup tools.
 
 import re
 
+import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.report import Report
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.rst_parser.core import RSTParser
+
+
+def highlight_pre(op):
+    config = dict()
+    config.update(monostyle_io.get_override(__file__, op[0], "threshold_min", 0.6))
+    config.update(monostyle_io.get_override(__file__, op[0], "threshold_severe", 1))
+    return {"config": config}
+
+
+def highlight(toolname, document, reports, config):
+    """Overuse of inline markup."""
+    threshold_min = config["threshold_min"]
+    threshold_severe = config["threshold_severe"]
+    average_ref = 14
+    blank_line = 80
+
+    def evaluate(reports, score_global, counter, score_cur, text_chars, is_final=False):
+        distance = score_cur["before"]
+        score = (0.75 * (-pow(min(distance, 100) / 100, 2) + 1) * score_cur["category_change"] +
+                 0.20 * (-pow(min(distance, 75) / 75, 2) + 1) * score_cur["name_change"] +
+                 -pow(2 * pow(score_cur["light_len"] /
+                              (score_cur["light_len"] + min(distance, 200) +
+                               min(text_chars, 200)), 2) - 1, 2) + 1)
+
+        score_global += score
+        counter += 1
+
+        if text_chars > 100 or is_final:
+            score_final = (score_global / counter) * (-(1 / (counter + (1 / 1.125))) + 1.125)
+            if score_final > threshold_min:
+                output = score_cur["node"].code.copy().clear(True)
+                message = Report.quantity(what="highlight overuse",
+                                          how=str(counter) + " times")
+                reports.append(Report('I' if score_final < threshold_severe else 'W', toolname,
+                                      output, message, score_cur["node"].parent_node.code))
+
+            score_global = 0
+            counter = 0
+
+        return reports, score_global, counter
+
+    categories = {
+        "style": (("emphasis",), ("role", {"sub", "sup"}), ("strong",)),
+        "decor": (("literal",),
+                ("role", {"abbr", "class", "default", "download",
+                 "guilabel", "kbd", "math", "menuselection"})),
+        "color": (("cit",), ("foot",), ("hyperlink",), ("int-target",),
+                ("role", {"doc", "index", "mod", "ref", "term"}), ("standalone",), ("subst",)),
+    }
+
+    score_cur = None
+    score_global = 0
+    counter = 0
+    line_trim_re = re.compile(r"^\s*(\S.*?)\s*$", re.MULTILINE)
+    text_chars = 0
+    for node_parent in rst_walker.iter_node(document.body, {"text", "dir", "sect"}, False):
+        if node_parent.node_name != "text":
+            if score_cur:
+                reports, score_global, counter = evaluate(reports, score_global, counter,
+                                                          score_cur, text_chars, True)
+            score_cur = None
+            text_chars = average_ref + blank_line
+            continue
+
+        node_up = node_parent.parent_node.parent_node
+        if rst_walker.is_of(node_up, "def", "*", "head"):
+            continue
+
+        for node in rst_walker.iter_node(node_parent.body):
+            if node.node_name == "text":
+                text_chars += sum(len(m.group(1))
+                                  for m in re.finditer(line_trim_re, str(node.code)))
+                if not node.next:
+                    last_line = (next(node.code.reversed_splitlines())
+                                 if node.code.span_len(True) != 0 else None)
+                    if not last_line or last_line.isspace():
+                        text_chars += blank_line
+                continue
+
+            category = None
+            for key, value in categories.items():
+                for typ in value:
+                    if rst_walker.is_of(node, *typ):
+                        category = key
+                        break
+                if category:
+                    break
+            else:
+                continue
+
+            if node.head:
+                light_len = len(node.head.code)
+            elif node.id:
+                light_len = average_ref
+            else:
+                light_len = len(node.body.code)
+
+            name = node.node_name + (str(node.name).strip() if node.name else "")
+            score_next = {
+                "before": text_chars / 2 if score_cur else text_chars,
+                "category_change": bool(score_cur is not None and
+                                        score_cur["category"] != category),
+                "category": category,
+                "light_len": light_len,
+                "name": name,
+                "name_change": bool(score_cur is not None and score_cur["name"] != name),
+                "node": node,
+            }
+            if score_cur:
+                text_chars = text_chars / 2
+                reports, score_global, counter = evaluate(reports, score_global, counter,
+                                                          score_cur, text_chars)
+            score_cur = score_next
+            text_chars = 0
+
+    if score_cur:
+        reports, score_global, counter = evaluate(reports, score_global, counter,
+                                                  score_cur, text_chars, True)
+
+    return reports
 
 
 def heading_level(toolname, document, reports):
@@ -246,8 +367,8 @@ def indention(toolname, document, reports):
 
             is_code = bool(rst_walker.is_of(node, "dir", {"code-block", "default", "math"}))
             offset = 0
-            if ((not node.parent_node and node.node_name == "snippet") or
-                    (node.node_name == "block-quote" and document.node_name == "snippet" and
+            if ((not node.parent_node and node.code.start_lincol != 0) or
+                    (node.node_name == "block-quote" and document.code.start_lincol != 0 and
                      ((not node.prev and
                        node.code.start_lincol[0] == document.code.start_lincol[0]) or
                       (node.prev and not node.prev.prev and
@@ -485,7 +606,8 @@ def leak_pre(_):
     # todo add line, field
     re_lib["overlist"] = (
         re.compile(r"\n *(?:" + '|'.join((rst_parser.re_lib["bullet"].pattern,
-                                         rst_parser.re_lib["enum"].pattern)) + r")", re.MULTILINE),
+                                          rst_parser.re_lib["enum"].pattern)) + r")",
+                   re.MULTILINE),
         Report.missing(what="blank line", where="over list"))
 
 
@@ -509,7 +631,8 @@ def leak_pre(_):
     re_lib["docstart"] = (re.compile(r"\A[^/\\]"),
         Report.missing(what="slash", where="at internal link start"))
 
-    re_lib["docdrive"] = (re.compile(r"\A[A-Za-z]\:[/\\]"),
+    re_lib["docdrive"] = (
+        re.compile(r"\A([A-Za-z]\:[/\\]|[/\\](?:home[/\\])?users?[/\\]|[.~]{1,2}[/\\])"),
         Report.existing(what="drive", where="at internal link start"))
 
     re_lib["docext"] = (re.compile(r"\.[A-Za-z0-9]{1,4}\Z"),
@@ -803,7 +926,7 @@ def structure_pre(_):
               {"output": True, "message": "transition not between text"}),
              ("dir(figure, list-table) - def-list \\ * + dir(figure, list-table) & def-list",
               {"output": True, "message": "image splitting definition list"}),
-             ("dir(admonition) == *[None] = *[!class: refbox]",
+             ("dir(admonition) = *[!class: refbox]",
               {"severity": 'W', "output": True,
                "message": "admonition directive without refbox class"}),
              ("dir(admonition)[class: refbox] - !sect \\ * ++ !None",
@@ -835,7 +958,7 @@ def structure_pre(_):
     ref = r"(\!?(?:\*|[\w.+:-]+)(?:, *(?:\*|[\w.+:-]+))*)"
     selector_re = re.compile("".join((r"(?:\!??", ref, r"(?:\(([^)]*?)\))?(?:#", ref,
                                       r")?(?:\[([^\]]*?)\])?(?:\.", ref,
-                                      r")?)|(?:\{(\d+?(?: *, *\d*?)?)\})")))
+                                      r")?)|(?:\{([+-]?\d+?(?: *, *[+-]?\d*?)?)\})")))
     operator_re = re.compile(r"(?:\A| +)(([\^$|=/\\+\-<>?&])\2?) +")
     operators = {"|", "=", "==", "+", "-", "++", "--", "/", ">", ">>",
                  "<", "<<", "\\", "?", "&", "&&", "||"}
@@ -993,7 +1116,8 @@ def structure(toolname, document, reports, data):
                     hasattr(node_active, waypoint_active["node"][0][0])):
                 return getattr(node_active, waypoint_active["node"][0][0])
         else:
-            return node_active.child_nodes[waypoint_active["node"][0][0]]
+            if abs(waypoint_active["node"][0][0]) < len(node_active.child_nodes):
+                return node_active.child_nodes[waypoint_active["node"][0][0]]
 
     operators = {
         "|": lambda node_active, _, __, ___: node_active,
@@ -1005,22 +1129,22 @@ def structure(toolname, document, reports, data):
         "++": lambda node_active, _, __, ___: node_active.next_leaf(),
         "--": lambda node_active, _, __, ___: node_active.prev_leaf(),
         "/": lambda node_active, waypoint_active, _, __:
-                            get_child_node(node_active, waypoint_active),
+             get_child_node(node_active, waypoint_active),
         ">": lambda node_active, _, __, ___: node_active.child_nodes.first(),
         ">>": lambda node_active, _, __, ___: node_active.child_nodes.last(),
         "<": lambda node_active, _, __, ___: node_active.parent_node,
         "<<": lambda node_active, _, __, ___: node_active.parent_node.parent_node
-                            if node_active.parent_node else None,
+                                              if node_active.parent_node else None,
         "\\": lambda _, __, node_con, ___: node_con,
         # repetitions
         "?": lambda node_active, waypoint_active, node_con, waypoint_con:
-            repeat(node_active, waypoint_active, node_con, waypoint_con, (0, 1)),
+             repeat(node_active, waypoint_active, node_con, waypoint_con, (0, 1)),
         "&": lambda node_active, waypoint_active, node_con, waypoint_con:
-            repeat(node_active, waypoint_active, node_con, waypoint_con, (0, None)),
+             repeat(node_active, waypoint_active, node_con, waypoint_con, (0, None)),
         "&&": lambda node_active, waypoint_active, node_con, waypoint_con:
-            repeat(node_active, waypoint_active, node_con, waypoint_con, (1, None)),
+              repeat(node_active, waypoint_active, node_con, waypoint_con, (1, None)),
         "||": lambda node_active, waypoint_active, node_con, waypoint_con:
-            duplicate(node_active, waypoint_active, node_con, waypoint_con),
+              duplicate(node_active, waypoint_active, node_con, waypoint_con),
     }
     routes = data[1]
     for node in rst_walker.iter_node(document, data[0]):
@@ -1084,6 +1208,7 @@ def structure(toolname, document, reports, data):
 
 
 OPS = (
+    ("highlight", highlight, highlight_pre),
     ("heading-level", heading_level, None),
     ("indention", indention, None),
     ("kbd", kbd, kbd_pre),

@@ -451,9 +451,11 @@ class Report():
 def options_overide(options=None):
     """Override the default print options."""
     if options is None:
-        options = options_overide(config.console_options)
+        options = config.console_options
+        if options is None:
+            options = {}
 
-    options = {
+    return {
         "file_title": True,
         "absolute_path": False,
         "file_title_underline": None,
@@ -462,7 +464,6 @@ def options_overide(options=None):
         "summary_overline": '_',
         **options
     }
-    return options
 
 
 def print_reports(reports, options=None):

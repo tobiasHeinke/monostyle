@@ -391,15 +391,14 @@ class RSTParser:
     # -----------------------------------------------------------------------------
     # Block
 
-    def document(self, filename, text):
-        fg = Fragment(filename, text)
+    def document(self, filename=None, text=None, fg=None):
+        if filename is None and text is None and fg is None:
+            print("RST document missing parameter")
+            return None
+
+        if fg is None:
+            fg = Fragment(filename, text)
         new_node = NodeRST("document", fg)
-        new_node.append_part("body", fg)
-        return new_node
-
-
-    def snippet(self, fg):
-        new_node = NodeRST("snippet", fg)
         new_node.append_part("body", fg)
         return new_node
 
