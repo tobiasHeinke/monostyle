@@ -93,7 +93,9 @@ def refbox(rst_parser, document):
             prime = NodeRST("field-list", None)
             prime.append_part("body", None)
             prime.body.append_child(field_node)
-            node.attr = prime
+            node.attr = NodePartRST("attr", field_node.code)
+            node.attr.append_child(prime, False)
+            node.child_nodes.prepend(node.attr)
 
         else:
             for field_node in node_child.body.child_nodes:

@@ -98,7 +98,7 @@ def get_reports_version(mods, rst_parser, from_vsn, is_internal, path, rev=None,
                                                           fg.start_lincol[0], fg.end_lincol[0]),
                                     is_temp=True)
 
-        reports, filename_prev = apply(rst_parser, mods, reports, rst_parser.snippet(fg),
+        reports, filename_prev = apply(rst_parser, mods, reports, rst_parser.document(fg=fg),
                                        parse_options, print_options,
                                        filename_prev, filter_reports, context)
 
@@ -160,7 +160,7 @@ def filter_reports(report, context):
     """Filter out reports in the diff context."""
     return bool(report.tool in
                 {"blank-line", "flavor", "indention", "heading-level", "heading-line-length",
-                 "mark", "markup-names", "start-case"} and # "search-word",
+                 "mark", "markup-names", "start-case", "structure"} and # "search-word",
                 report.output.start_lincol is not None and context is not None and
                 report.output.start_lincol[0] in context)
 

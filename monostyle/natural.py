@@ -716,7 +716,7 @@ def overuse(toolname, document, reports, config):
                 if is_first or word_str not in topics:
                     weight = 1
                     if not is_first and word_str in stopwords:
-                        weight -= 0.4
+                        weight -= 0.6
                     else:
                         if not is_first:
                             weight -= 0.2

@@ -180,8 +180,8 @@ def get_attr(node, name):
     """Return the first attribute node's body with a matching lowercase name."""
     if node.attr and not node.attr.child_nodes.is_empty():
         field_list = node.attr.child_nodes.first()
-        if not field_list.child_nodes.is_empty():
-            for field_node in field_list.child_nodes.last().child_nodes:
+        if field_list.body:
+            for field_node in field_list.body.child_nodes:
                 if str(field_node.name).strip().lower() == name:
                     return field_node.body
 

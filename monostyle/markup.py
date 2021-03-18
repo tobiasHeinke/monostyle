@@ -30,13 +30,13 @@ def highlight(toolname, document, reports, config):
 
     def evaluate(reports, score_global, counter, score_cur, text_chars, is_final=False):
         distance = score_cur["before"]
-        score = (0.75 * (-pow(min(distance, 100) / 100, 2) + 1) * score_cur["category_change"] +
-                 0.20 * (-pow(min(distance, 75) / 75, 2) + 1) * score_cur["name_change"] +
-                 -pow(2 * pow(score_cur["light_len"] /
-                              (score_cur["light_len"] + min(distance, 200) +
-                               min(text_chars, 200)), 2) - 1, 2) + 1)
+        score_global += (0.75 * (-pow(min(distance, 100) / 100, 2) + 1) *
+                         score_cur["category_change"] +
+                         0.20 * (-pow(min(distance, 75) / 75, 2) + 1) * score_cur["name_change"] +
+                         -pow(2 * pow(score_cur["light_len"] /
+                                      (score_cur["light_len"] + min(distance, 200) +
+                                       min(text_chars, 200)), 2) - 1, 2) + 1)
 
-        score_global += score
         counter += 1
 
         if text_chars > 100 or is_final:
@@ -57,7 +57,7 @@ def highlight(toolname, document, reports, config):
         "style": (("emphasis",), ("role", {"sub", "sup"}), ("strong",)),
         "decor": (("literal",),
                 ("role", {"abbr", "class", "default", "download",
-                 "guilabel", "kbd", "math", "menuselection"})),
+                          "guilabel", "kbd", "math", "menuselection"})),
         "color": (("cit",), ("foot",), ("hyperlink",), ("int-target",),
                 ("role", {"doc", "index", "mod", "ref", "term"}), ("standalone",), ("subst",)),
     }
@@ -367,8 +367,8 @@ def indention(toolname, document, reports):
 
             is_code = bool(rst_walker.is_of(node, "dir", {"code-block", "default", "math"}))
             offset = 0
-            if ((not node.parent_node and node.code.start_lincol != 0) or
-                    (node.node_name == "block-quote" and document.code.start_lincol != 0 and
+            if ((not node.parent_node and node.code.start_lincol[0] != 0) or
+                    (node.node_name == "block-quote" and document.code.start_lincol[0] != 0 and
                      ((not node.prev and
                        node.code.start_lincol[0] == document.code.start_lincol[0]) or
                       (node.prev and not node.prev.prev and
@@ -874,11 +874,11 @@ def structure_pre(_):
     # missing: /re group repetitions, greedy switch (always),
     # /css: child_nodes selection like first-of-type or only
 
-    def new_waypoint(waypoint_str, operator, selector_re):
+    def new_waypoint(waypoint_str, operator, selector_re, is_start=False):
         """Parses the selector and creates a waypoint."""
         positive = bool(not waypoint_str.startswith("!!"))
         if selector_m := re.match(selector_re, waypoint_str):
-            waypoint = {"operator": operator, "is_input": False}
+            waypoint = {"operator": operator, "is_start": is_start, "is_input": False}
             for index, seg in enumerate(("node", "name", "id", "attr", "part", "node")):
                 positive_seg = positive
                 if value := selector_m.group(index+1):
@@ -893,7 +893,7 @@ def structure_pre(_):
                         for entry in value:
                             if (colon_index := entry.find(":")) != -1:
                                 new_value.append((entry[:colon_index].strip(),
-                                                  entry[colon_index:].strip()))
+                                                  entry[colon_index+1:].strip()))
                             else:
                                 print("invalid attribute in:", waypoint_str)
                                 continue
@@ -931,23 +931,25 @@ def structure_pre(_):
                "message": "admonition directive without refbox class"}),
              ("dir(admonition)[class: refbox] - !sect \\ * ++ !None",
               {"output": True, "message": "refbox admonition not at section start"}),
-             ("sect + dir(figure, admonition, list-table) & !text",
-              {"output": False, "message": "section not starting with text"}),
-             ("bullet-list, enum-list - !text",
-              {"output": True, "message": "list without introductory text"}),
+             ("sect + dir(figure, admonition, list-table) & !text, def-list",
+              {"output": False, "message": "section not starting with a text"}),
+             ("bullet-list, enum-list - !None = !text",
+              {"output": True, "message": "list without an introductory text"}),
              ("dir(code) - !text",
-              {"output": True, "message": "code without introductory text"}),
+              {"output": True, "message": "code without an introductory text"}),
              ("dir(figure) / body = None",
-              {"output": True, "message": "figure without caption"}),
+              {"output": True, "message": "figure without a caption"}),
              ("strong, emphasis << sect",
               {"output": True, "message": "font styling in heading"}),
              ("- {0} & {{1}} = None \\ * + {0} && !None"
               .format("dir(note, tip, important, hint, warning, seealso)"),
               {"output": True, "message": "more than three boxes in a row"}),
              ("+ emphasis, strong || !None",
-              {"output": True, "message": "adjoined inline nodes of same type"}),
+              {"output": True, "message": "adjoined inline nodes of the same type"}),
              ("dir(seealso) + !None",
               {"output": True, "message": "seealso admonition not at section end"}),
+             ("dir(index) - target, comment",
+              {"output": True, "message": "index directive not at top"}),
             )
     operators_start = {
         "^": " + None \\ *",
@@ -979,6 +981,7 @@ def structure_pre(_):
         route = []
         operator = None
         last = 0
+        is_start = False
         success = True
         for operator_m in re.finditer(operator_re, expr):
             if operator_m.group(1) not in operators:
@@ -986,7 +989,8 @@ def structure_pre(_):
                 break
 
             if last != operator_m.start(0):
-                if waypoint := new_waypoint(expr[last:operator_m.start(0)], operator, selector_re):
+                if waypoint := new_waypoint(expr[last:operator_m.start(0)], operator,
+                                            selector_re, is_start):
                     route.append(waypoint)
                 else:
                     success = False
@@ -994,6 +998,7 @@ def structure_pre(_):
 
             operator = operator_m.group(1)
             last = operator_m.end(0)
+            is_start = bool(operator_m.start(0) == 0)
 
         if not success:
             break
@@ -1042,51 +1047,21 @@ def structure(toolname, document, reports, data):
                 value = rst_walker.get_attr(node, entry[0])
                 if value is None or value.code.isspace():
                     return bool((entry[1] == "None") == waypoint["node"][1])
-                if (not((entry[1] == "*" and str(value.code).strip() == entry[1]) ==
+                if (not((entry[1] == "*" or str(value.code).strip() == entry[1]) ==
                         waypoint["attr"][1])):
                     return False
         return True
 
-    def repeat(node_active, waypoint_active, node_con, waypoint_con, span=None):
-        """Repeats the previous the operation while the note matches the waypoint."""
-        if "operation" not in waypoint_con.keys():
-            print(waypoint_con["operator"], " no operation to repeat")
-            return None
-
-        if waypoint_active["is_input"]:
-            span = waypoint_active["node"][0]
-        counter = -1
-        while node_active and (counter == -1 or matcher(node_active, waypoint_con)):
-            if (span and ((len(span) == 1 and counter == span[0]) or
-                    (len(span) != 1 and counter == span[1]))):
-                break
-            node_active = waypoint_con["operation"](node_active, waypoint_active,
-                                                    node_con, waypoint_con)
-            while node_active and node_active.node_name == "text" and node_active.code.isspace():
-                node_active = waypoint_con["operation"](node_active, waypoint_active,
-                                                        node_con, waypoint_con)
-            counter += 1
-
-        if span and counter < span[0]:
-            return None
-
-        return node_active
-
-
-    def duplicate(node_active, waypoint_active, node_con, waypoint_con):
-        """Repeats the previous the operation if the node matches a reference node."""
+    def matcher_duplicate(node_active, waypoint_active, node_con, waypoint_con):
+        """Returns if the node matches a reference node."""
         def attr_value(node, key):
             value = rst_walker.get_attr(node, key)
             if value is None or value.code.isspace():
                 return None
             return str(value.code).strip()
 
-        if "operation" not in waypoint_con.keys():
-            print(waypoint_con["operator"], " no operation to repeat")
-            return None
-
         if node_active is None or node_con is None:
-            return node_active if node_active == node_con else None
+            return bool(node_active == node_con)
 
         get_value = {
             "node": lambda node: rst_walker.to_node(node).node_name,
@@ -1099,14 +1074,86 @@ def structure(toolname, document, reports, data):
                 continue
             if seg != "attr":
                 if get_value[seg](node_active) != get_value[seg](node_con):
-                    return None
+                    return False
             else:
                 for entry in waypoint_con["attr"][0]:
                     if entry[1] == "*":
                         continue
                     if attr_value(node_active, entry[0]) != attr_value(node_con, entry[0]):
-                        return None
+                        return False
 
+        return True
+
+    def operate(node_active, waypoint_active, node_con, waypoint_con, on_active=True):
+        operators = {
+            "|": lambda node_active, _, __, ___: node_active,
+            "=": lambda node_active, _, __, ___: node_active,
+            "==": lambda node_active, _, __, ___: node_active,
+            # traversals
+            "+": lambda node_active, _, __, ___: node_active.next,
+            "-": lambda node_active, _, __, ___: node_active.prev,
+            "++": lambda node_active, _, __, ___: node_active.next_leaf(),
+            "--": lambda node_active, _, __, ___: node_active.prev_leaf(),
+            "/": lambda node_active, waypoint_active, _, __:
+                 get_child_node(node_active, waypoint_active),
+            ">": lambda node_active, _, __, ___: node_active.child_nodes.first(),
+            ">>": lambda node_active, _, __, ___: node_active.child_nodes.last(),
+            "<": lambda node_active, _, __, ___: node_active.parent_node,
+            "<<": lambda node_active, _, __, ___: node_active.parent_node.parent_node
+                                                  if node_active.parent_node else None,
+            "\\": lambda _, __, node_con, ___: node_con,
+            # repetitions
+            "?": lambda node_active, waypoint_active, node_con, waypoint_con:
+                 repeat(node_active, waypoint_active, node_con, waypoint_con, (0, 1)),
+            "&": lambda node_active, waypoint_active, node_con, waypoint_con:
+                 repeat(node_active, waypoint_active, node_con, waypoint_con, (0, None)),
+            "&&": lambda node_active, waypoint_active, node_con, waypoint_con:
+                  repeat(node_active, waypoint_active, node_con, waypoint_con, (1, None)),
+            "||": lambda node_active, waypoint_active, node_con, waypoint_con:
+                  duplicate(node_active, waypoint_active, node_con, waypoint_con),
+        }
+        operator = waypoint_active["operator"] if on_active else waypoint_con["operator"]
+        if not operator:
+            print(waypoint_active["operator"] if on_active else waypoint_con["operator"],
+                " no operation to repeat")
+            return None
+
+        node_prev = node_active
+        operation = operators[operator]
+        node_active = operation(node_active, waypoint_active, node_con, waypoint_con)
+        if node_active is not node_prev and operator != "\\":
+            while (node_active and
+                   node_active.node_name == "text" and node_active.code.isspace()):
+                node_active = operation(node_active, waypoint_active, node_con, waypoint_con)
+        return node_active
+
+    def repeat(node_active, waypoint_active, node_con, waypoint_con, span=None):
+        """Repeats the previous the operation while the note matches the waypoint."""
+        if waypoint_active["is_input"]:
+            span = waypoint_active["node"][0]
+        if waypoint_con["is_start"]:
+            node_active = operate(node_active, waypoint_active, node_con, waypoint_con, False)
+        counter = 0
+        while node_active and matcher(node_active, waypoint_con):
+            if (span and ((len(span) == 1 and counter == span[0]) or
+                    (len(span) != 1 and counter == span[1]))):
+                break
+            node_active = operate(node_active, waypoint_active, node_con, waypoint_con, False)
+            counter += 1
+
+        if span and counter < span[0]:
+            return None
+
+        return node_active
+
+    def duplicate(node_active, waypoint_active, node_con, waypoint_con):
+        """Repeats the previous the operation if the node matches a reference node."""
+        if node_active is None or node_con is None:
+            return node_active if node_active == node_con else None
+
+        node_active = operate(node_active, waypoint_active, node_con, waypoint_con, False)
+        if not matcher_duplicate(node_active, waypoint_active, node_con, waypoint_con):
+            return None
         return node_active
 
     def get_child_node(node_active, waypoint_active):
@@ -1119,33 +1166,6 @@ def structure(toolname, document, reports, data):
             if abs(waypoint_active["node"][0][0]) < len(node_active.child_nodes):
                 return node_active.child_nodes[waypoint_active["node"][0][0]]
 
-    operators = {
-        "|": lambda node_active, _, __, ___: node_active,
-        "=": lambda node_active, _, __, ___: node_active,
-        "==": lambda node_active, _, __, ___: node_active,
-        # traversals
-        "+": lambda node_active, _, __, ___: node_active.next,
-        "-": lambda node_active, _, __, ___: node_active.prev,
-        "++": lambda node_active, _, __, ___: node_active.next_leaf(),
-        "--": lambda node_active, _, __, ___: node_active.prev_leaf(),
-        "/": lambda node_active, waypoint_active, _, __:
-             get_child_node(node_active, waypoint_active),
-        ">": lambda node_active, _, __, ___: node_active.child_nodes.first(),
-        ">>": lambda node_active, _, __, ___: node_active.child_nodes.last(),
-        "<": lambda node_active, _, __, ___: node_active.parent_node,
-        "<<": lambda node_active, _, __, ___: node_active.parent_node.parent_node
-                                              if node_active.parent_node else None,
-        "\\": lambda _, __, node_con, ___: node_con,
-        # repetitions
-        "?": lambda node_active, waypoint_active, node_con, waypoint_con:
-             repeat(node_active, waypoint_active, node_con, waypoint_con, (0, 1)),
-        "&": lambda node_active, waypoint_active, node_con, waypoint_con:
-             repeat(node_active, waypoint_active, node_con, waypoint_con, (0, None)),
-        "&&": lambda node_active, waypoint_active, node_con, waypoint_con:
-              repeat(node_active, waypoint_active, node_con, waypoint_con, (1, None)),
-        "||": lambda node_active, waypoint_active, node_con, waypoint_con:
-              duplicate(node_active, waypoint_active, node_con, waypoint_con),
-    }
     routes = data[1]
     for node in rst_walker.iter_node(document, data[0]):
         for route, report_info in routes:
@@ -1155,19 +1175,9 @@ def structure(toolname, document, reports, data):
                 if index == 0:
                     node_active = node
                     node_prev = node
-
-                    if waypoint_active["operator"] is not None:
-                        waypoint_active["operation"] = operators[waypoint_active["operator"]]
                 else:
                     node_prev = node_active
-                    waypoint_active["operation"] = operators[waypoint_active["operator"]]
-                    node_active = waypoint_active["operation"](node_active, waypoint_active,
-                                                               node_con, waypoint_con)
-                    if node_active is not node_prev and waypoint_active["operator"] != "\\":
-                        while (node_active and
-                               node_active.node_name == "text" and node_active.code.isspace()):
-                            node_active = waypoint_active["operation"](
-                                              node_active, waypoint_active, node_con, waypoint_con)
+                    node_active = operate(node_active, waypoint_active, node_con, waypoint_con)
 
                 operator_next = route[index+1]["operator"] if index != len(route) - 1 else None
                 if not waypoint_active["is_input"]:
@@ -1187,7 +1197,8 @@ def structure(toolname, document, reports, data):
 
                             break
 
-                    elif operator_next not in {"|", "?", "&"}:
+                    elif (operator_next not in {"|", "?", "&"} and
+                            waypoint_active["operator"] != "=="):
                         break
 
                 if operator_next:
