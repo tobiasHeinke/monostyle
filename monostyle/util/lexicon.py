@@ -8,7 +8,7 @@ List of words.
 
 import re
 import csv
-from difflib import SequenceMatcher
+from difflib import get_close_matches
 
 import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.part_of_speech import PartofSpeech
@@ -166,55 +166,12 @@ class Lexicon:
                 return self.data[first_char][word_str]
 
 
-    def find_similar(self, word_normed, word_str, count, sim_threshold):
-        """Fuzzy search with adaptive filtering."""
-        def iter_lexicon(word_str):
-            if len(word_str) == 0:
-                return
-            first_char = word_str[0].lower()
-            if first_char in self.data.keys():
-                value = self.data[first_char]
-                yield from reversed(value.items())
-            for key, value in self.data.items():
-                if key != first_char:
-                    yield from reversed(value.items())
-
-        similars = []
-        word_chars = set(ord(c) for c in word_str)
-        for stored_word, stored_entry in iter_lexicon(word_str):
-            len_deviation = abs(len(word_str) - len(stored_word)) / len(word_str)
-            if len_deviation >= 2:
-                continue
-            len_deviation = len(word_chars) - len_deviation
-            if len_deviation == 0:
-                len_deviation = 1
-            sim_rough = len(word_chars.intersection(stored_entry["_charset"])) / len_deviation
-            is_not_full = bool(len(similars) < count)
-            if is_not_full or sim_rough >= min_rough:
-                matcher = SequenceMatcher(None, word_str, stored_word)
-                sim_quick = matcher.quick_ratio()
-                if is_not_full or sim_quick >= min_quick:
-                    sim_slow = matcher.ratio()
-                    if sim_slow == 1 and word_str == stored_word:
-                        continue
-                    if is_not_full:
-                        similars.append((stored_word, sim_slow, sim_quick, sim_rough))
-                    else:
-                        min_value = None
-                        min_index = 0
-                        for index, entry in enumerate(similars):
-                            if min_value is None or entry[1] <= min_value:
-                                min_index = index
-                                min_value = entry[1]
-
-                        similars[min_index] = (stored_word, sim_slow, sim_quick, sim_rough)
-
-                    min_quick = min(s[2] for s in similars)
-                    min_rough = min(s[3] for s in similars)
-
-        similars.sort(key=lambda key: key[1], reverse=True)
-        return tuple(self.lower_first_reverse(entry[0], word_normed) for entry in similars
-                     if entry[1] >= sim_threshold)
+    def find_similar(self, word_normed, word_str, count, sim_threshold, lexicon_words=None):
+        if not lexicon_words:
+            lexicon_words = list(entry[0] for entry in self.join())
+        return tuple(self.lower_first_reverse(entry, word_str)
+                     for entry in get_close_matches(word_normed, lexicon_words,
+                                                    n=count, cutoff=sim_threshold)), lexicon_words
 
 
     def compare(self, other):

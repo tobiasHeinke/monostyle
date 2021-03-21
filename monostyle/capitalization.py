@@ -198,7 +198,7 @@ def pos_case(toolname, document, reports):
     return reports
 
 
-def property_noun_pre(_):
+def proper_noun_pre(_):
     """Build lexicon with lower/uppercase counts."""
     segmenter = Segmenter()
 
@@ -267,7 +267,7 @@ def property_noun_pre(_):
     return args
 
 
-def property_noun(toolname, document, reports, data, config):
+def proper_noun(toolname, document, reports, data, config):
     """Find in minority lowercase words."""
     segmenter = Segmenter()
 
@@ -275,7 +275,7 @@ def property_noun(toolname, document, reports, data, config):
                                                 config["instr_neg"]):
         for word in segmenter.iter_word(part.code):
             if entry := data.find(str(word)):
-                message = "property noun: {:4.0%}".format(entry["ratio"])
+                message = "proper noun: {:4.0%}".format(entry["ratio"])
                 line = Report.getline_punc(document.code, word, 50, 30)
                 reports.append(Report('W', toolname, word, message, line))
 
@@ -503,7 +503,7 @@ OPS = (
     ("admonition-title", admonition_title, None),
     ("heading-caps", heading_caps, heading_caps_pre),
     ("pos-case", pos_case, None),
-    ("property-noun", property_noun, property_noun_pre),
+    ("proper-noun", proper_noun, proper_noun_pre),
     ("start-case", start_case, start_case_pre),
     ("type", typ_case, typ_case_pre),
     ("ui", ui_case, None),

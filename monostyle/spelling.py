@@ -52,24 +52,25 @@ def search(toolname, document, reports, config):
 
     threshold = config["threshold"]
     # compare words against the lexicon.
+    lexicon_words = None
     for word_str, entry_hunk in text_words:
-        found_count = -1
+        frequency = -1
         if entry := lexicon.find(word_str):
-            found_count = int(entry["_counter"])
+            frequency = int(entry["_counter"])
 
-        if found_count < threshold:
-            line = None
-            if found_count != -1:
+        if frequency < threshold:
+            if frequency != -1:
                 severity = 'I'
                 message = "rare word: hunk: {0} lex: {1}".format(str(entry_hunk["_counter"] + 1),
-                                                                 str(found_count + 1))
+                                                                 str(frequency + 1))
             else:
                 severity = 'W'
                 message = "new word: hunk: " + str(entry_hunk["_counter"] + 1)
-                line = Fragment(document.code.filename,
-                                ", ".join(lexicon.find_similar(lexicon.norm_punc(word_str),
-                                                               str(entry_hunk["word"]), 5, 0.6)))
-                line = line.add_offset(-line.end_pos, (-1,0))
+            suggestions, lexicon_words = lexicon.find_similar(lexicon.norm_punc(word_str),
+                                                              str(entry_hunk["word"]), 5, 0.6,
+                                                              lexicon_words)
+            line = Fragment(document.code.filename, ", ".join(suggestions))
+            line = line.add_offset(-line.end_pos, (-1,0))
 
             reports.append(Report(severity, toolname, entry_hunk["word"], message, line))
 

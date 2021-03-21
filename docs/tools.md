@@ -200,9 +200,9 @@ Check the title capitalization convention of headings.
 
 Find uppercase part of speech types in continuous text (either a typo or missing sentence punctuation).
 
-### property-noun
+### proper-noun
 
-Find lowercase versions of majority uppercase words (usually a property name or name of a person).
+Find lowercase versions of majority uppercase words (usually a product name or name of a person).
 
 ### start-case
 

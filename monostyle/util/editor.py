@@ -214,7 +214,7 @@ class Editor:
         return False
 
 
-class FNEditor(Editor):
+class FilenameEditor(Editor):
     """File renaming with SVN."""
 
     def __init__(self, fg, use_git=True):
@@ -226,8 +226,8 @@ class FNEditor(Editor):
             import monostyle.svn_inter as vsn_inter
 
 
-    def from_file(filename):
-        return FNEditor(Fragment(filename, None))
+    def from_file(filename, use_git=True):
+        return FilenameEditor(Fragment(filename, None), use_git=use_git)
 
 
     def _read(self):
@@ -236,7 +236,7 @@ class FNEditor(Editor):
 
         if not os.path.isfile(self.fg.filename):
             self._status = False
-            print("FNEditor error: file not found", self.fg.filename)
+            print("FilenameEditor error: file not found", self.fg.filename)
             return None
 
         if len(self.fg.content) == 0:
@@ -251,7 +251,7 @@ class FNEditor(Editor):
 
         if os.path.isfile(str(text_dst)):
             self._status = False
-            print("FNEditor error: file already exists", str(text_dst))
+            print("FilenameEditor error: file already exists", str(text_dst))
             return None
 
         vsn_inter.move(self.fg.filename, str(text_dst))
@@ -332,18 +332,20 @@ class EditorSession:
     mode -- selects the type of editor.
     """
 
-    def __init__(self, mode="text"):
+    def __init__(self, mode="text", **kwargs):
         if mode == "text":
             self._editor_class = Editor
         elif mode in {"filename", "filename"}:
-            self._editor_class = FNEditor
+            self._editor_class = FilenameEditor
         elif mode in {"prop", "props", "property", "properties",
                       "conf", "config", "configuration"}:
             self._editor_class = PropEditor
         else:
             print("Unknown EditorSession mode:", mode)
 
-        self._editor_stack = []
+        self._kwargs = kwargs
+
+        self._editors = []
         # Store the index of the last accessed editor for performance.
         self._last_index = None
         self._status = True
@@ -355,25 +357,25 @@ class EditorSession:
 
     def add(self, fg):
         if (self._last_index is not None and
-                self._editor_stack[self._last_index].fg.filename == fg.filename):
-            self._editor_stack[self._last_index].add(fg)
+                self._editors[self._last_index].fg.filename == fg.filename):
+            self._editors[self._last_index].add(fg)
         else:
-            for index, editor in enumerate(reversed(self._editor_stack)):
+            for index, editor in enumerate(reversed(self._editors)):
                 if editor.fg.filename == fg.filename:
                     editor.add(fg)
-                    self._last_index = len(self._editor_stack) - 1 - index
+                    self._last_index = len(self._editors) - 1 - index
                     break
             else:
-                editor = self._editor_class.from_file(fg.filename)
+                editor = self._editor_class.from_file(fg.filename, **self._kwargs)
                 editor.add(fg)
-                self._editor_stack.append(editor)
-                self._last_index = len(self._editor_stack) - 1
+                self._editors.append(editor)
+                self._last_index = len(self._editors) - 1
 
 
     def apply(self, virtual=False, pos_lc=True, stop_on_conflict=False):
         if virtual:
             result = []
-        for editor in self._editor_stack:
+        for editor in self._editors:
             output = editor.apply(virtual=virtual, pos_lc=pos_lc)
             if virtual:
                 result.append(output)
@@ -384,6 +386,6 @@ class EditorSession:
                 if stop_on_conflict:
                     break
 
-        self._editor_stack.clear()
+        self._editors.clear()
         if virtual:
             return result

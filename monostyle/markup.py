@@ -962,8 +962,8 @@ def structure_pre(_):
                                       r")?(?:\[([^\]]*?)\])?(?:\.", ref,
                                       r")?)|(?:\{([+-]?\d+?(?: *, *[+-]?\d*?)?)\})")))
     operator_re = re.compile(r"(?:\A| +)(([\^$|=/\\+\-<>?&])\2?) +")
-    operators = {"|", "=", "==", "+", "-", "++", "--", "/", ">", ">>",
-                 "<", "<<", "\\", "?", "&", "&&", "||"}
+    operators = {";", "=", "==", "+", "-", "++", "--", "/", ">", ">>",
+                 "<", "<<", "\\", "?", "&", "&&", "|", "||"}
     pos_names = set()
     routes = []
     for expr, report_info in exprs:
@@ -1010,7 +1010,7 @@ def structure_pre(_):
                 break
 
         for waypoint in route:
-            if waypoint["operator"] not in (None, "|"):
+            if waypoint["operator"] not in (None, ";"):
                 break
             if not waypoint["node"][1]:
                 pos_names = None
@@ -1053,7 +1053,7 @@ def structure(toolname, document, reports, data):
         return True
 
     def matcher_duplicate(node_active, waypoint_active, node_con, waypoint_con):
-        """Returns if the node matches a reference node."""
+        """Returns if the node matches a reference node with a waypoint as criterion."""
         def attr_value(node, key):
             value = rst_walker.get_attr(node, key)
             if value is None or value.code.isspace():
@@ -1086,7 +1086,7 @@ def structure(toolname, document, reports, data):
 
     def operate(node_active, waypoint_active, node_con, waypoint_con, on_active=True):
         operators = {
-            "|": lambda node_active, _, __, ___: node_active,
+            ";": lambda node_active, _, __, ___: node_active,
             "=": lambda node_active, _, __, ___: node_active,
             "==": lambda node_active, _, __, ___: node_active,
             # traversals
@@ -1109,12 +1109,14 @@ def structure(toolname, document, reports, data):
                  repeat(node_active, waypoint_active, node_con, waypoint_con, (0, None)),
             "&&": lambda node_active, waypoint_active, node_con, waypoint_con:
                   repeat(node_active, waypoint_active, node_con, waypoint_con, (1, None)),
+            "|": lambda node_active, waypoint_active, node_con, waypoint_con:
+                  duplicate(node_active, waypoint_active, node_con, waypoint_con),
             "||": lambda node_active, waypoint_active, node_con, waypoint_con:
                   duplicate(node_active, waypoint_active, node_con, waypoint_con),
         }
         operator = waypoint_active["operator"] if on_active else waypoint_con["operator"]
         if not operator:
-            print(waypoint_active["operator"] if on_active else waypoint_con["operator"],
+            print(waypoint_active["operator"] if not on_active else waypoint_con["operator"],
                 " no operation to repeat")
             return None
 
@@ -1197,17 +1199,17 @@ def structure(toolname, document, reports, data):
 
                             break
 
-                    elif (operator_next not in {"|", "?", "&"} and
+                    elif (operator_next not in {";", "?", "&"} and
                             waypoint_active["operator"] != "=="):
                         break
 
                 if operator_next:
-                    if node_active is None and operator_next not in {"|", "=", "==", "\\"}:
+                    if node_active is None and operator_next not in {";", "=", "==", "\\"}:
                         break
-                    if operator_next in {"|", "||", "=", "==", "?", "&", "&&", "\\"}:
+                    if operator_next in {";", "=", "==", "?", "&", "&&", "|", "||", "\\"}:
                         if waypoint_con is None:
                             waypoint_con = waypoint_active
-                            if operator_next == "||" or index == 0:
+                            if operator_next in {"|", "||"} or index == 0:
                                 node_con = node_active
                             else:
                                 node_con = node_prev

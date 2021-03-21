@@ -90,12 +90,7 @@ def ask_user(*question):
 def path_to_rel(path, base=None):
     """Make path relative."""
     path = norm_path_sep(os.path.normpath(path))
-    rel = config.root_dir
-    if base is not None:
-        bases = {"root": rel, "rst": config.rst_dir, "po": config.po_dir, "img": config.img_dir}
-        if base in bases:
-            rel = '/'.join((rel, bases[base]))
-
+    rel = path_to_abs("", base)
     if path.startswith(rel):
         path = path[len(rel) + 1:]
 
@@ -109,9 +104,9 @@ def path_to_abs(path, base=None):
     if not path.startswith(root):
         bases = {"root": root, "rst": config.rst_dir, "po": config.po_dir, "img": config.img_dir}
         if base is not None and base in bases and not path.startswith(bases[base] + '/'):
-            path = '/'.join((root, bases[base], path))
+            path = '/'.join((root, bases[base], path)).strip("/")
         else:
-            path = '/'.join((root, path))
+            path = '/'.join((root, path)).strip("/")
     return path
 
 
