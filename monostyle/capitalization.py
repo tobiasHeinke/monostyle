@@ -364,7 +364,7 @@ def typ_case_pre(_):
     import monostyle.listsearch as listsearch
     rst_parser = RSTParser()
 
-    def typ_titles(document, b_type, searchlist):
+    def typ_titles(document, b_type, terms):
         """Get page title and create versions where one word is not uppercase."""
         for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
             head = str(node.name.code).strip()
@@ -401,11 +401,11 @@ def typ_case_pre(_):
                         pattern_str.extend(words[index + 1:])
                         term.append(r"\b" + " ".join(pattern_str))
 
-            searchlist.append([term, head])
+            terms.append([term, head])
 
             break
 
-        return searchlist
+        return terms
 
     typs = (
         ("Modifier", "modeling/modifiers/", ["common_options"]),
@@ -416,7 +416,7 @@ def typ_case_pre(_):
         ("Node", "modeling/modifiers/nodes/", []),
         ("Strip", "video_editing/sequencer/strips/", [])
     )
-    searchlist = []
+    terms = []
     for kind, path, ignore in typs:
         ignore.extend(("index", "introduction"))
 
@@ -436,11 +436,11 @@ def typ_case_pre(_):
                     break
             if not skip:
                 document = rst_parser.parse(rst_parser.document(filename, text))
-                searchlist = typ_titles(document, kind, searchlist)
+                terms = typ_titles(document, kind, terms)
 
     args = dict()
-    args["config"] = listsearch.parse_config("")
-    args["data"] = listsearch.compile_searchlist(searchlist, args["config"])
+    args["config"] = listsearch.parse_flags("")
+    args["data"] = listsearch.compile_terms(terms, {"flags": args["config"]})
 
     return args
 
@@ -464,25 +464,35 @@ def ui_case(toolname, document, reports):
         "standalone": "*", "literal": "*", "substitution": "*"
     }
     icon_re = re.compile(r"\([^\)]*?\)\s*\Z")
-    for node in rst_walker.iter_node(document.body, "def"):
+    for node in rst_walker.iter_node(document.body, {"def", "field"}):
+        is_field = bool(node.node_name == "field")
+        if is_field:
+            if not rst_walker.is_of(node.parent_node.parent_node.parent_node, 
+                                    {"def", "block-quote"}):
+                continue
+            child = node.name
+        else:
+            child = node.head.child_nodes.first().body
+
         is_first_word = True
-        for part in rst_walker.iter_nodeparts_instr(node.head.child_nodes.first().body,
-                                                    instr_pos, instr_neg, False):
+        for part in rst_walker.iter_nodeparts_instr(child, instr_pos, instr_neg, False):
             if is_first_word and part.parent_node.prev is not None:
                 is_first_word = False
 
             part_code = part.code
-            if icon_m := re.search(icon_re, str(part.code)):
-                part_code = part.code.slice(part.code.start_pos,
-                                            part.code.loc_to_abs(icon_m.start(0)), True)
+            if not is_field:
+                if icon_m := re.search(icon_re, str(part.code)):
+                    part_code = part.code.slice(part.code.start_pos,
+                                                part.code.loc_to_abs(icon_m.start(0)), True)
 
             buf = None
             for word in segmenter.iter_word(part_code):
                 if buf:
-                    if message_repl := titlecase(part_of_speech, buf, is_first_word,
-                                                 False, "definition term"):
-                        reports.append(Report('W', toolname, buf, message_repl[0], node.head.code,
-                                              message_repl[1]))
+                    if message_repl := titlecase(part_of_speech, buf, is_first_word, False,
+                                                 "field name" if is_field else "definition term"):
+                        reports.append(Report('W', toolname, buf, message_repl[0],
+                                              node.name.code if is_field else node.head.code,
+                                              message_repl[1] if is_field else None))
                     is_first_word = False
                 buf = word
 
@@ -490,10 +500,11 @@ def ui_case(toolname, document, reports):
                 # ignore part.next, one part per node
                 is_last_word = bool(part.parent_node.next is None or
                                     rst_walker.is_of(part.parent_node.next, "role", "kbd"))
-                if message_repl := titlecase(part_of_speech, buf, is_first_word,
-                                             is_last_word, "definition term"):
-                    reports.append(Report('W', toolname, buf, message_repl[0], node.head.code,
-                                          message_repl[1]))
+                if message_repl := titlecase(part_of_speech, buf, is_first_word, is_last_word,
+                                             "field name" if is_field else "definition term"):
+                    reports.append(Report('W', toolname, buf, message_repl[0],
+                                          node.name.code if is_field else node.head.code,
+                                          message_repl[1] if is_field else None))
                 is_first_word = False
 
     return reports

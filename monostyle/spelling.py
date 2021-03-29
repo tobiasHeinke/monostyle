@@ -20,7 +20,7 @@ from monostyle.util.segmenter import Segmenter
 from monostyle.util.lexicon import Lexicon
 
 
-def search_pre(op):
+def search_pre(toolname):
     config_dir = monostyle_io.path_to_abs("monostyle")
     if not os.path.isdir(config_dir):
         print("No user config found skipping spell checking")
@@ -35,7 +35,7 @@ def search_pre(op):
         else:
             return None
 
-    config = dict(monostyle_io.get_override(__file__, op[0], "threshold", 3))
+    config = dict(monostyle_io.get_override(__file__, toolname, "threshold", 3))
     return {"config": config}
 
 

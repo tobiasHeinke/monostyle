@@ -68,7 +68,7 @@ def init(ops, op_names, mod_name):
                 args = {}
                 if len(op) > 2 and op[2] is not None:
                     # evaluate pre
-                    args = op[2](op)
+                    args = op[2](op[0])
 
                 ops_sel.append((op[0], op[1], args, bool(not(len(op) > 3 and not op[3]))))
                 break

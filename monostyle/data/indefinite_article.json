@@ -1,7 +1,7 @@
 {
 "source partial": ["https://github.com/retextjs/retext-indefinite-article/tree/master/lib"],
 
-  "a":{
+	"a":{
 		"syllable": [
 			"hom",
 			"honest",
@@ -10,16 +10,16 @@
 			"hotel",
 			"hour",
 			"uni[dmn]"
-	  ],
-	  "letter": [
+		],
+		"letter": [
 			"f", "h", "l", "m", "n", "r", "s", "x"
-	  ],
+		],
 		"acronym": [
 			"NURBS", "RAM"
 		]
-  },
-  "an":{
-	  "syllable": [
+	},
+	"an":{
+		"syllable": [
 			"eu",
 			"once",
 			"one",
@@ -29,10 +29,10 @@
 			"ur",
 			"us[aeu]",
 			"ut"
-	  ],
-	  "letter": [
+		],
+		"letter": [
 			"u"
-	  ],
+		],
 		"acronym": [
 		]
 	}

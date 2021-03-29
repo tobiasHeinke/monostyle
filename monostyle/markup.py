@@ -14,10 +14,10 @@ import monostyle.rst_parser.walker as rst_walker
 from monostyle.rst_parser.core import RSTParser
 
 
-def highlight_pre(op):
+def highlight_pre(toolname):
     config = dict()
-    config.update(monostyle_io.get_override(__file__, op[0], "threshold_min", 0.6))
-    config.update(monostyle_io.get_override(__file__, op[0], "threshold_severe", 1))
+    config.update(monostyle_io.get_override(__file__, toolname, "threshold_min", 0.6))
+    config.update(monostyle_io.get_override(__file__, toolname, "threshold_severe", 1))
     return {"config": config}
 
 
@@ -1110,7 +1110,7 @@ def structure(toolname, document, reports, data):
             "&&": lambda node_active, waypoint_active, node_con, waypoint_con:
                   repeat(node_active, waypoint_active, node_con, waypoint_con, (1, None)),
             "|": lambda node_active, waypoint_active, node_con, waypoint_con:
-                  duplicate(node_active, waypoint_active, node_con, waypoint_con),
+                 duplicate(node_active, waypoint_active, node_con, waypoint_con),
             "||": lambda node_active, waypoint_active, node_con, waypoint_con:
                   duplicate(node_active, waypoint_active, node_con, waypoint_con),
         }

@@ -344,7 +344,7 @@ def number(toolname, document, reports, re_lib):
     return reports
 
 
-def pairs_pre(op):
+def pairs_pre(toolname):
     args = dict()
     re_lib = dict()
 
@@ -356,7 +356,7 @@ def pairs_pre(op):
     args["re_lib"] = re_lib
 
     # Max number of lines between the open and close mark.
-    args["config"] = dict(monostyle_io.get_override(__file__, op[0], "max_line_span", 2))
+    args["config"] = dict(monostyle_io.get_override(__file__, toolname, "max_line_span", 2))
 
     return args
 

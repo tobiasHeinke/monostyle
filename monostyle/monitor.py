@@ -11,8 +11,8 @@ import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.report import Report
 
 
-def check_pre(op):
-    config = monostyle_io.get_override(__file__, op[0], "files", [])[0]
+def check_pre(toolname):
+    config = monostyle_io.get_override(__file__, toolname, "files", [])[0]
     return {"config": config[1]}
 
 

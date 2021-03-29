@@ -312,7 +312,7 @@ def collocation_pre(_):
     for word in removals:
         lexicon.remove(word)
 
-    searchlist = []
+    terms = []
     for word, _ in lexicon:
         if len(word) <= 4:
             continue
@@ -320,11 +320,11 @@ def collocation_pre(_):
         result = split_rec(lexicon, word, True)
         if result:
             terms = list(" ".join(group) for group in result)
-            searchlist.append([terms, word])
+            terms.append([terms, word])
 
     args = dict()
-    args["config"] = listsearch.parse_config("BIO")
-    args["data"] = listsearch.compile_searchlist(searchlist, args["config"])
+    args["config"] = listsearch.parse_flags("BIO")
+    args["data"] = listsearch.compile_terms(terms, {"flags": args["config"]})
 
     return args
 
@@ -373,7 +373,7 @@ def hyphen_pre(_):
     count_threshold_spaced = 6
 
 
-    searchlist = []
+    terms = []
     dash_re = re.compile(r"(?<!\A)\-(?!\Z)")
     for word, entry in lexicon:
         if not re.search(dash_re, word):
@@ -388,15 +388,15 @@ def hyphen_pre(_):
             count_rec = int(entry_rec["_counter"]) + 1
             if (count_rec / (count_rec + count) < ratio_threshold and
                     (count_rec + count / 2) > count_threshold_joined):
-                searchlist.append([word_rec, word])
+                terms.append([word_rec, word])
                 break
 
         if count > count_threshold_spaced:
-            searchlist.append([re.sub(dash_re, " ", word), word])
+            terms.append([re.sub(dash_re, " ", word), word])
 
     args = dict()
-    args["config"] = listsearch.parse_config("BIO")
-    args["data"] = listsearch.compile_searchlist(searchlist, args["config"])
+    args["config"] = listsearch.parse_flags("BIO")
+    args["data"] = listsearch.compile_terms(terms, {"flags": args["config"]})
 
     return args
 
@@ -565,10 +565,10 @@ def metric(toolname, document, reports):
     return reports
 
 
-def overuse_pre(op):
+def overuse_pre(toolname):
     config = dict()
-    config.update(monostyle_io.get_override(__file__, op[0], "threshold_min", 2))
-    config.update(monostyle_io.get_override(__file__, op[0], "threshold_severe", 3.1))
+    config.update(monostyle_io.get_override(__file__, toolname, "threshold_min", 2))
+    config.update(monostyle_io.get_override(__file__, toolname, "threshold_severe", 3.1))
     return {"config": config}
 
 
@@ -794,9 +794,9 @@ def search_pure(toolname, document, reports, re_lib, config):
     return reports
 
 
-def repeated_pre(op):
+def repeated_pre(toolname):
     # Number of the word within to run the detection.
-    config = dict(monostyle_io.get_override(__file__, op[0], "buf_size", 3, (1, None)))
+    config = dict(monostyle_io.get_override(__file__, toolname, "buf_size", 3, (1, None)))
     return {"config": config}
 
 
