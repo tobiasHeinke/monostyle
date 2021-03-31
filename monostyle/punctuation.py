@@ -373,7 +373,7 @@ def pairs(toolname, document, reports, re_lib, config):
         "dir": {"code-block": "*", "default": "*", "math": "*", "youtube": "*", "vimeo": "*"},
         "substdef": {"unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*", "comment": "*",
-        "role": {"kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"},
+        "role": {"kbd": "*", "menuselection": "*", "math": "*"},
         "literal": "*", "standalone": "*"
     }
 

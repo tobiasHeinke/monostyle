@@ -8,7 +8,6 @@ Text editing utilities.
 
 from monostyle.util.fragment import Fragment, FragmentBundle
 
-
 class Editor:
     """Text editing.
 

@@ -33,8 +33,8 @@ def compile_terms(terms, conf):
         overline -- match over whitespace including line wraps.
         boundary -- pattern start and end with word boundaries.
     """
-    def combine_message(message, conf):
-        if "message" in conf:
+    def combine_message(message, has_message, conf):
+        if "message" in conf and not has_message:
             message = conf["message"]
         else:
             if not isinstance(message, str):
@@ -87,13 +87,13 @@ def compile_terms(terms, conf):
     for term in terms:
         if isinstance(term, str):
             pattern_strs = term
-            message = combine_message(pattern_strs, conf)
+            message = combine_message(pattern_strs, False, conf)
         elif len(term) == 1:
             pattern_strs = term[0]
-            message = combine_message(pattern_strs, conf)
+            message = combine_message(pattern_strs, False, conf)
         elif len(term) == 2:
             pattern_strs = term[0]
-            message = combine_message(term[1], conf)
+            message = combine_message(term[1], True, conf)
         else:
             print("list: wrong form:", term)
             continue
@@ -151,7 +151,7 @@ def search_free(toolname, document, reports, data):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "comment": "*", "doctest": "*", "target": "*",
         "role": {
-            "kbd": "*", "class": "*", "mod": "*", "math": "*"
+            "kbd": "*", "math": "*"
         },
         "standalone": "*"
     }
@@ -187,7 +187,7 @@ def search_word(toolname, document, reports, data, config):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "comment": "*", "doctest": "*", "target": "*",
         "role": {
-            "kbd": "*", "class": "*", "mod": "*", "math": "*"
+            "kbd": "*", "math": "*"
         },
         "standalone": "*"
     }
@@ -219,8 +219,8 @@ def search_word(toolname, document, reports, data, config):
 
 
 def search_pre(toolname):
-    def wildcard_leaf(data_src):
-        for key, value in data_src.items():
+    def wildcard_leaf(obj):
+        for key, value in obj.items():
             if isinstance(value, dict):
                 if "terms" in value.keys():
                     yield key, value

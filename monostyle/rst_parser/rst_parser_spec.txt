@@ -186,6 +186,9 @@ role abbr
 	` {head} ( {id} ) `
 	` {head} `
 
+role class, func, index, mod, meth
+	` {id} `
+
 
 Notes:
 ------

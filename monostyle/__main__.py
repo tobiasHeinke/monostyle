@@ -47,8 +47,10 @@ def import_module(name, dst=None):
         dst = name
     name = "monostyle." + name
     if name in sys.modules:
-        print("module import: {0} already in sys.modules".format(name))
-    elif (spec := importlib.util.find_spec(name)) is not None:
+        # module already in sys.modules
+        return sys.modules[name]
+
+    if (spec := importlib.util.find_spec(name)) is not None:
         module = importlib.util.module_from_spec(spec)
         sys.modules[dst] = module
         spec.loader.exec_module(module)
@@ -62,7 +64,12 @@ def init(ops, op_names, mod_name):
     if isinstance(op_names, str):
         op_names = [op_names]
 
+    lexicon_exist = None
     for op_name in op_names:
+        if op_name in {"collocation", "hyphen", "new-word"}:
+            if lexicon_exist is None:
+                lexicon_exist = import_module("update_lexicon").setup_lexicon()
+
         for op in ops:
             if op_name == op[0]:
                 args = {}

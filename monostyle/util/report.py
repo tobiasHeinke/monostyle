@@ -12,7 +12,6 @@ from math import ceil
 import monostyle.config as config
 from monostyle.util.monostyle_io import print_over, print_title, path_to_rel
 
-
 class MessageTemplate():
 
     __slots__ = ('_template', '_components')
@@ -472,9 +471,11 @@ def print_reports(reports, options=None):
         return None
 
     options = options_overide()
+    filename_prev = None
     for report in reports:
-        if report is not None:
-            print_report(report, options)
+        if report is None:
+            continue
+        filename_prev = print_report(report, options, filename_prev)
 
     if options["show_summary"]:
         reports_summary(reports, options)

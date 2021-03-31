@@ -26,14 +26,14 @@ Please refer to [Tools](/docs/tools.md) for a listing.
 
 Requirements: When using SVN the command line client tools need to be installed.
 
-For spell checking a dictionary has to build.
+For spell checking a dictionary (aka lexicon) has to build.
 On first run you have to confirm to start this (or also if the dictionary file is not found).
 
 The dictionary has to be updated from time to time or after a new topic has been added
 to include new words (of cause the whole project has to be spell-checked at this point).
-To do this run the `spelling` script:
+To do this run the `update_lexicon` script:
 ```sh
-python -m monostyle.spelling
+python -m monostyle.update_lexicon
 ```
 
 ## Running Monostyle

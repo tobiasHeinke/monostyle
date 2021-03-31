@@ -47,6 +47,11 @@ class Lexicon:
         return bool(self.data)
 
 
+    def __len__(self):
+        """Number of words."""
+        return sum(len(section) for section in self.data.values())
+
+
     def reset(self):
         """Clear data."""
         self.data.clear()

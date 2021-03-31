@@ -12,6 +12,7 @@ import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.report import Report
 from monostyle.rst_parser.core import RSTParser
 import monostyle.rst_parser.walker as rst_walker
+
 from monostyle.util.char_catalog import CharCatalog
 from monostyle.util.part_of_speech import PartofSpeech
 from monostyle.util.segmenter import Segmenter
@@ -106,7 +107,7 @@ def heading_caps(toolname, document, reports, re_lib):
     }
     instr_neg = {
         "role": {
-            "kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"
+            "kbd": "*", "menuselection": "*", "math": "*"
         },
         "literal": "*", "standalone": "*"
     }
@@ -173,6 +174,10 @@ def pos_case(toolname, document, reports):
     }
     was_open = False
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
+        if (rst_walker.is_of(part, "field") and
+                not rst_walker.is_of(part.parent_node.parent_node.parent_node, "field")):
+            continue
+
         for sen, is_open in segmenter.iter_sentence(part.code, output_openess=True):
             is_first_word = not was_open
             for word in segmenter.iter_word(sen):
@@ -216,7 +221,7 @@ def proper_noun_pre(_):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*", "comment": "*",
         "role": {
-            "kbd": "*", "class": "*", "mod": "*", "math": "*"
+            "kbd": "*", "math": "*"
         },
         "literal": "*", "standalone": "*"
     }
@@ -459,7 +464,7 @@ def ui_case(toolname, document, reports):
     }
     instr_neg = {
         "role": {
-            "kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"
+            "kbd": "*", "menuselection": "*", "math": "*"
         },
         "standalone": "*", "literal": "*", "substitution": "*"
     }
@@ -467,7 +472,7 @@ def ui_case(toolname, document, reports):
     for node in rst_walker.iter_node(document.body, {"def", "field"}):
         is_field = bool(node.node_name == "field")
         if is_field:
-            if not rst_walker.is_of(node.parent_node.parent_node.parent_node, 
+            if not rst_walker.is_of(node.parent_node.parent_node.parent_node,
                                     {"def", "block-quote"}):
                 continue
             child = node.name
@@ -499,7 +504,8 @@ def ui_case(toolname, document, reports):
             if buf:
                 # ignore part.next, one part per node
                 is_last_word = bool(part.parent_node.next is None or
-                                    rst_walker.is_of(part.parent_node.next, "role", "kbd"))
+                                    rst_walker.is_of(part.parent_node.next, "role",
+                                                     {"kbd", "guilabel"}))
                 if message_repl := titlecase(part_of_speech, buf, is_first_word, is_last_word,
                                              "field name" if is_field else "definition term"):
                     reports.append(Report('W', toolname, buf, message_repl[0],

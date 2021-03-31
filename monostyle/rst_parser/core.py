@@ -37,10 +37,9 @@ class RSTParser:
     )
     roles_sphinx = (
         'abbr', 'any', 'class', 'command', 'dfn', 'doc', 'download', 'envvar', 'eq',
-        'file', 'guilabel', 'index', 'kbd', 'keyword', 'mailheader', 'makevar',
-        'manpage', 'math', 'menuselection', 'mimetype', 'mod', 'newsgroup',
-        'numref', 'option', 'pep', 'program', 'ref', 'regexp', 'rfc', 'samp',
-        'sub', 'sup', 'term', 'token'
+        'file', 'guilabel', 'kbd', 'keyword', 'mailheader', 'makevar', 'manpage',
+        'menuselection', 'mimetype', 'mod', 'newsgroup', 'numref',
+        'option', 'program', 'ref', 'regexp', 'samp', 'term', 'token'
     )
 
     substitution = {
@@ -1379,6 +1378,11 @@ class RSTParser:
                     node.head.node_name = "head"
                     node.head.child_nodes = LinkedList(node.head)
                 node.body = None
+
+        elif name_str in {"class", "func", "index", "mod", "meth"}:
+            node.id = node.body
+            node.id.node_name = "id"
+            node.id.child_nodes = LinkedList(node.id)
 
         return node
 

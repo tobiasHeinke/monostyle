@@ -812,18 +812,22 @@ def markup_names(toolname, document, reports):
     """Find unknown/uncommon role and directive names."""
 
     roles = (
-        'abbr', 'class', 'doc', 'download', 'guilabel', 'index', 'kbd', 'math',
-        'menuselection', 'mod', 'ref', 'sub', 'sup', 'term'
+        # standard docutils
+        'index', 'sub', 'sup', 'math',
+        # Sphinx custom
+        'abbr', 'doc', 'download', 'menuselection', 'ref', 'term', 'guilabel', 'kbd',
+        #   Sphinx indexing
+        'class', 'func', 'meth', 'mod'
     )
 
     directives = (
-        # standard docutils ones
+        # standard docutils
         #   admonition
         'admonition', 'hint', 'important', 'note', 'tip', 'warning',
         #    other
         'container', 'figure', 'image', 'include', 'list-table', 'math',
         'parsed-literal', 'replace', 'rubric', 'unicode',
-        # Sphinx custom ones
+        # Sphinx custom
         'code-block', 'glossary', 'highlight', 'hlist', 'index', 'only', 'seealso', 'toctree',
         # Sphinx extension
         'vimeo', 'youtube'
@@ -923,7 +927,7 @@ def structure_pre(_):
 
     exprs = (
              ("trans - * == !text, def-list \\ * + !text, def-list",
-              {"output": True, "message": "transition not between text"}),
+              {"output": False, "message": "transition not between text"}),
              ("dir(figure, list-table) - def-list \\ * + dir(figure, list-table) & def-list",
               {"output": True, "message": "image splitting definition list"}),
              ("dir(admonition) = *[!class: refbox]",
@@ -931,7 +935,8 @@ def structure_pre(_):
                "message": "admonition directive without refbox class"}),
              ("dir(admonition)[class: refbox] - !sect \\ * ++ !None",
               {"output": True, "message": "refbox admonition not at section start"}),
-             ("sect + dir(figure, admonition, list-table) & !text, def-list",
+             # ; trans
+             ("sect + dir(figure, admonition, list-table, toctree) & !text, def-list, section",
               {"output": False, "message": "section not starting with a text"}),
              ("bullet-list, enum-list - !None = !text",
               {"output": True, "message": "list without an introductory text"}),

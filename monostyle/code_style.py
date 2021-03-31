@@ -161,7 +161,7 @@ def blank_line(toolname, document, reports):
             reports.append(Report('W', toolname, output, message, node.code, fix))
 
     count_end, _, __ = counter(node, invert=True)
-    if count_end >= 2:
+    if count_end >= 3:
         output = node.code.copy().clear(True)
         message = Report.quantity(what="three or more blank lines")
         reports.append(Report('W', toolname, output, message))

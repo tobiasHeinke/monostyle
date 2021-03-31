@@ -54,7 +54,7 @@ def abbreviation_pre(_):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*", "comment": "*",
         "role": {
-            "kbd": "*", "class": "*", "mod": "*", "math": "*", "term": "*"
+            "kbd": "*", "math": "*", "term": "*"
         },
         "literal": "*", "standalone": "*"
     }
@@ -202,9 +202,7 @@ def article(toolname, document, reports, re_lib, data):
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*",
-        "role": {
-            "class": "*", "mod": "*", "math": "*"
-        },
+        "role": {"math": "*"},
         "literal": "*", "standalone": "*"
     }
 
@@ -476,7 +474,7 @@ def metric(toolname, document, reports):
         "substdef": {"*": ["head"], "unicode": "*", "replace": "*"},
         "target": "*", "comment": "*",
         "role": {
-            "kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"
+            "kbd": "*", "menuselection": "*", "math": "*"
         },
         "standalone": "*", "literal": "*", "substitution": "*"
     }
@@ -640,7 +638,7 @@ def overuse(toolname, document, reports, config):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*",
         "role": {
-            "kbd": "*", "class": "*", "mod": "*", "math": "*"
+            "kbd": "*", "math": "*"
         },
         "literal": "*", "standalone": "*"
     }
@@ -777,7 +775,7 @@ def search_pure(toolname, document, reports, re_lib, config):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*",
         "role": {
-            "kbd": "*", "class": "*", "mod": "*", "math": "*"
+            "kbd": "*", "math": "*"
         },
         "literal": "*", "standalone": "*"
     }
@@ -832,7 +830,7 @@ def repeated(toolname, document, reports, config):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*",
         "role": {
-            "kbd": "*", "menuselection": "*", "class": "*", "mod": "*", "math": "*"
+            "kbd": "*", "menuselection": "*", "math": "*"
         },
         "literal": "*", "standalone": "*"
     }
