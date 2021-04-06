@@ -112,9 +112,9 @@ def highlight(toolname, document, reports, config):
             name = node.node_name + (str(node.name).strip() if node.name else "")
             score_next = {
                 "before": text_chars / 2 if score_cur else text_chars,
+                "category": category,
                 "category_change": bool(score_cur is not None and
                                         score_cur["category"] != category),
-                "category": category,
                 "light_len": light_len,
                 "name": name,
                 "name_change": bool(score_cur is not None and score_cur["name"] != name),
@@ -441,15 +441,17 @@ def kbd_pre(_):
         # Modifier
         r"^(Shift(?:\-|\Z))?(Ctrl(?:\-|\Z))?(Alt(?:\-|\Z))?((?:Cmd|OSKey)(?:\-|\Z))?",
 
-        # Alphanumeric
         # Note, shifted keys such as '!?:<>"' should not be included.
         r"((?:",
+        # Alphanumeric
         r"[A-Z0-9]|",
+        # Symbols
         r"[=\[\];']|",
 
         # Named
         '|'.join((
-            "Comma", "Period", "Slash", "Backslash", "Minus", "AccentGrave",
+            "Comma", "Period", "Slash", "Backslash",
+            "Equals", "Minus", "AccentGrave",
             # Editing
             "Tab", "Backspace", "Delete", "Return", "Spacebar",
             # Navigation
@@ -935,13 +937,15 @@ def structure_pre(_):
                "message": "admonition directive without refbox class"}),
              ("dir(admonition)[class: refbox] - !sect \\ * ++ !None",
               {"output": True, "message": "refbox admonition not at section start"}),
-             # ; trans
              ("sect + dir(figure, admonition, list-table, toctree) & !text, def-list, section",
               {"output": False, "message": "section not starting with a text"}),
              ("bullet-list, enum-list - !None = !text",
               {"output": True, "message": "list without an introductory text"}),
              ("dir(code) - !text",
               {"output": True, "message": "code without an introductory text"}),
+             ("- dir(figure) & {1} = None \\ * + dir(figure) && !None",
+              {"output": True, "message": "three or more figures in a row"
+               " consider moving them into a list-table"}),
              ("dir(figure) / body = None",
               {"output": True, "message": "figure without a caption"}),
              ("strong, emphasis << sect",
@@ -1090,6 +1094,17 @@ def structure(toolname, document, reports, data):
         return True
 
     def operate(node_active, waypoint_active, node_con, waypoint_con, on_active=True):
+        def skip(node_active, waypoint_active):
+            waypoint = waypoint_active if not waypoint_con else waypoint_con
+            if node_active.node_name == "text":
+                return bool(node_active.code.isspace())
+            for typ in (("target",), ("comment",), ("substdef",),
+                        ("dir", "highlight"), ("dir", "index")):
+                if rst_walker.is_of(node, *typ):
+                    return bool(typ[0] != waypoint["node"] and
+                            (len(typ) == 1 or typ[1] != waypoint["name"]))
+            return False
+
         operators = {
             ";": lambda node_active, _, __, ___: node_active,
             "=": lambda node_active, _, __, ___: node_active,
@@ -1129,8 +1144,7 @@ def structure(toolname, document, reports, data):
         operation = operators[operator]
         node_active = operation(node_active, waypoint_active, node_con, waypoint_con)
         if node_active is not node_prev and operator != "\\":
-            while (node_active and
-                   node_active.node_name == "text" and node_active.code.isspace()):
+            while node_active and skip(node_active, waypoint_active):
                 node_active = operation(node_active, waypoint_active, node_con, waypoint_con)
         return node_active
 
@@ -1204,8 +1218,8 @@ def structure(toolname, document, reports, data):
 
                             break
 
-                    elif (operator_next not in {";", "?", "&"} and
-                            waypoint_active["operator"] != "=="):
+                    elif (index == 0 or (operator_next not in {";", "?", "&"} and
+                            waypoint_active["operator"] != "==")):
                         break
 
                 if operator_next:

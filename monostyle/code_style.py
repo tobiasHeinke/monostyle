@@ -263,14 +263,12 @@ def heading_lines(toolname, document, reports):
             if node.name_start:
                 lineno = node.name_start.code.start_lincol[0]
                 fix_over = node.name_start.code.slice((lineno, 0), (lineno + 1, 0), True)
-                fix_over = fix_over.to_fragment()
                 fix_over.replace_fill([heading_char * title_len + "\n"])
-                bd.bundle.append(fix_over)
+                bd.combine(fix_over)
             lineno = node.name_end.code.start_lincol[0]
             fix_under = node.name_end.code.slice((lineno, 0), (lineno + 1, 0), True)
-            fix_under = fix_under.to_fragment()
             fix_under.replace_fill([heading_char * title_len + "\n"])
-            bd.bundle.append(fix_under)
+            bd.combine(fix_under)
             reports.append(Report('W', toolname, output, message, fix=bd))
 
         title_ind_m = re.match(r" *", str(node.name.code))

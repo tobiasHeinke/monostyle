@@ -16,7 +16,7 @@ class Editor:
 
     def __init__(self, fg):
         self.fg = fg
-        self._changes = []
+        self._changes = FragmentBundle()
         self._status = True
 
 
@@ -60,38 +60,35 @@ class Editor:
 
     def add(self, fg):
         """Add replacement."""
-        if isinstance(fg, FragmentBundle):
-            self._changes.extend(fg.bundle)
-        else:
-            self._changes.append(fg)
+        self._changes.combine(fg, check_align=False, merge=False)
 
 
-    def apply(self, virtual=False, pos_lc=True, use_conflict_handling=False):
+    def apply(self, virtual=False, pos_lincol=True, use_conflict_handling=False):
         """Apply the edits to the input text.
 
         virtual -- return the output text or write it to the file.
         """
 
         text_src = self._read()
-        if len(self._changes) == 0 or text_src is None:
+        if len(self._changes.bundle) == 0 or text_src is None:
             return text_src
 
         self._remove_doubles()
-        self._changes.sort(key=lambda change: (change.get_start(pos_lc), change.get_end(pos_lc)))
         conflicted = []
-        if not self._check_integrity(pos_lc):
+        self._status = not self._changes.is_self_overlapped(pos_lincol)
+        if not self._status:
             if not use_conflict_handling:
                 return None
 
-            conflicted = self.handle_conflicts(pos_lc)
-            self._changes.sort(key=lambda change: (change.get_start(pos_lc),
-                                                   change.get_end(pos_lc)))
+            conflicted = self.handle_conflicts(pos_lincol)
 
         text_dst = text_src.copy().clear(True)
+        self._changes.bundle.sort(key=lambda change: (change.get_start(pos_lincol),
+                                                      change.get_end(pos_lincol)))
         after = text_src
         for change in self._changes:
-            before, _, after = after.slice(change.get_start(pos_lc), change.get_end(pos_lc),
-                                           output_zero=True)
+            before, _, after = after.slice(change.get_start(pos_lincol),
+                                           change.get_end(pos_lincol), output_zero=True)
 
             if before:
                 text_dst.combine(before, False)
@@ -101,7 +98,7 @@ class Editor:
         if after:
             text_dst.combine(after, False)
 
-        self._changes.clear()
+        self._changes.bundle.clear()
         if virtual:
             if not use_conflict_handling:
                 return text_dst
@@ -124,38 +121,23 @@ class Editor:
             else:
                 new_changes.append(change)
 
-        self._changes = new_changes
+        self._changes.bundle = new_changes
 
 
-    def _check_integrity(self, pos_lc):
-        """Check for overlaps of the start to end span."""
-        prev = None
-        for change in self._changes:
-            if prev:
-                if (change.is_in_span(prev.get_start(pos_lc)) or
-                        change.is_in_span(prev.get_end(pos_lc))):
-                    self._status = False
-                    break
-
-            prev = change
-
-        return self._status
-
-
-    def handle_conflicts(self, pos_lc):
+    def handle_conflicts(self, pos_lincol):
         """Interval Scheduling: activity selection problem.
         With multiple zero-length the order is undefined.
 
         Adapted from:
         https://www.techiedelight.com/activity-selection-problem-using-dynamic-programming/
         """
-        groups = [[] for _ in range(0, len(self._changes))]
-        for index, pair in enumerate(sorted(self._changes,
-                                            key=lambda change: change.get_end(pos_lc))):
-            for index_sub, pair_sub in enumerate(self._changes[:index]):
-                if (pair_sub.get_end(pos_lc) < pair.get_start(pos_lc) or
-                        (pair_sub.get_end(pos_lc) == pair.get_start(pos_lc) and
-                        (pair_sub.get_start(pos_lc) != pair.get_end(pos_lc))) and
+        groups = [[] for _ in range(0, len(self._changes.bundle))]
+        for index, pair in enumerate(sorted(self._changes.bundle,
+                                            key=lambda change: change.get_end(pos_lincol))):
+            for index_sub, pair_sub in enumerate(self._changes.bundle[:index]):
+                if (pair_sub.get_end(pos_lincol) < pair.get_start(pos_lincol) or
+                        (pair_sub.get_end(pos_lincol) == pair.get_start(pos_lincol) and
+                        (pair_sub.get_start(pos_lincol) != pair.get_end(pos_lincol))) and
                         len(groups[index]) < len(groups[index_sub])):
                     groups[index] = groups[index_sub].copy()
 
@@ -172,7 +154,7 @@ class Editor:
                 conflicted.append(change)
                 self._status = False
 
-        self._changes = group_max
+        self._changes.bundle = group_max
         return conflicted
 
 
@@ -205,12 +187,8 @@ class Editor:
                                   m.end()).add_offset(text_src.start_pos))
 
 
-    def is_in_fg(self, loc):
-        for change in self._changes:
-            if change.is_in_span(loc):
-                return True
-
-        return False
+    def is_in_change(self, loc):
+        return self._changes.is_in_span(loc)
 
 
 class FilenameEditor(Editor):
@@ -371,11 +349,11 @@ class EditorSession:
                 self._last_index = len(self._editors) - 1
 
 
-    def apply(self, virtual=False, pos_lc=True, stop_on_conflict=False):
+    def apply(self, virtual=False, pos_lincol=True, stop_on_conflict=False):
         if virtual:
             result = []
         for editor in self._editors:
-            output = editor.apply(virtual=virtual, pos_lc=pos_lc)
+            output = editor.apply(virtual=virtual, pos_lincol=pos_lincol)
             if virtual:
                 result.append(output)
 

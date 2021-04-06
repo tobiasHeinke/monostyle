@@ -110,7 +110,7 @@ def apply(filename, tools, reports_unfixed, rst_parser):
     for change in changes_file:
         editor.add(change)
 
-    _, conflicted = editor.apply(False, pos_lc=False, use_conflict_handling=True)
+    _, conflicted = editor.apply(False, pos_lincol=False, use_conflict_handling=True)
 
     if len(conflicted) != 0:
         for fg_conflict in conflicted:
