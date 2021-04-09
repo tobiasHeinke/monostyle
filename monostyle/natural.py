@@ -491,7 +491,8 @@ def metric(toolname, document, reports):
                     counter["para"] += 1
                 node_prev = node_cur
                 is_last = bool(rst_walker.is_of(node_cur.parent_node,
-                                                {"def", "dir", "enum", "bullet", "field"}) and
+                                                {"def", "dir", "enum", "bullet",
+                                                 "field", "cell"}) and
                                node_cur.next is None)
                 reports = compare(node_cur, sen_full, counter, reports, is_last=is_last)
                 if is_last:
@@ -516,7 +517,7 @@ def metric(toolname, document, reports):
             if (node_cur and node_prev and
                     (node_cur.node_name == "sect" or
                      (rst_walker.is_of(node_cur.parent_node,
-                                       {"def", "dir", "enum", "bullet", "field"}) and
+                                       {"def", "dir", "enum", "bullet", "field", "cell"}) and
                       node_cur.prev is None))):
                 reports = compare(node_prev, sen_full, counter, reports, is_last=True)
                 counter["para_short"] = 0
@@ -565,7 +566,7 @@ def metric(toolname, document, reports):
 
 def overuse_pre(toolname):
     config = dict()
-    config.update(monostyle_io.get_override(__file__, toolname, "threshold_min", 2))
+    config.update(monostyle_io.get_override(__file__, toolname, "threshold_min", 2.0))
     config.update(monostyle_io.get_override(__file__, toolname, "threshold_severe", 3.1))
     return {"config": config}
 

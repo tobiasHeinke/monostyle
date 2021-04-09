@@ -17,7 +17,7 @@ from monostyle.rst_parser.core import RSTParser
 def highlight_pre(toolname):
     config = dict()
     config.update(monostyle_io.get_override(__file__, toolname, "threshold_min", 0.6))
-    config.update(monostyle_io.get_override(__file__, toolname, "threshold_severe", 1))
+    config.update(monostyle_io.get_override(__file__, toolname, "threshold_severe", 1.0))
     return {"config": config}
 
 

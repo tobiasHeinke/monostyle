@@ -146,7 +146,7 @@ class Fragment():
     def combine(self, fg, check_align=True, pos_lincol=True, keep_end=False, merge=True):
         """Combines two aligned fragments into one."""
         if fg.is_bundle():
-            return fg.combine(self, check_align, pos_lincol, keep_end, merge)
+            return self.to_bundle().combine(fg, check_align, pos_lincol, keep_end, merge=False)
 
         if merge:
             if check_align and not self.is_aligned(fg, True):
@@ -193,9 +193,9 @@ class Fragment():
                 else self.extend(other))
 
 
-    def is_overlapped(self, fg, pos_lincol, is_recursive=False):
+    def is_overlapped(self, fg, pos_lincol, _is_recursive=False):
         """Check if two fragments overlap."""
-        if not is_recursive and fg.is_bundle():
+        if not _is_recursive and fg.is_bundle():
             return fg.is_overlapped(self, pos_lincol)
 
         if not self.end_lincol or not fg.start_lincol:
@@ -208,7 +208,7 @@ class Fragment():
                 self.is_in_span(fg.get_end(pos_lincol), False, True)):
             return True
 
-        if not is_recursive and fg.is_overlapped(self, pos_lincol, is_recursive=True):
+        if not _is_recursive and fg.is_overlapped(self, pos_lincol, _is_recursive=True):
             return True
         return False
 
@@ -236,7 +236,7 @@ class Fragment():
         return True
 
 
-    def slice_match_obj(self, match_obj, groupno, after_inner=False, output_zero=True):
+    def slice_match_obj(self, match_obj, groupno, after_inner=False, output_zero=True, **_):
         """Slice by span defined by a regex match object."""
         if len(match_obj.groups()) >= groupno and match_obj.group(groupno) is not None:
             at_start = self.loc_to_abs(match_obj.start(groupno))
@@ -319,17 +319,32 @@ class Fragment():
         return result[0] if len(result) == 1 else tuple(result)
 
 
-    def slice_block(self, at_start, at_end):
+    def slice_block(self, at_start, at_end, after_inner=False, output_zero=True,
+                    include_before=False, include_after=False):
         """Returns a rectangular block defined by the start and end corners."""
         if isinstance(at_start, int):
             at_start = self.pos_to_lincol(at_start)
         if isinstance(at_end, int):
             at_end = self.pos_to_lincol(at_end)
-        result = FragmentBundle()
-        for line in self.slice(at_start, at_end, True).splitlines():
-            result.combine(line.slice((line.start_lincol[0], at_start[1]),
-                                      (line.start_lincol[0], at_end[1]), True))
-        return result
+        is_diff_column = bool(at_start[1] != at_end[1])
+
+        cuts = [FragmentBundle()]
+        if not after_inner:
+            cuts.append(FragmentBundle())
+        if is_diff_column:
+            cuts.append(FragmentBundle())
+
+        for line in self.slice(at_start if not include_before else (at_start[0], 0),
+                               at_end if not include_after else (at_end[0]+1, 0),
+                               True).splitlines():
+            result = line.slice((line.start_lincol[0], at_start[1]),
+                                (line.start_lincol[0], at_end[1]) if is_diff_column else None,
+                                after_inner, output_zero)
+            for cut, fg in zip(cuts, result):
+                if fg is not None:
+                    cut.combine(fg, merge=False)
+
+        return cuts[0] if len(cuts) == 1 else tuple(cuts)
 
 
     def splitlines(self, buffered=False):
@@ -350,6 +365,14 @@ class Fragment():
             yield line
             start_pos = line.end_pos
 
+        if buffered:
+            yield None
+
+
+    def iter_lines(self, buffered=False):
+        """Yield content lines."""
+        for line_str in self.content:
+            yield line_str
         if buffered:
             yield None
 
@@ -482,25 +505,19 @@ class Fragment():
 
 
     def replace(self, new_content, pos_lincol=True, open_end=True):
-        if isinstance(new_content, (Fragment, FragmentBundle)):
-            self, _, after = self.slice(new_content.get_start(pos_lincol),
-                                        new_content.get_end(pos_lincol), output_zero=True)
-            self.combine(new_content, False)
-            self.combine(after, False)
+        if isinstance(new_content, str):
+            new_content = new_content.splitlines(keepends=True)
         else:
-            if isinstance(new_content, str):
-                new_content = new_content.splitlines(keepends=True)
-            else:
-                if len(new_content) != 0 and isinstance(new_content[0], list):
-                    if not open_end:
-                        new_content = new_content[0]
-                    else:
-                        new = []
-                        for content in new_content:
-                            new.extend(content)
-                        new_content = new
+            if len(new_content) != 0 and isinstance(new_content[0], list):
+                if not open_end:
+                    new_content = new_content[0]
+                else:
+                    new = []
+                    for content in new_content:
+                        new.extend(content)
+                    new_content = new
 
-            self.content = new_content
+        self.content = new_content
         return self
 
 
@@ -607,8 +624,7 @@ class Fragment():
 
 
     def __iter__(self):
-        """Iterate over content list."""
-        yield from self.content
+        yield self
 
 
     def __str__(self):
@@ -750,7 +766,6 @@ class FragmentBundle():
         last = self.bundle[0].start_pos
         content = []
         for fg in self:
-            print(last, fg.start_pos)
             if last != fg.start_pos:
                 if static_filler:
                     content.append(filler)
@@ -806,12 +821,11 @@ class FragmentBundle():
         if not bd:
             return self
 
-        bundle = bd.bundle if bd.is_bundle() else (bd,)
-        is_before = bool(not self or bundle[0].get_start(pos_lincol) < self.get_end(pos_lincol))
+        is_before = bool(not self or bd.get_start(pos_lincol) < self.get_start(pos_lincol))
 
         if keep_end and self:
             end_cur = self.get_end(pos_lincol)
-            for fg in bundle:
+            for fg in bd:
                 if fg.get_start(pos_lincol) > end_cur:
                     fg.start_pos = self.bundle[-1].end_pos
                     if self.bundle[-1].end_lincol:
@@ -821,9 +835,10 @@ class FragmentBundle():
                     if self.bundle[-1].end_lincol:
                         fg.end_lincol = self.bundle[-1].end_lincol
 
+        bundle = bd.bundle if bd.is_bundle() else (bd,)
         if merge and self:
             if not self.is_overlapped(bd, pos_lincol):
-                self.bundle[-1].combine(bundle[0])
+                self.bundle[-1].combine(bundle[0], merge=merge)
                 self.bundle.extend(bundle[1:])
         else:
             self.bundle.extend(bundle)
@@ -864,8 +879,6 @@ class FragmentBundle():
         if not self or not bd:
             return False
 
-        bd = bd.bundle if bd.is_bundle() else (bd,)
-
         for fg in self:
             for fg_bd in bd:
                 if fg.is_overlapped(fg_bd, pos_lincol):
@@ -887,7 +900,7 @@ class FragmentBundle():
         if not self or not bd:
             return True
 
-        fg_first = bd.bundle[0] if bd.is_bundle() else bd
+        fg_first = next(iter(bd))
 
         if last_only:
             return self.bundle[-1].is_aligned(fg_first, pos_lincol)
@@ -912,13 +925,14 @@ class FragmentBundle():
         return True
 
 
-    def slice_match_obj(self, match_obj, groupno, after_inner=False, output_zero=True):
+    def slice_match_obj(self, match_obj, groupno, after_inner=False, output_zero=True,
+                        filler=None, static_filler=False):
         """relative to first."""
         if not self:
             return self
         if len(match_obj.groups()) >= groupno and match_obj.group(groupno) is not None:
-            at_start = self.loc_to_abs(match_obj.start(groupno))
-            at_end = self.loc_to_abs(match_obj.end(groupno))
+            at_start = self.loc_to_abs(match_obj.start(groupno), filler, static_filler)
+            at_end = self.loc_to_abs(match_obj.end(groupno), filler, static_filler)
 
             return self.slice(at_start, at_end, after_inner, output_zero)
 
@@ -970,7 +984,7 @@ class FragmentBundle():
                     else:
                         fg_first = self.bundle[index_start[0]].slice(start, after_inner=True)
 
-                    if len(fg_first) != 0:
+                    if fg_first is not None and len(fg_first) != 0:
                         bd.bundle.append(fg_first)
                 if index_start[0] == index_end[0] and not index_start[1] and not index_end[1]:
                     fgs_inner = self.bundle[index_start[0]]
@@ -987,7 +1001,7 @@ class FragmentBundle():
                         fg_last = self.bundle[index_end[0]].slice(self.bundle[index_end[0]]
                                                                   .get_start(pos_lincol),
                                                                   end, True)
-                        if len(fg_last) != 0:
+                        if fg_last is not None and len(fg_last) != 0:
                             bd.bundle.append(fg_last)
 
             result.append(bd)
@@ -995,20 +1009,39 @@ class FragmentBundle():
         return result[0] if len(result) == 1 else tuple(result)
 
 
-    def slice_block(self, at_start, at_end):
+    def slice_block(self, at_start, at_end, after_inner=False, output_zero=True,
+                    include_before=False, include_after=False):
         if isinstance(at_start, int):
             at_start = self.pos_to_lincol(at_start)
         if isinstance(at_end, int):
             at_end = self.pos_to_lincol(at_end)
-        result = FragmentBundle()
-        for fg in self:
-            result.combine(fg.slice_block(at_start, at_end))
-        return result
+
+        cuts = [FragmentBundle()]
+        if not after_inner:
+            cuts.append(FragmentBundle())
+        if at_start[1] != at_end[1]:
+            cuts.append(FragmentBundle())
+        for index, fg in enumerate(self):
+            result = fg.slice_block(at_start, at_end, after_inner, output_zero,
+                                    include_before or index != 0,
+                                    include_after or index != len(self.bundle) - 1)
+            for cut, bd in zip(cuts, result):
+                if bd:
+                    cut.combine(bd, merge=False)
+
+        return cuts[0] if len(cuts) == 1 else tuple(cuts)
 
 
     def splitlines(self, buffered=False):
         for fg in self:
             yield from fg.splitlines()
+        if buffered:
+            yield None
+
+
+    def iter_lines(self, buffered=False):
+        for fg in self:
+            yield from fg.iter_lines()
         if buffered:
             yield None
 
@@ -1181,26 +1214,18 @@ class FragmentBundle():
 
     def replace(self, new_content, pos_lincol=True, open_end=True):
         """Map list entry to entry in bundle."""
-        if isinstance(new_content, (Fragment, FragmentBundle)):
-            bd = bd.bundle if bd.is_bundle() else (bd,)
-            for fg in bd:
-                self, _, after = self.slice(new_content.get_start(pos_lincol),
-                                            new_content.get_end(pos_lincol), output_zero=True)
-                self.combine(new_content, False)
-                self.combine(after, False)
-        else:
-            if not self:
-                return self
+        if not self:
+            return self
 
-            for fg, content in zip(self, new_content):
-                fg.replace(content)
+        for fg, content in zip(self, new_content):
+            fg.replace(content)
 
-            for fg in self.bundle[len(new_content):]:
-                fg.replace("")
+        for fg in self.bundle[len(new_content):]:
+            fg.replace("")
 
-            if open_end:
-                for content in new_content[len(self.bundle):]:
-                    self.bundle[-1].extend(content)
+        if open_end:
+            for content in new_content[len(self.bundle):]:
+                self.bundle[-1].extend(content)
 
         return self
 

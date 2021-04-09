@@ -108,7 +108,7 @@ def apply(filename, tools, reports_unfixed, rst_parser):
         fg = Fragment(filename, text)
     editor = Editor(fg)
     for change in changes_file:
-        editor.add(change)
+        editor.add(change, pos_lincol=False)
 
     _, conflicted = editor.apply(False, pos_lincol=False, use_conflict_handling=True)
 

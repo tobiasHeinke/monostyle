@@ -58,9 +58,9 @@ class Editor:
             return None
 
 
-    def add(self, fg):
+    def add(self, fg, pos_lincol=True):
         """Add replacement."""
-        self._changes.combine(fg, check_align=False, merge=False)
+        self._changes.combine(fg, pos_lincol=pos_lincol, check_align=False, merge=False)
 
 
     def apply(self, virtual=False, pos_lincol=True, use_conflict_handling=False):
