@@ -244,6 +244,21 @@ Check if a heading matches the tool name in the admonition reference box.
 Searches for unused (ref) targets.
 
 
+## Image
+
+### duplicated-image
+
+Find images with the same (binary) content.
+
+### image-filename
+
+Check chars in filename and filenames differing only by case or extention.
+
+### unused-image
+
+Images not referenced in the docs.
+
+
 ## Monitor
 
 ### monitor

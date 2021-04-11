@@ -60,7 +60,7 @@ class Editor:
 
     def add(self, fg, pos_lincol=True):
         """Add replacement."""
-        self._changes.combine(fg, pos_lincol=pos_lincol, check_align=False, merge=False)
+        self._changes.combine(fg, check_align=False, pos_lincol=pos_lincol, merge=False)
 
 
     def apply(self, virtual=False, pos_lincol=True, use_conflict_handling=False):
@@ -82,22 +82,7 @@ class Editor:
 
             conflicted = self.handle_conflicts(pos_lincol)
 
-        text_dst = text_src.copy().clear(True)
-        self._changes.bundle.sort(key=lambda change: (change.get_start(pos_lincol),
-                                                      change.get_end(pos_lincol)))
-        after = text_src
-        for change in self._changes:
-            before, _, after = after.slice(change.get_start(pos_lincol),
-                                           change.get_end(pos_lincol), output_zero=True)
-
-            if before:
-                text_dst.combine(before, False)
-
-            text_dst.combine(change, False)
-
-        if after:
-            text_dst.combine(after, False)
-
+        text_dst = text_src.union(self._changes, pos_lincol)
         self._changes.bundle.clear()
         if virtual:
             if not use_conflict_handling:
@@ -155,6 +140,8 @@ class Editor:
                 self._status = False
 
         self._changes.bundle = group_max
+        self._changes.bundle.sort(key=lambda change: (change.get_start(pos_lincol),
+                                                      change.get_end(pos_lincol)))
         return conflicted
 
 

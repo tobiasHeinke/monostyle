@@ -120,7 +120,7 @@ def unused_image(toolname, reports, data):
     for _, name, ext in monostyle_io.img_files():
         if name + ext not in data:
             out = Fragment(name + ext, name + ext)
-            msg = "unused image "
+            msg = "unused image"
             reports.append(Report('W', toolname, out, msg))
 
     return reports
