@@ -66,6 +66,12 @@ class Fragment():
         return self.end_pos if pos_lincol else self.end_lincol
 
     #--------------------
+    # Filename
+
+    def has_consistent_filenames(self):
+        return True
+
+    #--------------------
     # Content
 
     def extend(self, new_content, keep_end=False):
@@ -109,15 +115,12 @@ class Fragment():
             return self.to_bundle().combine(other, check_align, pos_lincol, keep_end, merge=False)
 
         if merge:
-            if check_align and not self.is_aligned(other, True):
+            if check_align and not self.is_aligned(other, pos_lincol):
                 return self
 
-            if not self.end_lincol or not other.end_lincol:
+            if pos_lincol or not self.end_lincol or not other.end_lincol:
                 self.extend(other.content)
             else:
-                if check_align and not self.is_aligned(other, False):
-                    return self
-
                 if self.end_lincol == other.start_lincol:
                     if len(self.content) != 0 and len(other.content) != 0:
                         self.content[-1] += other.content[0]
@@ -189,7 +192,7 @@ class Fragment():
         new = FragmentBundle()
         before, _ = other.slice(self.get_start(pos_lincol), output_zero=False)
         if before:
-            new.combine(before, False)
+            new.combine(before, False, pos_lincol=pos_lincol)
         if (self.is_in_span(other.get_start(pos_lincol), True, True) or
                 self.is_in_span(other.get_end(pos_lincol), True, True)):
             after = self
@@ -201,14 +204,14 @@ class Fragment():
                 before, _, after = after.slice(fg.get_start(pos_lincol), fg.get_end(pos_lincol),
                                                output_zero=False)
                 if before:
-                    new.combine(before, False, pos_lincol=pos_lincol)
-                new.combine(fg, False, pos_lincol=pos_lincol)
+                    new.combine(before, False, pos_lincol=pos_lincol, merge=False)
+                new.combine(fg, False, pos_lincol=pos_lincol, merge=False)
 
             if after:
-                new.combine(after, False, pos_lincol=pos_lincol)
+                new.combine(after, False, pos_lincol=pos_lincol, merge=False)
         after = other.slice(self.get_end(pos_lincol), after_inner=True, output_zero=False)
         if after:
-            new.combine(after, False, pos_lincol=pos_lincol)
+            new.combine(after, False, pos_lincol=pos_lincol, merge=False)
 
         result = new.to_fragment()
         if result:
@@ -228,8 +231,8 @@ class Fragment():
                 break
             if fg.get_end(pos_lincol) < self.get_start(pos_lincol):
                 continue
-            new.combine(self.slice(fg.get_start(pos_lincol),
-                                           fg.get_end(pos_lincol), True, output_zero=True))
+            new.combine(self.slice(fg.get_start(pos_lincol), fg.get_end(pos_lincol),
+                                   True, output_zero=True), pos_lincol=pos_lincol, merge=False)
 
         result = new.to_fragment()
         if result:
@@ -253,10 +256,10 @@ class Fragment():
             before, _, after = after.slice(fg.get_start(pos_lincol),
                                            fg.get_end(pos_lincol), output_zero=False)
             if before:
-                new.combine(before, False, merge=False)
+                new.combine(before, False, pos_lincol=pos_lincol, merge=False)
 
         if after:
-            new.combine(after, False, merge=False)
+            new.combine(after, False, pos_lincol=pos_lincol, merge=False)
 
         result = new.to_fragment()
         if result:
@@ -269,7 +272,7 @@ class Fragment():
         new = FragmentBundle()
         before, _ = other.slice(self.get_start(pos_lincol), output_zero=False)
         if before:
-            new.combine(before, False)
+            new.combine(before, False, pos_lincol=pos_lincol)
         if (self.is_in_span(other.get_start(pos_lincol), True, True) or
                 self.is_in_span(other.get_end(pos_lincol), True, True)):
             after = self
@@ -281,13 +284,13 @@ class Fragment():
                 before, _, after = after.slice(fg.get_start(pos_lincol),
                                                fg.get_end(pos_lincol), output_zero=False)
                 if before:
-                    new.combine(before, False, merge=False)
+                    new.combine(before, False, pos_lincol=pos_lincol, merge=False)
 
             if after:
-                new.combine(after, False, merge=False)
+                new.combine(after, False, pos_lincol=pos_lincol, merge=False)
         after = other.slice(self.get_end(pos_lincol), after_inner=True, output_zero=False)
         if after:
-            new.combine(after, False, merge=False)
+            new.combine(after, False, pos_lincol=pos_lincol, merge=False)
 
         result = new.to_fragment()
         if result:
@@ -460,19 +463,27 @@ class Fragment():
 
 
     def replace(self, new_content, pos_lincol=True, open_end=True):
-        if isinstance(new_content, str):
-            new_content = new_content.splitlines(keepends=True)
-        else:
-            if len(new_content) != 0 and isinstance(new_content[0], list):
+        if isinstance(new_content, (Fragment, FragmentBundle)):
+            new = self.union(new_content, pos_lincol)
+            if new.is_bundle():
                 if not open_end:
-                    new_content = new_content[0]
-                else:
-                    new = []
-                    for content in new_content:
-                        new.extend(content)
-                    new_content = new
+                    return self
+                new = new.bundle[0]
+            self.content = new.content
+        else:
+            if isinstance(new_content, str):
+                new_content = new_content.splitlines(keepends=True)
+            else:
+                if len(new_content) != 0 and isinstance(new_content[0], list):
+                    if not open_end:
+                        new_content = new_content[0]
+                    else:
+                        new = []
+                        for content in new_content:
+                            new.extend(content)
+                        new_content = new
 
-        self.content = new_content
+            self.content = new_content
         return self
 
 
@@ -517,6 +528,10 @@ class Fragment():
     def __contains__(self, term):
         """Search content list."""
         return term in self.content
+
+
+    def sort(self, *_):
+        return None
 
     #--------------------
     # Location
@@ -721,7 +736,7 @@ class Fragment():
 
 
     def is_empty(self):
-        return False
+        return len(self.content) == 0
 
     #--------------------
     # Iterate, Compare & Convert
@@ -810,7 +825,7 @@ class Fragment():
 
 
 class FragmentBundle():
-    """A list of Fragments. sorted, non overlapping."""
+    """A list of Fragments. Well formed if: sorted, non overlapping."""
 
     __slots__ = ('bundle',)
 
@@ -884,6 +899,17 @@ class FragmentBundle():
     def get_end(self, pos_lincol):
         return self.end_pos if pos_lincol else self.end_lincol
 
+    #--------------------
+    # Filename
+
+    def has_consistent_filenames(self):
+        """All filenames are the same."""
+        prev = None
+        for fg in self:
+            if prev.filename != fg.filename:
+                return False
+            prev = fg
+        return True
 
     #--------------------
     # Content
@@ -891,6 +917,7 @@ class FragmentBundle():
     def extend(self, new_content, keep_end=False):
         if not self:
             return self
+
         self.bundle[-1].extend(new_content, keep_end)
         return self
 
@@ -898,8 +925,8 @@ class FragmentBundle():
     def rermove_zero_len_end(self):
         if not self:
             return self
-        if len(self.bundle[-1]) == 0:
-            self.bundle = self.bundle[0:-1]
+
+        self.bundle[-1].rermove_zero_len_end()
         return self
 
 
@@ -931,8 +958,7 @@ class FragmentBundle():
             self.bundle.extend(bundle)
 
         if is_before:
-            self.bundle.sort(key=lambda change: (change.get_start(pos_lincol),
-                                                 change.get_end(pos_lincol)))
+            self.sort(pos_lincol)
 
         return self
 
@@ -1000,7 +1026,7 @@ class FragmentBundle():
         new = FragmentBundle()
         before, _ = other.slice(self.get_start(pos_lincol), output_zero=False)
         if before:
-            new.combine(before, False)
+            new.combine(before, False, pos_lincol=pos_lincol)
         after = self
         for fg_bd in self:
             other_cut = other.slice(new.get_end(pos_lincol) if new
@@ -1010,11 +1036,12 @@ class FragmentBundle():
             if not other_cut:
                 continue
 
-            new.combine(fg_bd.union(other_cut, pos_lincol), False, merge=False)
+            new.combine(fg_bd.union(other_cut, pos_lincol), False, pos_lincol=pos_lincol,
+                        merge=False)
 
         after = other.slice(self.get_end(pos_lincol), after_inner=True, output_zero=False)
         if after:
-            new.combine(after, False, merge=False)
+            new.combine(after, False, pos_lincol=pos_lincol, merge=False)
 
         result = new.to_fragment()
         if result:
@@ -1029,7 +1056,7 @@ class FragmentBundle():
 
         new = FragmentBundle()
         for fg_bd in self:
-            new.combine(fg_bd.intersection(other, pos_lincol))
+            new.combine(fg_bd.intersection(other, pos_lincol), False, pos_lincol, merge=False)
 
         result = new.to_fragment()
         if result:
@@ -1044,7 +1071,7 @@ class FragmentBundle():
 
         new = FragmentBundle()
         for fg_bd in self:
-            new.combine(fg_bd.difference(other, pos_lincol))
+            new.combine(fg_bd.difference(other, pos_lincol), False, pos_lincol, merge=False)
 
         result = new.to_fragment()
         if result:
@@ -1056,7 +1083,7 @@ class FragmentBundle():
         new = FragmentBundle()
         before, _ = other.slice(self.get_start(pos_lincol), output_zero=False)
         if before:
-            new.combine(before, False)
+            new.combine(before, False, pos_lincol=pos_lincol)
         for fg_bd in self:
             other_cut = other.slice(new.get_end(pos_lincol) if new
                                     else other.get_start(pos_lincol),
@@ -1065,11 +1092,12 @@ class FragmentBundle():
             if not other_cut:
                 continue
 
-            new.combine(fg_bd.symmetric_difference(other_cut, pos_lincol), False, merge=False)
+            new.combine(fg_bd.symmetric_difference(other_cut, pos_lincol), False,
+                        pos_lincol=pos_lincol, merge=False)
 
         after = other.slice(self.get_end(pos_lincol), after_inner=True, output_zero=False)
         if after:
-            new.combine(after, False, merge=False)
+            new.combine(after, False, pos_lincol=pos_lincol, merge=False)
 
         result = new.to_fragment()
         if result:
@@ -1207,18 +1235,24 @@ class FragmentBundle():
 
     def replace(self, new_content, pos_lincol=True, open_end=True):
         """Map list entry to entry in bundle."""
-        if not self:
-            return self
+        if isinstance(new_content, (Fragment, FragmentBundle)):
+            new = self.union(new_content, pos_lincol)
+            if not new.is_bundle():
+                new = new.to_bundle()
+            self.bundle = new.bundle
+        else:
+            if not self:
+                return self
 
-        for fg, content in zip(self, new_content):
-            fg.replace(content)
+            for fg, content in zip(self, new_content):
+                fg.replace(content)
 
-        for fg in self.bundle[len(new_content):]:
-            fg.replace("")
+            for fg in self.bundle[len(new_content):]:
+                fg.replace("")
 
-        if open_end:
-            for content in new_content[len(self.bundle):]:
-                self.bundle[-1].extend(content)
+            if open_end:
+                for content in new_content[len(self.bundle):]:
+                    self.bundle[-1].extend(content)
 
         return self
 
@@ -1275,13 +1309,20 @@ class FragmentBundle():
 
         return False
 
+
+    def sort(self, pos_lincol):
+        """Sort bundle by location."""
+        self.bundle.sort(key=lambda fg: (fg.get_start(pos_lincol), fg.get_end(pos_lincol)))
+
     #--------------------
     # Location
 
     def add_offset(self, offset_pos=None, offset_lincol=None):
+        first_line = True
         for fg in self:
-            if offset_lincol and fg.start_lincol[0] != self.start_lincol[0]:
+            if offset_lincol and first_line and fg.start_lincol[0] != self.start_lincol[0]:
                 offset_lincol = (offset_lincol[0], 0)
+                first_line = False
             fg.add_offset(offset_pos, offset_lincol)
         return self
 
@@ -1545,8 +1586,14 @@ class FragmentBundle():
 
 
     def is_empty(self):
-        """Return if the Bundle list is empty."""
-        return len(self.bundle) == 0
+        """Return if the Bundle list is empty or all its Fragments are empty."""
+        if not self:
+            return True
+
+        for fg in self:
+            if not fg.is_empty():
+                return False
+        return True
 
     #--------------------
     # Iterate, Compare & Convert

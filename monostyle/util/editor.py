@@ -11,12 +11,12 @@ from monostyle.util.fragment import Fragment, FragmentBundle
 class Editor:
     """Text editing.
 
-    fg -- Fragment as a virtual input used to apply edits on.
+    source -- Fragment as a virtual input used to apply edits on.
     """
 
-    def __init__(self, fg):
-        self.fg = fg
-        self._changes = FragmentBundle()
+    def __init__(self, source, changes=None):
+        self.source = source
+        self._changes = FragmentBundle() if changes is None else changes
         self._status = True
 
 
@@ -30,25 +30,25 @@ class Editor:
 
     def _read(self):
         """Return stored text or read it from the file."""
-        if len(self.fg.content) == 0:
+        if self.source.is_empty():
             try:
-                with open(self.fg.filename, "r", encoding="utf-8") as f:
+                with open(self.source.filename, "r", encoding="utf-8") as f:
                     text = f.read()
 
             except (IOError, OSError) as err:
                 self._status = False
-                print("{0}: cannot read: {1}".format(self.fg.filename, err))
+                print("{0}: cannot read: {1}".format(self.source.filename, err))
                 return None
 
-            return Fragment(self.fg.filename, text)
+            return Fragment(self.source.filename, text)
 
-        return self.fg
+        return self.source
 
 
     def _write(self, text_dst):
         """Write output to the file."""
         try:
-            with open(self.fg.filename, "w", encoding="utf-8") as f:
+            with open(self.source.filename, "w", encoding="utf-8") as f:
                 f.write(str(text_dst))
 
             return text_dst
@@ -58,31 +58,43 @@ class Editor:
             return None
 
 
-    def add(self, fg, pos_lincol=True):
+    def add(self, new_change, pos_lincol=True):
         """Add replacement."""
-        self._changes.combine(fg, check_align=False, pos_lincol=pos_lincol, merge=False)
+        self._changes.combine(new_change, check_align=False, pos_lincol=pos_lincol, merge=False)
 
 
-    def apply(self, virtual=False, pos_lincol=True, use_conflict_handling=False):
-        """Apply the edits to the input text.
+    def apply(self, virtual=False, pos_lincol=True, use_conflict_handling=False,
+              ignore_filename=True):
+        """Apply the edits to the input text and conflict detection and handling.
 
         virtual -- return the output text or write it to the file.
         """
 
         text_src = self._read()
-        if len(self._changes.bundle) == 0 or text_src is None:
+        if self._changes.is_empty() or text_src is None:
             return text_src
 
         self._remove_doubles()
         conflicted = []
+        if not ignore_filename:
+            self._status = (not self._changes.has_consistent_filenames(pos_lincol) and
+                            not self._changes.filename == self.source.filename)
+            if not self._status:
+                if not use_conflict_handling:
+                    return None
+            conflicted.extend(self._handle_filename_conflicts())
+
         self._status = not self._changes.is_self_overlapped(pos_lincol)
         if not self._status:
             if not use_conflict_handling:
                 return None
 
-            conflicted = self.handle_conflicts(pos_lincol)
+            conflicted.extend(self._handle_location_conflicts(pos_lincol))
 
         text_dst = text_src.union(self._changes, pos_lincol)
+        if not virtual and not text_dst.is_complete():
+            return None
+
         self._changes.bundle.clear()
         if virtual:
             if not use_conflict_handling:
@@ -109,7 +121,22 @@ class Editor:
         self._changes.bundle = new_changes
 
 
-    def handle_conflicts(self, pos_lincol):
+    def _handle_filename_conflicts(self):
+        """Remove entries with a different filename than the source and return them."""
+        new_changes = []
+        conflicted = []
+        filename_src = self.source.filename
+        for change in self._changes:
+            if change.filename == filename_src:
+                new_changes.append(change)
+            else:
+                conflicted.append(change)
+
+        self._changes.bundle = new_changes
+        return conflicted
+
+
+    def _handle_location_conflicts(self, pos_lincol):
         """Interval Scheduling: activity selection problem.
         With multiple zero-length the order is undefined.
 
@@ -140,9 +167,7 @@ class Editor:
                 self._status = False
 
         self._changes.bundle = group_max
-        self._changes.bundle.sort(key=lambda change: (change.get_start(pos_lincol),
-                                                      change.get_end(pos_lincol)))
-        return conflicted
+        self._changes.sort(pos_lincol)
 
 
     def iter_edit(self, find_re):
@@ -170,7 +195,7 @@ class Editor:
             yield ls
             # detect alterations
             if ls != ls_orig:
-                self.add(Fragment(self.fg.filename, ''.join(ls), m.start(),
+                self.add(Fragment(self.source.filename, ''.join(ls), m.start(),
                                   m.end()).add_offset(text_src.start_pos))
 
 
@@ -181,8 +206,8 @@ class Editor:
 class FilenameEditor(Editor):
     """File renaming with SVN."""
 
-    def __init__(self, fg, use_git=True):
-        super().__init__(fg)
+    def __init__(self, source, use_git=True):
+        super().__init__(source)
         global vsn_inter
         if use_git:
             import monostyle.git_inter as vsn_inter
@@ -198,15 +223,15 @@ class FilenameEditor(Editor):
         """Check if the file exists and return source Fragment."""
         import os.path
 
-        if not os.path.isfile(self.fg.filename):
+        if not os.path.isfile(self.source.filename):
             self._status = False
-            print("FilenameEditor error: file not found", self.fg.filename)
+            print("FilenameEditor error: file not found", self.source.filename)
             return None
 
-        if len(self.fg.content) == 0:
-            return Fragment(self.fg.filename, self.fg.filename)
+        if self.source.is_empty():
+            return Fragment(self.source.filename, self.source.filename)
 
-        return self.fg
+        return self.source
 
 
     def _write(self, text_dst):
@@ -218,7 +243,7 @@ class FilenameEditor(Editor):
             print("FilenameEditor error: file already exists", str(text_dst))
             return None
 
-        vsn_inter.move(self.fg.filename, str(text_dst))
+        vsn_inter.move(self.source.filename, str(text_dst))
         return text_dst
 
 
@@ -250,7 +275,7 @@ class PropEditor(Editor):
         import os.path
         import monostyle.svn_inter
 
-        filename, key = PropEditor.split_key(self.fg.filename)
+        filename, key = PropEditor.split_key(self.source.filename)
         if not key:
             self._status = False
             print("PropEditor error: no key", filename)
@@ -261,13 +286,13 @@ class PropEditor(Editor):
             print("PropEditor error: file not found", filename)
             return None
 
-        if len(self.fg.content) == 0:
+        if self.source.is_empty():
             content = []
             for line in monostyle.svn_inter.prop_get(filename, key):
                 content.append(line.decode("utf-8"))
-            return Fragment(self.fg.filename, content)
+            return Fragment(self.source.filename, content)
 
-        return self.fg
+        return self.source
 
 
     def _write(self, text_dst):
@@ -275,7 +300,7 @@ class PropEditor(Editor):
         import os.path
         import monostyle.svn_inter
 
-        filename, key = PropEditor.split_key(self.fg.filename)
+        filename, key = PropEditor.split_key(self.source.filename)
         if not key:
             self._status = False
             print("PropEditor error: no key", filename)
@@ -319,19 +344,19 @@ class EditorSession:
         return self._status
 
 
-    def add(self, fg):
+    def add(self, new_change, pos_lincol=True):
         if (self._last_index is not None and
-                self._editors[self._last_index].fg.filename == fg.filename):
-            self._editors[self._last_index].add(fg)
+                self._editors[self._last_index].new_change.filename == new_change.filename):
+            self._editors[self._last_index].add(new_change, pos_lincol)
         else:
             for index, editor in enumerate(reversed(self._editors)):
-                if editor.fg.filename == fg.filename:
-                    editor.add(fg)
+                if editor.new_change.filename == new_change.filename:
+                    editor.add(new_change, pos_lincol)
                     self._last_index = len(self._editors) - 1 - index
                     break
             else:
-                editor = self._editor_class.from_file(fg.filename, **self._kwargs)
-                editor.add(fg)
+                editor = self._editor_class.from_file(new_change.filename, **self._kwargs)
+                editor.add(new_change, pos_lincol)
                 self._editors.append(editor)
                 self._last_index = len(self._editors) - 1
 
@@ -345,7 +370,7 @@ class EditorSession:
                 result.append(output)
 
             if not editor:
-                print("Editor error: conflict in", editor.fg.filename)
+                print("Editor error: conflict in", editor.source.filename)
                 self._status = False
                 if stop_on_conflict:
                     break

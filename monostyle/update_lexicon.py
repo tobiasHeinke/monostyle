@@ -57,7 +57,7 @@ def lexicon_write_csv(lexicon):
         print("{0}: cannot write: {1}".format(lex_filename, err))
 
 
-def difference(lex_stored, lex_new):
+def differential(lex_stored, lex_new):
     """Show a differential between the current texts and the stored lexicon."""
     added, removed = lex_stored.compare(lex_new)
     monostyle_io.print_title("Added", True)
@@ -76,7 +76,7 @@ def main():
     descr = "Write lexicon."
     parser = argparse.ArgumentParser(description=descr)
     # first char to lowercase
-    doc_str = difference.__doc__[0].lower() + difference.__doc__[1:]
+    doc_str = differential.__doc__[0].lower() + differential.__doc__[1:]
     parser.add_argument("-d", "--diff",
                         action="store_true", dest="diff", default=False,
                         help=doc_str)
@@ -107,7 +107,7 @@ def main():
     else:
         lex_stored = Lexicon(False)
         if lex_stored is not None:
-            difference(lex_stored, lex_new)
+            differential(lex_stored, lex_new)
 
 
 if __name__ == "__main__":

@@ -62,32 +62,28 @@ def apply(filename, tools, reports_unfixed, rst_parser):
     def search_conflicted(fg_conflict, tools):
         for reports in tools.values():
             for report in reports:
-                if isinstance(report.fix, FragmentBundle):
-                    for change in report.fix:
-                        if change is fg_conflict:
-                            return report
-                else:
-                    if report.fix is fg_conflict:
+                for change in report.fix:
+                    if change is fg_conflict:
                         return report
 
     def filter_tool_overlap(changes_file, changes):
         """Filter out space at eol also removed by reflow."""
-        new_changes = []
+        new_changes = FragmentBundle()
         for entry_old in changes_file:
             for entry in changes:
                 if entry.start_lincol == entry_old.start_lincol and len(entry_old) == 0:
                     break
             else:
-                new_changes.append(entry_old)
-        new_changes.extend(changes)
-        return new_changes
+                new_changes.combine(entry_old, check_align=False, merge=False)
+
+        return new_changes.combine(changes, check_align=False, merge=False)
 
     filename = monostyle_io.path_to_abs(filename, "rst")
     filename, text = monostyle_io.single_text(filename)
     if text is None:
         return reports_unfixed.extend(tools[1])
 
-    changes_file = []
+    changes_file = FragmentBundle()
     fg = None
     for tool, reports in tools.items():
         if tool == "reflow":
@@ -99,17 +95,12 @@ def apply(filename, tools, reports_unfixed, rst_parser):
             reports_unfixed.extend(unlocated)
         else:
             for report in reports:
-                changes_file.append(report.fix)
+                changes_file.combine(report.fix, check_align=False, merge=False)
 
-    if len(changes_file) == 0:
+    if changes_file.is_empty():
         return reports_unfixed
 
-    if fg is None:
-        fg = Fragment(filename, text)
-    editor = Editor(fg)
-    for change in changes_file:
-        editor.add(change, pos_lincol=False)
-
+    editor = Editor(fg if fg is not None else Fragment(filename, text), changes_file)
     _, conflicted = editor.apply(False, pos_lincol=False, use_conflict_handling=True)
 
     if len(conflicted) != 0:

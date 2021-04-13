@@ -30,6 +30,7 @@ import re
 from monostyle.util.part_of_speech import PartofSpeech
 from monostyle.util.nodes import Node, LinkedList
 import monostyle.rst_parser.walker as rst_walker
+from monostyle.util.fragment import FragmentBundle
 
 
 def reflow_trial(boxes, optimum, maximum, options):
@@ -107,9 +108,9 @@ def reflow_trial(boxes, optimum, maximum, options):
 
 def fix(root_rst, reports):
     """Search for the reports location in the full document."""
-    changes = []
+    changes = FragmentBundle()
     unlocated = reports.copy()
-    for node in rst_walker.iter_node(root_rst, ("text"), False):
+    for node in rst_walker.iter_node(root_rst, "text", False):
         if node.body.code:
             is_first_report = True
             reports_pro = []
@@ -119,7 +120,7 @@ def fix(root_rst, reports):
                     if is_first_report:
                         changes_para = reflow(node)
                         report.fix = changes_para
-                        changes.extend(changes_para)
+                        changes.combine(changes_para, check_align=False, merge=False)
                         is_first_report = False
 
             for report in reports_pro:
@@ -156,16 +157,16 @@ def reflow(node):
     maximum = maximum_abs - ind_block
     # print(show_limes(node, options["optimum"], options["maximum"]), end="\n")
 
-    changes_para = []
     boxes = process_para(node, ind_first - ind_block, options)
+    changes_para = FragmentBundle()
     if len(boxes) > 1:
         boxes = reflow_penalties(boxes, options)
         # show_demerits(boxes)
         boxes, lastbreak = reflow_trial(boxes, optimum, maximum, options)
         changes_para = stringify_space(boxes, lastbreak)
 
-    if len(changes_para) != 0:
-        changes_para = add_indent(changes_para, ind_block)
+        if not changes_para.is_empty():
+            changes_para = add_indent(changes_para, ind_block)
 
     return changes_para
 
@@ -406,7 +407,7 @@ def pos_weight(part_of_speech, word):
 
 def stringify_space(boxes, lastbreak):
     """Find changes turning spaces into newlines (or vice versa)."""
-    changes_para = []
+    changes_para = FragmentBundle()
     box = boxes.last()
     while box:
         is_last = True
@@ -420,11 +421,11 @@ def stringify_space(boxes, lastbreak):
                         for _ in range(max(1, nl_count)):
                             new_content.append('\n')
                         box.space.replace_fill(new_content)
-                        changes_para.append(box.space)
+                        changes_para.combine(box.space, check_align=False, merge=False)
                 is_last = False
             elif len(space_str) != 0 and (len(space_str) != 1 or space_str == '\n'):
                 box.space.replace_fill(' ')
-                changes_para.append(box.space)
+                changes_para.combine(box.space, check_align=False, merge=False)
             box = box.prev
 
         box = lastbreak
