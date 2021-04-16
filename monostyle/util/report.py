@@ -245,12 +245,40 @@ class Report():
 
 
     def repr(self, options=None):
+        def join_entries(entries, options, formatting):
+            lines = []
+            invalid_keys = set()
+            for format_line in options["formatting"]:
+                line = []
+                for key in format_line:
+                    value = entries.get(key, Ellipsis)
+                    if value is Ellipsis:
+                        invalid_keys.add(key)
+                        continue
+                    if value is not None:
+                        if start := options.get(key + "_start", None):
+                            line.append(start)
+                        line.append(value)
+                        if end := options.get(key + "_end", None):
+                            line.append(end)
+                        else:
+                            line.append(" ")
+                if line:
+                    lines.append(''.join(line).rstrip())
+
+            if not Report.repr.user_notified and invalid_keys:
+                print("Report formatting key error: " + ", ".join(invalid_keys))
+                Report.repr.user_notified = True
+                options["formatting"] = formatting
+                return join_entries(entries, options, formatting)
+            return '\n'.join(lines)
+
         if options is None:
             options = {}
 
-        format_str = "{filename}{location} {severity} {output} {message}{line}"
+        formatting = (("filename", "location", "severity", "output", "message"), ("line",))
         options = {
-            "format_str": format_str,
+            "formatting": formatting,
             "show_filename": True,
             "absolute_path": False,
             "filename_end": ":",
@@ -258,11 +286,12 @@ class Report():
             "location_column": ":",
             "show_location_end": False,
             "location_span": " - ",
+            "number_width": "0",
 
             "severity_display": "long",
 
             "output_start": "'",
-            "output_end": "'",
+            "output_end": "' ",
             "output_limit": 100,
             "output_ellipsis": "…",
 
@@ -279,44 +308,46 @@ class Report():
             "autofix_display": "long",
             **options
         }
-        entries = dict.fromkeys(self.__slots__, "")
-        entries.update((("filename", ""), ("location", "")))
+        entries = dict.fromkeys(self.__slots__, None)
+        entries.update((("filename", None), ("location", None)))
 
         if not options.get("file_title", False) and options["show_filename"]:
             if options["absolute_path"]:
                 entries["filename"] = self.output.filename
             else:
                 entries["filename"] = path_to_rel(self.output.filename)
-            entries["filename"] += options["filename_end"]
 
         sev_map = self.severity_maps.get(options["severity_display"], self.severity_maps["letter"])
         entries["severity"] = sev_map.get(self.severity, sev_map["U"])
 
         entries["tool"] = self.tool
 
+        number_width = (str(options["number_width"]) if str(options["number_width"]).isdigit()
+                        else "0")
         if self.output.start_lincol and self.output.start_lincol[0] != -1:
-            entries["location"] = "".join((str(self.output.start_lincol[0] + 1),
+            entries["location"] = (("{0:" + number_width + "}{1}{2:" + number_width + "}")
+                                   .format(self.output.start_lincol[0] + 1,
                                            options["location_column"],
-                                           str(self.output.start_lincol[1] + 1)))
+                                           self.output.start_lincol[1] + 1))
             if options["show_location_end"] and self.output.start_lincol != self.output.end_lincol:
-                entries["location"] += "".join((options["location_span"],
-                                                str(self.output.end_lincol[0] + 1),
+                entries["location"] += (("{0}{1:" + number_width + "}{2}{3:" + number_width + "}")
+                                        .format(options["location_span"],
+                                                self.output.end_lincol[0] + 1,
                                                 options["location_column"],
-                                                str(self.output.end_lincol[1] + 1)))
+                                                self.output.end_lincol[1] + 1))
 
         elif self.output.start_pos != -1:
-            entries["location"] = str(self.output.start_pos)
+            entries["location"] = ("{0:" + number_width + "}").format(self.output.start_pos + 1)
 
             if options["show_location_end"] and self.output.start_pos != self.output.end_pos:
-                entries["location"] += options["location_span"] + str(self.output.end_pos)
+                entries["location"] += (("{0}{1:" + number_width + "}")
+                                        .format(options["location_span"], self.output.end_pos + 1))
 
         if len(self.output) != 0:
             entries["output"] = str(self.output).replace("\n", '¶')
             if len(entries["output"]) > options["output_limit"]:
                 entries["output"] = entries["output"][:options["output_limit"]]
                 entries["output"] += options["output_ellipsis"]
-            entries["output"] = options["output_start"] + entries["output"] + \
-                                options["output_end"]
 
         entries["message"] = self.message
 
@@ -337,21 +368,12 @@ class Report():
             if len(entries["line"]) > options["line_limit"]:
                 entries["line"] = entries["line"][:options["line_limit"]]
                 entries["line"] += options["line_ellipsis"]
-            entries["line"] = "\n" + options["line_start"] + entries["line"]
 
         if options["show_autofix"] and self.fix is not None:
             entries["fix"] = self.fix_mark_map.get(options["autofix_display"],
                                                    self.fix_mark_map["long"])
 
-        try:
-            return options["format_str"].format(**entries)
-        except KeyError as err:
-            if not Report.repr.user_notified:
-                print("Report format_str key error: {} in \"{}\""
-                      .format(err, options["format_str"]))
-                Report.repr.user_notified = True
-
-            return format_str.format(**entries)
+        return join_entries(entries, options, formatting)
 
     repr.user_notified = False
 

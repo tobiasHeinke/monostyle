@@ -76,12 +76,15 @@ class Fragment():
 
     def extend(self, new_content, keep_end=False):
         """Adds lines to the content. Join first with last if not newline end."""
+        if len(new_content) == 0:
+            return self
+
         self.rermove_zero_len_end()
 
         if isinstance(new_content, str):
             new_content = [line for line in new_content.splitlines(keepends=True)]
 
-        is_nl_end = bool(self.content and self.content[-1].endswith('\n'))
+        is_nl_end = bool(not self.content or self.content[-1].endswith('\n'))
         if is_nl_end:
             self.content.append(new_content[0])
         else:

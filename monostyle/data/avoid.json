@@ -266,9 +266,10 @@
 		"say you", "being said",
 		"shows? up",
 		"so (forth|now|on|this|to|what)",
+		"somewhat",
 		"sooner or later",
 		["turn(ed|ing)? (on|off)", ["(de)activate", "(dis)enable"]],
-		"whatever", "what ever",
+		"what ?ever",
 		"what not",
 		"what so ever"
 	]

@@ -99,7 +99,7 @@ def refbox(rst_parser, document):
 
         else:
             for field_node in node_child.body.child_nodes:
-                if (str(field_node.name).strip() not in {"Hotkey", "Menu", "Panel", "Mode", "Tool",
+                if (str(field_node.name).strip() not in {"Shortcut", "Menu", "Panel", "Mode", "Tool",
                                                          "Editor", "Header", "Type", "Context"}):
                     break
 

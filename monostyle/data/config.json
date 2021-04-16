@@ -58,7 +58,7 @@
 		"show_summary": true,
 		"summary_overline": "_",
 
-		"format_str": "{filename}{location} {severity} {output} {message} {fix}{line}",
+		"formatting": [["filename", "location", "severity", "output", "message", "fix"], ["line"]],
 		"show_filename": true,
 		"absolute_path": true,
 		"filename_end": ":",
@@ -66,12 +66,14 @@
 		"location_column": ":",
 		"show_location_end": false,
 		"location_span": " - ",
+		// add a zero at the start to fill with zeros instead of spaces.
+		"number_width": "0",
 
 		// options: 'long', 'letter', 'ascii', 'icon', 'emoji', 'color', 'shape'
 		"severity_display": "long",
 
 		"output_start": "´",
-		"output_end": "´",
+		"output_end": "´ ",
 		"output_limit": 100,
 		"output_ellipsis": "…",
 

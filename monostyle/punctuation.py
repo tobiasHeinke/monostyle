@@ -202,7 +202,7 @@ def mark(toolname, document, reports, re_lib):
 
                     # refbox parts
                     if (rst_walker.is_of(par_node, "field",
-                                         {"Hotkey", "Menu", "Panel", "Mode",
+                                         {"Shortcut", "Menu", "Panel", "Mode",
                                           "Tool", "Editor", "Header", "Type"})):
                         continue
                     if (rst_walker.is_of(part.next_leaf(), "dir", "default") and

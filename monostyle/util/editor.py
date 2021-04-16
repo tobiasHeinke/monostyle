@@ -92,7 +92,7 @@ class Editor:
             conflicted.extend(self._handle_location_conflicts(pos_lincol))
 
         text_dst = text_src.union(self._changes, pos_lincol)
-        if not virtual and not text_dst.is_complete():
+        if not virtual and not text_dst.is_complete(pos_lincol):
             return None
 
         self._changes.bundle.clear()
@@ -168,6 +168,7 @@ class Editor:
 
         self._changes.bundle = group_max
         self._changes.sort(pos_lincol)
+        return conflicted
 
 
     def iter_edit(self, find_re):

@@ -347,7 +347,7 @@ def indention(toolname, document, reports):
                                                   ind_aim_first - ind_first))
 
                     output = node_field.name_end.code.copy().clear(False)
-                    reports.append(Report('W', toolname, output, message, node_field.name))
+                    reports.append(Report('W', toolname, output, message, node_field.name.code))
 
                 if ind_block is not None and ind_block != ind_aim_block:
                     message = Report.substitution(what="field wrong indent",
@@ -355,7 +355,7 @@ def indention(toolname, document, reports):
                                                   ind_aim_block - ind_block))
 
                     output = node_field.name_end.code.copy().clear(False)
-                    reports.append(Report('W', toolname, output, message, node_field.name))
+                    reports.append(Report('W', toolname, output, message, node_field.name.code))
 
         else:
             if (node.node_name.endswith("-list") or
@@ -937,7 +937,7 @@ def structure_pre(_):
                "message": "admonition directive without refbox class"}),
              ("dir(admonition)[class: refbox] - !sect \\ * ++ !None",
               {"output": True, "message": "refbox admonition not at section start"}),
-             ("sect + dir(figure, admonition, list-table, toctree) & !text, def-list, section",
+             ("sect + dir(figure, admonition, list-table, toctree) & !text, def-list, sect",
               {"output": False, "message": "section not starting with a text"}),
              ("bullet-list, enum-list - !None = !text",
               {"output": True, "message": "list without an introductory text"}),
@@ -1100,7 +1100,7 @@ def structure(toolname, document, reports, data):
                 return bool(node_active.code.isspace())
             for typ in (("target",), ("comment",), ("substdef",),
                         ("dir", "highlight"), ("dir", "index")):
-                if rst_walker.is_of(node, *typ):
+                if rst_walker.is_of(node_active, *typ):
                     return bool(typ[0] != waypoint["node"] and
                             (len(typ) == 1 or typ[1] != waypoint["name"]))
             return False

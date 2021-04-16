@@ -174,9 +174,13 @@ def pos_case(toolname, document, reports):
     }
     was_open = False
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        if (rst_walker.is_of(part, "field") and
-                not rst_walker.is_of(part.parent_node.parent_node.parent_node, "field")):
-            continue
+        if rst_walker.is_of(part.parent_node.parent_node, "field"):
+            node_par = part
+            while node_par and node_par.node_name != "field-list":
+                node_par = node_par.parent_node
+            if (not rst_walker.is_of(node_par.parent_node, "*", "*", "attr") and
+                    not rst_walker.is_of(node_par.parent_node, "document")):
+                continue
 
         for sen, is_open in segmenter.iter_sentence(part.code, output_openess=True):
             is_first_word = not was_open
