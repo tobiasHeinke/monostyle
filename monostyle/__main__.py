@@ -137,13 +137,13 @@ def get_reports_file(mods, rst_parser, path, parse_options):
     print_options = options_overide()
     show_current = bool(path)
     if path:
-        path = monostyle_io.path_to_abs(path, "rst")
+        path = monostyle_io.path_to_abs(path, "doc")
     filename_prev = None
     if parse_options["resolve"]:
         titles, targets = env.get_link_titles(rst_parser)
         parse_options["titles"] = titles
         parse_options["targets"] = targets
-    for filename, text in monostyle_io.rst_texts(path):
+    for filename, text in monostyle_io.doc_texts(path):
         doc = rst_parser.document(filename, text)
         if show_current:
             monostyle_io.print_over("processing:",

@@ -64,9 +64,9 @@ class MessageTemplate():
                     message.append(subst)
                 elif not is_optional:
                     if missing_keys is None:
-                        missing_keys = []
+                        missing_keys = set()
                     message.append("{" + value + "}")
-                    missing_keys.append(value)
+                    missing_keys.add(value)
 
         message = " ".join(message)
         if missing_keys is not None:
@@ -254,7 +254,7 @@ class Report():
                     value = entries.get(key, Ellipsis)
                     if value is Ellipsis:
                         invalid_keys.add(key)
-                        continue
+                        break
                     if value is not None:
                         if start := options.get(key + "_start", None):
                             line.append(start)
@@ -266,11 +266,13 @@ class Report():
                 if line:
                     lines.append(''.join(line).rstrip())
 
-            if not Report.repr.user_notified and invalid_keys:
-                print("Report formatting key error: " + ", ".join(invalid_keys))
-                Report.repr.user_notified = True
+            if invalid_keys:
+                if not Report.repr.user_notified:
+                    print("Report formatting key error: " + ", ".join(invalid_keys))
+                    Report.repr.user_notified = True
                 options["formatting"] = formatting
                 return join_entries(entries, options, formatting)
+
             return '\n'.join(lines)
 
         if options is None:
@@ -338,7 +340,6 @@ class Report():
 
         elif self.output.start_pos != -1:
             entries["location"] = ("{0:" + number_width + "}").format(self.output.start_pos + 1)
-
             if options["show_location_end"] and self.output.start_pos != self.output.end_pos:
                 entries["location"] += (("{0}{1:" + number_width + "}")
                                         .format(options["location_span"], self.output.end_pos + 1))

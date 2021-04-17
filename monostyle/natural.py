@@ -63,7 +63,7 @@ def abbreviation_pre(_):
     after_test_re = re.compile(r"\A\s*?\(")
     after_re = re.compile(r"\A\s*?\(([^\)]+?)\)")
 
-    for filename, text in monostyle_io.rst_texts():
+    for filename, text in monostyle_io.doc_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
 
         # todo glossary terms as explanation?
@@ -644,7 +644,7 @@ def overuse(toolname, document, reports, config):
         "literal": "*", "standalone": "*"
     }
     topics = {'and', 'or'}
-    for word in re.split(r"[/._-]", monostyle_io.path_to_rel(document.code.filename, 'rst')
+    for word in re.split(r"[/._-]", monostyle_io.path_to_rel(document.code.filename, 'doc')
                                                 .replace(".rst", "")):
         topics.add(word)
     words = Lexicon()

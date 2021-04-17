@@ -42,11 +42,12 @@
 	// Project Directories
 	// -------------------
 
-	"rst_dir": "manual",
-	"po_dir": "locale",
-	"build_dir": "build",
-	"img_dir": "manual/images",
-
+	"project_dirs": {
+		"doc": "manual",
+		"loc": "locale",
+		"build": "build",
+		"img": "manual/images"
+	},
 
 	// Console Output
 	// --------------
@@ -58,7 +59,10 @@
 		"show_summary": true,
 		"summary_overline": "_",
 
-		"formatting": [["filename", "location", "severity", "output", "message", "fix"], ["line"]],
+		"formatting": [
+			["filename", "location", "severity", "output", "message", "fix"],
+			["line"]
+		],
 		"show_filename": true,
 		"absolute_path": true,
 		"filename_end": ":",

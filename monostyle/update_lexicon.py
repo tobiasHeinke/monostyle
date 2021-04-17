@@ -33,7 +33,7 @@ def build_lexicon():
     """Build lexicon by looping over files."""
     rst_parser = RSTParser()
     lexicon = Lexicon()
-    for filename, text in monostyle_io.rst_texts():
+    for filename, text in monostyle_io.doc_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
         for word in word_filtered(document):
             lexicon.add(str(word))

@@ -15,11 +15,11 @@ def get_link_titles(rst_parser):
     targets = {}
     titles = {}
 
-    for filename, text in monostyle_io.rst_texts():
+    for filename, text in monostyle_io.doc_texts():
         doc = rst_parser.document(filename, text)
         doc.body = rst_parser.parse_block(doc.body)
         for node in rst_walker.iter_node(doc.body, "sect"):
-            filename = monostyle_io.path_to_rel(filename, "rst")
+            filename = monostyle_io.path_to_rel(filename, "doc")
             filename = '/' + filename[:-4]
 
             titles[filename] = node.name

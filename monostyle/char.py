@@ -51,7 +51,7 @@ def encoding(toolname, reports):
 
     # standard Unicode replace char <?>
     repchar_re = re.compile("\uFFFD")
-    for filename in monostyle_io.rst_files():
+    for filename in monostyle_io.doc_files():
         with open(filename, "r", encoding="utf-8", errors="replace") as f:
             try:
                 text = f.read()

@@ -102,7 +102,7 @@ def unused_image_pre(_):
     rst_parser = RSTParser()
     commented_out = True
 
-    for filename, text in monostyle_io.rst_texts():
+    for filename, text in monostyle_io.doc_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
         if commented_out:
             for node in rst_walker.iter_node(document.body, "comment"):
@@ -110,7 +110,7 @@ def unused_image_pre(_):
         for node in rst_walker.iter_node(document.body, "dir"):
             if rst_walker.is_of(node, "*", {"figure", "image"}):
                 images.add(monostyle_io.path_to_rel(monostyle_io.path_to_abs(
-                           str(node.head.code).strip(), "rst"), "img"))
+                           str(node.head.code).strip(), "doc"), "img"))
 
     return {"data": images}
 

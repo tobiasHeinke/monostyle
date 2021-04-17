@@ -100,13 +100,12 @@ def path_to_rel(path, base=None):
 def path_to_abs(path, base=None):
     """Make path absolute."""
     path = norm_path_sep(os.path.normpath(path))
-    root = config.root_dir
-    if not path.startswith(root):
-        bases = {"root": root, "rst": config.rst_dir, "po": config.po_dir, "img": config.img_dir}
+    bases = config.project_dirs
+    if not path.startswith(bases["root"]):
         if base is not None and base in bases and not path.startswith(bases[base] + '/'):
-            path = '/'.join((root, bases[base], path)).strip("/")
+            path = '/'.join((bases["root"], bases[base], path)).strip("/")
         else:
-            path = '/'.join((root, path)).strip("/")
+            path = '/'.join((bases["root"], path)).strip("/")
     return path
 
 
@@ -174,34 +173,34 @@ def get_override(file, toolname, varname, default, limits=None):
     return ((varname, default),)
 
 
-def rst_files(path=None):
+def doc_files(path=None):
     """Yields the filename of RST files."""
     if path is None:
-        path = path_to_abs("", "rst")
+        path = path_to_abs("", "doc")
 
     return files_recursive(path, ext_pos=(".rst",))
 
 
-def rst_texts(path=None):
+def doc_texts(path=None):
     """Yields the filename and text of RST files."""
     if path is None:
-        path = path_to_abs("", "rst")
+        path = path_to_abs("", "doc")
 
     return texts_recursive(path, ext_pos=(".rst",))
 
 
-def po_files(path=None):
+def loc_files(path=None):
     """Yields the filename of PO files."""
     if path is None:
-        path = path_to_abs("", "po")
+        path = path_to_abs("", "loc")
 
     return files_recursive(path, ext_pos=(".po",))
 
 
-def po_texts(path=None):
+def loc_texts(path=None):
     """Yields the filename and text of PO files."""
     if path is None:
-        path = path_to_abs("", "po")
+        path = path_to_abs("", "loc")
 
     return texts_recursive(path, ext_pos=(".po",))
 

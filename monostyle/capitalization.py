@@ -232,7 +232,7 @@ def proper_noun_pre(_):
 
     lexicon = Lexicon()
     rst_parser = RSTParser()
-    for filename, text in monostyle_io.rst_texts():
+    for filename, text in monostyle_io.doc_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
 
         first = True
@@ -429,7 +429,7 @@ def typ_case_pre(_):
     for kind, path, ignore in typs:
         ignore.extend(("index", "introduction"))
 
-        for filename, text in monostyle_io.rst_texts(monostyle_io.path_to_abs(path, "rst")):
+        for filename, text in monostyle_io.doc_texts(monostyle_io.path_to_abs(path, "doc")):
             skip = False
             for skip_filename in ignore:
                 if filename.endswith(skip_filename + ".rst"):
@@ -437,7 +437,7 @@ def typ_case_pre(_):
                     break
 
             # is not nested
-            filename_rel = monostyle_io.path_to_rel(filename, "rst")
+            filename_rel = monostyle_io.path_to_rel(filename, "doc")
             for _, path_rec, __ in typs:
                 if (path != path_rec and len(path) < len(path_rec) and
                         filename_rel.startswith(path_rec)):

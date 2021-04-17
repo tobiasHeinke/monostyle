@@ -92,8 +92,10 @@ class Editor:
             conflicted.extend(self._handle_location_conflicts(pos_lincol))
 
         text_dst = text_src.union(self._changes, pos_lincol)
-        if not virtual and not text_dst.is_complete(pos_lincol):
-            return None
+        if not virtual:
+            self._status = text_dst.is_complete(pos_lincol)
+            if not self._status:
+                return None
 
         self._changes.bundle.clear()
         if virtual:

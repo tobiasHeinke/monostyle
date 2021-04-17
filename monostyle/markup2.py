@@ -24,7 +24,7 @@ def glossary_pre(_):
     terms_glossary = set()
     glossary_code = None
     glossary_filenames = []
-    for filename, text in monostyle_io.rst_texts():
+    for filename, text in monostyle_io.doc_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
 
         for node in rst_walker.iter_node(document.body, ("dir", "role",)):
@@ -98,7 +98,7 @@ def local_targets_pre(_):
     targets = []
     rst_parser = RSTParser()
 
-    for filename, text in monostyle_io.rst_texts():
+    for filename, text in monostyle_io.doc_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
         for node in rst_walker.iter_node(document.body, {"target", "role"}):
             if node.node_name == "target":
@@ -243,7 +243,7 @@ def unused_targets_pre(_):
     targets = []
     rst_parser = RSTParser()
 
-    for filename, text in monostyle_io.rst_texts():
+    for filename, text in monostyle_io.doc_texts():
         document = rst_parser.parse(rst_parser.document(filename, text))
         for node in rst_walker.iter_node(document.body, {"target", "role", "subst"}):
             if node.node_name == "target":

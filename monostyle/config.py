@@ -10,11 +10,7 @@ import os
 import json
 
 tool_selection = None
-root_dir = None
-rst_dir = None
-po_dir = None
-build_dir = None
-img_dir = None
+project_dirs = None
 console_options = None
 config_override = None
 template_override = None
@@ -22,11 +18,10 @@ template_override = None
 
 def init(root):
     """Create user config file or override config."""
-    global root_dir
-    root_dir = root
     config_default, source_default = read_file(root, True)
     for key, value in config_default.items():
         globals()[key] = value
+    globals()["project_dirs"]["root"] = root
 
     try:
         config_user, _ = read_file(root, False)
@@ -39,6 +34,7 @@ def init(root):
         for key, value in config_user.items():
             if key in config_default.keys() and value is not None:
                 globals()[key] = override_typecheck(value, globals()[key], "monostyle config")
+        globals()["project_dirs"]["root"] = root
 
     return True
 

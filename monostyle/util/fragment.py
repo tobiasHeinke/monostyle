@@ -1109,13 +1109,13 @@ class FragmentBundle():
 
 
     def slice_match_obj(self, match_obj, groupno, after_inner=False, output_zero=True,
-                        filler=None, static_filler=False):
+                        filler=None, filler_mode=None):
         """relative to first."""
         if not self:
             return self
         if len(match_obj.groups()) >= groupno and match_obj.group(groupno) is not None:
-            at_start = self.loc_to_abs(match_obj.start(groupno), filler, static_filler)
-            at_end = self.loc_to_abs(match_obj.end(groupno), filler, static_filler)
+            at_start = self.loc_to_abs(match_obj.start(groupno), filler, filler_mode)
+            at_end = self.loc_to_abs(match_obj.end(groupno), filler, filler_mode)
 
             return self.slice(at_start, at_end, after_inner, output_zero)
 
@@ -1338,7 +1338,7 @@ class FragmentBundle():
         return self
 
 
-    def loc_to_abs(self, loc_rel, filler=None, static_filler=False):
+    def loc_to_abs(self, loc_rel, filler=None, filler_mode=None):
         if not self:
             return None
 
@@ -1347,7 +1347,7 @@ class FragmentBundle():
             prev = None
             for fg in self:
                 if filler and prev is not None:
-                    if static_filler:
+                    if filler_mode == "static":
                         if loc_rel <= cursor + len(filler):
                             return prev + loc_rel - cursor
                         cursor += len(filler) if prev != fg.start_pos else 0
@@ -1365,7 +1365,7 @@ class FragmentBundle():
             prev = None
             for fg in self:
                 if filler and prev is not None:
-                    if static_filler:
+                    if filler_mode == "static":
                         cursor += filler.count('\n') if prev != fg.start_lincol[0] else 0
                     else:
                         cursor += fg.start_lincol[0] - prev
@@ -1379,7 +1379,7 @@ class FragmentBundle():
                 prev = fg.end_lincol[0]
 
 
-    def loc_to_rel(self, loc_abs, filler=None, static_filler=False):
+    def loc_to_rel(self, loc_abs, filler=None, filler_mode=None):
         if not self:
             return None
         if filler is None:
@@ -1388,7 +1388,7 @@ class FragmentBundle():
         if isinstance(loc_abs, int):
             for fg in self:
                 if fg.is_in_span(loc_abs):
-                    if filler and not static_filler:
+                    if filler and filler_mode != "static":
                         return self.bundle[0].loc_to_rel(loc_abs)
 
                     cursor = 0
@@ -1404,7 +1404,7 @@ class FragmentBundle():
         else:
             for fg in self:
                 if fg.is_in_span(loc_abs):
-                    if filler and not static_filler:
+                    if filler and filler_mode != "static":
                         return self.bundle[0].loc_to_rel(loc_abs)
 
                     cursor = 0
@@ -1643,12 +1643,12 @@ class FragmentBundle():
         return bool(self.bundle)
 
 
-    def to_fragment(self, pos_lincol=True, filler=None, static_filler=False):
+    def to_fragment(self, pos_lincol=True, filler=None, filler_mode=None):
         if not self:
             return None
 
         if filler is not None:
-            return Fragment(self.bundle[0].filename, self.join(filler, static_filler),
+            return Fragment(self.bundle[0].filename, self.join(filler, filler_mode),
                             self.bundle[0].start_pos, self.bundle[-1].end_pos,
                             self.bundle[0].start_lincol, self.bundle[-1].end_lincol,
                             bool(self.bundle[0].start_lincol is not None))
@@ -1664,7 +1664,7 @@ class FragmentBundle():
         return self
 
 
-    def join(self, filler=None, static_filler=False):
+    def join(self, filler=None, filler_mode=None):
         if not self:
             return ''
 
@@ -1675,9 +1675,12 @@ class FragmentBundle():
         content = []
         for fg in self:
             if last != fg.start_pos:
-                if static_filler:
+                if filler_mode == "static":
                     content.append(filler)
-                else:
+                elif filler_mode == "extend":
+                    content.append(filler[:fg.start_pos - last])
+                    content.append(filler[-1] * (fg.start_pos - last - len(filler)))
+                else: # repeat
                     content.append(filler * ((fg.start_pos - last) // len(filler)))
                     if len(filler) != 1:
                         content.append(filler[:(fg.start_pos - last) % len(filler)])

@@ -33,7 +33,7 @@ def run(reports, rst_parser, filenames_conflicted=None):
 
     group_file = {}
     for report in group_fix:
-        filename = monostyle_io.path_to_abs(report.output.filename, "rst")
+        filename = monostyle_io.path_to_abs(report.output.filename, "doc")
         if filename not in group_file.keys():
             group_file.setdefault(filename, {})
 
@@ -78,7 +78,7 @@ def apply(filename, tools, reports_unfixed, rst_parser):
 
         return new_changes.combine(changes, check_align=False, merge=False)
 
-    filename = monostyle_io.path_to_abs(filename, "rst")
+    filename = monostyle_io.path_to_abs(filename, "doc")
     filename, text = monostyle_io.single_text(filename)
     if text is None:
         return reports_unfixed.extend(tools[1])
