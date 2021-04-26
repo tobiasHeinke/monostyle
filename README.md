@@ -49,13 +49,15 @@ Monostyle has four modes:
       Run this before you update your working copy with Git or SVN.
    </dd>
   <dt>-p, --patch</dt>
-  <dd>To check changes in a patch-file.</dd>
+  <dd>To check changes in a patch-file.
+      The directory from where Monostyle is run has to be same as where the patch-file was created.
+  </dd>
   <dt>-f, --file</dt>
   <dd>To check a file or directory.</dd>
   <dt>-r, --root</dt>
   <dd>
-      The root is the absolute path to the project directory or where the patch file was created.
-      If not set the directory where Monostyle is run from is used as the root.
+      The root is the absolute path to the top directory of your project.
+      If not set the directory where Monostyle is run from is used.
   </dd>
   <dt>--cached, --staged</dt>
   <dd>

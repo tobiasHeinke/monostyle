@@ -20,8 +20,8 @@ class Editor:
         self._status = True
 
 
-    def from_file(filename):
-        return Editor(Fragment(filename, None))
+    def from_file(filename, changes=None):
+        return Editor(Fragment(filename, None), changes=changes)
 
 
     def __bool__(self):
@@ -202,15 +202,22 @@ class Editor:
                                   m.end()).add_offset(text_src.start_pos))
 
 
+    def is_conflicted(self, new_change, pos_lincol=True):
+        """Change is (self) overlaped."""
+        return bool(new_change.is_self_overlapped(pos_lincol) or
+                    self._changes.is_overlapped(new_change, pos_lincol))
+
+
     def is_in_change(self, loc):
+        """Location is in changes."""
         return self._changes.is_in_span(loc)
 
 
 class FilenameEditor(Editor):
     """File renaming with SVN."""
 
-    def __init__(self, source, use_git=True):
-        super().__init__(source)
+    def __init__(self, source, changes=None, use_git=True):
+        super().__init__(source, changes=changes)
         global vsn_inter
         if use_git:
             import monostyle.git_inter as vsn_inter
@@ -218,8 +225,8 @@ class FilenameEditor(Editor):
             import monostyle.svn_inter as vsn_inter
 
 
-    def from_file(filename, use_git=True):
-        return FilenameEditor(Fragment(filename, None), use_git=use_git)
+    def from_file(filename, changes=None, use_git=True):
+        return FilenameEditor(Fragment(filename, None), changes=changes, use_git=use_git)
 
 
     def _read(self):
@@ -257,8 +264,8 @@ class PropEditor(Editor):
     Non-binary property values only.
     """
 
-    def from_file(filename):
-        return PropEditor(Fragment(filename, None))
+    def from_file(filename, changes=None):
+        return PropEditor(Fragment(filename, None), changes=changes)
 
 
     def join_key(filename, key):

@@ -100,12 +100,14 @@ def path_to_rel(path, base=None):
 def path_to_abs(path, base=None):
     """Make path absolute."""
     path = norm_path_sep(os.path.normpath(path))
-    bases = config.project_dirs
-    if not path.startswith(bases["root"]):
-        if base is not None and base in bases and not path.startswith(bases[base] + '/'):
-            path = '/'.join((bases["root"], bases[base], path)).strip("/")
+    root = norm_path_sep(os.getcwd())
+    if not path.startswith(root):
+        base = (norm_path_sep(os.path.normpath(config.project_dirs[base])).lstrip(".")
+                if base in config.project_dirs else None)
+        if base is not None and not path.startswith(base + '/'):
+            path = '/'.join((root, base, path)).strip("/")
         else:
-            path = '/'.join((bases["root"], path)).strip("/")
+            path = '/'.join((root, path)).strip("/")
     return path
 
 

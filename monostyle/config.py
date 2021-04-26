@@ -16,12 +16,12 @@ config_override = None
 template_override = None
 
 
-def init(root):
+def init(root, cwd):
     """Create user config file or override config."""
     config_default, source_default = read_file(root, True)
     for key, value in config_default.items():
         globals()[key] = value
-    globals()["project_dirs"]["root"] = root
+    globals()["project_dirs"]["cwd"] = cwd
 
     try:
         config_user, _ = read_file(root, False)
@@ -34,7 +34,7 @@ def init(root):
         for key, value in config_user.items():
             if key in config_default.keys() and value is not None:
                 globals()[key] = override_typecheck(value, globals()[key], "monostyle config")
-        globals()["project_dirs"]["root"] = root
+        globals()["project_dirs"]["cwd"] = cwd
 
     return True
 

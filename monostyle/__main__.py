@@ -85,8 +85,10 @@ def init(ops, op_names, mod_name):
     return ops_sel
 
 
-def get_reports_version(mods, rst_parser, from_vsn, is_internal, path, rev=None, cached=False):
+def get_reports_version(mods, rst_parser, from_vsn, is_internal, path=None, rev=None, cached=False):
     """Gets text snippets (hunk) from versioning."""
+    if not path:
+        path = monostyle_io.path_to_abs("")
     reports = []
     show_current = True
     filename_prev = None
@@ -205,10 +207,10 @@ def apply(rst_parser, mods, reports, document, parse_options, print_options,
     return reports, filename_prev
 
 
-def update(path, rev=None):
+def update(rev=None):
     """Update the working copy."""
     filenames_conflicted = set()
-    for filename, conflict, rev_up in vsn_inter.update_files(path, rev):
+    for filename, conflict, rev_up in vsn_inter.update_files(monostyle_io.path_to_abs(""), rev):
         # A conflict will be resolvable with versioning's command interface.
         if conflict:
             filenames_conflicted.add(filename)
@@ -236,6 +238,25 @@ def patch_flavor(filename):
 
 def setup(root, patch=None):
     """Setup user config and file storage."""
+    cwd = monostyle_io.norm_path_sep(os.getcwd())
+    if root is not None:
+        if not os.path.exists(os.path.normpath(root)):
+            print('Error: root {0} does not exists'.format(root))
+            return False
+
+        root = monostyle_io.norm_path_sep(root)
+        if len(cwd) < len(root) and root.startswith(cwd):
+            swap = cwd
+            cwd = root
+            root = swap
+
+        if not cwd.startswith(root):
+            cwd = root
+    else:
+        root = cwd
+
+    os.chdir(root)
+
     is_repo = False
     is_git = False
     if not patch:
@@ -267,7 +288,7 @@ def setup(root, patch=None):
             print("{0}: cannot create: {1}".format(config_dir, err))
             return False
 
-    success = config.init(root)
+    success = config.init(root, cwd[len(root):])
     if success:
         Report.override_templates(config.template_override)
     return success
@@ -342,17 +363,7 @@ def main(descr=None, mod_selection=None, parse_options=None):
 
     args = parser.parse_args()
 
-    if args.root is None:
-        root_dir = os.getcwd()
-    else:
-        root_dir = os.path.normpath(args.root)
-
-        if not os.path.exists(root_dir):
-            print('Error: root {0} does not exists'.format(args.root))
-            return 2
-
-    root_dir = monostyle_io.norm_path_sep(root_dir)
-    setup_sucess = setup(root_dir, args.patch)
+    setup_sucess = setup(args.root, args.patch)
     if not setup_sucess:
         return 2
 
@@ -371,8 +382,7 @@ def main(descr=None, mod_selection=None, parse_options=None):
         else:
             rev = args.external if len(args.external.strip()) != 0 else None
 
-        reports = get_reports_version(mods, rst_parser, True, is_internal, root_dir,
-                                      rev, args.cached)
+        reports = get_reports_version(mods, rst_parser, True, is_internal, rev, args.cached)
 
     elif args.patch:
         if not os.path.exists(args.patch):
@@ -382,12 +392,13 @@ def main(descr=None, mod_selection=None, parse_options=None):
         reports = get_reports_version(mods, rst_parser, False, True,
                                       monostyle_io.norm_path_sep(args.patch))
         for report in reports:# custom root
-            report.output.filename = monostyle_io.path_to_abs(report.output.filename)
+            report.output.filename = monostyle_io.path_to_abs(report.output.filename, "cwd")
     else:
         if not parse_options:
             parse_options = {"parse": True, "resolve": False, "post": False}
         if is_selection and args.do_resolve:
             parse_options["resolve"] = args.do_resolve
+
         reports = get_reports_file(mods, rst_parser,
                                    monostyle_io.norm_path_sep(args.filename)
                                    if args.filename else None,
@@ -396,7 +407,7 @@ def main(descr=None, mod_selection=None, parse_options=None):
     filenames_conflicted = None
     if not is_selection:
         if args.up or (args.auto and args.external is not None):
-            filenames_conflicted = update(root_dir, args.up)
+            filenames_conflicted = update(args.up)
 
     if args.auto:
         if ((is_selection or not ((args.external and rev) or args.patch) or

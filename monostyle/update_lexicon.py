@@ -6,7 +6,6 @@ update_lexicon
 Update the lexicon in the user configuration.
 """
 
-import os
 import csv
 
 import monostyle.util.monostyle_io as monostyle_io
@@ -87,17 +86,7 @@ def main():
 
     args = parser.parse_args()
 
-    if args.root is None:
-        root_dir = os.getcwd()
-    else:
-        root_dir = os.path.normpath(args.root)
-
-        if not os.path.exists(root_dir):
-            print('Error: root {0} does not exists'.format(args.root))
-            return 2
-
-    root_dir = monostyle_io.norm_path_sep(root_dir)
-    setup_sucess = setup(root_dir)
+    setup_sucess = setup(args.root)
     if not setup_sucess:
         return 2
 

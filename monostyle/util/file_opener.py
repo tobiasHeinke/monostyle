@@ -6,8 +6,7 @@ util.file_opener
 Open files in a text editor.
 """
 
-import os
-import sys
+import os.path
 import subprocess
 
 from monostyle.util.monostyle_io import ask_user, print_over, path_to_rel
@@ -82,8 +81,10 @@ def open_files(files, show_current=False):
 
 
 def main(argv=None):
+    import sys
     if argv is None:
         argv = sys.argv[1:]
+    del sys
 
     if len(argv) == 0 or argv[0] == "":
         print("No files given")
