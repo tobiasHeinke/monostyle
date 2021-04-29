@@ -17,13 +17,13 @@ from monostyle.util.report import Report
 # https://developer.blender.org/diffusion/BM/browse/trunk/blender_docs/tools/open_quickfix_in_editor.py
 
 def run(path, lincol):
+    """Open the editor via cmd."""
     cmd = ("notepad++",
            "-n" + str(lincol[0] + 1),
            "-c" + str(lincol[1] + 1), path)
     try:
-        proc = subprocess.Popen(cmd, shell=False)
-        proc.wait()
-        return proc.returncode
+        with subprocess.Popen(cmd, shell=False) as proc:
+            return proc.returncode
     except OSError:
         print("text editor to open not found")
     except ValueError as err:
@@ -31,6 +31,7 @@ def run(path, lincol):
 
 
 def open_reports_files(reports, min_severity=None):
+    """Create a list of files in the reports."""
     levels = list(Report.severities)
     if min_severity is not None:
         levels = levels[:levels.index(min_severity.upper()) +1]
@@ -48,6 +49,7 @@ def open_reports_files(reports, min_severity=None):
 
 
 def open_files(files, show_current=False):
+    """Opens a list of files."""
     nonexistents = []
     warning_limit = 100
     count = 0
@@ -81,6 +83,9 @@ def open_files(files, show_current=False):
 
 
 def main(argv=None):
+    """Inputs a comma-separated list of filenames
+    with optional lineno and colno split by double colons.
+    """
     import sys
     if argv is None:
         argv = sys.argv[1:]
@@ -91,12 +96,11 @@ def main(argv=None):
         return None
 
 
-    files_str = argv[0].split(',')
     files = []
-    for entry in files_str:
-        colno = "0"
-        lineno = "0"
+    for entry in argv[0].split(','):
         path = entry
+        lineno = 1
+        colno = 1
         # search only after file extension
         dot_idx = entry.rfind('.')
         last_idx = entry.rfind(':', dot_idx)

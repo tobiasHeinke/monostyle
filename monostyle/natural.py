@@ -275,7 +275,7 @@ def collocation_pre(_):
         if branch is None:
             branch = []
 
-        for word_rec, _ in lexicon.iter_section(word[0]):
+        for word_rec, _ in lexicon.iter_sections(word[0]):
             if len(word_rec) > len(word) or not word.startswith(word_rec):
                 continue
 
@@ -573,7 +573,8 @@ def overuse_pre(toolname):
 
 def overuse(toolname, document, reports, config):
     """Overuse of words. Filter with markup, subjects after an determiner,
-       transitions at sentence start, the file path and stopwords."""
+    transitions at sentence start, the file path and stopwords.
+    """
     threshold_min = config["threshold_min"]
     threshold_severe = config["threshold_severe"]
     distance_min = 5

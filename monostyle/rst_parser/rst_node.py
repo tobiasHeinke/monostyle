@@ -15,7 +15,7 @@ class NodeRST(Node):
 
 
     def __init__(self, node_name, code):
-        super(NodeRST, self).__init__()
+        super().__init__()
 
         self.node_name = node_name
 
@@ -42,6 +42,7 @@ class NodeRST(Node):
 
 
     def append_part(self, name, code, is_full_line=False):
+        """Append a newly created part child."""
         if not is_full_line:
             new_part = NodePartRST(name, code)
         else:
@@ -55,12 +56,14 @@ class NodeRST(Node):
 
 
     def insert_part(self, name, code, after):
+        """Insert newly created part child after a reference node."""
         new_part = NodePartRST(name, code)
         self.child_nodes.insert_after(after, new_part)
         setattr(self, name, new_part)
 
 
     def append_code(self, code):
+        """Extent the node's code."""
         if self.code is None:
             if code is None:
                 self.code = code
@@ -72,6 +75,7 @@ class NodeRST(Node):
 
 
     def prev_leaf(self):
+        """Return the previous leaf node."""
         if self.prev:
             return self.prev
         node = self
@@ -92,6 +96,7 @@ class NodeRST(Node):
 
 
     def next_leaf(self):
+        """Return the next leaf node."""
         if self.next:
             return self.next
         node = self
@@ -126,7 +131,7 @@ class NodePartRST(Node):
 
 
     def __init__(self, node_name, code):
-        super(NodePartRST, self).__init__()
+        super().__init__()
 
         self.node_name = node_name
 
@@ -140,6 +145,9 @@ class NodePartRST(Node):
 
 
     def append_child(self, new_node, prop_code=True):
+        """Append a node as a child.
+        prop_code -- propagate code to parent.
+        """
         self.child_nodes.append(new_node)
         if prop_code:
 
@@ -156,6 +164,7 @@ class NodePartRST(Node):
 
 
     def append_code(self, code):
+        """Extent the node's code and of its parents."""
         if self.code is None:
             if code is None:
                 self.code = code
@@ -170,6 +179,7 @@ class NodePartRST(Node):
 
 
     def prev_leaf(self):
+        """Return the previous leaf node."""
         node = self
         while not node.prev:
             if node.parent_node:
@@ -189,6 +199,7 @@ class NodePartRST(Node):
 
 
     def next_leaf(self):
+        """Return the next leaf node."""
         node = self
         while not node.next:
             if node.parent_node:

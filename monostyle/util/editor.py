@@ -32,8 +32,8 @@ class Editor:
         """Return stored text or read it from the file."""
         if self.source.is_empty():
             try:
-                with open(self.source.filename, "r", encoding="utf-8") as f:
-                    text = f.read()
+                with open(self.source.filename, "r", encoding="utf-8") as text_file:
+                    text = text_file.read()
 
             except (IOError, OSError) as err:
                 self._status = False
@@ -48,8 +48,8 @@ class Editor:
     def _write(self, text_dst):
         """Write output to the file."""
         try:
-            with open(self.source.filename, "w", encoding="utf-8") as f:
-                f.write(str(text_dst))
+            with open(self.source.filename, "w", encoding="utf-8") as text_file:
+                text_file.write(str(text_dst))
 
             return text_dst
 
@@ -202,10 +202,13 @@ class Editor:
                                   m.end()).add_offset(text_src.start_pos))
 
 
-    def is_conflicted(self, new_change, pos_lincol=True):
-        """Change is (self) overlaped."""
-        return bool(new_change.is_self_overlapped(pos_lincol) or
-                    self._changes.is_overlapped(new_change, pos_lincol))
+    def is_conflicted(self, new_change, pos_lincol=True, ignore_filename=True):
+        """Change is (self) overlapped."""
+        return bool(not new_change.is_self_overlapped(pos_lincol) and
+                    not self._changes.is_overlapped(new_change, pos_lincol) and
+                    (ignore_filename or
+                    (new_change.filename == self.source.filename and
+                     new_change.has_consistent_filenames(pos_lincol))))
 
 
     def is_in_change(self, loc):

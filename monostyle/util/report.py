@@ -391,32 +391,32 @@ class Report():
     #------------------------
 
 
-    def getline_lineno(code, fg, start_end=True):
+    def getline_lineno(code, output, start_end=True):
         """Extract a single line.
         start_end -- use start or end as location.
         """
-        lineno = fg.start(False)[0] if start_end else fg.end(False)[0]
+        lineno = output.start(False)[0] if start_end else output.end(False)[0]
         return code.slice((lineno, 0), (lineno+1, 0), True)
 
 
-    def getline_newline(code, fg, n, start_end=True):
+    def getline_newline(code, output, n, start_end=True):
         """Extract a line including lines around it.
         n -- number of lines to include around the line (odds below).
         start_end -- use start or end as location.
         """
-        lineno = fg.start(False)[0] if start_end else fg.end(False)[0]
+        lineno = output.start(False)[0] if start_end else output.end(False)[0]
         start = (lineno - ceil(n / 2), 0)
         end = (lineno + (n // 2) + 1, 0)
         return code.slice(start, end, True)
 
 
-    def getline_punc(code, fg, min_chars, margin):
+    def getline_punc(code, output, min_chars, margin):
         """Extracts line limited by punctuation.
         min_chars -- minimal amount of chars to extract on both sides.
         margin -- length of the outer margin within to search for punctuation marks.
         """
-        start = fg.start_pos - min_chars - margin
-        end = fg.end_pos + min_chars + margin
+        start = output.start_pos - min_chars - margin
+        end = output.end_pos + min_chars + margin
         buf = code.slice(start, end, True)
 
         margin_start, _, margin_end = buf.slice(start + margin, end - margin)
@@ -436,14 +436,14 @@ class Report():
         return buf.slice(start, end, True)
 
 
-    def getline_offset(code, fg, offset, after_before=None):
+    def getline_offset(code, output, offset, after_before=None):
         """Extracts a lines limited by an offset.
         offset -- span to include.
         after_before -- offset after end, before start or half on both sides.
         """
         is_pos = isinstance(offset, int)
-        start = fg.get_start(is_pos)
-        end = fg.get_end(is_pos)
+        start = output.get_start(is_pos)
+        end = output.get_end(is_pos)
         if after_before is None:
             if is_pos:
                 diff = offset // 2

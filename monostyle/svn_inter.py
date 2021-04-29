@@ -82,7 +82,7 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
     lineno = 0
     context = []
     skip = False
-    fg = None
+    code = None
     loc_re = re.compile(r"@@ \-\d+?(?:,\d+?)? \+(\d+?)(?:,\d+?)? @@")
     body = False
     for line in op(filename_source, rev, is_change):
@@ -108,32 +108,31 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
             continue
 
         if line.startswith("@@"):
-            if fg is not None and len(fg.content) != len(context):
-                yield fg, context, None
+            if code is not None and len(code.content) != len(context):
+                yield code, context, None
 
             loc_m = re.match(loc_re, line)
             start_lincol = (int(loc_m.group(1)) - 1, 0)
-            fg = Fragment(filename, [], 0, 0, start_lincol, start_lincol)
+            code = Fragment(filename, [], 0, 0, start_lincol, start_lincol)
             context = []
             lineno = start_lincol[0]
             body = True
 
         elif body:
             if line.startswith(' '):
-                fg.extend(line[1:] + '\n')
+                code.extend(line[1:] + '\n')
                 context.append(lineno)
                 lineno += 1
             elif line.startswith('+'):
-                fg.extend(line[1:] + '\n')
+                code.extend(line[1:] + '\n')
                 lineno += 1
 
             elif line.startswith('\\'):
-                message = line[2:] # backslash + space
-                fg_copy = fg.copy().clear(False)
-                yield fg_copy, None, message
+                # message backslash + space
+                yield code.copy().clear(False), None, line[2:]
 
-    if fg and len(fg.content) != len(context):
-        yield fg, context, None
+    if code and len(code.content) != len(context):
+        yield code, context, None
 
 
 def update_files(path, rev=None):
@@ -149,11 +148,8 @@ def update_files(path, rev=None):
                     rev_up = rev_up[:-1]
                 print(line)
             else:
-                conflict = bool(line[0] == 'C')
-                filename = line[5:].rstrip()
-                filename = norm_path_sep(filename)
-
-                yield filename, conflict, rev_up
+                # filename, conflict
+                yield norm_path_sep(line[5:].rstrip()), bool(line[0] == 'C'), rev_up
 
 
 def info(path):

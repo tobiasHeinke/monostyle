@@ -67,9 +67,9 @@ def encoding(toolname, reports):
                 reports.append(Report('F', toolname, output, message))
 
             else:
-                document_fg = Fragment(filename, text)
+                code = Fragment(filename, text)
                 for repchar_m in re.finditer(repchar_re, text):
-                    output = document_fg.slice_match_obj(repchar_m, 0, True)
+                    output = code.slice_match_obj(repchar_m, 0, True)
                     message = "unsupported character"
                     reports.append(Report('E', toolname, output, message))
 

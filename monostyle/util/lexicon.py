@@ -21,15 +21,14 @@ class Lexicon:
 
     def __new__(cls, blank=True):
         if not blank and not cls.__default__:
-            lexicon_flat = cls.read_csv(cls)
-            if lexicon_flat:
-                cls.__default__ = cls.add_charset(cls, cls.split(cls, lexicon_flat))
+            cls.__default__ = cls.split(cls, cls.read_csv(cls))
 
         if not hasattr(cls, '__loaded'):
             cls.__loaded = True
             char_catalog = CharCatalog()
             cls.hyphen_re = re.compile(r"[" + char_catalog.data["connector"]["hyphen"] + r"]")
-            cls.apostrophe_re = re.compile(r"[" + char_catalog.data["connector"]["apostrophe"] + r"]")
+            cls.apostrophe_re = re.compile(r"[" + char_catalog.data["connector"]["apostrophe"] +
+                                           r"]")
             cls.part_of_speech = PartofSpeech()
 
         return super().__new__(cls)
@@ -103,19 +102,13 @@ class Lexicon:
         return lexicon_flat
 
 
-    def add_charset(self, lexicon_split):
-        for section in lexicon_split.values():
-            for word, entry in section.items():
-                entry["_charset"] = set(ord(c) for c in word.lower())
-        return lexicon_split
-
-
     def __iter__(self):
         for section in self.data.values():
             yield from section.items()
 
 
-    def iter_section(self, first_char):
+    def iter_sections(self, first_char):
+        """Iterate over sections."""
         if len(first_char) == 0:
             return
         first_char = first_char.lower()

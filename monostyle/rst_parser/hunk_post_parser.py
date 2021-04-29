@@ -60,8 +60,9 @@ def toctree(rst_parser, document):
                     node.attr.append_child(field_node, False)
                     node.child_nodes.prepend(node.attr)
 
-                fg = Fragment(document.code.filename, [".. toctree::\n"], -1, -1, (-1, 0), (-1, 0))
-                doc = rst_parser.parse(rst_parser.document(fg=fg))
+                doc = rst_parser.parse(rst_parser.document(
+                        code=Fragment(document.code.filename, [".. toctree::\n"],
+                                      -1, -1, (-1, 0), (-1, 0))))
                 part_transfer(node, doc.body.child_nodes.first())
 
     return document
@@ -70,11 +71,11 @@ def toctree(rst_parser, document):
 def refbox(rst_parser, document):
     def rename(rst_parser, node, add_class):
         node.node_name = "dir"
-        fg = Fragment(document.code.filename,
-                      [".. admonition:: Reference\n",
-                       "   :class: refbox\n" if add_class else ""],
-                      -2, -2, (-2, 0), (-2, 0))
-        doc = rst_parser.parse(rst_parser.document(fg=fg))
+        doc = rst_parser.parse(rst_parser.document(
+                  code=Fragment(document.code.filename,
+                                [".. admonition:: Reference\n",
+                                 "   :class: refbox\n" if add_class else ""],
+                                 -2, -2, (-2, 0), (-2, 0))))
         part_transfer(node, doc.body.child_nodes.first())
 
     node = document.body.child_nodes.first()
@@ -99,8 +100,9 @@ def refbox(rst_parser, document):
 
         else:
             for field_node in node_child.body.child_nodes:
-                if (str(field_node.name).strip() not in {"Shortcut", "Menu", "Panel", "Mode", "Tool",
-                                                         "Editor", "Header", "Type", "Context"}):
+                if (str(field_node.name).strip() not in
+                        {"Shortcut", "Menu", "Panel", "Mode", "Tool",
+                         "Editor", "Header", "Type", "Context"}):
                     break
 
             else:

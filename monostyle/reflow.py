@@ -300,23 +300,31 @@ def reflow_penalties(boxes, options):
         if (re.search(r"[\?\!][\"')]*$", box.content) and
                 (box.next and re.match(r"^[^A-Za-z]*[A-Z]", box.next.content))):
             box.demerits += options["sentence"] / 2
-            if box.prev: box.prev.demerits -= options["sentence"]
-            if box.next: box.next.demerits -= options["sentence"]
+            if box.prev:
+                box.prev.demerits -= options["sentence"]
+            if box.next:
+                box.next.demerits -= options["sentence"]
 
         if re.search(r"\,$", box.content): # Comma after word
             box.demerits += options["dependent"] / 2
-            if box.prev: box.prev.demerits -= options["dependent"]
-            if box.next: box.next.demerits -= options["dependent"]
+            if box.prev:
+                box.prev.demerits -= options["dependent"]
+            if box.next:
+                box.next.demerits -= options["dependent"]
 
         if re.search(r"[\;\"\'\)]$|--$", box.content): # Punctuation after word
             box.demerits += options["independent"] / 2
-            if box.prev: box.prev.demerits -= options["independent"]
-            if box.next: box.next.demerits -= options["independent"]
+            if box.prev:
+                box.prev.demerits -= options["independent"]
+            if box.next:
+                box.next.demerits -= options["independent"]
 
         if box.next and re.match(r"^\(", box.next.content): # Next word has opening parenthesis
             box.demerits += options["independent"] / 2
-            if box.prev: box.prev.demerits -= options["independent"]
-            if box.next: box.next.demerits -= options["independent"]
+            if box.prev:
+                box.prev.demerits -= options["independent"]
+            if box.next:
+                box.next.demerits -= options["independent"]
 
         if (box.next and re.match(r"[A-Z]", box.content) and
                 not re.search(r"\.", box.content) and re.match(r"[A-Z]", box.next.content)):
@@ -327,17 +335,20 @@ def reflow_penalties(boxes, options):
 
         if re.match(r"\d", box.content):
             box.demerits -= options["math"]
-            if box.prev: box.prev.demerits -= options["math"]
+            if box.prev:
+                box.prev.demerits -= options["math"]
 
         if single_char_m := re.match(r"\\?(.)$", box.content):
             if single_char_m.group(1) != "a":
                 box.demerits -= options["math"]
-                if box.prev: box.prev.demerits -= options["math"]
+                if box.prev:
+                    box.prev.demerits -= options["math"]
 
         tag = pos_weight(part_of_speech, box.content)
         if tag and tag[0] != "abbreviation":
             box.demerits += tag[-1][1] * options["connpenalty"]
-            if box.prev: box.prev.demerits += tag[-1][0] * options["connpenalty"]
+            if box.prev:
+                box.prev.demerits += tag[-1][0] * options["connpenalty"]
 
     return boxes
 

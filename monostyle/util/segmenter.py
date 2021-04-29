@@ -76,30 +76,31 @@ class Segmenter:
         return cls.instance
 
 
-    def iter_paragraph(self, fg, output_openess=False):
+    def iter_paragraph(self, source, output_openess=False):
         buf_start = 0
         para_re = self.para_re
-        text = str(fg)
+        text = str(source)
         for para_m in re.finditer(para_re, text):
-            para_fg = fg.slice(fg.loc_to_abs(buf_start), fg.loc_to_abs(para_m.end(0)), True)
+            para_source = source.slice(source.loc_to_abs(buf_start),
+                                       source.loc_to_abs(para_m.end(0)), True)
             if not output_openess:
-                yield para_fg
+                yield para_source
             else:
-                yield para_fg, False
+                yield para_source, False
             buf_start = para_m.end(0)
 
-        if fg.loc_to_abs(buf_start) != fg.end_pos:
-            para_fg = fg.slice(fg.loc_to_abs(buf_start), after_inner=True)
+        if source.loc_to_abs(buf_start) != source.end_pos:
+            para_source = source.slice(source.loc_to_abs(buf_start), after_inner=True)
             if not output_openess:
-                yield para_fg
+                yield para_source
             else:
-                yield para_fg, True
+                yield para_source, True
 
 
-    def iter_sentence(self, fg, crop_start=False, crop_end=False, output_openess=False):
+    def iter_sentence(self, source, crop_start=False, crop_end=False, output_openess=False):
         buf_start = 0
         sent_re = self.sent_re
-        text = str(fg)
+        text = str(source)
         for sent_m in re.finditer(sent_re, text):
             if (sent_m.group(2) == "." and
                     sent_m.group(1) is not None and
@@ -111,37 +112,39 @@ class Segmenter:
                 buf_start = sent_m.end(0)
                 continue
 
-            sent_fg = fg.slice(fg.loc_to_abs(buf_start), fg.loc_to_abs(sent_m.end(0)), True)
+            sent_source = source.slice(source.loc_to_abs(buf_start),
+                                       source.loc_to_abs(sent_m.end(0)), True)
             if not output_openess:
-                yield sent_fg
+                yield sent_source
             else:
-                yield sent_fg, False
+                yield sent_source, False
 
             buf_start = sent_m.end(0)
 
         if not crop_end and buf_start != len(text):
-            sent_fg = fg.slice(fg.loc_to_abs(buf_start), after_inner=True)
+            sent_source = source.slice(source.loc_to_abs(buf_start), after_inner=True)
             if not output_openess:
-                yield sent_fg
+                yield sent_source
             else:
-                yield sent_fg, True
+                yield sent_source, True
 
 
-    def iter_clause(self, fg):
+    def iter_clause(self, source):
         # config: serial comma skip when less spaces
         threshold = 3
 
-        def do_not_skip(fg, clause_fg, is_non_oxford, is_buffered, was_non_oxford):
+        def do_not_skip(source, clause_source, is_non_oxford, is_buffered, was_non_oxford):
             if is_non_oxford and is_buffered:
                 return False
             if was_non_oxford:
                 return True
-            clause_str = str(clause_fg)
+            clause_str = str(clause_source)
             if re.match(r"\s*however,", clause_str):
                 return False
             space_count = sum(1 for s in re.finditer(r"\S\s", clause_str)) -1
             if space_count <= threshold:
-                if fg.start_pos != clause_fg.start_pos and fg.end_pos != clause_fg.end_pos:
+                if (source.start_pos != clause_source.start_pos and
+                        source.end_pos != clause_source.end_pos):
                     return False
             if re.search(self.ellipsis_re, clause_str):
                 return False
@@ -151,41 +154,43 @@ class Segmenter:
 
         buf_start = 0
         buf = None
-        text = str(fg)
+        text = str(source)
         was_non_oxford = False
         for clause_m in re.finditer(clause_re, text):
-            clause_fg = fg.slice(fg.loc_to_abs(buf_start), fg.loc_to_abs(clause_m.end(0)), True)
-            if do_not_skip(fg, clause_fg, bool(clause_m.group(2)), bool(buf), was_non_oxford):
+            clause_source = source.slice(source.loc_to_abs(buf_start),
+                                         source.loc_to_abs(clause_m.end(0)), True)
+            if do_not_skip(source, clause_source, bool(clause_m.group(2)),
+                           bool(buf), was_non_oxford):
                 if buf is not None:
                     yield buf
                     buf = None
-                yield clause_fg
+                yield clause_source
             else:
                 if buf is None:
-                    buf = clause_fg
+                    buf = clause_source
                 else:
-                    buf.combine(clause_fg)
+                    buf.combine(clause_source)
 
             buf_start = clause_m.end(0)
             was_non_oxford = clause_m.group(2)
 
         if buf_start != len(text):
-            clause_fg = fg.slice(fg.loc_to_abs(buf_start), after_inner=True)
-            if do_not_skip(fg, clause_fg, False, bool(buf), was_non_oxford):
+            clause_source = source.slice(source.loc_to_abs(buf_start), after_inner=True)
+            if do_not_skip(source, clause_source, False, bool(buf), was_non_oxford):
                 if buf is not None:
                     yield buf
-                yield clause_fg
+                yield clause_source
             else:
                 if buf is None:
-                    buf = clause_fg
+                    buf = clause_source
                 else:
-                    buf.combine(clause_fg)
+                    buf.combine(clause_source)
                 yield buf
 
 
-    def iter_parenthesis(self, fg):
+    def iter_parenthesis(self, source):
         # config: skip when less spaces
-        text = str(fg)
+        text = str(source)
         threshold = 3
         buf_start = 0
 
@@ -194,34 +199,35 @@ class Segmenter:
             space_count = sum(1 for s in re.finditer(r"\S\s", pare_m.group(0))) - 1
             if space_count > threshold:
                 if buf_start != pare_m.start(0):
-                    yield fg.slice(fg.loc_to_abs(buf_start), fg.loc_to_abs(pare_m.start(0)), True)
-                yield fg.slice_match_obj(pare_m, 0, True)
+                    yield source.slice(source.loc_to_abs(buf_start),
+                                       source.loc_to_abs(pare_m.start(0)), True)
+                yield source.slice_match_obj(pare_m, 0, True)
                 buf_start = pare_m.end(0)
 
         if buf_start != len(text):
-            yield fg.slice(fg.loc_to_abs(buf_start), after_inner=True)
+            yield source.slice(source.loc_to_abs(buf_start), after_inner=True)
 
 
-    def iter_word(self, fg, filter_numbers=True):
+    def iter_word(self, source, filter_numbers=True):
         word_re = self.word_re
         number_filter_re = self.number_filter_re
-        fg_str = str(fg)
-        for word_m in re.finditer(word_re, fg_str):
+        text = str(source)
+        for word_m in re.finditer(word_re, text):
             if not filter_numbers or not re.match(number_filter_re, word_m.group(0)):
-                yield fg.slice_match_obj(word_m, 1, True)
+                yield source.slice_match_obj(word_m, 1, True)
 
 
-    def iter_wordsub(self, fg, filter_numbers=True):
+    def iter_wordsub(self, source, filter_numbers=True):
         wordsub_re = self.wordsub_re
         number_filter_re = self.number_filter_re
-        fg_str = str(fg)
-        for wordsub_m in re.finditer(wordsub_re, fg_str):
+        text = str(source)
+        for wordsub_m in re.finditer(wordsub_re, text):
             if not filter_numbers or not re.match(number_filter_re, wordsub_m.group(0)):
-                yield fg.slice_match_obj(wordsub_m, 0, True)
+                yield source.slice_match_obj(wordsub_m, 0, True)
 
 
-    def iter_number(self, fg):
+    def iter_number(self, source):
         number_re = self.number_re
-        fg_str = str(fg)
-        for number_m in re.finditer(number_re, fg_str):
-            yield fg.slice_match_obj(number_m, 0, True)
+        text = str(source)
+        for number_m in re.finditer(number_re, text):
+            yield source.slice_match_obj(number_m, 0, True)

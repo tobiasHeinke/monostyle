@@ -55,8 +55,8 @@ def import_module(name, dst=None):
         sys.modules[dst] = module
         spec.loader.exec_module(module)
         return module
-    else:
-        print("module import: can't find the {0} module".format(name))
+
+    print("module import: can't find the {0} module".format(name))
 
 
 def init(ops, op_names, mod_name):
@@ -94,20 +94,21 @@ def get_reports_version(mods, rst_parser, from_vsn, is_internal, path=None, rev=
     filename_prev = None
     print_options = options_overide()
     parse_options = {"parse": True, "resolve": False, "post": True}
-    for fg, context, message in vsn_inter.run_diff(from_vsn, is_internal, path, rev, cached):
+    for code, context, message in vsn_inter.run_diff(from_vsn, is_internal, path, rev, cached):
         if message is not None:
-            vsn_report = Report('W', "versioning-diff", fg, message, fix=fg.copy().replace('\n'))
+            vsn_report = Report('W', "versioning-diff", code, message,
+                                fix=code.copy().replace('\n'))
             filename_prev = print_report(vsn_report, print_options, filename_prev)
             reports.append(vsn_report)
             continue
 
         if show_current:
-            monostyle_io.print_over("processing:",
-                                    "{0}[{1}-{2}]".format(monostyle_io.path_to_rel(fg.filename),
-                                                          fg.start_lincol[0], fg.end_lincol[0]),
+            monostyle_io.print_over("processing:", "{0}[{1}-{2}]"
+                                    .format(monostyle_io.path_to_rel(code.filename),
+                                            code.start_lincol[0],code.end_lincol[0]),
                                     is_temp=True)
 
-        reports, filename_prev = apply(rst_parser, mods, reports, rst_parser.document(fg=fg),
+        reports, filename_prev = apply(rst_parser, mods, reports, rst_parser.document(code=code),
                                        parse_options, print_options,
                                        filename_prev, filter_reports, context)
 
@@ -117,6 +118,7 @@ def get_reports_version(mods, rst_parser, from_vsn, is_internal, path=None, rev=
     if show_current:
         monostyle_io.print_over("processing: done")
 
+    print(*rst_parser.warnings)
     return reports
 
 
@@ -162,6 +164,7 @@ def get_reports_file(mods, rst_parser, path, parse_options):
     if show_current:
         monostyle_io.print_over("processing: done")
 
+    print(*rst_parser.warnings)
     return reports
 
 
@@ -222,8 +225,8 @@ def update(rev=None):
 def patch_flavor(filename):
     """Detect whether the patch is Git flavor."""
     try:
-        with open(filename, "r") as f:
-            text = f.read()
+        with open(filename, "r") as patch_file:
+            text = patch_file.read()
 
     except (IOError, OSError) as err:
         print("{0}: cannot open: {1}".format(filename, err))
@@ -246,9 +249,7 @@ def setup(root, patch=None):
 
         root = monostyle_io.norm_path_sep(root)
         if len(cwd) < len(root) and root.startswith(cwd):
-            swap = cwd
-            cwd = root
-            root = swap
+            cwd, root = root, cwd
 
         if not cwd.startswith(root):
             cwd = root

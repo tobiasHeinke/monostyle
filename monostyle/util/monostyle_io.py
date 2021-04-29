@@ -241,8 +241,8 @@ def texts_recursive(path=None, ext_pos=()):
 def single_text(filename):
     """Returns the filename and text of a single file."""
     try:
-        with open(filename, "r", encoding="utf-8") as f:
-            text = f.read()
+        with open(filename, "r", encoding="utf-8") as text_file:
+            text = text_file.read()
 
         filename = norm_path_sep(filename)
         return filename, text

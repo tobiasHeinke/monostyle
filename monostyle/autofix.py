@@ -59,11 +59,11 @@ def run(reports, rst_parser, filenames_conflicted=None):
 
 def apply(filename, tools, reports_unfixed, rst_parser):
     """Run the fix tool and apply the changes to the file."""
-    def search_conflicted(fg_conflict, tools):
+    def search_conflicted(change_conflicted, tools):
         for reports in tools.values():
             for report in reports:
                 for change in report.fix:
-                    if change is fg_conflict:
+                    if change is change_conflicted:
                         return report
 
     def filter_tool_overlap(changes_file, changes):
@@ -84,11 +84,11 @@ def apply(filename, tools, reports_unfixed, rst_parser):
         return reports_unfixed.extend(tools[1])
 
     changes_file = FragmentBundle()
-    fg = None
+    source = None
     for tool, reports in tools.items():
         if tool == "reflow":
             document = rst_parser.parse(rst_parser.document(filename, text))
-            fg = document.code
+            source = document.code
             changes, unlocated = monostyle.reflow.fix(document.body, reports)
 
             changes_file = filter_tool_overlap(changes_file, changes)
@@ -100,12 +100,12 @@ def apply(filename, tools, reports_unfixed, rst_parser):
     if changes_file.is_empty():
         return reports_unfixed
 
-    editor = Editor(fg if fg is not None else Fragment(filename, text), changes_file)
+    editor = Editor(source if source is not None else Fragment(filename, text), changes_file)
     _, conflicted = editor.apply(False, pos_lincol=False, use_conflict_handling=True)
 
     if len(conflicted) != 0:
-        for fg_conflict in conflicted:
-            report_conflict = search_conflicted(fg_conflict, tools)
+        for change_conflicted in conflicted:
+            report_conflict = search_conflicted(change_conflicted, tools)
             if report_conflict:
                 reports_unfixed.append(report_conflict)
 
