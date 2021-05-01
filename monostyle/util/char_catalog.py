@@ -71,45 +71,34 @@ class CharCatalog:
 
     def unicode_set(self, pattern_str, start_block, end_block, store=True):
         """Generate a regex set over a range of Unicode blocks selected by its ASCII version."""
-        def alnum(c):
-            return c.isalnum()
-
-        def alpha(c):
-            return c.isalpha()
-
-        def up(c):
-            return c.isupper()
-
-        def low(c):
-            return c.islower()
-
         if len(self.unicode_set.storage) != 0:
-            if (us := self.unicode_set.storage.get(pattern_str + str(start_block) + "-" +
-                                                   str(end_block))):
-                return us
+            if (stored := self.unicode_set.storage.get(pattern_str + str(start_block) + "-" +
+                                                       str(end_block))):
+                return stored
+
         if pattern_str == "a-z":
-            test_op = low
+            test_op = str.islower
         elif pattern_str == "A-Z":
-            test_op = up
+            test_op = str.isupper
         elif pattern_str in {"A-Za-z", "a-zA-Z"}:
-            test_op = alpha
+            test_op = str.isalpha
         elif pattern_str in {"A-Za-z0-9", "a-z0-9A-Z", "0-9A-Za-z"}:
-            test_op = alnum
+            test_op = str.isalnum
         else:
             print("char_catalog.py unicode range: unknown pattern", pattern_str)
             return pattern_str
 
-        region = []
+        regions = []
         for i in range(self._block(start_block), self._block(end_block)):
-            c = chr(i)
-            if test_op(c):
-                region.append(c)
+            char = chr(i)
+            if test_op(char):
+                regions.append(char)
 
-        region = self.contract(region)
+        regions = self.contract(regions)
         if store:
             self.unicode_set.storage[pattern_str + str(start_block) + "-" +
-                                     str(end_block)] = region
-        return region
+                                     str(end_block)] = regions
+        return regions
 
     unicode_set.storage = {}
 
@@ -120,104 +109,104 @@ class CharCatalog:
         return self.stringify(self.join(chars), apply_escape)
 
 
-    def stringify(self, chars, apply_escape=True):
+    def stringify(self, regions, apply_escape=True):
         """Join a mixed list of single chars and tuple for ranges."""
-        region = []
-        for entry in chars:
+        pattern = []
+        for entry in regions:
             if isinstance(entry, tuple):
                 if apply_escape:
                     for entry_range in entry:
                         if entry_range.endswith('-') and not entry_range.startswith('\\'):
                             entry_range = '\\' + entry_range
-                region.append(entry[0] + '-' + entry[1])
+                pattern.append(entry[0] + '-' + entry[1])
             else:
-                region.append(entry)
+                pattern.append(entry)
 
-        return ''.join(region)
+        return ''.join(pattern)
 
 
     def join(self, chars):
         """Find ranges and store them as tuples."""
-        region = []
+        regions = []
         buf = None
         last = ""
         was_esc = False
         was_adjoin = False
-        for c in chars:
+        for char in chars:
             if was_esc:
-                c = '\\' + c
+                char = '\\' + char
                 was_esc = False
-            elif c == '\\':
+            elif char == '\\':
                 was_esc = True
                 continue
 
             if buf is not None:
-                if ord(c[-1]) - ord(last[-1]) == 1:
+                if ord(char[-1]) - ord(last[-1]) == 1:
                     was_adjoin = True
                 else:
                     if was_adjoin:
-                        region.append((buf, last))
-                        buf = c
+                        regions.append((buf, last))
+                        buf = char
                         was_adjoin = False
                     else:
-                        region.append(buf)
-                        buf = c
+                        regions.append(buf)
+                        buf = char
             else:
-                buf = c
-            last = c
+                buf = char
+            last = char
 
         if buf is not None:
             if was_adjoin:
-                region.append((buf, c))
+                regions.append((buf, char))
             else:
-                region.append(c)
+                regions.append(char)
 
-        return region
+        return regions
 
 
     def expand(self, pattern_str):
         """Expand a shorten set into a char list."""
-        chars_ex = []
+        chars = []
         for entry in self.split(pattern_str):
             if isinstance(entry, tuple):
                 for range_char in range(ord(entry[0][-1]), ord(entry[1][-1]) + 1):
-                    chars_ex.append(chr(range_char))
+                    chars.append(chr(range_char))
             else:
-                chars_ex.append(entry)
+                chars.append(entry)
 
-        return chars_ex
+        return chars
 
 
     def split(self, pattern_str):
         """Parse the pattern for dashes and store them as tuples."""
-        chars = []
+        regions = []
         was_esc = False
         was_dash = False
         buf = None
-        for c in pattern_str:
+        for char in pattern_str:
             if was_esc:
-                c = '\\' + c
+                char = '\\' + char
                 was_esc = False
-            elif c == "\\":
+            elif char == "\\":
                 was_esc = True
                 continue
 
             if buf is not None:
                 if was_dash:
-                    chars.append((buf, c))
+                    regions.append((buf, char))
                     was_dash = False
                     buf = None
-                elif c == "-":
+                elif char == "-":
                     was_dash = True
                 else:
-                    chars.append(buf)
-                    buf = c
+                    regions.append(buf)
+                    buf = char
             else:
-                buf = c
+                buf = char
 
         if buf is not None:
-            chars.append(buf)
+            regions.append(buf)
             if was_dash:
-                chars.append(c)
+                regions.append(char)
 
-        return chars
+        return regions

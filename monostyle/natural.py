@@ -317,8 +317,7 @@ def collocation_pre(_):
 
         result = split_rec(lexicon, word, True)
         if result:
-            terms = list(" ".join(group) for group in result)
-            terms.append([terms, word])
+            terms.append((list(" ".join(group) for group in result), word))
 
     args = dict()
     args["config"] = listsearch.parse_flags("BIO")

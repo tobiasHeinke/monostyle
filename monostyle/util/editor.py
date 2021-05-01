@@ -21,6 +21,7 @@ class Editor:
 
 
     def from_file(filename, changes=None):
+        """Read the source from file before applying."""
         return Editor(Fragment(filename, None), changes=changes)
 
 
@@ -272,10 +273,12 @@ class PropEditor(Editor):
 
 
     def join_key(filename, key):
+        """Join key with filename."""
         return ':'.join((filename, key))
 
 
     def split_key(filename):
+        """Split key from filename."""
         if (dot_idx := filename.rfind('.')) != -1:
             if (colon_idx := filename.find(':', dot_idx)) != -1:
                 return filename[:colon_idx], filename[colon_idx + 1:]
@@ -335,6 +338,7 @@ class EditorSession:
     """
 
     def __init__(self, mode="text", **kwargs):
+        """mode -- select the type of editor."""
         if mode == "text":
             self._editor_class = Editor
         elif mode in {"filename", "filename"}:
@@ -358,6 +362,7 @@ class EditorSession:
 
 
     def add(self, new_change, pos_lincol=True):
+        """Store change in editor."""
         if (self._last_index is not None and
                 self._editors[self._last_index].new_change.filename == new_change.filename):
             self._editors[self._last_index].add(new_change, pos_lincol)
@@ -375,6 +380,7 @@ class EditorSession:
 
 
     def apply(self, virtual=False, pos_lincol=True, stop_on_conflict=False):
+        """Apply each editor."""
         if virtual:
             result = []
         for editor in self._editors:

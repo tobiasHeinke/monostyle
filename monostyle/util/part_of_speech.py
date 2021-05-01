@@ -47,6 +47,7 @@ class PartofSpeech:
 
 
     def remove_comments(cls, obj):
+        """Remove commented out entries."""
         rem_keys = []
         for key, value in obj.items():
             if key.startswith("#"):
@@ -81,6 +82,7 @@ class PartofSpeech:
 
 
     def tag(self, word):
+        """Assign POS tag."""
         def search(obj, word):
             if not isinstance(obj, str):
                 branch = []
@@ -115,6 +117,7 @@ class PartofSpeech:
 
 
     def isacr(self, word):
+        """The word is an acronym."""
         if acr_m := re.match(self.acr_re, str(word)):
             if acr_m.end() - acr_m.start() == len(word):
                 return True
@@ -122,6 +125,7 @@ class PartofSpeech:
 
 
     def isabbr(self, word):
+        """The word is an abbreviation."""
         if abbr_m := re.match(self.abbr_re, str(word)):
             if abbr_m.end() - abbr_m.start() == len(word):
                 return True

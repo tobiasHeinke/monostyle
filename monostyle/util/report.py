@@ -380,10 +380,11 @@ class Report():
 
 
     def __repr__(self):
-        self.repr()
+        return self.repr()
 
 
     def copy(self):
+        """Copy report."""
         return type(self)(self.severity, self.tool, self.output.copy(), self.message,
                           self.line.copy(), self.fix.copy())
 

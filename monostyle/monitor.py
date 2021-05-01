@@ -17,21 +17,17 @@ def check_pre(toolname):
 
 
 def check(toolname, document, reports, config):
-
+    """"Report if monitored file is changed."""
     if len(config) == 0:
         return reports
 
-    filename = monostyle_io.path_to_rel(document.code.filename)
-    if filename.startswith('/'):
-        filename = filename[1:]
+    filename = monostyle_io.path_to_rel(document.code.filename).lstrip('/')
 
     for entry in config:
-        if entry.startswith('/'):
-            entry = entry[1:]
-
-        message = ""
-        # match all subfolders
+        entry = entry.lstrip('/')
+        message = None
         if entry.endswith('/'):
+            # match all subfolders
             if re.match(entry, filename):
                 message = "changed in " + entry
         else:
@@ -44,13 +40,13 @@ def check(toolname, document, reports, config):
                 if re.match(entry + r"\/[^/]+?$", filename):
                     message = "changed in " + entry
 
-        if message != "" and filename not in check.reg:
-            output = document.body.code.copy().clear(True)
+        if message and filename not in check.register:
+            output = document.code.copy().clear(True)
             reports.append(Report('I', toolname, output, message))
-            check.reg.append(filename)
+            check.register.append(filename)
 
     return reports
 
-check.reg = []
+check.register = []
 
 OPS = (("monitor", check, check_pre),)

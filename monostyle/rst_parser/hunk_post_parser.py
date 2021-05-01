@@ -3,8 +3,7 @@
 rst_parser.hunk_post_parser
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Parse again nodes of differential hunks after main parsing
-to derive cut off node_name from the nodes body.
+Retrofit cut off node parts in differential hunks after main parsing.
 """
 
 import re
@@ -13,6 +12,7 @@ from monostyle.rst_parser.rst_node import NodeRST, NodePartRST
 
 
 def parse(rst_parser, document):
+    """Find partial markup by deriving the node_name from the node's body."""
     document = toctree(rst_parser, document)
     document = refbox(rst_parser, document)
 
@@ -20,6 +20,7 @@ def parse(rst_parser, document):
 
 
 def toctree(rst_parser, document):
+    """Find partial toctree directives."""
     doc_re = re.compile(r"\A *\S([^ \\/]+?[\\/])*[^ \\/]+?\.rst(?:$|\Z)")
     node = document.body.child_nodes.first()
     if node.node_name == "text" and node.code.isspace():
@@ -61,14 +62,15 @@ def toctree(rst_parser, document):
                     node.child_nodes.prepend(node.attr)
 
                 doc = rst_parser.parse(rst_parser.document(
-                        code=Fragment(document.code.filename, [".. toctree::\n"],
-                                      -1, -1, (-1, 0), (-1, 0))))
+                          code=Fragment(document.code.filename, [".. toctree::\n"],
+                                        -1, -1, (-1, 0), (-1, 0))))
                 part_transfer(node, doc.body.child_nodes.first())
 
     return document
 
 
 def refbox(rst_parser, document):
+    """Find partial admonition directives with refbox class."""
     def rename(rst_parser, node, add_class):
         node.node_name = "dir"
         doc = rst_parser.parse(rst_parser.document(
@@ -111,6 +113,7 @@ def refbox(rst_parser, document):
     return document
 
 
-def part_transfer(node, virt):
-    for part in virt.child_nodes:
+def part_transfer(node, node_virtual):
+    """Move node parts from one node to another."""
+    for part in node_virtual.child_nodes:
         setattr(node, part.node_name, part)

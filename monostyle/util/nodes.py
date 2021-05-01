@@ -157,11 +157,20 @@ class LinkedList:
 
 
     def count(self, ref_node):
-        """Return count of the node, but NOT when the payload is the identical."""
-        if not self.is_linked(ref_node):
-            return 0
+        """Return count of the node."""
+        if not hasattr(ref_node, "__eq__"):
+            raise NotImplementedError("Node requires an __eq__ method to check"
+                                      "if payload is identical")
 
-        return 1
+        counter = 0
+        if not self.is_linked(ref_node):
+            return counter
+
+        for node in self:
+            if node is ref_node:
+                counter += 1
+
+        return counter
 
 
     def index(self, ref_node, start=None, end=None):

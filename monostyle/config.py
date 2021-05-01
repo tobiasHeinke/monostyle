@@ -66,6 +66,7 @@ def read_file(root, from_default):
 
 
 def write_file(root, text):
+    """Write user config file."""
     filename = os.path.normpath(os.path.join(root, "monostyle", "config.json"))
 
     try:

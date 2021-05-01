@@ -60,6 +60,7 @@ def import_module(name, dst=None):
 
 
 def init(ops, op_names, mod_name):
+    """Execute the pre functions of the tools."""
     ops_sel = []
     if isinstance(op_names, str):
         op_names = [op_names]
@@ -105,7 +106,7 @@ def get_reports_version(mods, rst_parser, from_vsn, is_internal, path=None, rev=
         if show_current:
             monostyle_io.print_over("processing:", "{0}[{1}-{2}]"
                                     .format(monostyle_io.path_to_rel(code.filename),
-                                            code.start_lincol[0],code.end_lincol[0]),
+                                            code.start_lincol[0], code.end_lincol[0]),
                                     is_temp=True)
 
         reports, filename_prev = apply(rst_parser, mods, reports, rst_parser.document(code=code),

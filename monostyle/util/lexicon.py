@@ -57,6 +57,7 @@ class Lexicon:
 
 
     def read_csv(self):
+        """Read lexicon from the user config directory."""
         lexicon_flat = []
         lex_filename = monostyle_io.path_to_abs("monostyle/lexicon.csv")
         try:
@@ -165,6 +166,7 @@ class Lexicon:
 
 
     def find_similar(self, word_normed, word_str, count, sim_threshold, lexicon_words=None):
+        """Fuzzy match word in lexicon."""
         if not lexicon_words:
             lexicon_words = list(entry[0] for entry in self.join())
         return tuple(self.lower_first_reverse(entry, word_str)

@@ -3,7 +3,7 @@
 update_lexicon
 ~~~~~~~~~~~~~~
 
-Update the lexicon in the user configuration.
+Update lexicon in the user configuration.
 """
 
 import csv
@@ -16,12 +16,12 @@ from monostyle.util.lexicon import Lexicon
 
 
 def setup_lexicon():
+    """Build and save the lexicon."""
     lexicon = Lexicon(False)
     if not lexicon:
         if monostyle_io.ask_user("The lexicon does not exist in the user config folder ",
                                  "do you want to build it"):
-            lex_new = build_lexicon()
-            lexicon_write_csv(lex_new)
+            lexicon_write_csv(build_lexicon())
         else:
             return False
 
@@ -41,6 +41,7 @@ def build_lexicon():
 
 
 def lexicon_write_csv(lexicon):
+    """Write lexicon to user config directory."""
     lex_filename = monostyle_io.path_to_abs("monostyle/lexicon.csv")
     count = 0
     try:
@@ -90,13 +91,13 @@ def main():
     if not setup_sucess:
         return 2
 
-    lex_new = build_lexicon()
+    lexicon_new = build_lexicon()
     if not args.diff:
-        lexicon_write_csv(lex_new)
+        lexicon_write_csv(lexicon_new)
     else:
-        lex_stored = Lexicon(False)
-        if lex_stored is not None:
-            differential(lex_stored, lex_new)
+        lexicon_stored = Lexicon(False)
+        if lexicon_stored is not None:
+            differential(lexicon_stored, lexicon_new)
 
 
 if __name__ == "__main__":

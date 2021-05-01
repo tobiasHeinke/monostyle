@@ -402,8 +402,7 @@ def pairs(toolname, document, reports, re_lib, config):
                             reports.append(Report('W', toolname, output, message))
 
                         # invert index
-                        index = len(stack) - 1 - index
-                        stack.pop(index)
+                        stack.pop(len(stack) - 1 - index)
                         break
 
                 else:
