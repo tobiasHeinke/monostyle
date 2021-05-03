@@ -396,10 +396,10 @@ def indention(toolname, document, reports):
                             reports = block_indention(reports, part, offset,
                                                       bool(node.code.start_lincol[0] ==
                                                            part.code.start_lincol[0]))
-                    elif m := re.search(markup_space_re, str(part.code)):
-                        if (len(m.group(1)) != 1 and
+                    elif markup_space_m := re.search(markup_space_re, str(part.code)):
+                        if (len(markup_space_m.group(1)) != 1 and
                                 not rst_walker.is_of(part, "substdef", "*", "id_end")):
-                            with_what = "{:+} chars".format(1 - len(m.group(1)))
+                            with_what = "{:+} chars".format(1 - len(markup_space_m.group(1)))
                             message = Report.substitution(what="wrong markup spacing",
                                                           with_what=with_what)
                             line = (node.child_nodes[2].code if len(node.child_nodes) > 1

@@ -2,7 +2,7 @@
 {
 	"tool_selection": {
 		"markup": {
-			"tools": ["highlight", "heading-level", "indention", "kbd", "leak", "markup-names"],
+			"tools": ["highlight", "heading-level", "indention", "kbd", "leak", "markup-names", "structure"],
 			"ext": ".rst"
 		},
 		"listsearch": {

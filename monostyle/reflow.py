@@ -214,19 +214,19 @@ def process_para(node, ind_offset, options):
 
 
 class Box(Node):
-    """Text container.
-
-    content -- text.
-    space -- following spaces as Fragment.
-    demerits -- weight of breaks after the Box.
-    extra_len -- length of whitespaces before the Box e.g. a first line indent.
-    """
+    """Text container."""
 
     __slots__ = (
         'content', 'space', 'demerits', 'totalpenalty', 'linkbreak',
         'best_linkbreak', 'word_len', 'space_len')
 
     def __init__(self, content, space, demerits, extra_len=0):
+        """
+        content -- text.
+        space -- following spaces as Fragment.
+        demerits -- weight of breaks after the Box.
+        extra_len -- length of whitespaces before the Box e.g. a first line indent.
+        """
         super().__init__()
 
         self.content = content

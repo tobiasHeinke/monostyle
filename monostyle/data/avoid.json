@@ -33,12 +33,12 @@
 		"here",
 		"impl(y|ied|ying)",
 		"improves?",
+		"literally",
 		"mak(e|ing)",
 		"nothing",
 		"operat(es?|ing)",
 		"puts?",
 		"refines?",
-		"set(?! of)",
 		"specified",
 		"strictly",
 		"things?",
@@ -49,8 +49,10 @@
 	],
 	"ignore":[
 		"another",
+		"define",
 		"literally",
-		"other"
+		"other",
+		"set"
 	]
 },
 "qualifier":{

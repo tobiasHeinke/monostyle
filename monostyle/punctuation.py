@@ -279,6 +279,9 @@ def number_pre(_):
     re_lib["range"] = (re.compile(r"\d\.\.+\d"),
         Report.option(what="range separator", with_what="to or dash"))
 
+    re_lib["ratio"] = (re.compile(r"\d +:\d|\d: +\d"),
+        Report.existing(what="space", where="around ratio separator"))
+
     re_lib["percentlimit"] = (re.compile(r"\D(?:0|100)%"),
         Report.option(what="percentage limits", with_what="written out no or fully"))
 

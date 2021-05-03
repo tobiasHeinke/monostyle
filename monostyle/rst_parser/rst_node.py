@@ -7,6 +7,7 @@ rst_parser.rst_node
 from monostyle.util.nodes import Node
 
 class NodeRST(Node):
+    """Universal node for RST."""
 
     __slots__ = ('node_name',
                  'indent', 'name_start', 'name', 'name_end', 'id_start', 'id', 'id_end',
@@ -15,6 +16,10 @@ class NodeRST(Node):
 
 
     def __init__(self, node_name, code):
+        """
+        node_name -- node type.
+        code -- source of the node.
+        """
         super().__init__()
 
         self.node_name = node_name
@@ -126,11 +131,16 @@ class NodeRST(Node):
 
 
 class NodePartRST(Node):
+    """Child node parts of RST nodes."""
 
     __slots__ = ('node_name', 'code', 'active', 'is_parsed', 'is_parsing')
 
 
     def __init__(self, node_name, code):
+        """
+        node_name -- node part type.
+        code -- source of the node.
+        """
         super().__init__()
 
         self.node_name = node_name

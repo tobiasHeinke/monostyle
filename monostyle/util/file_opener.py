@@ -23,6 +23,7 @@ def run(path, lincol):
            "-c" + str(lincol[1] + 1), path)
     try:
         with subprocess.Popen(cmd, shell=False) as proc:
+            proc.wait()
             return proc.returncode
     except OSError:
         print("text editor to open not found")

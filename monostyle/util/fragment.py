@@ -7,22 +7,22 @@ Text line container.
 """
 
 class Fragment():
-    """A substring with positional information.
+    """A substring with positional information."""
 
-    filename -- absolute file path and name.
-    content -- original text or replacement text as a list of string lines.
-    start_pos/_end -- start/end as absolute char position (to the start of the file).
-    start_lincol/_end -- start/end as line/column number (0-based).
-                         Each added content (list entry) is treated as a line.
-    """
     __slots__ = ('filename', 'content', 'start_pos', 'end_pos', 'start_lincol', 'end_lincol')
 
 
     def __init__(self, filename, content, start_pos=None, end_pos=None,
                  start_lincol=None, end_lincol=None, use_lincol=True):
-        """content is split into lines if use_lincol.
+        """The content is split into lines.
         starts defaults to zero (because the start_lincol can not be measured).
         ends are measured/derived from content if None.
+
+        filename -- absolute file path and name.
+        content -- original text or replacement text as a list of string lines.
+        start_pos/_end -- start/end as absolute char position (to the start of the file).
+        start_lincol/_end -- start/end as line/column number (0-based).
+                             Each added content (list entry) is treated as a line.
         """
         self.filename = filename
 

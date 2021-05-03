@@ -9,12 +9,13 @@ Text editing utilities.
 from monostyle.util.fragment import Fragment, FragmentBundle
 
 class Editor:
-    """Text editing.
-
-    source -- Fragment as a virtual input used to apply edits on.
-    """
+    """Text editing and conflict handling."""
 
     def __init__(self, source, changes=None):
+        """
+        source -- Fragment as a virtual input used to apply edits on.
+        changes -- FragmentBundle as starting changes.
+        """
         self.source = source
         self._changes = FragmentBundle() if changes is None else changes
         self._status = True
@@ -332,13 +333,12 @@ class PropEditor(Editor):
 
 
 class EditorSession:
-    """Session with one editor per file.
-
-    mode -- selects the type of editor.
-    """
+    """Session with one editor per file."""
 
     def __init__(self, mode="text", **kwargs):
-        """mode -- select the type of editor."""
+        """
+        mode -- selects the type of editor.
+        """
         if mode == "text":
             self._editor_class = Editor
         elif mode in {"filename", "filename"}:

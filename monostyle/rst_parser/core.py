@@ -3,7 +3,7 @@
 rst_parser.core
 ~~~~~~~~~~~~~~~
 
-A RST parser.
+Main module of the RST parser.
 """
 
 import re
@@ -12,6 +12,7 @@ from monostyle.util.nodes import LinkedList
 from monostyle.rst_parser.rst_node import NodeRST, NodePartRST
 
 class RSTParser:
+    """An RST parser."""
 
     directives = (
         'admonition', 'attention', 'caution', 'class', 'code', 'compound',
@@ -184,8 +185,8 @@ class RSTParser:
                          "indented": False,
                          "is_block_end": False}
 
-            if m := re.match(ind_re, line_str):
-                ind_abs = line.loc_to_abs((0, m.end(1)))[1]
+            if ind_m := re.match(ind_re, line_str):
+                ind_abs = line.loc_to_abs((0, ind_m.end(1)))[1]
                 if block_ind is None:
                     block_ind = ind_abs
                 else:
@@ -386,7 +387,6 @@ class RSTParser:
                         self.parse_node_inline(node.body)
                     else:
                         node.body = self.parse_inline(node.body)
-
 
         return root
 
@@ -1325,10 +1325,10 @@ class RSTParser:
                 node.child_nodes.insert_after(node.active, new_node)
                 split = True
 
-                after = NodeRST("text", after)
-                after.append_part("body", after)
-                node.child_nodes.insert_after(new_node, after)
-                node.active = after
+                node_after = NodeRST("text", after)
+                node_after.append_part("body", after)
+                node.child_nodes.insert_after(new_node, node_after)
+                node.active = node_after
 
         return node, split
 

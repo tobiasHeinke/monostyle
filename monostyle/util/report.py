@@ -13,6 +13,7 @@ import monostyle.config as config
 from monostyle.util.monostyle_io import print_over, print_title, path_to_rel
 
 class MessageTemplate():
+    """Formatting for messages."""
 
     __slots__ = ('_template', '_components')
 
@@ -21,6 +22,9 @@ class MessageTemplate():
 
 
     def __init__(self, template):
+        """
+        template -- Formatting string.
+        """
         self._template = template
         self._components = self.parse(template)
 
@@ -76,19 +80,19 @@ class MessageTemplate():
 
 
 class Report():
-    """Universal tool output format.
-
-    severity -- severity level of the report.
-    tool -- name of the tool which issued the report.
-    output -- extracted content Fragment defines the file path and name and position
-    message -- message outputted to the user.
-    line -- extracted line Fragment.
-    fix -- autofix options.
-    """
+    """Universal tool output format."""
 
     __slots__ = ('severity', 'tool', 'output', 'message', 'line', 'fix')
 
     def __init__(self, severity, tool, output, message, line=None, fix=None):
+        """
+        severity -- severity level of the report.
+        tool -- name of the tool which issued the report.
+        output -- extracted content Fragment defines the file path and name and position
+        message -- message outputted to the user.
+        line -- extracted line Fragment.
+        fix -- autofix options.
+        """
         self.severity = severity
         self.tool = tool
         self.output = output

@@ -7,6 +7,7 @@ Generic node container.
 """
 
 class Node:
+    """Node base class."""
 
     __slots__ = ('prev', 'next', 'parent_node', 'child_nodes')
 
@@ -53,6 +54,7 @@ class Node:
 
 
 class LinkedList:
+    """Container for interconnected nodes."""
 
     __slots__ = ('_head', '_tail', '_list_size', 'parent')
 
@@ -145,7 +147,7 @@ class LinkedList:
 
 
     def __contains__(self, ref_node):
-        """Cecks if the node is in the list."""
+        """Checks if the node is in the list."""
         if not self.is_linked(ref_node):
             return False
 

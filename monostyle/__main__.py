@@ -141,8 +141,6 @@ def get_reports_file(mods, rst_parser, path, parse_options):
 
     print_options = options_overide()
     show_current = bool(path)
-    if path:
-        path = monostyle_io.path_to_abs(path, "doc")
     filename_prev = None
     if parse_options["resolve"]:
         titles, targets = env.get_link_titles(rst_parser)
@@ -211,10 +209,12 @@ def apply(rst_parser, mods, reports, document, parse_options, print_options,
     return reports, filename_prev
 
 
-def update(rev=None):
+def update(path=None, rev=None):
     """Update the working copy."""
+    if path:
+        path = monostyle_io.path_to_abs("")
     filenames_conflicted = set()
-    for filename, conflict, rev_up in vsn_inter.update_files(monostyle_io.path_to_abs(""), rev):
+    for filename, conflict, rev_up in vsn_inter.update_files(path, rev):
         # A conflict will be resolvable with versioning's command interface.
         if conflict:
             filenames_conflicted.add(filename)
@@ -384,7 +384,8 @@ def main(descr=None, mod_selection=None, parse_options=None):
         else:
             rev = args.external if len(args.external.strip()) != 0 else None
 
-        reports = get_reports_version(mods, rst_parser, True, is_internal, rev, args.cached)
+        reports = get_reports_version(mods, rst_parser, True, is_internal, rev=rev,
+                                      cached=args.cached)
 
     elif args.patch:
         if not os.path.exists(args.patch):
@@ -409,7 +410,7 @@ def main(descr=None, mod_selection=None, parse_options=None):
     filenames_conflicted = None
     if not is_selection:
         if args.up or (args.auto and args.external is not None):
-            filenames_conflicted = update(args.up)
+            filenames_conflicted = update(rev=args.up)
 
     if args.auto:
         if ((is_selection or not ((args.external and rev) or args.patch) or

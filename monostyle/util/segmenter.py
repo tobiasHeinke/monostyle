@@ -11,6 +11,7 @@ from monostyle.util.char_catalog import CharCatalog
 from monostyle.util.part_of_speech import PartofSpeech
 
 class Segmenter:
+    """Text segmentation and tokenization."""
 
     def __new__(cls):
         if not hasattr(cls, 'instance'):
