@@ -141,6 +141,8 @@ def get_reports_file(mods, rst_parser, path, parse_options):
 
     print_options = options_overide()
     show_current = bool(path)
+    if path:
+        path = monostyle_io.path_to_abs(path, "doc")
     filename_prev = None
     if parse_options["resolve"]:
         titles, targets = env.get_link_titles(rst_parser)
@@ -211,7 +213,7 @@ def apply(rst_parser, mods, reports, document, parse_options, print_options,
 
 def update(path=None, rev=None):
     """Update the working copy."""
-    if path:
+    if not path:
         path = monostyle_io.path_to_abs("")
     filenames_conflicted = set()
     for filename, conflict, rev_up in vsn_inter.update_files(path, rev):
@@ -334,7 +336,8 @@ def main(descr=None, mod_selection=None, parse_options=None):
     group.add_argument("-p", "--patch",
                        dest="patch", help="read diff from PATCHFILE")
     group.add_argument("-f", "--file",
-                       dest="filename", help="check working copy file or directory FILENAME")
+                       dest="filename", nargs='?', const="",
+                       help="check working copy file or directory FILENAME")
 
     parser.add_argument("-r", "--root",
                         dest="root", nargs='?', const="",

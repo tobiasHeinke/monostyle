@@ -53,11 +53,11 @@
 	// --------------
 
 	"console_options": {
-		"file_title": true,
-		"file_title_underline": "-",
+		"show_file_title": true,
+		"file_title_ruler": "-",
 		"compact": true,
 		"show_summary": true,
-		"summary_overline": "_",
+		"summary_ruler": "_",
 
 		"formatting": [
 			["filename", "location", "severity", "output", "message", "fix"],

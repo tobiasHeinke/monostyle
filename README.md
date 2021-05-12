@@ -10,11 +10,11 @@ Its tools are applied on new or changed content
 which makes it fast and it allows a wider range of tools,
 because they can have false positives. 
 For example style guide rules that have exceptions which can't be filtered out.
-Supported for versioning are SVN and Git (experimental).
+Supported for version control are SVN and Git (experimental).
 
-Monostyle is build as a framework and not as a ready-made tool
-because the tools and data require customization.
-For example you might not want to use Chicago style title case or you might have different technical terms that are acceptable.
+Monostyle is not a ready-made tool because its tools and data require customization.
+For example you might not want to use Chicago style title case or
+you might have different technical terms that are acceptable.
 It includes its own RST parser and a port of the [Reflow line wrapper](https://metacpan.org/pod/Text::Reflow).
 Its utilities can also be used for text editing with scripts.
 Monostyle is customized for the [Blender manual](https://developer.blender.org/project/profile/53/).
@@ -41,42 +41,48 @@ python -m monostyle.update_lexicon
 Monostyle has four modes:
 
 <dl>
-  <dt>-i, --internal</dt>
-  <dd>To check your own changes (the default).</dd>
-  <dt>-e, --external</dt>
-  <dd>
+   <dt>-i, --internal</dt>
+   <dd>To check your own changes (the default).</dd>
+   <dt>-e, --external</dt>
+   <dd>
       To check changes made to the repository by others.
       Run this before you update your working copy with Git or SVN.
    </dd>
-  <dt>-p, --patch</dt>
-  <dd>To check changes in a patch-file.
-      The directory from where Monostyle is run has to be same as where the patch-file was created.
-  </dd>
-  <dt>-f, --file</dt>
-  <dd>To check a file or directory.</dd>
-  <dt>-r, --root</dt>
-  <dd>
+   <dt>-p, --patch</dt>
+   <dd>To check changes in a patch-file.
+      The directory from where Monostyle is run has to be same as
+      where the patch-file was created.
+   </dd>
+   <dt>-f, --file</dt>
+   <dd>To check a file or directory.</dd>
+</dl>
+
+Options:
+
+<dl>
+   <dt>-r, --root</dt>
+   <dd>
       The root is the absolute path to the top directory of your project.
       If not set the directory where Monostyle is run from is used.
-  </dd>
-  <dt>--cached, --staged</dt>
-  <dd>
-      Set the diff cached option (Git only).
-  </dd>
+   </dd>
+   <dt>--cached, --staged</dt>
+   <dd>Set the diff cached option (Git only).</dd>
+   <dt>-s, --resolve</dt>
+   <dd>Resolve links and substitutions (file mode only).</dd>
 </dl>
 
 Post processing:
 
 <dl>
-  <dt>-u, --update</dt>
-  <dd>Update the working copy.</dd>
-  <dt>-a, --autofix </dt>
-  <dd>Apply autofixes. This also does an update if the changes are external.</dd>
-  <dt>-o, --open</dt>
-  <dd>Open the reported files in a text editor.
+   <dt>-u, --update</dt>
+   <dd>Update the working copy.</dd>
+   <dt>-a, --autofix </dt>
+   <dd>Apply autofixes. This also does an update if the changes are external.</dd>
+   <dt>-o, --open</dt>
+   <dd>Open the reported files in a text editor.
       Optionally only if the report has a severity higher than specified.
       Please check if your editor of choice is available (else please make a I/PR to add it).
-  </dd>
+   </dd>
 </dl>
 
 For more info on command line arguments use the `--help` command.

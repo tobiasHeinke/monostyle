@@ -460,8 +460,36 @@ def typ_case(toolname, document, reports, data, config):
 
 def ui_case(toolname, document, reports):
     """Check the capitalization in definition list terms."""
-    segmenter = Segmenter()
+    def check_words(part, code, is_first_word, part_name, line, do_fix=False):
+        buf = None
+        ui_terms = {"menu", "context", "node", "tab", "panel", "region", "editor", "editors"}
+        for word in segmenter.iter_word(code):
+            if buf:
+                if str(buf) in ui_terms:
+                    continue
+                if message_repl := titlecase(part_of_speech, buf, is_first_word,
+                                             False, part_name):
+                    reports.append(Report('W', toolname, buf, message_repl[0],
+                                          line, message_repl[0] if do_fix else None))
+                is_first_word = False
+            buf = word
 
+        if buf and str(buf) not in ui_terms:
+            # ignore part.next, one part per node
+            is_last_word = bool(rst_walker.is_of(part, "role", "menuselection") or
+                                part.parent_node.next is None or
+                                rst_walker.is_of(part.parent_node.next, "role",
+                                                 {"kbd", "guilabel"}))
+
+            if message_repl := titlecase(part_of_speech, buf, is_first_word,
+                                         True, part_name):
+                reports.append(Report('W', toolname, buf, message_repl[0],
+                                      line, message_repl[0] if do_fix else None))
+            is_first_word = False
+
+        return reports, is_first_word
+
+    segmenter = Segmenter()
     part_of_speech = PartofSpeech()
     instr_pos = {
         "*": {"*": ["head", "body"]}
@@ -473,15 +501,37 @@ def ui_case(toolname, document, reports):
         "standalone": "*", "literal": "*", "substitution": "*"
     }
     icon_re = re.compile(r"\([^\)]*?\)\s*\Z")
-    for node in rst_walker.iter_node(document.body, {"def", "field"}):
+    arrow_re = re.compile(r"\s*\-+>\s*\b")
+    for node in rst_walker.iter_node(document.body, {"def", "field", "role"}):
+        if node.node_name ==  "role":
+            if rst_walker.is_of(node, "role", "menuselection"):
+                body_str = str(node.body.code)
+                last = 0
+                for arrow_m in re.finditer(arrow_re, body_str):
+                    entry_code = node.body.code.slice(node.body.code.loc_to_abs(last),
+                                                      node.body.code.loc_to_abs(arrow_m.start()),
+                                                      after_inner=True)
+                    last = arrow_m.end()
+                    reports, _ = check_words(node.body, entry_code, True,
+                                             "menuselection item", node.body.code)
+                if last != len(body_str):
+                    entry_code = node.body.code.slice(node.body.code.loc_to_abs(last),
+                                                      after_inner=True)
+                    reports, _ = check_words(node.body, entry_code, True,
+                                             "menuselection item", node.body.code)
+
+            continue
+
         is_field = bool(node.node_name == "field")
         if is_field:
             if not rst_walker.is_of(node.parent_node.parent_node.parent_node,
                                     {"def", "block-quote"}):
                 continue
             child = node.name
+            part_name = "field name"
         else:
             child = node.head.child_nodes.first().body
+            part_name = "definition term"
 
         is_first_word = True
         for part in rst_walker.iter_nodeparts_instr(child, instr_pos, instr_neg, False):
@@ -494,28 +544,8 @@ def ui_case(toolname, document, reports):
                     part_code = part.code.slice(part.code.start_pos,
                                                 part.code.loc_to_abs(icon_m.start(0)), True)
 
-            buf = None
-            for word in segmenter.iter_word(part_code):
-                if buf:
-                    if message_repl := titlecase(part_of_speech, buf, is_first_word, False,
-                                                 "field name" if is_field else "definition term"):
-                        reports.append(Report('W', toolname, buf, message_repl[0],
-                                              node.name.code if is_field else node.head.code,
-                                              message_repl[1] if is_field else None))
-                    is_first_word = False
-                buf = word
-
-            if buf:
-                # ignore part.next, one part per node
-                is_last_word = bool(part.parent_node.next is None or
-                                    rst_walker.is_of(part.parent_node.next, "role",
-                                                     {"kbd", "guilabel"}))
-                if message_repl := titlecase(part_of_speech, buf, is_first_word, is_last_word,
-                                             "field name" if is_field else "definition term"):
-                    reports.append(Report('W', toolname, buf, message_repl[0],
-                                          node.name.code if is_field else node.head.code,
-                                          message_repl[1] if is_field else None))
-                is_first_word = False
+            reports, is_first_word = check_words(part, part_code, is_first_word, part_name,
+                                                 child.code, is_field)
 
     return reports
 

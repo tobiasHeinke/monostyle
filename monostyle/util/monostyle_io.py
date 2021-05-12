@@ -240,6 +240,7 @@ def texts_recursive(path=None, ext_pos=()):
 
 def single_text(filename):
     """Returns the filename and text of a single file."""
+    filename = path_to_abs(filename, "root")
     try:
         with open(filename, "r", encoding="utf-8") as text_file:
             text = text_file.read()

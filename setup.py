@@ -13,7 +13,7 @@ setup(
     license="GPLv3+",
     author="Tobias Heinke",
     author_email="tobias.heinke@outlook.com",
-    description="A framework for style checking and linting",
+    description="Tools for style checking and linting",
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords=["linter", "rst", "documentation", "style guide"],

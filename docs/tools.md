@@ -252,7 +252,7 @@ Find images with the same (binary) content.
 
 ### image-filename
 
-Check chars in filename and filenames differing only by case or extention.
+Check chars in filename and filenames differing only by case or extension.
 
 ### unused-image
 

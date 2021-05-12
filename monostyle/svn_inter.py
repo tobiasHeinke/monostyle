@@ -12,7 +12,7 @@ import os
 import re
 import subprocess
 
-from monostyle.util.monostyle_io import print_over
+from monostyle.util.monostyle_io import print_over, single_text
 from monostyle.util.fragment import Fragment
 
 
@@ -309,12 +309,8 @@ def run_diff(from_vsn, is_internal, path, rev, cached=None):
     binary_ext = {".png", ".jpg", ".jpeg", ".gif", ".pyc"}
     if from_vsn and is_internal:
         for filename in unversioned_files(path, binary_ext):
-            try:
-                with open(filename, "r", encoding="utf-8") as f:
-                    text = f.read()
-            except (IOError, OSError) as err:
-                print("{0}: cannot open: {1}".format(filename, err))
-            else:
+            filename, text = single_text(filename)
+            if text:
                 yield Fragment(filename, text), None, None
 
     yield from difference(from_vsn, is_internal, path, rev, binary_ext)

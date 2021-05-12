@@ -317,7 +317,7 @@ class Report():
         entries = dict.fromkeys(self.__slots__, None)
         entries.update((("filename", None), ("location", None)))
 
-        if not options.get("file_title", False) and options["show_filename"]:
+        if not options.get("show_file_title", False) and options["show_filename"]:
             if options["absolute_path"]:
                 entries["filename"] = self.output.filename
             else:
@@ -483,12 +483,12 @@ def options_overide(options=None):
             options = {}
 
     return {
-        "file_title": True,
+        "show_file_title": True,
         "absolute_path": False,
-        "file_title_underline": None,
+        "file_title_ruler": None,
         "compact": False,
         "show_summary": False,
-        "summary_overline": '_',
+        "summary_ruler": '_',
         **options
     }
 
@@ -513,11 +513,11 @@ def print_report(report, options=None, filename_prev=None):
     """Print a single report. Returns the filename of the report for storage."""
     if report is None:
         return
-    if options and options["file_title"]:
+    if options and options["show_file_title"]:
         if filename_prev is None or filename_prev != report.output.filename:
             print_title(report.output.filename if options["absolute_path"]
                         else path_to_rel(report.output.filename),
-                        underline=options["file_title_underline"])
+                        underline=options["file_title_ruler"])
 
     print_over(report.repr(options))
     if not options["compact"]:
@@ -544,6 +544,6 @@ def reports_summary(reports, options):
 
     summary_text.append("total" + ": " + str(summary["total"]))
 
-    if options["summary_overline"]:
-        print_over(options["summary_overline"] * len(", ".join(summary_text)))
+    if options["summary_ruler"]:
+        print_over(options["summary_ruler"] * len(", ".join(summary_text)))
     print_over(", ".join(summary_text))

@@ -117,7 +117,6 @@
 		"accepts",
 		"acts?",
 		"asks?",
-		"behaves?",
 		"chooses",
 		"comes? up",
 		"concern",
@@ -139,6 +138,9 @@
 		"visits",
 		"wants",
 		"will do"
+	],
+	"ignore":[
+		"behaves?"
 	]
 },
 "computer-characteristic":{
@@ -295,6 +297,7 @@
 	],
 	"ignore":[
 		"clean",
+		"cool",
 		"fine",
 		"fit",
 		"great"
