@@ -943,16 +943,18 @@ def structure_pre(_):
               {"output": True, "message": "list without an introductory text"}),
              ("dir(code) - !text",
               {"output": True, "message": "code without an introductory text"}),
-             ("- dir(figure) & {1} = None \\ * + dir(figure) && !None",
+             ("- dir(figure) & {1} = None \\ * + dir(figure) && {2} = !None",
               {"output": True, "message": "three or more figures in a row"
                " consider moving them into a list-table"}),
+             ("- sect & {1} = None \\ * + sect && {2} = !None",
+              {"output": True, "message": "three or more headings in a row"}),
              ("dir(figure) / body = None",
               {"output": True, "message": "figure without a caption"}),
              ("strong, emphasis << sect",
               {"output": True, "message": "font styling in heading"}),
-             ("- {0} & {{1}} = None \\ * + {0} && !None"
+             ("- {0} & {{1}} = None \\ * + {0} && {{2}} = !None"
               .format("dir(note, tip, important, hint, warning, seealso)"),
-              {"output": True, "message": "more than three boxes in a row"}),
+              {"output": True, "message": "three or more boxes in a row"}),
              ("+ emphasis, strong || !None",
               {"output": True, "message": "adjoined inline nodes of the same type"}),
              ("dir(seealso) + !None",
@@ -1106,20 +1108,20 @@ def structure(toolname, document, reports, data):
             return False
 
         operators = {
-            ";": lambda node_active, _, __, ___: node_active,
-            "=": lambda node_active, _, __, ___: node_active,
-            "==": lambda node_active, _, __, ___: node_active,
+            ";": lambda node_active, *_: node_active,
+            "=": lambda node_active, *_: node_active,
+            "==": lambda node_active, *_: node_active,
             # traversals
-            "+": lambda node_active, _, __, ___: node_active.next,
-            "-": lambda node_active, _, __, ___: node_active.prev,
-            "++": lambda node_active, _, __, ___: node_active.next_leaf(),
-            "--": lambda node_active, _, __, ___: node_active.prev_leaf(),
-            "/": lambda node_active, waypoint_active, _, __:
+            "+": lambda node_active, *_: node_active.next,
+            "-": lambda node_active, *_: node_active.prev,
+            "++": lambda node_active, *_: node_active.next_leaf(),
+            "--": lambda node_active, *_: node_active.prev_leaf(),
+            "/": lambda node_active, waypoint_active, *_:
                  get_child_node(node_active, waypoint_active),
-            ">": lambda node_active, _, __, ___: node_active.child_nodes.first(),
-            ">>": lambda node_active, _, __, ___: node_active.child_nodes.last(),
-            "<": lambda node_active, _, __, ___: node_active.parent_node,
-            "<<": lambda node_active, _, __, ___: node_active.parent_node.parent_node
+            ">": lambda node_active, *_: node_active.child_nodes.first(),
+            ">>": lambda node_active, *_: node_active.child_nodes.last(),
+            "<": lambda node_active, *_: node_active.parent_node,
+            "<<": lambda node_active, *_: node_active.parent_node.parent_node
                                                   if node_active.parent_node else None,
             "\\": lambda _, __, node_con, ___: node_con,
             # repetitions

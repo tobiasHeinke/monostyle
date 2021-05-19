@@ -470,7 +470,7 @@ def ui_case(toolname, document, reports):
                 if message_repl := titlecase(part_of_speech, buf, is_first_word,
                                              False, part_name):
                     reports.append(Report('W', toolname, buf, message_repl[0],
-                                          line, message_repl[0] if do_fix else None))
+                                          line, message_repl[1] if do_fix else None))
                 is_first_word = False
             buf = word
 
@@ -482,9 +482,9 @@ def ui_case(toolname, document, reports):
                                                  {"kbd", "guilabel"}))
 
             if message_repl := titlecase(part_of_speech, buf, is_first_word,
-                                         True, part_name):
+                                         is_last_word, part_name):
                 reports.append(Report('W', toolname, buf, message_repl[0],
-                                      line, message_repl[0] if do_fix else None))
+                                      line, message_repl[1] if do_fix else None))
             is_first_word = False
 
         return reports, is_first_word

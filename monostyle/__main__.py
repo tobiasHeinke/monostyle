@@ -351,7 +351,7 @@ def main(descr=None, mod_selection=None, parse_options=None):
     if is_selection:
         parser.add_argument("-s", "--resolve",
                             action="store_true", dest="do_resolve", default=False,
-                            help="resolve links and substitutions")
+                            help="resolve link titles and substitutions")
 
 
     if not is_selection:

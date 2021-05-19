@@ -9,7 +9,7 @@ With Monostyle you can lint and style check your documentation covering all part
 Its tools are applied on new or changed content
 which makes it fast and it allows a wider range of tools,
 because they can have false positives. 
-For example style guide rules that have exceptions which can't be filtered out.
+For example exceptions to style guide rules that can't be filtered out.
 Supported for version control are SVN and Git (experimental).
 
 Monostyle is not a ready-made tool because its tools and data require customization.
@@ -68,7 +68,7 @@ Options:
    <dt>--cached, --staged</dt>
    <dd>Set the diff cached option (Git only).</dd>
    <dt>-s, --resolve</dt>
-   <dd>Resolve links and substitutions (file mode only).</dd>
+   <dd>Resolve link titles and substitutions (file mode only).</dd>
 </dl>
 
 Post processing:

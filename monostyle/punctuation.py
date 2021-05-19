@@ -56,8 +56,11 @@ def mark_pre(_):
         Report.missing(what="space", where="after/before quote mark"))
 
     # not match: 'a' article; more than two letters are detected as misspelling
-    re_lib["spaceapos"] = (re.compile(r"\w' +[b-zA-Z]\b"),
+    re_lib["aposspace"] = (re.compile(r"\w' +[b-zA-Z]\b"),
         Report.existing(what="space", where="after apostrophe"))
+
+    re_lib["ellipsisspace"] = (re.compile(r"\.{3} +[" + punc + pare_close + r"]"),
+        Report.existing(what="space", where="after ellipsis"))
 
     re_lib["double"] = (re.compile(r"([^\w\d\s\\.-])\1|(?<!\.)(?:\.{2}|\.{4})(?!\.)"),
         Report.existing(what="double punctuation"))

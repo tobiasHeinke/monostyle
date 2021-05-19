@@ -47,7 +47,7 @@ def toctree(rst_parser, document):
                 sub_node = rst_parser.parse_inline(NodeRST("", line), "link")
                 if (len(sub_node.child_nodes) > 1 and
                         sub_node.child_nodes[1].node_name == "link"):
-                    line_str = str(sub_node.child_nodes[1].code)
+                    line_str = str(sub_node.child_nodes[1].body.code)
 
                 if not re.match(doc_re, line_str):
                     break

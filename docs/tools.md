@@ -16,6 +16,7 @@ Find rare or new words. This is a multi tool because it detects:
 - Compounding/hyphenation (if the words are not used individually like 'well defined').
 - Acronyms and capitalization within a word.
 - Homophones (similar sounding words) when one of the pair is rare.
+- Singulare/plurale tantum (singular/plural-only nouns)
 
 
 ## List Search
@@ -26,9 +27,10 @@ Explicit search for terms and capitalization.
   - vague: unspecific verbs like 'make'.
   - qualifier: requires the reader to make an assessment, e.g. 'very' can often be removed.
   - difficulty: simplicity is subjective. Can be condescending.
-  - anthropomorphism: verbs that attribute programs or algorithms human qualities, e.g. 'wants' thus a will.
-  - computer characteristic: adverbs that superficially describe expected characteristics of computer programs
-    like speed thus 'instant' results.
+  - anthropomorphism: verbs that attribute programs or algorithms human qualities,
+    e.g. 'wants' thus a will.
+  - computer characteristic: adverbs that superficially describe expected characteristics of
+    computer programs like speed thus 'instant' results.
   - voice: how to address the reader.
   - pronoun: non gender neutral pronouns.
   - uncertainty: requires the reader to make an assessment or the writer is unsure.
@@ -39,10 +41,11 @@ Explicit search for terms and capitalization.
   - style: miscellaneous rules.
 
 - dev
-  - development: wording for release nodes not belonging in docs and limitations that might be outdated.
+  - development: wording for release nodes not belonging in docs and
+    limitations that might be outdated.
   - CS technical term: software development jargon.
 
-- simplify: complicated words (long, loan or uncommon words and official language).
+- simplify: overly-complex words: long, loan or rare words and official language (Sesquipedalian).
 
 - Blender
   - UI: correct names for user interface elements, hyphenation, capitalization
@@ -129,7 +132,7 @@ Search for space-separated versions of compounds like 'may be' vs. 'maybe'.
 
 ### grammar
 
-Grammar linting.
+Limited grammar linting.
 
 ### hyphen
 
@@ -190,7 +193,7 @@ Check blank lines at the end of the file.
 
 ### admonition-title
 
-Check the titlecase convention of the first line of admonitions.
+Check the title case convention of the first line of admonitions.
 
 ### heading-caps
 
@@ -270,3 +273,5 @@ Monitor files/directories for changes.
 
 - present tense
 - positive language: explain what to do instead of what not to.
+- caps: link titles and emphasis
+- verbosity/ pleonasm
