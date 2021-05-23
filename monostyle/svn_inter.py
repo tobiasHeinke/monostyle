@@ -42,7 +42,7 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
     op = diff if from_vsn else file_diff
 
     is_change = False
-    if rev is None:
+    if not rev:
         rev = "BASE"
         if not is_internal:
             rev += ":HEAD"
@@ -88,7 +88,7 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
     for line in op(filename_source, rev, is_change):
         try:
             line = line.decode("utf-8")
-        except:
+        except UnicodeError:
             # binary: skip
             continue
 

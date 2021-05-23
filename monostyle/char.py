@@ -56,14 +56,14 @@ def encoding(toolname, reports):
             try:
                 text = f.read()
 
-            except UnicodeEncodeError as err:
+            except UnicodeError as err:
                 output = Fragment(filename, "")
-                message = "encode error: " + str(err)
+                message = "encoding error: " + str(err)
                 reports.append(Report('F', toolname, output, message))
 
-            except:
+            except Exception as err:
                 output = Fragment(filename, "")
-                message = "unknown encode error"
+                message = "unknown error: " + str(err)
                 reports.append(Report('F', toolname, output, message))
 
             else:

@@ -229,17 +229,20 @@ def patch_flavor(filename):
     """Detect whether the patch is Git flavor."""
     try:
         with open(filename, "r") as patch_file:
-            text = patch_file.read()
+            for line in patch_file:
+                if line.startswith("Index: "):
+                    return False
+                if line.startswith("diff --git "):
+                    return True
 
     except (IOError, OSError) as err:
         print("{0}: cannot open: {1}".format(filename, err))
         return None
 
-    for line in text.splitlines():
-        if line.startswith("Index: "):
-            return False
-        if line.startswith("diff --git "):
-            return True
+    except UnicodeError as err:
+        print("{0}: encoding error: {1}".format(filename, err))
+        return None
+
 
 
 def setup(root, patch=None):
@@ -381,14 +384,15 @@ def main(descr=None, mod_selection=None, parse_options=None):
         mods = ((init(mod_selection[0], args.op_names, mod_selection[2]), mod_selection[1]),)
     rst_parser = RSTParser()
     if not is_selection and not args.filename and not args.patch:
-        is_internal = bool(args.internal is not None)
-        if is_internal:
-            rev = args.internal if len(args.internal.strip()) != 0 else None
-        else:
-            rev = args.external if len(args.external.strip()) != 0 else None
+        rev = None
+        if args.internal:
+            rev = args.internal.strip()
+        elif args.external:
+            rev = args.external.strip()
 
-        reports = get_reports_version(mods, rst_parser, True, is_internal, rev=rev,
-                                      cached=args.cached)
+        reports = get_reports_version(mods, rst_parser, True,
+                                      bool(args.internal is not None or args.external is None),
+                                      rev=rev, cached=args.cached)
 
     elif args.patch:
         if not os.path.exists(args.patch):

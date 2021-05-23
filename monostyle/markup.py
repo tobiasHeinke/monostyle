@@ -1122,7 +1122,7 @@ def structure(toolname, document, reports, data):
             ">>": lambda node_active, *_: node_active.child_nodes.last(),
             "<": lambda node_active, *_: node_active.parent_node,
             "<<": lambda node_active, *_: node_active.parent_node.parent_node
-                                                  if node_active.parent_node else None,
+                                          if node_active.parent_node else None,
             "\\": lambda _, __, node_con, ___: node_con,
             # repetitions
             "?": lambda node_active, waypoint_active, node_con, waypoint_con:

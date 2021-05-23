@@ -31,7 +31,7 @@
 		"go(es)?",
 		"happen(ing|s)?",
 		"here",
-		"impl(y|ied|ying)",
+		"impl(ied|y|ying)",
 		"improves?",
 		"literally",
 		"mak(e|ing)",
@@ -46,7 +46,7 @@
 		"ways?",
 		"whenever",
 		"wherever",
-		"work(s|ing)?"
+		"work(ing|s)?"
 	],
 	"ignore":[
 		"another",
@@ -91,7 +91,7 @@
 		"apparent(ly)?",
 		"basically",
 		"clearly",
-		"eas(e|y|ily|ier)",
+		"eas(e|ier|ily|y)",
 		"effortless",
 		"intuitive(ly)?",
 		"just",
@@ -130,7 +130,7 @@
 		"makes",
 		"predicts?",
 		"prefers",
-		"remember(s|ed)",
+		"remember(ed|s)",
 		"reads",
 		"takes?",
 		"tells?", "told",
@@ -241,6 +241,7 @@
 	],
 	"ignore":[
 		"be chosen",
+		"cases?, scenarios?",
 		"mainly",
 		"often"
 	]
@@ -260,19 +261,19 @@
 	"flags": "BI",
 	"terms":[
 		"as you",
-		"bring(s|ing)?(?! out)",
+		"bring(ing|s)?(?! out)",
 		["check out", ["please refer to", "see"]],
 		"comes",
 		"do(es|ing)? (it|so|that|this)",
 		"(forget|scratch) that",
-		"get(ting|s)? rid",
+		"get(s|ting)? rid",
 		["go(ing)? in(to)?", ["switch to", "enter", "open"]],
 		"going(?! to)",
 		"just (about|in|so|that|to)",
 		[["kinds? of", "sorts? of"], "type of"],
 		"now,? (that|this|to)",
 		"pretty much",
-		"(right|for) now",
+		"(for|right) now",
 		"say you", "being said",
 		"shows? up",
 		"so (forth|now|on|this|to|what)",
@@ -305,7 +306,8 @@
 		"cool",
 		"fine",
 		"fit",
-		"great"
+		"great",
+		"polished"
 	]
 }
 }

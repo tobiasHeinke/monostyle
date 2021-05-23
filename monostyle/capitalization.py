@@ -331,7 +331,7 @@ def start_case(toolname, document, reports, re_lib):
     }
     instr_neg = {
         "dir": {
-            "figure": ["head"], "toctree": "*", "include": "*", "index": "*",
+            "figure": ["head"], "toctree": "*", "include": "*", "index": "*", "highlight": "*",
             "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},

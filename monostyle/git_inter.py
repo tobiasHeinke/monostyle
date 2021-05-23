@@ -40,7 +40,7 @@ def difference(from_vsn, is_internal, filename_source, rev, cached):
     op = diff if from_vsn else file_diff
 
     is_change = False
-    if rev is None:
+    if not rev:
         rev = "HEAD"
         if not is_internal:
             rev += "..remotes/origin/HEAD"
@@ -54,7 +54,7 @@ def difference(from_vsn, is_internal, filename_source, rev, cached):
     for line in op(filename_source, rev, cached):
         try:
             line = line.decode("utf-8")
-        except:
+        except UnicodeError:
             # binary: skip
             continue
 
