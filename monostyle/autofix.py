@@ -71,7 +71,7 @@ def apply(filename, tools, reports_unfixed, rst_parser):
         new_changes = FragmentBundle()
         for entry_old in changes_file:
             for entry in changes:
-                if entry.start_lincol == entry_old.start_lincol and len(entry_old) == 0:
+                if entry.start_lincol == entry_old.start_lincol and entry_old.isspace():
                     break
             else:
                 new_changes.combine(entry_old, check_align=False, merge=False)
@@ -87,15 +87,17 @@ def apply(filename, tools, reports_unfixed, rst_parser):
     source = None
     for tool, reports in tools.items():
         if tool == "reflow":
-            document = rst_parser.parse(rst_parser.document(filename, text))
-            source = document.code
-            changes, unlocated = monostyle.reflow.fix(document.body, reports)
+            continue
+        for report in reports:
+            changes_file.combine(report.fix, check_align=False, merge=False)
 
-            changes_file = filter_tool_overlap(changes_file, changes)
-            reports_unfixed.extend(unlocated)
-        else:
-            for report in reports:
-                changes_file.combine(report.fix, check_align=False, merge=False)
+    if "reflow" in tools.keys():
+        document = rst_parser.parse(rst_parser.document(filename, text))
+        source = document.code
+        changes, unlocated = monostyle.reflow.fix(document.body, tools["reflow"])
+
+        changes_file = filter_tool_overlap(changes_file, changes)
+        reports_unfixed.extend(unlocated)
 
     if changes_file.is_empty():
         return reports_unfixed
@@ -106,7 +108,7 @@ def apply(filename, tools, reports_unfixed, rst_parser):
     if len(conflicted) != 0:
         for change_conflicted in conflicted:
             report_conflict = search_conflicted(change_conflicted, tools)
-            if report_conflict:
+            if report_conflict and report_conflict not in reports_unfixed:
                 reports_unfixed.append(report_conflict)
 
     return reports_unfixed

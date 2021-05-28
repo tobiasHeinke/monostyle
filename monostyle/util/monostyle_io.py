@@ -64,7 +64,7 @@ def ask_user(*question):
     keys = {"pos": "yes", "neg": "nope", "help": "help"}
     retries = 0
     while True:
-        ip = input("".join((*question, " ", keys["pos"][0], "/", keys["neg"][0], "?"))).lower()
+        ip = input("".join((*question, " (", keys["pos"][0], "/", keys["neg"][0], ")? "))).lower()
         if not ip or keys["help"].startswith(ip) or ip in ("?", "¿"):
             print("confirm by entering:",
                   "'" + "', '".join(keys["pos"][:n] for n in range(1, len(keys["pos"]) + 1)) + "'")

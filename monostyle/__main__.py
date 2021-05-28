@@ -237,11 +237,9 @@ def patch_flavor(filename):
 
     except (IOError, OSError) as err:
         print("{0}: cannot open: {1}".format(filename, err))
-        return None
 
     except UnicodeError as err:
         print("{0}: encoding error: {1}".format(filename, err))
-        return None
 
 
 

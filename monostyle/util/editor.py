@@ -97,7 +97,9 @@ class Editor:
         if not virtual:
             self._status = text_dst.is_complete(pos_lincol)
             if not self._status:
-                return None
+                if not use_conflict_handling:
+                    return None
+                return text_src, self._changes.bundle
 
         self._changes.bundle.clear()
         if virtual:
@@ -148,8 +150,8 @@ class Editor:
         https://www.techiedelight.com/activity-selection-problem-using-dynamic-programming/
         """
         groups = [[] for _ in range(0, len(self._changes.bundle))]
-        for index, pair in enumerate(sorted(self._changes.bundle,
-                                            key=lambda change: change.get_end(pos_lincol))):
+        self._changes.sort(pos_lincol, start_end=False)
+        for index, pair in enumerate(self._changes.bundle):
             for index_sub, pair_sub in enumerate(self._changes.bundle[:index]):
                 if (pair_sub.get_end(pos_lincol) < pair.get_start(pos_lincol) or
                         (pair_sub.get_end(pos_lincol) == pair.get_start(pos_lincol) and

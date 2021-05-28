@@ -141,7 +141,8 @@
 		"will do"
 	],
 	"ignore":[
-		"behaves?"
+		"behaves?",
+		"deal with"
 	]
 },
 "computer-characteristic":{
@@ -198,7 +199,7 @@
 		"almost",
 		"ambigu(it(ies|y)|ous(ly)?)",
 		"ambivalent",
-		"approximat(e(ly)?|ions?)",
+		"appropriat(e(ly)?|ions?)",
 		"arbitrar(ily|y)",
 		"a round",
 		"assum(ed?|ing)",
@@ -234,12 +235,13 @@
 		"sometimes?",
 		"suppos(ed?|edly|ing)",
 		"theoretical(ly)?",
-		"try",
+		"tr(ied|y|ying)",
 		"typical(ly)?",
 		"(un)?likel(ier|y)",
 		"usual(ly)?"
 	],
 	"ignore":[
+		"approximat(e(ly)?|ions?)",
 		"be chosen",
 		"cases?, scenarios?",
 		"mainly",

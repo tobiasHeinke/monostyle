@@ -108,7 +108,7 @@ class Fragment():
         if (len(self.content) != 0 and len(self.content[-1]) == 0 and
                 self.start_lincol and self.start_lincol[1] == 0):
             self.content = self.content[:-1]
-            self.set_back_end()
+            self.switch_lincol()
         return self
 
 
@@ -557,12 +557,22 @@ class Fragment():
         return self
 
 
-    def set_back_end(self):
-        """Moves the lincol end at column 0 to the previous line end."""
+    def switch_lincol(self, before=None):
+        """Moves the lincol end at column 0 to the previous line end and in reverse for start."""
+        if before:
+            if before.is_bundle():
+                before = before.bundle[-1]
+            if (self.start_lincol and before.is_aligned(self, False) and
+                    before.content and before.content[-1].endswith('\n')):
+                new_start = (self.start_lincol[0] + 1, 0)
+                if self.start_lincol == self.end_lincol:
+                    self.end_lincol = new_start
+                self.start_lincol = new_start
+
         if (not self.end_lincol or not self.content or
                 self.end_lincol[1] != 0 or self.end_lincol == self.start_lincol):
             return self
-        if self.content[-1][-1] == '\n':
+        if self.content[-1].endswith('\n'):
             self.end_lincol = (self.end_lincol[0] - 1, len(self.content[-1]))
 
         return self
@@ -669,7 +679,7 @@ class Fragment():
             if self.end_lincol == other.start_lincol:
                 return True
             if (other.start_lincol[1] == 0 and self.end_lincol[0] + 1 == other.start_lincol[0] and
-                    self.content and self.content[-1][-1] == '\n'):
+                    self.content and self.content[-1].endswith('\n')):
                 return True
 
         return False
@@ -934,12 +944,12 @@ class FragmentBundle():
         return self
 
 
-    def combine(self, other, check_align=False, pos_lincol=True, keep_end=False, merge=True):
+    def combine(self, other, check_align=True, pos_lincol=True, keep_end=False, merge=True):
         """Merge -- combine last and first if aligned."""
         if not other:
             return self
 
-        is_before = bool(not self or other.get_start(pos_lincol) < self.get_start(pos_lincol))
+        is_before = bool(not self or other.get_end(pos_lincol) < self.get_end(pos_lincol))
 
         if keep_end and self:
             end_cur = self.get_end(pos_lincol)
@@ -954,9 +964,9 @@ class FragmentBundle():
                         piece.end_lincol = self.bundle[-1].end_lincol
 
         bundle = other.bundle if other.is_bundle() else (other,)
-        if merge and self:
+        if merge and self and (not check_align or self.is_aligned(other, pos_lincol)):
             if not self.is_overlapped(other, pos_lincol):
-                self.bundle[-1].combine(bundle[0], pos_lincol=pos_lincol, merge=merge)
+                self.bundle[-1].combine(bundle[0], check_align, pos_lincol, merge=merge)
                 self.bundle.extend(bundle[1:])
         else:
             self.bundle.extend(bundle)
@@ -1314,9 +1324,13 @@ class FragmentBundle():
         return False
 
 
-    def sort(self, pos_lincol):
+    def sort(self, pos_lincol, start_end=False):
         """Sort bundle by location."""
-        self.bundle.sort(key=lambda piece: (piece.get_start(pos_lincol), piece.get_end(pos_lincol)))
+        self.bundle.sort(key=(lambda piece: (piece.get_start(pos_lincol),
+                                             piece.get_end(pos_lincol)))
+                              if start_end else
+                              (lambda piece: (piece.get_end(pos_lincol),
+                                              piece.get_start(pos_lincol))))
 
     #--------------------
     # Location
@@ -1331,11 +1345,11 @@ class FragmentBundle():
         return self
 
 
-    def set_back_end(self):
+    def switch_lincol(self):
         if not self:
             return self
 
-        self.bundle[-1].set_back_end()
+        self.bundle[-1].switch_lincol()
         return self
 
 

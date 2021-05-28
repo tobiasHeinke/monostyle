@@ -935,7 +935,7 @@ def structure_pre(_):
              ("dir(admonition) = *[!class: refbox]",
               {"severity": 'W', "output": True,
                "message": "admonition directive without refbox class"}),
-             ("dir(admonition)[class: refbox] - !sect \\ * ++ !None",
+             ("dir(admonition)[class: refbox] - !sect \\ * -- !None",
               {"output": True, "message": "refbox admonition not at section start"}),
              ("sect + dir(figure, admonition, list-table, toctree) & !text, def-list, sect",
               {"output": False, "message": "section not starting with a text"}),
