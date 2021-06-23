@@ -200,7 +200,7 @@ class Report():
 
 
     def write_out_quantity(number, subject, irregular_plural=None, limit=None):
-        """Spell out number and switch subject between singular and plural."""
+        """Spell out number and inflect the subject for singular and plural forms."""
         if limit is None:
             limit = 99
         number = int(number)

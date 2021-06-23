@@ -1328,9 +1328,9 @@ class FragmentBundle():
         """Sort bundle by location."""
         self.bundle.sort(key=(lambda piece: (piece.get_start(pos_lincol),
                                              piece.get_end(pos_lincol)))
-                              if start_end else
-                              (lambda piece: (piece.get_end(pos_lincol),
-                                              piece.get_start(pos_lincol))))
+                             if start_end else
+                             (lambda piece: (piece.get_end(pos_lincol),
+                                             piece.get_start(pos_lincol))))
 
     #--------------------
     # Location

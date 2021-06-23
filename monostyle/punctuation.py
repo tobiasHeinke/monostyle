@@ -38,8 +38,9 @@ def mark_pre(_):
         re.compile(r"([" + pare_open + r"] )|( [" + pare_close + r"])", re.MULTILINE),
         Report.existing(what="space", where="after/before opening/closing bracket"))
 
-    re_lib["nopuncend"] = (re.compile(r"[" + punc + r"][" + pare_close + r"]?\s*\Z"),
-        Report.missing(what="punctuation mark", where="at {0} end"))
+    re_lib["puncend"] = (re.compile(r"[" + punc + r"][" + pare_close + r"]?\s*\Z"),
+        (Report.missing(what="punctuation mark", where="at {0} end"),
+        Report.existing(what="punctuation mark", where="at {0} end")))
 
     # FP: code
     re_lib["commaend"] = (re.compile(r"[,;]\s*\Z"),
@@ -159,7 +160,7 @@ def mark(toolname, document, reports, re_lib):
         if part.parent_node.node_name == "text":
             part_str = str(part.code)
             for key, value in re_lib.items():
-                if key in {"nopuncend", "commaend"}:
+                if key in {"puncend", "commaend"}:
                     continue
                 pattern = value[0]
                 for m in re.finditer(pattern, part_str):
@@ -188,14 +189,14 @@ def mark(toolname, document, reports, re_lib):
         "grid-table": "*", "simple-table": "*"
     }
 
-    noend_re = re_lib["nopuncend"][0]
+    punc_end_re = re_lib["puncend"][0]
     comma_re = re_lib["commaend"][0]
     space_re = re.compile(r"\S ")
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
         if not part.parent_node.next:
             if part.parent_node.node_name == "text":
                 part_str = str(part.code)
-                if (not re.search(noend_re, part_str) and
+                if (not re.search(punc_end_re, part_str) and
                         (len(part_str.strip()) != 0 or
                          (part.parent_node.prev and
                           part.parent_node.prev.code.end_lincol[0] == part.code.start_lincol[0]))):
@@ -214,7 +215,7 @@ def mark(toolname, document, reports, re_lib):
                     if not is_sentence(part, par_node, instr_pos, instr_neg, space_re):
                         continue
                     output = part.code.copy().clear(False)
-                    message = re_lib["nopuncend"][1].format("paragraph")
+                    message = re_lib["puncend"][1][0].format("paragraph")
                     line = Report.getline_offset(document.body.code, output, 100, False)
                     reports.append(Report('W', toolname, output, message, line))
 
@@ -227,9 +228,9 @@ def mark(toolname, document, reports, re_lib):
                         reports.append(Report('W', toolname, output, message))
 
         elif rst_walker.is_of(part, {"role", "hyperlink"}, "*", "head"):
-            if re.search(noend_re, str(part.code)):
+            if re.search(punc_end_re, str(part.code)):
                 output = part.code.copy().clear(False)
-                message = (re_lib["nopuncend"][1]
+                message = (re_lib["puncend"][1][1]
                            .format(rst_walker.write_out(part.parent_node.node_name) +
                                    " " + part.node_name))
                 reports.append(Report('W', toolname, output, message))

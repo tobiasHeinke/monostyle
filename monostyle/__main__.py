@@ -119,7 +119,8 @@ def get_reports_version(mods, rst_parser, from_vsn, is_internal, path=None, rev=
     if show_current:
         monostyle_io.print_over("processing: done")
 
-    print(*rst_parser.warnings)
+    if rst_parser.warnings:
+        print('\n'.join(rst_parser.warnings))
     return reports
 
 
@@ -165,7 +166,8 @@ def get_reports_file(mods, rst_parser, path, parse_options):
     if show_current:
         monostyle_io.print_over("processing: done")
 
-    print(*rst_parser.warnings)
+    if rst_parser.warnings:
+        print('\n'.join(rst_parser.warnings))
     return reports
 
 

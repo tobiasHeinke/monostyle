@@ -114,7 +114,7 @@ class RSTParser:
         before_b = r"])|\A)"
         after_a = r"(?:(?=[^\w"
         after_b = r"])|\Z)"
-        url_chars = r"[-_.!~*'()[\];/:&=+$,%a-zA-Z0-9]"
+        url_chars = r"[-_.!?~#*'()[\];/:&=+$,%a-zA-Z0-9]"
         url = r"(?:\\[*_])?" + url_chars + r"*\b(?:\\[*_]" + url_chars + r"*)*"
 
         inlines = {

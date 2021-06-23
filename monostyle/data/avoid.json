@@ -19,7 +19,7 @@
 		"anytime",
 		"anyway",
 		"anywhere",
-		"certain",
+		"certain(ly)?",
 		"does(?! not)",
 		"do(ing|ne)?",
 		"effective(ly)?",
@@ -108,6 +108,7 @@
 		"undemanding"
 	],
 	"ignore":[
+		"only",
 		"quickly",
 		"efficiently"
 	]
@@ -125,13 +126,16 @@
 		"decides",
 		"expects",
 		"fulfills",
+		"governs",
 		"guesses", "guessed by",
 		"intends",
 		"makes",
+		"manages",
 		"predicts?",
 		"prefers",
 		"remember(ed|s)",
 		"reads",
+		"respect(ing|s)?",
 		"takes?",
 		"tells?", "told",
 		"treats",
@@ -267,18 +271,22 @@
 		["check out", ["please refer to", "see"]],
 		"comes",
 		"do(es|ing)? (it|so|that|this)",
+		"fee?d(ing|s)?",
 		"(forget|scratch) that",
 		"get(s|ting)? rid",
 		["go(ing)? in(to)?", ["switch to", "enter", "open"]],
 		"going(?! to)",
+		"head over",
 		"just (about|in|so|that|to)",
 		[["kinds? of", "sorts? of"], "type of"],
+		"bunch of",
 		"now,? (that|this|to)",
 		"pretty much",
 		"(for|right) now",
 		"say you", "being said",
 		"shows? up",
 		"so (forth|now|on|this|to|what)",
+		"(?-i:S)o,|(and|or) (so(?! on)|such)",
 		"so[ -]called",
 		"somewhat",
 		"sooner or later",
@@ -301,7 +309,8 @@
 		"nice(ly)?",
 		"perfect(ly)?",
 		"refurbish(ed)?",
-		"revamp(ed)?"
+		"revamp(ed)?",
+		"streamlined"
 	],
 	"ignore":[
 		"clean",
@@ -309,7 +318,8 @@
 		"fine",
 		"fit",
 		"great",
-		"polished"
+		"polished",
+		"experience"
 	]
 }
 }

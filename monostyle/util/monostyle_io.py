@@ -103,7 +103,7 @@ def path_to_abs(path, base=None):
     root = norm_path_sep(os.getcwd())
     if not path.startswith(root):
         base = (norm_path_sep(os.path.normpath(config.project_dirs[base])).lstrip(".")
-                if base in config.project_dirs else None)
+                if base and base in config.project_dirs else None)
         if base is not None and not path.startswith(base + '/'):
             path = '/'.join((root, base, path)).strip("/")
         else:
@@ -218,7 +218,7 @@ def img_files(path=None):
 def texts_recursive(path=None, ext_pos=()):
     """Yields the filename and text of files."""
     if path is None:
-        path = path_to_abs("", "root")
+        path = path_to_abs("")
 
     ext_names = '/'.join(ext[1:] for ext in ext_pos) # strip dot
     if not os.path.isdir(path):
@@ -240,7 +240,7 @@ def texts_recursive(path=None, ext_pos=()):
 
 def single_text(filename):
     """Returns the filename and text of a single file."""
-    filename = path_to_abs(filename, "root")
+    filename = path_to_abs(filename)
     try:
         with open(filename, "r", encoding="utf-8") as text_file:
             text = text_file.read()
@@ -256,7 +256,7 @@ def single_text(filename):
 def files_recursive(path=None, ext_pos=(), split_output=False):
     """Yield files in the sub-/directories."""
     if path is None:
-        path = path_to_abs("", "root")
+        path = path_to_abs("")
     else:
         path = norm_path_sep(path)
 

@@ -326,7 +326,8 @@ def line_style(toolname, document, reports, re_lib):
     part_of_speech = PartofSpeech()
 
     for node in rst_walker.iter_node(document.body, {"text", "block-quote"}, enter_pos=False):
-        if rst_walker.is_of(node.parent_node, {"sect", "def"}):
+        if (rst_walker.is_of(node.parent_node, "sect") or
+                rst_walker.is_of(node.parent_node, "def", "*", "head")):
             continue
 
         text = str(node.code)
