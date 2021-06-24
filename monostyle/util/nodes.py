@@ -53,6 +53,15 @@ class Node:
                 return node
 
 
+    def copy(self, linked=False):
+        """Create a copy the node."""
+        new = type(self)()
+        for prop in self.__dict__.keys():
+            if linked or prop not in self.__slots__.keys():
+                setattr(new, prop, getattr(self, prop))
+        return new
+
+
 class LinkedList:
     """Container for interconnected nodes."""
 
@@ -69,10 +78,8 @@ class LinkedList:
     def copy(self):
         """Create a copy."""
         new_list = type(self)(self.parent)
-        new_list._head = self._head
-        new_list._tail = self._tail
-        new_list._list_size = self._list_size
-
+        for node in self:
+            new_list.append(node.copy(linked=False))
         return new_list
 
 
