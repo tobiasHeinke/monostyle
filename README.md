@@ -8,7 +8,7 @@ With Monostyle you can lint and style check your documentation covering all part
 
 Its tools are applied on new or changed content
 which makes it fast and it allows a wider range of tools,
-because they can have false positives. 
+because they can have false positives.
 For example exceptions to style guide rules that can't be filtered out.
 Supported for version control are SVN and Git (experimental).
 
@@ -54,7 +54,11 @@ Monostyle has four modes:
       where the patch-file was created.
    </dd>
    <dt>-f, --file</dt>
-   <dd>To check a file or directory.</dd>
+   <dd>To check a file or directory.
+      Files can have a line selection at the end split with a colon and
+      the span separated by a dash. For example `test.rst:10-25`.
+      If the start or end are ommitted the start and end of the file are used accordingly.
+   </dd>
 </dl>
 
 Options:

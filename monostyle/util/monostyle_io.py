@@ -117,6 +117,16 @@ def norm_path_sep(path):
                     if len(s) != 0 and (len(s) != 1 or s != "."))
 
 
+def split_path_appendix(path, sep=':'):
+    """Splits of an appendix at the end of a file path."""
+    path_only, filename = os.path.split(path)
+    filename, ext = os.path.splitext(path)
+    ext_only, sep, appendix = ext.partition(sep)
+    if sep:
+        path = '/'.join((path_only, filename)) + ext_only
+    return path, appendix
+
+
 def get_data_file(path):
     """Read JSON data file.
 

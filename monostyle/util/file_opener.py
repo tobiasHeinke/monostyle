@@ -9,7 +9,7 @@ Open files in a text editor.
 import os.path
 import subprocess
 
-from monostyle.util.monostyle_io import ask_user, print_over, path_to_rel
+from monostyle.util.monostyle_io import ask_user, print_over, path_to_rel, split_path_appendix
 from monostyle.util.report import Report
 
 
@@ -96,24 +96,15 @@ def main(argv=None):
         print("No files given")
         return None
 
-
     files = []
     for entry in argv[0].split(','):
-        path = entry
+        path, appendix = split_path_appendix(entry)
         lineno = 1
         colno = 1
-        # search only after file extension
-        dot_idx = entry.rfind('.')
-        last_idx = entry.rfind(':', dot_idx)
-        if last_idx != -1:
-            penul_idx = entry.rfind(':', dot_idx, last_idx)
-            if penul_idx != -1:
-                path = entry[:penul_idx]
-                lineno = entry[penul_idx+1:last_idx]
-                colno = entry[last_idx+1:]
-            else:
-                path = entry[:last_idx]
-                lineno = entry[last_idx+1:]
+        if appendix:
+            lineno, _, colno = appendix.partition(':')
+            if not colno:
+                colno = 1
 
         files.append((path, (int(lineno) - 1, int(colno) - 1)))
 

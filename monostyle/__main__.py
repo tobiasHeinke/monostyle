@@ -22,6 +22,7 @@ from . import config
 from .util import monostyle_io
 from .util.report import (Report, print_reports, print_report,
                           options_overide, reports_summary)
+from .util.fragment import Fragment
 from .rst_parser.core import RSTParser
 from .rst_parser import environment as env
 from .rst_parser import hunk_post_parser
@@ -109,8 +110,8 @@ def get_reports_version(mods, rst_parser, from_vsn, is_internal, path=None, rev=
                                             code.start_lincol[0], code.end_lincol[0]),
                                     is_temp=True)
 
-        reports, filename_prev = apply(rst_parser, mods, reports, rst_parser.document(code=code),
-                                       parse_options, print_options,
+        reports, filename_prev = apply(rst_parser, mods, reports,
+                                       code, parse_options, print_options,
                                        filename_prev, filter_reports, context)
 
     if print_options["show_summary"]:
@@ -126,6 +127,27 @@ def get_reports_version(mods, rst_parser, from_vsn, is_internal, path=None, rev=
 
 def get_reports_file(mods, rst_parser, path, parse_options):
     """Get working copy text files."""
+    def split_span(path):
+        """Split of span and make path absolute."""
+        path, appendix = monostyle_io.split_path_appendix(path)
+        path = monostyle_io.path_to_abs(path, "doc")
+
+        if os.path.isfile(path) and appendix:
+            start, _, end = appendix.partition('-')
+            if start and start.isdigit():
+                start = (int(start) - 1, 0)
+            else:
+                start = None
+            if end and end.isdigit():
+                if not start:
+                    start = (0, 0)
+                end = (int(end), 0)
+            else:
+                end = None
+            return path, (start, end) if start or end else None
+
+        return path, None
+
     reports = []
     ops_loop = []
     ext_test = None
@@ -142,22 +164,31 @@ def get_reports_file(mods, rst_parser, path, parse_options):
 
     print_options = options_overide()
     show_current = bool(path)
+    span = None
     if path:
-        path = monostyle_io.path_to_abs(path, "doc")
+        path, span = split_span(path)
+
     filename_prev = None
     if parse_options["resolve"]:
         titles, targets = env.get_link_titles(rst_parser)
         parse_options["titles"] = titles
         parse_options["targets"] = targets
     for filename, text in monostyle_io.doc_texts(path):
-        doc = rst_parser.document(filename, text)
+        code = Fragment(filename, text)
+        if span:
+            code = code.slice(span[0], span[1], True)
+            if code.span_len(True) == 0:
+                continue
+            if code.start_pos != 0:
+                parse_options["post"] = True
+
         if show_current:
             monostyle_io.print_over("processing:",
-                                    "{0}[{1}-{2}]".format(monostyle_io.path_to_rel(filename),
-                                                          0, doc.code.end_lincol[0]),
+                                    "{0}[{1}-{2}]".format(monostyle_io.path_to_rel(code.filename),
+                                                          code.start_lincol[0], code.end_lincol[0]),
                                     is_temp=True)
 
-        reports, filename_prev = apply(rst_parser, ((ops_loop, ext_test),), reports, doc,
+        reports, filename_prev = apply(rst_parser, ((ops_loop, ext_test),), reports, code,
                                        parse_options, print_options, filename_prev)
 
     if print_options["show_summary"]:
@@ -180,9 +211,10 @@ def filter_reports(report, context):
                 report.output.start_lincol[0] in context)
 
 
-def apply(rst_parser, mods, reports, document, parse_options, print_options,
+def apply(rst_parser, mods, reports, code, parse_options, print_options,
           filename_prev, filter_func=None, context=None):
     """Parse the hunks and apply the tools."""
+    document = rst_parser.document(code=code)
     if parse_options["parse"] and document.code.filename.endswith(".rst"):
         document = rst_parser.parse(document)
         if parse_options["post"]:

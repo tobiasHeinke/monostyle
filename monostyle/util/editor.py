@@ -7,6 +7,7 @@ Text editing utilities.
 """
 
 from monostyle.util.fragment import Fragment, FragmentBundle
+from monostyle.util.monostyle_io import split_path_appendix
 
 class Editor:
     """Text editing and conflict handling."""
@@ -282,11 +283,7 @@ class PropEditor(Editor):
 
     def split_key(filename):
         """Split key from filename."""
-        if (dot_idx := filename.rfind('.')) != -1:
-            if (colon_idx := filename.find(':', dot_idx)) != -1:
-                return filename[:colon_idx], filename[colon_idx + 1:]
-
-        return filename, None
+        return split_path_appendix(filename, sep=':')
 
 
     def _read(self):
