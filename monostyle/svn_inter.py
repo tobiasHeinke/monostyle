@@ -270,12 +270,10 @@ def exec_command(cmd_args):
             print_over("fetching" if cmd_args[0] in {"status", "diff", "update"}
                        else "applying", cmd_args[0], ellipsis="...")
         output = subprocess.check_output(cmd)
-    except OSError as err:
+    except (OSError, ValueError) as err:
         print("svn", cmd_args[0], "error:", err)
-    except ValueError as err:
+    except subprocess.CalledProcessError as err:
         print("svn", cmd_args[0], "error:", err)
-    except Exception as err:
-        print("svn", cmd_args[0], "unexpected error", err)
     else:
         if not silent:
             print_over("done")
