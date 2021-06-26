@@ -77,28 +77,21 @@ class Segmenter:
         return cls.instance
 
 
-    def iter_paragraph(self, source, output_openess=False):
+    def iter_paragraph(self, source):
         buf_start = 0
         para_re = self.para_re
         text = str(source)
         for para_m in re.finditer(para_re, text):
-            para_source = source.slice(source.loc_to_abs(buf_start),
-                                       source.loc_to_abs(para_m.end(0)), True)
-            if not output_openess:
-                yield para_source
-            else:
-                yield para_source, False
+            yield (source.slice(source.loc_to_abs(buf_start),
+                                source.loc_to_abs(para_m.end(0)), True),
+                   source.slice_match_obj(para_m, 0, True))
             buf_start = para_m.end(0)
 
         if source.loc_to_abs(buf_start) != source.end_pos:
-            para_source = source.slice(source.loc_to_abs(buf_start), after_inner=True)
-            if not output_openess:
-                yield para_source
-            else:
-                yield para_source, True
+            yield source.slice(source.loc_to_abs(buf_start), after_inner=True), None
 
 
-    def iter_sentence(self, source, crop_start=False, crop_end=False, output_openess=False):
+    def iter_sentence(self, source, crop_start=False, crop_end=False):
         buf_start = 0
         sent_re = self.sent_re
         text = str(source)
@@ -113,21 +106,14 @@ class Segmenter:
                 buf_start = sent_m.end(0)
                 continue
 
-            sent_source = source.slice(source.loc_to_abs(buf_start),
-                                       source.loc_to_abs(sent_m.end(0)), True)
-            if not output_openess:
-                yield sent_source
-            else:
-                yield sent_source, False
+            yield (source.slice(source.loc_to_abs(buf_start),
+                                source.loc_to_abs(sent_m.end(0)), True),
+                   source.slice_match_obj(sent_m, 2, True))
 
             buf_start = sent_m.end(0)
 
         if not crop_end and buf_start != len(text):
-            sent_source = source.slice(source.loc_to_abs(buf_start), after_inner=True)
-            if not output_openess:
-                yield sent_source
-            else:
-                yield sent_source, True
+            yield source.slice(source.loc_to_abs(buf_start), after_inner=True), None
 
 
     def iter_clause(self, source):

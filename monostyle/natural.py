@@ -479,14 +479,14 @@ def metric(toolname, document, reports):
     }
     node_cur = None
     node_prev = None
-    is_open = False
+    stop = None
     sen_full = None
     counter = dict.fromkeys({"sect", "sen", "para", "para_short"}, 0)
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
         if node_cur is None or part.code.end_pos > node_cur.code.end_pos:
             if node_cur:
-                if is_open and sen_full and not sen_full.isspace():
+                if not stop and sen_full and not sen_full.isspace():
                     counter["para"] += 1
                 node_prev = node_cur
                 is_last = bool(rst_walker.is_of(node_cur.parent_node,
@@ -527,7 +527,7 @@ def metric(toolname, document, reports):
                 if node_cur.node_name == "sect":
                     counter["sect"] += len(part.code)
                 else:
-                    for sen, is_open in segmenter.iter_sentence(part.code, output_openess=True):
+                    for sen, stop in segmenter.iter_sentence(part.code):
                         for word in segmenter.iter_word(sen):
                             counter["sen"] += 1
                             if len(word) >= conf["word_len"]:
@@ -542,7 +542,7 @@ def metric(toolname, document, reports):
                             sen_full = document.body.code.slice(
                                            sen_full.start_lincol, sen.end_lincol, True)
 
-                        if not is_open:
+                        if stop:
                             reports = compare(node_cur, sen_full, counter, reports, True)
                             counter["sen"] = 0
                             counter["para"] += 1
@@ -556,7 +556,7 @@ def metric(toolname, document, reports):
                         sen_full = None
 
     if node_cur:
-        if is_open and sen_full and not sen_full.isspace():
+        if not stop and sen_full and not sen_full.isspace():
             counter["para"] += 1
         reports = compare(node_cur, sen_full, counter, reports, is_last=True)
 
@@ -675,7 +675,7 @@ def overuse(toolname, document, reports, config):
         if word:
             # add per average word length in skipped code
             counter += (part.code.start_pos - word.end_pos) // 6
-        for sen, is_open in segmenter.iter_sentence(part.code, output_openess=True):
+        for sen, stop in segmenter.iter_sentence(part.code):
             for word in segmenter.iter_word(sen):
                 counter += 1
                 word_str = str(word).lower()
@@ -731,7 +731,7 @@ def overuse(toolname, document, reports, config):
 
                 is_first = False
 
-            if not is_open:
+            if stop:
                 is_first = True
 
         if not part.next and not part.parent_node.next:
@@ -851,7 +851,7 @@ def repeated(toolname, document, reports, config):
 
                 buf.append("")
 
-            for sen, is_open in segmenter.iter_sentence(part.code, output_openess=True):
+            for sen, stop in segmenter.iter_sentence(part.code):
                 for word in segmenter.iter_word(sen):
                     word_lower = str(word).lower()
                     word_stem = stemmer_patch(porter_stemmer, word_lower)
@@ -877,7 +877,7 @@ def repeated(toolname, document, reports, config):
 
                     buf.append(word_stem)
 
-                if not is_open:
+                if stop:
                     buf.clear()
 
             if rst_walker.is_of(part, "text") and part.parent_node.indent:

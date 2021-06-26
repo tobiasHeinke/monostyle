@@ -182,7 +182,7 @@ def pos_case(toolname, document, reports):
                     not rst_walker.is_of(node_par.parent_node, "document")):
                 continue
 
-        for sen, is_open in segmenter.iter_sentence(part.code, output_openess=True):
+        for sen, stop in segmenter.iter_sentence(part.code):
             is_first_word = not was_open
             for word in segmenter.iter_word(sen):
                 if is_first_word:
@@ -198,7 +198,7 @@ def pos_case(toolname, document, reports):
                     message = Report.misformatted(what="uppercase " + tag[0])
                     reports.append(Report('W', toolname, word, message, sen))
 
-            was_open = is_open
+            was_open = bool(stop is None)
 
         # paragraph end
         if not part.parent_node.next:
@@ -237,7 +237,7 @@ def proper_noun_pre(_):
 
         first = True
         for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-            for sen in segmenter.iter_sentence(part.code):
+            for sen, _ in segmenter.iter_sentence(part.code):
                 for word in segmenter.iter_word(sen):
                     if first:
                         first = False
