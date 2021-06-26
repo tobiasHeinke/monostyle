@@ -16,15 +16,13 @@ from monostyle.rst_parser.core import RSTParser
 
 def highlight_pre(toolname):
     config = dict()
-    config.update(monostyle_io.get_override(__file__, toolname, "threshold_min", 0.6))
-    config.update(monostyle_io.get_override(__file__, toolname, "threshold_severe", 1.0))
+    config.update(monostyle_io.get_override(__file__, toolname, "thresholds", (0.6, 1.0)))
     return {"config": config}
 
 
 def highlight(toolname, document, reports, config):
     """Overuse of inline markup."""
-    threshold_min = config["threshold_min"]
-    threshold_severe = config["threshold_severe"]
+    thresholds = config["thresholds"]
     average_ref = 14
     blank_line = 80
 
@@ -41,11 +39,11 @@ def highlight(toolname, document, reports, config):
 
         if text_chars > 100 or is_final:
             score_final = (score_global / counter) * (-(1 / (counter + (1 / 1.125))) + 1.125)
-            if score_final > threshold_min:
+            if score_final > thresholds[0]:
                 output = score_cur["node"].code.copy().clear(True)
                 message = Report.quantity(what="highlight overuse",
                                           how=str(counter) + " times")
-                reports.append(Report('I' if score_final < threshold_severe else 'W', toolname,
+                reports.append(Report(Report.map_severity(thresholds, score_final), toolname,
                                       output, message, score_cur["node"].parent_node.code))
 
             score_global = 0

@@ -147,6 +147,7 @@ def page_name(toolname, document, reports):
     for word in re.split(r"[_-]", page):
         page_split.append(porter_stemmer.stem(word, 0, len(word)-1))
 
+    threshold = (0.5, 0.33, 0.25)
     for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
         head = str(node.name.code).lower().strip()
         head = re.sub(r"\b(\w)\-", r"\1", head)
@@ -186,16 +187,10 @@ def page_name(toolname, document, reports):
         if page == ''.join(acronym):
             sim = 1
 
-        if sim < 0.5:
-            severity = 'I'
-            if sim < 0.25:
-                severity = 'E'
-            elif sim < 0.33:
-                severity = 'W'
-
+        if sim < threshold[0]:
             message = "page title - filename mismatch {:4.0%}".format(sim)
-            reports.append(Report(severity, toolname, node.name.code, message,
-                                  Fragment(document.code.filename, page)))
+            reports.append(Report(Report.map_severity(threshold, sim), toolname, node.name.code,
+                                  message, Fragment(document.code.filename, page)))
 
         # break to only process only the first heading
         break

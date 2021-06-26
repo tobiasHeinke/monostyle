@@ -171,6 +171,19 @@ class Report():
     }
 
 
+    def map_severity(thresholds, value, start=None):
+        """Convert a value to a severity with a list of thresholds."""
+        severities = tuple(reversed(Report.severities))
+        if not start or start not in severities:
+            start = 'I'
+        direction = severities[0] <= severities[-1]
+        for index, threshold in enumerate(thresholds, -1 + severities.index(start)):
+            if bool(value > threshold if direction else value < threshold):
+                return severities[min(max(index, 0), len(severities) - 1)]
+        return severities[min(max(len(thresholds) -1 + severities.index(start), 0),
+                              len(severities) - 1)]
+
+
     #--------------------
     # Message
 

@@ -565,8 +565,7 @@ def metric(toolname, document, reports):
 
 def overuse_pre(toolname):
     config = dict()
-    config.update(monostyle_io.get_override(__file__, toolname, "threshold_min", 2.0))
-    config.update(monostyle_io.get_override(__file__, toolname, "threshold_severe", 3.1))
+    config.update(monostyle_io.get_override(__file__, toolname, "thresholds", (2.0, 3.1)))
     return {"config": config}
 
 
@@ -574,8 +573,7 @@ def overuse(toolname, document, reports, config):
     """Overuse of words. Filter with markup, subjects after an determiner,
     transitions at sentence start, the file path and stopwords.
     """
-    threshold_min = config["threshold_min"]
-    threshold_severe = config["threshold_severe"]
+    thresholds = config["thresholds"]
     distance_min = 5
     distance_max = 80
     modifier_as_topic = True
@@ -585,10 +583,11 @@ def overuse(toolname, document, reports, config):
         words.remove(word_str)
 
     def evaluate(document, reports, words):
-        def add_report(document, reports, word, is_severe, count):
+        def add_report(document, reports, word, thresholds, score, count):
             message = Report.quantity(what="overused word", how=str(count) + " times")
             line = Report.getline_punc(document.code, word, 50, 30)
-            reports.append(Report('I' if not is_severe else 'W', toolname, word, message, line))
+            reports.append(Report(Report.map_severity(thresholds, score), toolname, word,
+                                  message, line))
 
             return reports
 
@@ -604,10 +603,9 @@ def overuse(toolname, document, reports, config):
                     buf = instance
                 distance = instance[2] - buf[2]
                 if distance > distance_max:
-                    if score >= threshold_min:
+                    if score >= thresholds[0]:
                         reports = add_report(document, reports, instance[0],
-                                             bool(score >= threshold_severe),
-                                             index - index_last + 1)
+                                             thresholds, score, index - index_last + 1)
                     buf = None
                     score = 0
                     index_last = index
@@ -617,9 +615,9 @@ def overuse(toolname, document, reports, config):
                                                       (distance - distance_min), 2)) + 1)
                     buf = instance
 
-            if score >= threshold_min:
-                reports = add_report(document, reports, instance[0],
-                                     bool(score >= threshold_severe), index - index_last + 1)
+            if score >= thresholds[0]:
+                reports = add_report(document, reports, instance[0], thresholds, score,
+                                     index - index_last + 1)
         words.reset()
         return reports
 
