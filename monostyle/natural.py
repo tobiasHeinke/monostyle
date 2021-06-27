@@ -208,8 +208,13 @@ def article(toolname, document, reports, re_lib, data):
 
     is_a = None
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
-        if part.child_nodes.is_empty():
-            for word in segmenter.iter_word(part.code, filter_numbers=False):
+        if not part.child_nodes.is_empty():
+            if part.parent_node.node_name in {"def", "bullet", "enum", "field", "line"}:
+                is_a = None
+            continue
+
+        for sen, stop in segmenter.iter_sentence(part.code):
+            for word in segmenter.iter_word(sen, filter_numbers=False):
                 word_str = str(word).strip()
                 if len(word) < 3 and word_str in {"a", "A", "an", "An"}:
                     is_a = bool(word_str in {"a", "A"})
@@ -254,12 +259,11 @@ def article(toolname, document, reports, re_lib, data):
 
                     is_a = None
 
-            if part.parent_node.node_name == "role":
+            if stop:
                 is_a = None
 
-        else:
-            if part.parent_node.node_name in {"def", "bullet", "enum", "field", "line"}:
-                is_a = None
+        if part.parent_node.node_name == "role":
+            is_a = None
 
     return reports
 
