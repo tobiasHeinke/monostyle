@@ -67,7 +67,7 @@ class RSTParser:
         ind = r"( *)"
         re_lib["ind"] = re.compile(ind + r"\S")
         space_end = r"(?: +|(?=\n)|\Z)"
-        eol_end = r" *(?:\n)|\Z)"
+        eol_end = r" *(?:\n|\Z))"
 
         ref_name = r"(?:(?!_)\w)+(?:[-._+:](?:(?!_)\w)+)*"
         foot_name = "".join((r"(?:\d+)|[", "".join(self.foot_chars), r"]|(?:#", ref_name, r")"))
