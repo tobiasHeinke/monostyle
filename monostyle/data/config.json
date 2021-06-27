@@ -22,7 +22,7 @@
 			"ext": ".rst"
 		},
 		"char": {
-			"tools": ["char-search"],
+			"tools": ["char-search", "EOF"],
 			"ext": ".rst"
 		},
 		"natural": {

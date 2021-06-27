@@ -45,11 +45,12 @@ def difference(from_vsn, is_internal, filename_source, rev, cached):
         if not is_internal:
             rev += "..remotes/origin/HEAD"
 
+    loc_re = re.compile(r"@@ \-\d+?(?:,\d+?)? \+(\d+?)(?:,\d+?)? @@")
     lineno = 0
     context = []
     skip = False
     code = None
-    loc_re = re.compile(r"@@ \-\d+?(?:,\d+?)? \+(\d+?)(?:,\d+?)? @@")
+    messages = None
     body = False
     for line in op(filename_source, rev, cached):
         try:
@@ -73,12 +74,13 @@ def difference(from_vsn, is_internal, filename_source, rev, cached):
 
         if line.startswith("@@"):
             if code is not None and len(code.content) != len(context):
-                yield code, context, None
+                yield code, context, messages
 
             loc_m = re.match(loc_re, line)
             start_lincol = (int(loc_m.group(1)) - 1, 0)
             code = Fragment(filename, [], 0, 0, start_lincol, start_lincol)
             context = []
+            messages = None
             lineno = start_lincol[0]
             body = True
 
@@ -92,11 +94,13 @@ def difference(from_vsn, is_internal, filename_source, rev, cached):
                 lineno += 1
 
             elif line.startswith('\\'):
-                # message backslash + space
-                yield code.copy().clear(False), None, line[2:]
+                if not messages:
+                    messages = []
+                # backslash + space
+                messages.append(line[2:])
 
     if code and len(code.content) != len(context):
-        yield code, context, None
+        yield code, context, messages
 
 
 def update_files(path, rev=None):

@@ -76,17 +76,25 @@ def encoding(toolname, reports):
     return reports
 
 
-def eol(toolname, document, reports):
+def eof_pre(_):
+    args = dict()
+    args["re_lib"] = {"end": re.compile(r"\n{2}\Z|(?<!\n)\Z")}
+    args["config"] = dict()
+    return args
+
+
+def eof(toolname, document, reports, re_lib, config):
     """Check blank lines at end of file."""
 
-    if m := re.search(r"\n{2}\Z|(?<!\n)\Z", str(document.code)):
-        output = document.body.code.slice_match_obj(m, 0, True)
-        message = Report.existing(what=Report.write_out_quantity(str(m.group(0)).count('\n'),
-                                                                 "blank line"),
-                                  where="at the end of file")
-        fix = output.copy().replace('\n')
-        output = output.clear(True)
-        reports.append(Report('W', toolname, output, message, fix=fix))
+    if "_at_eof" in config and config["_at_eof"]:
+        if m := re.search(re_lib["end"], str(document.code)):
+            output = document.body.code.slice_match_obj(m, 0, True)
+            message = Report.existing(what=Report.write_out_quantity(str(m.group(0)).count('\n'),
+                                                                     "blank line"),
+                                      where="at the end of file")
+            fix = output.copy().replace('\n')
+            output = output.clear(True)
+            reports.append(Report('W', toolname, output, message, fix=fix))
 
     return reports
 
@@ -95,7 +103,7 @@ def eol(toolname, document, reports):
 OPS = (
     ("char-search", char_search, None),
     ("encoding", encoding, None, False),
-    ("EOF", eol, None),
+    ("EOF", eof, eof_pre),
 )
 
 if __name__ == "__main__":

@@ -96,13 +96,17 @@ def get_reports_version(mods, rst_parser, from_vsn, is_internal, path=None, rev=
     filename_prev = None
     print_options = options_overide()
     parse_options = {"parse": True, "resolve": False, "post": True}
-    for code, context, message in vsn_inter.run_diff(from_vsn, is_internal, path, rev, cached):
-        if message is not None:
-            vsn_report = Report('W', "versioning-diff", code, message,
-                                fix=code.copy().replace('\n'))
-            filename_prev = print_report(vsn_report, print_options, filename_prev)
-            reports.append(vsn_report)
-            continue
+    for code, context, messages in vsn_inter.run_diff(from_vsn, is_internal, path, rev, cached):
+        config_dynamic = {"_at_eof": False}
+        if messages is not None:
+            if "No newline at end of file" in messages:
+                config_dynamic["_at_eof"] = True
+                messages.remove("No newline at end of file")
+            if messages:
+                for message in messages:
+                    print("{0}:{1}: unexpected version control message: {2}"
+                                    .format(monostyle_io.path_to_rel(code.filename),
+                                            code.end_lincol[0], message))
 
         if show_current:
             monostyle_io.print_over("processing:", "{0}[{1}-{2}]"
@@ -112,7 +116,7 @@ def get_reports_version(mods, rst_parser, from_vsn, is_internal, path=None, rev=
 
         reports, filename_prev = apply(rst_parser, mods, reports,
                                        code, parse_options, print_options,
-                                       filename_prev, filter_reports, context)
+                                       filename_prev, config_dynamic, filter_reports, context)
 
     if print_options["show_summary"]:
         reports_summary(reports, print_options)
@@ -173,6 +177,8 @@ def get_reports_file(mods, rst_parser, path, parse_options):
         titles, targets = env.get_link_titles(rst_parser)
         parse_options["titles"] = titles
         parse_options["targets"] = targets
+
+    config_dynamic = {"_at_eof": True}
     for filename, text in monostyle_io.doc_texts(path):
         code = Fragment(filename, text)
         if span:
@@ -181,6 +187,8 @@ def get_reports_file(mods, rst_parser, path, parse_options):
                 continue
             if code.start_pos != 0:
                 parse_options["post"] = True
+            if code.end_pos != len(text):
+                config_dynamic["_at_eof"] = False
 
         if show_current:
             monostyle_io.print_over("processing:",
@@ -189,7 +197,7 @@ def get_reports_file(mods, rst_parser, path, parse_options):
                                     is_temp=True)
 
         reports, filename_prev = apply(rst_parser, ((ops_loop, ext_test),), reports, code,
-                                       parse_options, print_options, filename_prev)
+                                       parse_options, print_options, filename_prev, config_dynamic)
 
     if print_options["show_summary"]:
         reports_summary(reports, print_options)
@@ -212,7 +220,7 @@ def filter_reports(report, context):
 
 
 def apply(rst_parser, mods, reports, code, parse_options, print_options,
-          filename_prev, filter_func=None, context=None):
+          filename_prev, config_dynamic, filter_func=None, context=None):
     """Parse the hunks and apply the tools."""
     document = rst_parser.document(code=code)
     if parse_options["parse"] and document.code.filename.endswith(".rst"):
@@ -233,6 +241,9 @@ def apply(rst_parser, mods, reports, code, parse_options, print_options,
             # init failed
             if op[2] is None:
                 continue
+
+            if "config" in op[2]:
+                op[2]["config"].update(config_dynamic)
 
             reports_tool = []
             reports_tool = op[1](op[0], document, reports_tool, **op[2])

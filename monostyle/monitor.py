@@ -12,8 +12,7 @@ from monostyle.util.report import Report
 
 
 def check_pre(toolname):
-    config = monostyle_io.get_override(__file__, toolname, "files", [])[0]
-    return {"config": config[1]}
+    return {"config": dict(monostyle_io.get_override(__file__, toolname, "files", []))}
 
 
 def check(toolname, document, reports, config):
@@ -23,7 +22,7 @@ def check(toolname, document, reports, config):
 
     filename = monostyle_io.path_to_rel(document.code.filename).lstrip('/')
 
-    for entry in config:
+    for entry in config["files"]:
         entry = entry.lstrip('/')
         message = None
         if entry.endswith('/'):
