@@ -506,20 +506,32 @@ def options_overide(options=None):
     }
 
 
-def print_reports(reports, options=None):
+def print_reports(reports, options=None, filename_prev=None, is_final=True):
     """Print the reports in the command line."""
-    if reports is None:
-        return None
+    if not reports:
+        return filename_prev
 
-    options = options_overide()
-    filename_prev = None
+    options = options_overide(options)
+    if options["sort_key"]:
+        key = {
+            "severity": lambda report: (report.output.filename, report.severity),
+            "tool": lambda report: (report.output.filename, report.tool),
+            "start_pos": lambda report: (report.output.filename, report.output.start_pos),
+            "start_lincol": lambda report: (report.output.filename, report.output.start_lincol),
+            "autofix": lambda report: (report.output.filename, bool(report.fix is None)),
+        }
+        # fail silently
+        if options["sort_key"] in key:
+            reports.sort(key=key[options["sort_key"]])
+
     for report in reports:
         if report is None:
             continue
         filename_prev = print_report(report, options, filename_prev)
 
-    if options["show_summary"]:
+    if is_final and options["show_summary"]:
         reports_summary(reports, options)
+    return reports[-1].output.filename
 
 
 def print_report(report, options=None, filename_prev=None):

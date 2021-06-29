@@ -92,11 +92,23 @@ def get_reports_version(mods, rst_parser, from_vsn, is_internal, path=None, rev=
     if not path:
         path = monostyle_io.path_to_abs("")
     reports = []
+    reports_file = []
     show_current = True
     filename_prev = None
     print_options = options_overide()
     parse_options = {"parse": True, "resolve": False, "post": True}
-    for code, context, messages in vsn_inter.run_diff(from_vsn, is_internal, path, rev, cached):
+    filter_options = {"tools": {"blank-line", "flavor", "indention", "heading-level",
+                                "heading-line-length", "mark", "markup-names",
+                                "start-case", "structure", "ui"}}
+    for code, context, message in vsn_inter.run_diff(from_vsn, is_internal, path, rev, cached):
+        if filename_prev != code.filename:
+            if print_options["sort_key"]:
+                filename_prev = print_reports(reports_file, print_options,
+                                              filename_prev, is_final=False)
+            reports.extend(reports_file)
+            reports_file = []
+
+        filter_options["context"] = context
         config_dynamic = {"_at_eof": False}
         if messages is not None:
             if "No newline at end of file" in messages:
@@ -114,9 +126,13 @@ def get_reports_version(mods, rst_parser, from_vsn, is_internal, path=None, rev=
                                             code.start_lincol[0], code.end_lincol[0]),
                                     is_temp=True)
 
-        reports, filename_prev = apply(rst_parser, mods, reports,
-                                       code, parse_options, print_options,
-                                       filename_prev, config_dynamic, filter_reports, context)
+        reports_file, filename_prev = apply(rst_parser, mods, reports_file,
+                                            code, parse_options, print_options, config_dynamic,
+                                            filename_prev, filter_options)
+
+    reports.extend(reports_file)
+    if print_options["sort_key"]:
+        filename_prev = print_reports(reports_file, print_options, filename_prev, is_final=False)
 
     if print_options["show_summary"]:
         reports_summary(reports, print_options)
@@ -196,8 +212,14 @@ def get_reports_file(mods, rst_parser, path, parse_options):
                                                           code.start_lincol[0], code.end_lincol[0]),
                                     is_temp=True)
 
-        reports, filename_prev = apply(rst_parser, ((ops_loop, ext_test),), reports, code,
-                                       parse_options, print_options, filename_prev, config_dynamic)
+        reports_file = []
+        reports_file, filename_prev = apply(rst_parser, ((ops_loop, ext_test),), reports_file,
+                                            code, parse_options, print_options,
+                                            filename_prev, config_dynamic)
+        reports.extend(reports_file)
+
+        if print_options["sort_key"]:
+            filename_prev = print_reports(reports_file, print_options, filename_prev, is_final=False)
 
     if print_options["show_summary"]:
         reports_summary(reports, print_options)
@@ -210,18 +232,15 @@ def get_reports_file(mods, rst_parser, path, parse_options):
     return reports
 
 
-def filter_reports(report, context):
-    """Filter out reports in the diff context."""
-    return bool(report.tool in
-                {"blank-line", "flavor", "indention", "heading-level", "heading-line-length",
-                 "mark", "markup-names", "start-case", "structure", "ui"} and # "search-word",
-                report.output.start_lincol is not None and context is not None and
-                report.output.start_lincol[0] in context)
-
-
-def apply(rst_parser, mods, reports, code, parse_options, print_options,
-          filename_prev, config_dynamic, filter_func=None, context=None):
+def apply(rst_parser, mods, reports_file, code, parse_options, print_options,
+          filename_prev, config_dynamic, filter_options=None):
     """Parse the hunks and apply the tools."""
+    def filter_reports(report, options):
+        """Filter out reports in the diff context."""
+        return bool(report.tool in options["tools"] and
+                    report.output.start_lincol is not None and options["context"] is not None and
+                    report.output.start_lincol[0] in options["context"])
+
     document = rst_parser.document(code=code)
     if parse_options["parse"] and document.code.filename.endswith(".rst"):
         document = rst_parser.parse(document)
@@ -233,6 +252,7 @@ def apply(rst_parser, mods, reports, code, parse_options, print_options,
                                               parse_options["targets"])
             document = env.resolve_subst(document, rst_parser.substitution)
 
+    do_sort = bool(print_options["sort_key"])
     for ops, ext_test in mods:
         if ext_test and not document.code.filename.endswith(ext_test):
             continue
@@ -249,11 +269,12 @@ def apply(rst_parser, mods, reports, code, parse_options, print_options,
             reports_tool = op[1](op[0], document, reports_tool, **op[2])
 
             for report in reports_tool:
-                if filter_func is None or not filter_func(report, context):
-                    filename_prev = print_report(report, print_options, filename_prev)
-                    reports.append(report)
+                if not filter_options or not filter_reports(report, filter_options):
+                    if not do_sort:
+                        filename_prev = print_report(report, print_options, filename_prev)
+                    reports_file.append(report)
 
-    return reports, filename_prev
+    return reports_file, filename_prev
 
 
 def update(path=None, rev=None):

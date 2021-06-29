@@ -58,6 +58,8 @@
 		"compact": true,
 		"show_summary": true,
 		"summary_ruler": "_",
+		// options: 'severity', 'tool', 'start_pos', 'start_lincol, 'autofix'
+		"sort_key": "",
 
 		"formatting": [
 			["filename", "location", "severity", "output", "message", "fix"],
