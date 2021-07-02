@@ -285,8 +285,8 @@ def proper_noun(toolname, document, reports, data, config):
         for word in segmenter.iter_word(part.code):
             if entry := data.find(str(word)):
                 message = "proper noun: {:4.0%}".format(entry["ratio"])
-                line = Report.getline_punc(document.code, word, 50, 30)
-                reports.append(Report('W', toolname, word, message, line))
+                reports.append(Report('W', toolname, word, message)
+                               .set_line_punc(document.code, 50, 30))
 
     return reports
 
@@ -348,8 +348,8 @@ def start_case(toolname, document, reports, re_lib):
 
                 if re.match(start_re, str(part.code)):
                     output = part.code.copy().clear(True)
-                    line = Report.getline_offset(document.body.code, output, 100, True)
-                    reports.append(Report('W', toolname, output, re_lib["lowerpara"][1], line))
+                    reports.append(Report('W', toolname, output, re_lib["lowerpara"][1])
+                                   .set_line_offset(document.body.code, 100, True))
 
                 was_empty = bool(len(part.code) == 0)
 
@@ -361,8 +361,8 @@ def start_case(toolname, document, reports, re_lib):
                 pattern = value[0]
                 for m in re.finditer(pattern, part_str):
                     output = part.code.slice_match_obj(m, 0, True)
-                    line = Report.getline_offset(document.body.code, output, 100, True)
-                    reports.append(Report('W', toolname, output, value[1], line))
+                    reports.append(Report('W', toolname, output, value[1])
+                                   .set_line_offset(document.body.code, 100, True))
 
     return reports
 

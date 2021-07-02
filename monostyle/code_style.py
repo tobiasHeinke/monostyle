@@ -347,8 +347,8 @@ def line_style(toolname, document, reports, re_lib):
                     continue
 
                 output = node.code.slice_match_obj(m, 0, True)
-                line = Report.getline_offset(node.code, output, 100)
-                reports.append(Report('I', toolname, output, message, line, "reflow"))
+                reports.append(Report('I', toolname, output, message, fix="reflow")
+                               .set_line_offset(node.code, 100))
 
     return reports
 

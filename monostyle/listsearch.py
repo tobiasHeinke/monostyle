@@ -161,8 +161,8 @@ def search_free(toolname, document, reports, data):
         for pattern, message in data:
             for m in re.finditer(pattern, part_str):
                 output = part.code.slice_match_obj(m, 0, True)
-                line = Report.getline_punc(document.body.code, output, 50, 30)
-                reports.append(Report('I', toolname, output, message, line))
+                reports.append(Report('I', toolname, output, message)
+                               .set_line_punc(document.body.code, 50, 30))
 
     return reports
 
@@ -212,8 +212,8 @@ def search_word(toolname, document, reports, data, config):
                 if pattern != word_str:
                     continue
 
-                line = Report.getline_punc(document.body.code, word, 50, 30)
-                reports.append(Report('I', toolname, word, message, line))
+                reports.append(Report('I', toolname, word, message)
+                               .set_line_punc(document.body.code, 50, 30))
 
     return reports
 

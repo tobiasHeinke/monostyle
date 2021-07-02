@@ -167,8 +167,8 @@ def mark(toolname, document, reports, re_lib):
                     if m.start() == 0 and key == "closesol" and part.parent_node.prev:
                         continue
                     output = part.code.slice_match_obj(m, 0, True)
-                    line = Report.getline_punc(document.body.code, output, 50, 30)
-                    reports.append(Report('W', toolname, output, value[1], line))
+                    reports.append(Report('W', toolname, output, value[1])
+                                   .set_line_punc(document.body.code, 50, 30))
 
 
     instr_pos = {
@@ -216,8 +216,8 @@ def mark(toolname, document, reports, re_lib):
                         continue
                     output = part.code.copy().clear(False)
                     message = re_lib["puncend"][1][0].format("paragraph")
-                    line = Report.getline_offset(document.body.code, output, 100, False)
-                    reports.append(Report('W', toolname, output, message, line))
+                    reports.append(Report('W', toolname, output, message)
+                                   .set_line_offset(document.body.code, 100, False))
 
                 else:
                     if comma_m := re.search(comma_re, part_str):
@@ -345,8 +345,8 @@ def number(toolname, document, reports, re_lib):
                     continue
 
                 output = part.code.slice_match_obj(m, 0, True)
-                line = Report.getline_punc(document.body.code, output, 50, 30)
-                reports.append(Report('W', toolname, output, value[1], line))
+                reports.append(Report('W', toolname, output, value[1])
+                               .set_line_punc(document.body.code, 50, 30))
 
     return reports
 
@@ -475,10 +475,10 @@ def whitespace(toolname, document, reports, re_lib):
         pattern = value[0]
         for m in re.finditer(pattern, text):
             output = document.body.code.slice_match_obj(m, 0, True)
-            line = Report.getline_punc(document.body.code, output, 50, 30)
             fix = document.body.code.slice_match_obj(m, 1, True)
             fix.replace_fill(value[2])
-            reports.append(Report('W', toolname, output, value[1], line, fix))
+            reports.append(Report('W', toolname, output, value[1], fix=fix)
+                           .set_line_punc(document.body.code, 50, 30))
 
     multi_start_re = re_lib["multispacestart"][0]
     multi_re = re_lib["multispace"][0]
@@ -489,17 +489,17 @@ def whitespace(toolname, document, reports, re_lib):
         if node.prev:
             if multi_start_m := re.match(multi_start_re, node_str):
                 output = node.code.slice_match_obj(multi_start_m, 1, True)
-                line = Report.getline_punc(document.body.code, output, 50, 30)
                 fix = output.copy().replace_fill(value[2])
                 reports.append(Report('W', toolname, output, re_lib["multispacestart"][1],
-                                      line, fix if not is_cell else None))
+                                      fix=fix if not is_cell else None)
+                               .set_line_punc(document.body.code, 50, 30))
 
         for multi_m in re.finditer(multi_re, node_str):
             output = node.code.slice_match_obj(multi_m, 1, True)
-            line = Report.getline_punc(document.body.code, output, 50, 30)
             fix = output.copy().replace_fill(value[2])
             reports.append(Report('W', toolname, output, re_lib["multispace"][1],
-                                  line, fix if not is_cell else None))
+                                  fix=fix if not is_cell else None)
+                           .set_line_punc(document.body.code, 50, 30))
 
     return reports
 

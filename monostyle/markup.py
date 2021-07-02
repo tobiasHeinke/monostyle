@@ -737,8 +737,8 @@ def leak(toolname, document, reports, re_lib, data):
                     if on_mc_trans:
                         continue
                     output = part.code.slice_match_obj(m, 0, True)
-                    line = Report.getline_offset(part.parent_node.code, output, 100)
-                    reports.append(Report('F', toolname, output, re_lib[key][1], line))
+                    reports.append(Report('F', toolname, output, re_lib[key][1])
+                                   .set_line_offset(part.parent_node.code, 100))
 
 
     for node in rst_walker.iter_node(document.body, {"text", "sect", "field"}):
@@ -802,8 +802,8 @@ def leak(toolname, document, reports, re_lib, data):
 
                     else:
                         message = re_lib[key][1]
-                    line = Report.getline_offset(part.parent_node.parent_node.code, output, 100)
-                    reports.append(Report('F', toolname, output, message, line))
+                    reports.append(Report('F', toolname, output, message)
+                                   .set_line_offset(part.parent_node.parent_node.code, 100))
 
     return reports
 
