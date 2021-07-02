@@ -84,6 +84,23 @@ def override_typecheck(obj, ref, op_name, key_name=None):
     Sequence entries with mixed types must exactly match one of these types.
     No callables.
     """
+    def remove_types(obj):
+        """Remove types by recreating the object to support immutables."""
+        if not hasattr(obj, "__iter__") or type(obj) == str:
+            return obj
+
+        new = list()
+        if type(obj) == dict:
+            for key, value in obj.items():
+                if type(value) is not type:
+                    new.append((key, remove_types(value))) # todo double
+        else:
+            for entry in obj:
+                if type(entry) is not type:
+                    new.append(remove_types(entry))
+
+        return type(obj)(new)
+
     def print_error(obj, typs, op_name, key_name):
         print("{0} invalid type {1} expected {2}".format(op_name,
               type(obj).__name__, ", ".join(t.__name__ for t in typs)),
@@ -104,8 +121,11 @@ def override_typecheck(obj, ref, op_name, key_name=None):
 
         for key in invalid_keys:
             del obj[key]
+    elif hasattr(obj, "__call__"):
+        print_error(obj, (type(ref),), op_name, key_name)
+        obj = remove_types(ref)
     elif hasattr(obj, "__iter__") and type(obj) != str:
-        typs = list(set(type(entry) for entry in ref))
+        typs = list(set(type(entry) if type(entry) is not type else entry for entry in ref))
         new = []
         for entry in obj:
             if len(typs) != 0 and type(entry) not in typs:
@@ -124,15 +144,12 @@ def override_typecheck(obj, ref, op_name, key_name=None):
             obj = type(ref)(new)
         except (TypeError, ValueError):
             print_error(new, (type(ref),), op_name, key_name)
-            obj = ref
-    elif hasattr(obj, "__call__"):
-        print_error(obj, (type(ref),), op_name, key_name)
-        obj = ref
+            obj = remove_types(ref)
     else:
         try:
             obj = type(ref)(obj)
         except (TypeError, ValueError):
             print_error(obj, (type(ref),), op_name, key_name)
-            obj = ref
+            obj = remove_types(ref)
 
     return obj
