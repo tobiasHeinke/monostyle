@@ -10,7 +10,6 @@ import re
 
 import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.report import Report
-from monostyle.util.fragment import Fragment
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.part_of_speech import PartofSpeech
 from monostyle.util.char_catalog import CharCatalog
@@ -353,14 +352,9 @@ def number(toolname, document, reports, re_lib):
 
 def pairs_pre(toolname):
     args = dict()
-    re_lib = dict()
-
     # FP/FN: s' closing
     # FP: cut heading line
-
-    re_lib["pairchar"] = re.compile(r"[\(\[\{\)\]\}\]\"]|(?<!\w)'|(?<![sS])'(?!\w)")
-
-    args["re_lib"] = re_lib
+    args["re_lib"] = {"pairchar": re.compile(r"[\(\[\{\)\]\}\]\"]|(?<!\w)'|(?<![sS])'(?!\w)")}
 
     # Max number of lines between the open and close mark.
     args["config"] = dict(monostyle_io.get_override(__file__, toolname, "max_line_span", 2))
@@ -390,37 +384,31 @@ def pairs(toolname, document, reports, re_lib, config):
     pairs_map = {')': '(', ']': '[', '}': '{'}
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
-        for line in part.code.splitlines():
-            line_str = str(line)
-            for pair_m in re.finditer(pair_re, line_str):
-                pair_char = pair_m.group(0)
-                for index, entry in enumerate(reversed(stack)):
-                    if (entry[0] == pair_char or
-                            (pair_char in pairs_map and entry[0] == pairs_map[pair_char])):
+        part_str = str(part.code)
+        for pair_m in re.finditer(pair_re, part_str):
+            pair_char = part.code.slice_match_obj(pair_m, 0, True)
+            pair_char_str = pair_m.group(0)
+            for index, entry in enumerate(reversed(stack)):
+                if (entry[0] == pair_char_str or
+                        (pair_char_str in pairs_map and entry[0] == pairs_map[pair_char_str])):
 
-                        if (max_line_span is not None and
-                                line.start_lincol[0] - entry[1][0] > max_line_span):
-                            lincol_abs = line.loc_to_abs((0, pair_m.start(0)))
-                            reports.append(
-                                Report('W', toolname,
-                                       Fragment(document.code.filename, entry[0], -1,
-                                                start_lincol=entry[1]),
-                                       "long span - {0},{1}"
-                                       .format(lincol_abs[0] + 1, lincol_abs[1] + 1)))
+                    if (max_line_span is not None and
+                            pair_char.start_lincol[0] - entry[1].start_lincol[0] > max_line_span):
+                        reports.append(
+                            Report('W', toolname, entry[1], "long span - {0},{1}"
+                                   .format(pair_char.start_lincol[0] + 1,
+                                           pair_char.start_lincol[1] + 1)))
 
-                        # invert index
-                        stack.pop(len(stack) - 1 - index)
-                        break
+                    # invert index
+                    stack.pop(len(stack) - 1 - index)
+                    break
 
-                else:
-                    stack.append((pair_char, line.loc_to_abs((0, pair_m.start(0)))))
+            else:
+                stack.append((pair_char_str, pair_char))
 
     if len(stack) != 0:
         for entry in stack:
-            reports.append(
-                Report('W', toolname,
-                       Fragment(document.code.filename, entry[0], -1, start_lincol=entry[1]),
-                       "unclosed pairs"))
+            reports.append(Report('W', toolname, entry[1], "unclosed pairs"))
 
     if max_line_span is not None:
         for node in rst_walker.iter_node(document.body,
@@ -436,7 +424,7 @@ def pairs(toolname, document, reports, re_lib, config):
                 reports.append(
                     Report('W', toolname, node.body_start.code,
                            "long span - {0},{1}".format(
-                                node.body_start.code.end_lincol[0] + 1,
+                                node.body_end.code.start_lincol[0] + 1,
                                 node.body_end.code.start_lincol[1] + 1)))
 
             if node.body_start.code.end_pos == node.body_end.code.start_pos:
