@@ -53,9 +53,8 @@ def duplicated_image(toolname, reports):
                 continue
 
             if value == value_rec and key_rec + key not in pairs_found:
-                output = Fragment(key, key)
-                message = "duplicated image " + key_rec
-                reports.append(Report('W', toolname, output, message))
+                reports.append(Report('W', toolname, Fragment(key, key),
+                                      "duplicated image " + key_rec))
                 pairs_found.add(key + key_rec)
 
     return reports
@@ -75,23 +74,24 @@ def image_filename(toolname, reports):
             if (name_lower == name_rec.lower() and
                     (name != name_rec or ext != ext_rec) and
                     ''.join((name_rec, ext_rec, name, ext)) not in pairs_found):
-                output = Fragment(name + ext, name + ext)
-                message = (("case collition" if name != name_rec else "") +
+                reports.append(
+                    Report('W', toolname, Fragment(name + ext, name + ext),
+                           ("case collition" if name != name_rec else "") +
                            (" and " if name != name_rec and ext != ext_rec else "") +
-                           ("extension collition" if ext != ext_rec else ""))
-                reports.append(Report('W', toolname, output, message))
+                           ("extension collition" if ext != ext_rec else "")))
                 pairs_found.add(''.join((name, ext, name_rec, ext_rec)))
 
         for char_m in re.finditer(char_re, name):
-            severity = 'E' if not re.match(upper_re, char_m.group(0)) else 'I'
-            output = Fragment(name + ext, name).slice_match_obj(char_m, 0, True)
-            message = "not allowed char in image filename"
-            reports.append(Report(severity, toolname, output, message))
+            reports.append(
+                Report('E' if not re.match(upper_re, char_m.group(0)) else 'I', toolname,
+                       Fragment(name + ext, name).slice_match_obj(char_m, 0, True),
+                       "not allowed char in image filename"))
 
         if ext not in pos:
-            output = Fragment(name + ext, ext, len(name), start_lincol=(0, len(name)))
-            message = "bad extension"
-            reports.append(Report('E', toolname, output, message))
+            reports.append(
+                Report('E', toolname,
+                       Fragment(name + ext, ext, len(name), start_lincol=(0, len(name))),
+                       "bad extension"))
 
     return reports
 
@@ -118,9 +118,8 @@ def unused_image(toolname, reports, data):
     """Unused images."""
     for _, name, ext in monostyle_io.img_files():
         if name + ext not in data:
-            output = Fragment(name + ext, name + ext)
-            message = "unused image"
-            reports.append(Report('W', toolname, output, message))
+            reports.append(Report('W', toolname, Fragment(name + ext, name + ext),
+                                  "unused image"))
 
     return reports
 

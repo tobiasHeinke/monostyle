@@ -40,11 +40,12 @@ def highlight(toolname, document, reports, config):
         if text_chars > 100 or is_final:
             score_final = (score_global / counter) * (-(1 / (counter + (1 / 1.125))) + 1.125)
             if score_final > thresholds[0]:
-                output = score_cur["node"].code.copy().clear(True)
-                message = Report.quantity(what="highlight overuse",
-                                          how=str(counter) + " times")
-                reports.append(Report(Report.map_severity(thresholds, score_final), toolname,
-                                      output, message, score_cur["node"].parent_node.code))
+                reports.append(
+                    Report(Report.map_severity(thresholds, score_final), toolname,
+                           score_cur["node"].code.copy().clear(True),
+                           Report.quantity(what="highlight overuse",
+                                           how=str(counter) + " times"),
+                           score_cur["node"].parent_node.code))
 
             score_global = 0
             counter = 0
@@ -185,8 +186,9 @@ def heading_level(toolname, document, reports):
             level_prev = level_cur
 
         if message is not None:
-            output = node.name_end.code.copy().replace_fill(heading_char)
-            reports.append(Report(severity, toolname, output, message))
+            reports.append(
+                Report(severity, toolname,
+                       node.name_end.code.copy().replace_fill(heading_char), message))
 
     return reports
 
@@ -221,9 +223,11 @@ def indention(toolname, document, reports):
                 if block_line.start_lincol[1] < ind_aim and offset != ind_aim:
                     with_what += (" or {:+} chars (col: {})"
                                   .format(offset - block_line.start_lincol[1], offset + 1))
-                message = Report.substitution(what="wrong indent", with_what=with_what)
-                output = block_line.clear(True)
-                reports.append(Report('E', toolname, output, message, block_line_full))
+
+                reports.append(
+                    Report('E', toolname, block_line.clear(True),
+                           Report.substitution(what="wrong indent", with_what=with_what),
+                           block_line_full))
 
         return reports
 
@@ -246,12 +250,14 @@ def indention(toolname, document, reports):
                 if (ind_trg_next is not None and
                         node.indent.code.end_lincol[1] != ind_trg_next.code.end_lincol[1]):
                     # further intended
-                    message = Report.existing(what="target", where="not on same indent level")
-                    reports.append(Report('W', toolname, node.id.code, message))
+                    reports.append(
+                        Report('W', toolname, node.id.code,
+                               Report.existing(what="target", where="not on same indent level")))
             else:
                 # unintended
-                message = Report.missing(what="target", where="on same indent level")
-                reports.append(Report('W', toolname, node.id.code, message))
+                reports.append(
+                    Report('W', toolname, node.id.code,
+                           Report.missing(what="target", where="on same indent level")))
 
         # limit: groups of aligned fields, todo favor fix on refbox
         elif node.node_name == "field-list":
@@ -340,20 +346,18 @@ def indention(toolname, document, reports):
                         ind_aim_block = ind_aim_first
 
                 if ind_first != ind_aim_first:
-                    message = Report.substitution(what="field wrong alignment",
-                                                  with_what="{:+} chars".format(
-                                                  ind_aim_first - ind_first))
-
-                    output = node_field.name_end.code.copy().clear(False)
-                    reports.append(Report('W', toolname, output, message, node_field.name.code))
+                    reports.append(
+                        Report('W', toolname, node_field.name_end.code.copy().clear(False),
+                               Report.substitution(what="field wrong alignment",
+                                   with_what="{:+} chars".format(ind_aim_first - ind_first)),
+                               node_field.name.code))
 
                 if ind_block is not None and ind_block != ind_aim_block:
-                    message = Report.substitution(what="field wrong indent",
-                                                  with_what="{:+} chars".format(
-                                                  ind_aim_block - ind_block))
-
-                    output = node_field.name_end.code.copy().clear(False)
-                    reports.append(Report('W', toolname, output, message, node_field.name.code))
+                    reports.append(
+                        Report('W', toolname, node_field.name_end.code.copy().clear(False),
+                               Report.substitution(what="field wrong indent",
+                                   with_what="{:+} chars".format(ind_aim_block - ind_block)),
+                               node_field.name.code))
 
         else:
             if (node.node_name.endswith("-list") or
@@ -397,12 +401,13 @@ def indention(toolname, document, reports):
                     elif markup_space_m := re.search(markup_space_re, str(part.code)):
                         if (len(markup_space_m.group(1)) != 1 and
                                 not rst_walker.is_of(part, "substdef", "*", "id_end")):
-                            with_what = "{:+} chars".format(1 - len(markup_space_m.group(1)))
-                            message = Report.substitution(what="wrong markup spacing",
-                                                          with_what=with_what)
-                            line = (node.child_nodes[2].code if len(node.child_nodes) > 1
-                                    else node.code)
-                            reports.append(Report('W', toolname, part.code, message, line))
+                            reports.append(
+                                Report('W', toolname, part.code,
+                                       Report.substitution(what="wrong markup spacing",
+                                           with_what="{:+} chars".format(
+                                                     1 - len(markup_space_m.group(1)))),
+                                       node.child_nodes[2].code if len(node.child_nodes) > 1
+                                       else node.code))
                     continue
 
                 for child in part.child_nodes:
@@ -422,9 +427,10 @@ def indention(toolname, document, reports):
                             if part_len < ind_aim and offset != ind_aim:
                                 with_what += " or {:+} chars (col: {})".format(offset - part_len,
                                                                                offset + 1)
-                            message = Report.substitution(what="wrong indent", with_what=with_what)
-                            output = child.indent.code.copy().clear(False)
-                            reports.append(Report('E', toolname, output, message, child.code))
+                            reports.append(
+                                Report('E', toolname, child.indent.code.copy().clear(False),
+                                       Report.substitution(what="wrong indent",
+                                                           with_what=with_what), child.code))
 
     return reports
 
@@ -736,9 +742,10 @@ def leak(toolname, document, reports, re_lib, data):
                 for m in re.finditer(re_lib[key][0], part_str):
                     if on_mc_trans:
                         continue
-                    output = part.code.slice_match_obj(m, 0, True)
-                    reports.append(Report('F', toolname, output, re_lib[key][1])
-                                   .set_line_offset(part.parent_node.code, 100))
+                    reports.append(
+                        Report('F', toolname, part.code.slice_match_obj(m, 0, True),
+                               re_lib[key][1])
+                        .set_line_offset(part.parent_node.code, 100))
 
 
     for node in rst_walker.iter_node(document.body, {"text", "sect", "field"}):
@@ -764,7 +771,6 @@ def leak(toolname, document, reports, re_lib, data):
             part_str = str(part.code)
             for key in data[1]:
                 for m in re.finditer(re_lib[key][0], part_str):
-                    output = part.code.slice_match_obj(m, 0, True)
                     if re_lib[key][2]:
                         where = rst_walker.write_out(re_lib[key][1][0], re_lib[key][1][1])
                         message = Report.existing(what="leaked", where=where)
@@ -802,8 +808,9 @@ def leak(toolname, document, reports, re_lib, data):
 
                     else:
                         message = re_lib[key][1]
-                    reports.append(Report('F', toolname, output, message)
-                                   .set_line_offset(part.parent_node.parent_node.code, 100))
+                    reports.append(
+                        Report('F', toolname, part.code.slice_match_obj(m, 0, True), message)
+                        .set_line_offset(part.parent_node.parent_node.code, 100))
 
     return reports
 
@@ -838,29 +845,29 @@ def markup_names(toolname, document, reports):
             if node.name:
                 node_name_str = str(node.name.code).strip()
                 if node_name_str not in roles:
-                    message = ("uncommon role" if node_name_str in RSTParser.roles or
-                               node_name_str in RSTParser.roles_sphinx else "unknown role")
-                    reports.append(Report('E', toolname, node.name.code, message))
+                    reports.append(
+                        Report('E', toolname, node.name.code,
+                               "uncommon role" if node_name_str in RSTParser.roles or
+                               node_name_str in RSTParser.roles_sphinx else "unknown role"))
             else:
                 reports.append(Report('E', toolname, node.body.code, "default role"))
 
         elif node.node_name == "dir":
             name = str(node.name.code).strip() if node.name else node.name
             if name and name not in directives:
-                message = ("uncommon directive" if name in RSTParser.directives or
-                           name in RSTParser.directives_sphinx else "unknown directive")
-                reports.append(Report('E', toolname, node.name.code, message))
+                reports.append(
+                    Report('E', toolname, node.name.code,
+                           "uncommon directive" if name in RSTParser.directives or
+                           name in RSTParser.directives_sphinx else "unknown directive"))
 
             if name == "raw":
-                message = "raw directive"
-                reports.append(Report('F', toolname, node.name.code, message))
+                reports.append(Report('F', toolname, node.name.code, "raw directive"))
 
         else:
             # not at diff hunk start can be cut off def list.
             if node.code.start_lincol[0] != document.code.start_lincol[0]:
-                output = node.indent.code.copy().clear(False)
-                message = "block quote"
-                reports.append(Report('W', toolname, output, message))
+                reports.append(
+                    Report('W', toolname, node.indent.code.copy().clear(False), "block quote"))
 
     return reports
 
@@ -1206,15 +1213,16 @@ def structure(toolname, document, reports, data):
                         if (not operator_next or
                                 waypoint_active["operator"] == "==" or
                                 (waypoint_con and waypoint_con["operator"] == "==")):
-                            output = node
+                            node_output = node
                             if report_info["output"]:
                                 if node_active:
-                                    output = node_active
+                                    node_output = node_active
                                 elif node_con:
-                                    output = node_con
-                            output = output.code.copy().clear(True)
-                            reports.append(Report(report_info.get("severity", 'I'), toolname,
-                                                  output, report_info["message"]))
+                                    node_output = node_con
+                            reports.append(
+                                Report(report_info.get("severity", 'I'), toolname,
+                                       node_output.code.copy().clear(True),
+                                       report_info["message"]))
 
                             break
 

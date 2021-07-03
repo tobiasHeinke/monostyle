@@ -34,14 +34,16 @@ def char_search(toolname, document, reports):
         explicits += pattern
         for char_m in re.finditer(char_re, text):
             output = document.code.slice_match_obj(char_m, 0, True)
-            fix = output.copy().replace_fill(repl) if repl else None
-            reports.append(Report('E', toolname, output, message, fix=fix))
+            reports.append(
+                Report('E', toolname, output, message,
+                       fix=output.copy().replace_fill(repl) if repl else None))
 
     char_re = re.compile(r"[^\n -~À-ʨ©®°±€™\t" + explicits + r"]")
     for char_m in re.finditer(char_re, text):
-        message = "uncommon char: {0}, 0x{0:04x}".format(ord(char_m.group(0)))
-        output = document.code.slice_match_obj(char_m, 0, True)
-        reports.append(Report('E', toolname, output, message))
+        reports.append(
+            Report('E', toolname,
+                   document.code.slice_match_obj(char_m, 0, True),
+                   "uncommon char: {0}, 0x{0:04x}".format(ord(char_m.group(0)))))
 
     return reports
 
@@ -57,21 +59,19 @@ def encoding(toolname, reports):
                 text = f.read()
 
             except UnicodeError as err:
-                output = Fragment(filename, "")
-                message = "encoding error: " + str(err)
-                reports.append(Report('F', toolname, output, message))
+                reports.append(
+                    Report('F', toolname, Fragment(filename, ""), "encoding error: " + str(err)))
 
             except Exception as err:
-                output = Fragment(filename, "")
-                message = "unknown error: " + str(err)
-                reports.append(Report('F', toolname, output, message))
+                reports.append(
+                    Report('F', toolname, Fragment(filename, ""), "unknown error: " + str(err)))
 
             else:
                 code = Fragment(filename, text)
                 for repchar_m in re.finditer(repchar_re, text):
-                    output = code.slice_match_obj(repchar_m, 0, True)
-                    message = "unsupported character"
-                    reports.append(Report('E', toolname, output, message))
+                    reports.append(
+                        Report('E', toolname, code.slice_match_obj(repchar_m, 0, True),
+                               "unsupported character"))
 
     return reports
 
@@ -89,12 +89,12 @@ def eof(toolname, document, reports, re_lib, config):
     if "_at_eof" in config and config["_at_eof"]:
         if m := re.search(re_lib["end"], str(document.code)):
             output = document.body.code.slice_match_obj(m, 0, True)
-            message = Report.existing(what=Report.write_out_quantity(str(m.group(0)).count('\n'),
-                                                                     "blank line"),
-                                      where="at the end of file")
-            fix = output.copy().replace('\n')
-            output = output.clear(True)
-            reports.append(Report('W', toolname, output, message, fix=fix))
+            reports.append(
+                Report('W', toolname, output.clear(True),
+                       Report.existing(what=Report.write_out_quantity(
+                                                str(m.group(0)).count('\n'), "blank line"),
+                                       where="at the end of file"),
+                       fix=output.copy().replace('\n')))
 
     return reports
 

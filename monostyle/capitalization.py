@@ -72,9 +72,10 @@ def admonition_title(toolname, document, reports):
                         if word_str[0].islower():
                             word_low += 1
                 if word_all > 1 and word_low/ word_all >= threshold:
-                    message = "admonition caption titlecase: {:4.0%}".format(word_low/ word_all)
-                    output = node.head.code.copy().clear(True)
-                    reports.append(Report('W', toolname, output, message, node.head.code))
+                    reports.append(
+                        Report('W', toolname, node.head.code.copy().clear(True),
+                               "admonition caption titlecase: {:4.0%}"
+                               .format(word_low/ word_all), node.head.code))
 
     return reports
 
@@ -124,8 +125,8 @@ def heading_caps(toolname, document, reports, re_lib):
                 if buf:
                     if message_repl := titlecase(part_of_speech, buf, is_first_word,
                                                  False, "heading"):
-                        reports.append(Report('W', toolname, buf, message_repl[0], node.name.code,
-                                              message_repl[1]))
+                        reports.append(Report('W', toolname, buf, message_repl[0],
+                                              node.name.code, message_repl[1]))
                     if is_faq:
                         break
                     is_first_word = False
@@ -136,15 +137,15 @@ def heading_caps(toolname, document, reports, re_lib):
                 is_last_word = bool(part.parent_node.next is None)
                 if message_repl := titlecase(part_of_speech, buf, is_first_word,
                                              is_last_word, "heading"):
-                    reports.append(Report('W', toolname, buf, message_repl[0], node.name.code,
-                                          message_repl[1]))
+                    reports.append(Report('W', toolname, buf, message_repl[0],
+                                          node.name.code, message_repl[1]))
                 is_first_word = False
 
             part_str = str(part.code)
             for pattern, message in re_lib.values():
                 for m in re.finditer(pattern, part_str):
-                    output = part.code.slice_match_obj(m, 0, True)
-                    reports.append(Report('W', toolname, output, message, node.name.code))
+                    reports.append(Report('W', toolname, part.code.slice_match_obj(m, 0, True),
+                                          message, node.name.code))
 
     return reports
 
@@ -195,8 +196,9 @@ def pos_case(toolname, document, reports):
 
                 tag = part_of_speech.tag(word_str.lower())
                 if len(tag) != 0 and tag[0] not in {"noun", "abbreviation", "adjective", "verb"}:
-                    message = Report.misformatted(what="uppercase " + tag[0])
-                    reports.append(Report('W', toolname, word, message, sen))
+                    reports.append(
+                        Report('W', toolname, word,
+                               Report.misformatted(what="uppercase " + tag[0]), sen))
 
             was_open = bool(stop is None)
 
@@ -284,9 +286,9 @@ def proper_noun(toolname, document, reports, data, config):
                                                 config["instr_neg"]):
         for word in segmenter.iter_word(part.code):
             if entry := data.find(str(word)):
-                message = "proper noun: {:4.0%}".format(entry["ratio"])
-                reports.append(Report('W', toolname, word, message)
-                               .set_line_punc(document.code, 50, 30))
+                reports.append(
+                    Report('W', toolname, word, "proper noun: {:4.0%}".format(entry["ratio"]))
+                    .set_line_punc(document.code, 50, 30))
 
     return reports
 
@@ -347,9 +349,9 @@ def start_case(toolname, document, reports, re_lib):
                     part.parent_node.parent_node.parent_node.node_name == "text"):
 
                 if re.match(start_re, str(part.code)):
-                    output = part.code.copy().clear(True)
-                    reports.append(Report('W', toolname, output, re_lib["lowerpara"][1])
-                                   .set_line_offset(document.body.code, 100, True))
+                    reports.append(
+                        Report('W', toolname, part.code.copy().clear(True), re_lib["lowerpara"][1])
+                        .set_line_offset(document.body.code, 100, True))
 
                 was_empty = bool(len(part.code) == 0)
 
@@ -360,9 +362,9 @@ def start_case(toolname, document, reports, re_lib):
                     continue
                 pattern = value[0]
                 for m in re.finditer(pattern, part_str):
-                    output = part.code.slice_match_obj(m, 0, True)
-                    reports.append(Report('W', toolname, output, value[1])
-                                   .set_line_offset(document.body.code, 100, True))
+                    reports.append(
+                        Report('W', toolname, part.code.slice_match_obj(m, 0, True), value[1])
+                        .set_line_offset(document.body.code, 100, True))
 
     return reports
 

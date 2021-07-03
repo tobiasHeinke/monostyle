@@ -40,8 +40,7 @@ def compile_terms(terms, conf):
             if not isinstance(message, str):
                 message = '/'.join(message)
 
-        message = conf.get("message prefix", "") + message + conf.get("message suffix", "")
-        return message
+        return conf.get("message prefix", "") + message + conf.get("message suffix", "")
 
     def compile_pattern(pattern_str, conf, porter_stemmer):
         # ignore this single term
@@ -160,9 +159,9 @@ def search_free(toolname, document, reports, data):
         part_str = str(part.code)
         for pattern, message in data:
             for m in re.finditer(pattern, part_str):
-                output = part.code.slice_match_obj(m, 0, True)
-                reports.append(Report('I', toolname, output, message)
-                               .set_line_punc(document.body.code, 50, 30))
+                reports.append(
+                    Report('I', toolname, part.code.slice_match_obj(m, 0, True), message)
+                    .set_line_punc(document.body.code, 50, 30))
 
     return reports
 

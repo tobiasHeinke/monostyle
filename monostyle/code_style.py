@@ -145,11 +145,6 @@ def blank_line(toolname, document, reports):
         if count != aim and count != aim_alt:
             if aim_alt is not None and abs(aim - count) > abs(aim_alt - count):
                 aim = aim_alt
-            output = output_node.code if output_node else node.code.copy().clear(True)
-            message = Report.quantity(what=Report.write_out_quantity(aim, "blank line"),
-                                      where=(("over " if not is_between else "between ") +
-                                            rst_walker.write_out(node.node_name, node.name)))
-            message += ": {:+}".format(aim - count)
 
             fix = None
             if (rst_walker.is_of(node.parent_node, "dir",
@@ -158,13 +153,19 @@ def blank_line(toolname, document, reports):
                  node.parent_node.code.start_lincol[0] - node.code.start_lincol[0] < 2):
 
                 fix = node.parent_node.code.copy().clear(True).replace('\n')
-            reports.append(Report('W', toolname, output, message, node.code, fix))
+            reports.append(
+                Report('W', toolname, output_node.code if output_node
+                       else node.code.copy().clear(True),
+                       Report.quantity(what=Report.write_out_quantity(aim, "blank line"),
+                                       where=(("over " if not is_between else "between ") +
+                                             rst_walker.write_out(node.node_name, node.name))) +
+                       ": {:+}".format(aim - count), node.code, fix))
 
     count_end, _, __ = counter(node, invert=True)
     if count_end >= 3:
-        output = node.code.copy().clear(True)
-        message = Report.quantity(what="three or more blank lines")
-        reports.append(Report('W', toolname, output, message))
+        reports.append(
+            Report('W', toolname, node.code.copy().clear(True),
+                   Report.quantity(what="three or more blank lines")))
 
     return reports
 
@@ -179,54 +180,54 @@ def flavor(toolname, document, reports):
         if node.node_name == "trans":
             trans_len = len(str(node.name_start.code).strip())
             if trans_len < 12 and trans_len > 30:
-                output = node.name_start.code.copy().clear(True)
                 if trans_len < 12:
                     message = Report.under(what="dashes", where="in horizontal line")
                 else:
                     message = Report.over(what="dashes", where="in horizontal line")
 
-                reports.append(Report('W', toolname, output, message))
+                reports.append(
+                    Report('W', toolname, node.name_start.code.copy().clear(True), message))
 
             if not str(node.name_start.code).startswith('-'):
-                output = node.name_start.code.copy().clear(True)
-                message = Report.misformatted(what="wrong char", where="horizontal line")
-                reports.append(Report('W', toolname, output, message))
+                reports.append(
+                    Report('W', toolname, node.name_start.code.copy().clear(True),
+                           Report.misformatted(what="wrong char", where="horizontal line")))
 
         if node.node_name in {"bullet", "enum"}:
             if node.node_name == "bullet":
                 if not str(node.name_start.code).startswith('-'):
                     par_node = node.parent_node.parent_node.parent_node.parent_node
                     if not rst_walker.is_of(par_node, "dir", "list-table"):
-                        output = node.name_start.code.copy().clear(True)
-                        message = Report.misformatted(what="wrong char", where="bullet list")
-                        reports.append(Report('W', toolname, output, message))
+                        reports.append(
+                            Report('W', toolname, node.name_start.code.copy().clear(True),
+                                   Report.misformatted(what="wrong char", where="bullet list")))
 
             if (len(node.body.code) == 1 and
                     node.body.child_nodes.first().node_name == "text" and
                     is_blank_node(node.body.child_nodes.first())):
-                output = node.name_start.code.copy().clear(True)
-                message = Report.missing(what="empty comment", where="in empty list item")
-                reports.append(Report('W', toolname, output, message))
+                reports.append(
+                    Report('W', toolname, node.name_start.code.copy().clear(True),
+                           Report.missing(what="empty comment", where="in empty list item")))
 
         if node.node_name == "enum-list":
             first_node = node.body.child_nodes.first()
             if (str(first_node.name.code).strip() != "#" and
                     not rst_walker.is_of(node.parent_node, "dir", {"figure", "image"}, "body")):
-                output = first_node.name.code.copy().clear(True)
-                message = Report.misformatted(what="not auto-named", where="enumerated list")
-                reports.append(Report('W', toolname, output, message))
+                reports.append(
+                    Report('W', toolname, first_node.name.code.copy().clear(True),
+                           Report.misformatted(what="not auto-named", where="enumerated list")))
 
         if node.node_name == "text" and node.body.child_nodes.is_empty():
             node_content = str(node.body.code)
             for dash_m in re.finditer(dash_re, node_content):
-                output = node.body.code.slice_match_obj(dash_m, 0, True)
-                message = Report.substitution(what="dash", with_what="en-dash")
-                reports.append(Report('W', toolname, output, message))
+                reports.append(
+                    Report('W', toolname, node.body.code.slice_match_obj(dash_m, 0, True),
+                           Report.substitution(what="dash", with_what="en-dash")))
 
             for emdash_m in re.finditer(emdash_re, node_content):
-                output = node.body.code.slice_match_obj(emdash_m, 0, True)
-                message = Report.substitution(what="em-dash", with_what="en-dash")
-                reports.append(Report('W', toolname, output, message))
+                reports.append(
+                    Report('W', toolname, node.body.code.slice_match_obj(emdash_m, 0, True),
+                           Report.substitution(what="em-dash", with_what="en-dash")))
 
     return reports
 
@@ -240,16 +241,16 @@ def heading_lines(toolname, document, reports):
         title_len = len(str(node.name.code).strip()) + ind * 2
 
         if heading_char in {'%', '#', '*'} and not node.name_start:
-            output = node.name_end.code.copy().replace_fill(heading_char)
-            message = Report.missing(what="overline")
             fix = node.name.code.copy().replace_fill([heading_char * title_len + "\n"])
             fix = fix.clear(True)
-            reports.append(Report('W', toolname, output, message, fix=fix))
+            reports.append(
+                Report('W', toolname,
+                       node.name_end.code.copy().replace_fill(heading_char),
+                       Report.missing(what="overline"), fix=fix))
 
         if (len(str(node.name_end.code).strip()) != title_len or
                 (node.name_start and
                  len(str(node.name_start.code).strip()) != title_len)):
-            output = node.name_end.code.copy().replace_fill(heading_char)
             if len(str(node.name_end.code).strip()) != title_len:
                 message = Report.quantity(what="wrong underline length",
                                           how=": {:+}".format(
@@ -269,17 +270,20 @@ def heading_lines(toolname, document, reports):
             fix_under = node.name_end.code.slice((lineno, 0), (lineno + 1, 0), True)
             fix_under.replace_fill([heading_char * title_len + "\n"])
             fix.combine(fix_under)
-            reports.append(Report('W', toolname, output, message, fix=fix))
+            reports.append(
+                Report('W', toolname,
+                       node.name_end.code.copy().replace_fill(heading_char),
+                       message, fix=fix))
 
         title_ind_m = re.match(r" *", str(node.name.code))
         if title_ind_m and len(title_ind_m.group(0)) != ind:
-            output = node.name.code.copy().clear(True)
-            message = Report.quantity(what="wrong title indent",
-                                      how=": {:+}".format(ind - len(title_ind_m.group(0))))
-
             fix = node.name.code.slice_match_obj(title_ind_m, 0, True)
             fix.replace_fill([" " * ind])
-            reports.append(Report('W', toolname, output, message, fix=fix))
+            reports.append(
+                Report('W', toolname, node.name.code.copy().clear(True),
+                       Report.quantity(what="wrong title indent",
+                           how=": {:+}".format(ind - len(title_ind_m.group(0)))),
+                       fix=fix))
 
     return reports
 
@@ -346,9 +350,10 @@ def line_style(toolname, document, reports, re_lib):
                 if m.start() == 0 and (key == "sentwidow" or is_lastword):
                     continue
 
-                output = node.code.slice_match_obj(m, 0, True)
-                reports.append(Report('I', toolname, output, message, fix="reflow")
-                               .set_line_offset(node.code, 100))
+                reports.append(
+                    Report('I', toolname, node.code.slice_match_obj(m, 0, True),
+                           message, fix="reflow")
+                    .set_line_offset(node.code, 100))
 
     return reports
 
@@ -388,9 +393,8 @@ def long_line(toolname, document, reports):
                                     line = None
                                     continue
 
-                    output = line.copy().clear(False)
-                    message = "long line"
-                    reports.append(Report('W', toolname, output, message, line, "reflow"))
+                    reports.append(Report('W', toolname, line.copy().clear(False),
+                                          "long line", line, "reflow"))
 
             if buf or is_last:
                 line = buf
@@ -405,9 +409,11 @@ def style_extra(toolname, document, reports):
         if node.node_name == "hyperlink":
             if (re.match(r"https?\:\/\/", str(node.id.code)) and
                     not re.match(r"`__", str(node.body_end.code))):
-                message = Report.missing(what="underscore", where="after external link (same tab)")
-                fix = node.body_end.code.copy().clear(True).replace("_")
-                reports.append(Report('W', toolname, node.id.code, message, fix=fix))
+                reports.append(
+                    Report('W', toolname, node.id.code,
+                           Report.missing(what="underscore",
+                                          where="after external link (same tab)"),
+                           fix=node.body_end.code.copy().clear(True).replace("_")))
 
         elif node.node_name == "target":
             next_node = node.next
@@ -432,13 +438,16 @@ def style_extra(toolname, document, reports):
                     is_fig = True
 
                 if str(node.id.code).lstrip().startswith("fig-") != is_fig:
-                    message = Report.missing(what="'fig-' prefix", where="at start of figure ref.")
-                    reports.append(Report('W', toolname, node.id.code, message))
+                    reports.append(
+                        Report('W', toolname, node.id.code,
+                               Report.missing(what="'fig-' prefix",
+                                              where="at start of figure ref.")))
                 else:
                     if not is_fig and str(node.id.code).lstrip().startswith("tab-") != is_tab:
-                        message = Report.missing(what="'tab-' prefix",
-                                                 where="at start of table ref.")
-                        reports.append(Report('W', toolname, node.id.code, message))
+                        reports.append(
+                            Report('W', toolname, node.id.code,
+                                   Report.missing(what="'tab-' prefix",
+                                                  where="at start of table ref.")))
 
         elif rst_walker.is_of(node, "role", "menuselection"):
             dash_re = re.compile(r"(?:\A| )(\-{1,3}|\->|\-{3}>)(?: |\Z)")
@@ -452,8 +461,9 @@ def style_extra(toolname, document, reports):
                     message = Report.misformatted(what="arrow length" ,
                                              where="in " + rst_walker.write_out(node.node_name,
                                                                                 node.name))
-                fix = node.body.code.slice_match_obj(dash_m, 1, True).replace("-->")
-                reports.append(Report('W', toolname, node.body.code, message, fix=fix))
+                reports.append(
+                    Report('W', toolname, node.body.code, message,
+                           fix=node.body.code.slice_match_obj(dash_m, 1, True).replace("-->")))
 
     return reports
 

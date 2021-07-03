@@ -166,9 +166,9 @@ def mark(toolname, document, reports, re_lib):
                 for m in re.finditer(pattern, part_str):
                     if m.start() == 0 and key == "closesol" and part.parent_node.prev:
                         continue
-                    output = part.code.slice_match_obj(m, 0, True)
-                    reports.append(Report('W', toolname, output, value[1])
-                                   .set_line_punc(document.body.code, 50, 30))
+                    reports.append(
+                        Report('W', toolname, part.code.slice_match_obj(m, 0, True), value[1])
+                        .set_line_punc(document.body.code, 50, 30))
 
 
     instr_pos = {
@@ -214,26 +214,26 @@ def mark(toolname, document, reports, re_lib):
                         continue
                     if not is_sentence(part, par_node, instr_pos, instr_neg, space_re):
                         continue
-                    output = part.code.copy().clear(False)
-                    message = re_lib["puncend"][1][0].format("paragraph")
-                    reports.append(Report('W', toolname, output, message)
-                                   .set_line_offset(document.body.code, 100, False))
+                    reports.append(
+                        Report('W', toolname, part.code.copy().clear(False),
+                               re_lib["puncend"][1][0].format("paragraph"))
+                        .set_line_offset(document.body.code, 100, False))
 
                 else:
                     if comma_m := re.search(comma_re, part_str):
-                        output = part.code.slice_match_obj(comma_m, 0, True)
-                        message = (re_lib["commaend"][1]
-                                   .format(rst_walker.write_out(part.parent_node.node_name) +
-                                           " " + part.node_name))
-                        reports.append(Report('W', toolname, output, message))
+                        reports.append(
+                            Report('W', toolname, part.code.slice_match_obj(comma_m, 0, True),
+                                   re_lib["commaend"][1].format(
+                                       rst_walker.write_out(part.parent_node.node_name) +
+                                                            " " + part.node_name)))
 
         elif rst_walker.is_of(part, {"role", "hyperlink"}, "*", "head"):
             if re.search(punc_end_re, str(part.code)):
-                output = part.code.copy().clear(False)
-                message = (re_lib["puncend"][1][1]
-                           .format(rst_walker.write_out(part.parent_node.node_name) +
-                                   " " + part.node_name))
-                reports.append(Report('W', toolname, output, message))
+                reports.append(
+                    Report('W', toolname, part.code.copy().clear(False),
+                           re_lib["puncend"][1][1].format(
+                               rst_walker.write_out(part.parent_node.node_name) +
+                                                    " " + part.node_name)))
 
     return reports
 
@@ -344,9 +344,9 @@ def number(toolname, document, reports, re_lib):
                          rst_walker.is_of(part, "dir", "math"))):
                     continue
 
-                output = part.code.slice_match_obj(m, 0, True)
-                reports.append(Report('W', toolname, output, value[1])
-                               .set_line_punc(document.body.code, 50, 30))
+                reports.append(
+                    Report('W', toolname, part.code.slice_match_obj(m, 0, True), value[1])
+                    .set_line_punc(document.body.code, 50, 30))
 
     return reports
 
@@ -401,12 +401,12 @@ def pairs(toolname, document, reports, re_lib, config):
                         if (max_line_span is not None and
                                 line.start_lincol[0] - entry[1][0] > max_line_span):
                             lincol_abs = line.loc_to_abs((0, pair_m.start(0)))
-                            message = "long span"
-                            message += " - " + str(lincol_abs[0] + 1) + ","
-                            message += str(lincol_abs[1] + 1)
-                            output = Fragment(document.code.filename, entry[0], -1,
-                                              start_lincol=entry[1])
-                            reports.append(Report('W', toolname, output, message))
+                            reports.append(
+                                Report('W', toolname,
+                                       Fragment(document.code.filename, entry[0], -1,
+                                                start_lincol=entry[1]),
+                                       "long span - {0},{1}"
+                                       .format(lincol_abs[0] + 1, lincol_abs[1] + 1)))
 
                         # invert index
                         stack.pop(len(stack) - 1 - index)
@@ -416,10 +416,11 @@ def pairs(toolname, document, reports, re_lib, config):
                     stack.append((pair_char, line.loc_to_abs((0, pair_m.start(0)))))
 
     if len(stack) != 0:
-        message = "unclosed pairs"
         for entry in stack:
-            output = Fragment(document.code.filename, entry[0], -1, start_lincol=entry[1])
-            reports.append(Report('W', toolname, output, message))
+            reports.append(
+                Report('W', toolname,
+                       Fragment(document.code.filename, entry[0], -1, start_lincol=entry[1]),
+                       "unclosed pairs"))
 
     if max_line_span is not None:
         for node in rst_walker.iter_node(document.body,
@@ -432,14 +433,14 @@ def pairs(toolname, document, reports, re_lib, config):
 
             if (node.body_start.code.end_lincol[0] - node.body_end.code.start_lincol[0] >
                     max_line_span):
-                message = "long span"
-                message += " - " + str(node.body_start.code.end_lincol[0] + 1)
-                message += "," + str(node.body_end.code.start_lincol[1] + 1)
-                reports.append(Report('W', toolname, node.body_start.code, message))
+                reports.append(
+                    Report('W', toolname, node.body_start.code,
+                           "long span - {0},{1}".format(
+                                node.body_start.code.end_lincol[0] + 1,
+                                node.body_end.code.start_lincol[1] + 1)))
 
             if node.body_start.code.end_pos == node.body_end.code.start_pos:
-                message = "zero span"
-                reports.append(Report('W', toolname, node.code, message))
+                reports.append(Report('W', toolname, node.code, "zero span"))
 
     return reports
 
@@ -474,11 +475,12 @@ def whitespace(toolname, document, reports, re_lib):
             continue
         pattern = value[0]
         for m in re.finditer(pattern, text):
-            output = document.body.code.slice_match_obj(m, 0, True)
             fix = document.body.code.slice_match_obj(m, 1, True)
             fix.replace_fill(value[2])
-            reports.append(Report('W', toolname, output, value[1], fix=fix)
-                           .set_line_punc(document.body.code, 50, 30))
+            reports.append(
+                Report('W', toolname, document.body.code.slice_match_obj(m, 0, True),
+                       value[1], fix=fix)
+                .set_line_punc(document.body.code, 50, 30))
 
     multi_start_re = re_lib["multispacestart"][0]
     multi_re = re_lib["multispace"][0]
@@ -489,17 +491,17 @@ def whitespace(toolname, document, reports, re_lib):
         if node.prev:
             if multi_start_m := re.match(multi_start_re, node_str):
                 output = node.code.slice_match_obj(multi_start_m, 1, True)
-                fix = output.copy().replace_fill(value[2])
-                reports.append(Report('W', toolname, output, re_lib["multispacestart"][1],
-                                      fix=fix if not is_cell else None)
-                               .set_line_punc(document.body.code, 50, 30))
+                reports.append(
+                    Report('W', toolname, output, re_lib["multispacestart"][1],
+                           fix=output.copy().replace_fill(value[2]) if not is_cell else None)
+                    .set_line_punc(document.body.code, 50, 30))
 
         for multi_m in re.finditer(multi_re, node_str):
             output = node.code.slice_match_obj(multi_m, 1, True)
-            fix = output.copy().replace_fill(value[2])
-            reports.append(Report('W', toolname, output, re_lib["multispace"][1],
-                                  fix=fix if not is_cell else None)
-                           .set_line_punc(document.body.code, 50, 30))
+            reports.append(
+                Report('W', toolname, output, re_lib["multispace"][1],
+                       fix=output.copy().replace_fill(value[2]) if not is_cell else None)
+                .set_line_punc(document.body.code, 50, 30))
 
     return reports
 

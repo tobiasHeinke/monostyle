@@ -51,14 +51,15 @@ def search(toolname, document, reports, config):
                 message = "new word: hunk: " + str(entry_hunk["_counter"] + 1)
             suggestions, lexicon_words = lexicon.find_similar(lexicon.norm_punc(word_str),
                                                               str(entry_hunk["word"]),
-                                                              5 if frequency == -1 else 6, 0.6,
+                                                              5 + bool(frequency != -1), 0.6,
                                                               lexicon_words)
             if frequency != -1:
                 suggestions = suggestions[1:]
-            line = Fragment(document.code.filename, ", ".join(suggestions))
-            line = line.add_offset(-line.end_pos, (-1,0))
 
-            reports.append(Report(severity, toolname, entry_hunk["word"], message, line))
+            reports.append(
+                Report(severity, toolname, entry_hunk["word"], message,
+                       Fragment(document.code.filename, ", ".join(suggestions))
+                       .add_offset(-len(entry_hunk["word"]) * 8, (-1,0))))
 
     return reports
 
