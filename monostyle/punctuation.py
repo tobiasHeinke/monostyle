@@ -83,7 +83,7 @@ def mark_pre(_):
         Report.existing(what="opening punctuation", where="at line end"))
 
     # Style
-    re_lib["optplur"] = (re.compile(r"\w/s\b"),
+    re_lib["optplur"] = (re.compile(r"\w/e?s\b"),
         Report.substitution(what="optional plural", with_what="(s)"))
 
     # FP: cut toctree

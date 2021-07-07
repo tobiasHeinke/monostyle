@@ -224,7 +224,12 @@ class Report():
         )
         if number != 1:
             if not irregular_plural:
-                subject += "s"
+                for suffix in {"s", "sh", "ch", "x", "z"}:
+                    if subject.endswith(suffix):
+                        subject += "es"
+                        break
+                else:
+                    subject += "s"
             else:
                 subject = irregular_plural
 
