@@ -310,8 +310,18 @@ class Fragment():
             return self.slice(at_start, at_end, after_inner, output_zero)
 
 
-    def slice(self, at_start, at_end=None, after_inner=False, output_zero=True):
+    def slice(self, at_start=None, at_end=None, after_inner=False, output_zero=True):
         """Cut span."""
+        if at_start is None:
+            if at_end is None:
+                if after_inner:
+                    return self.copy()
+                if output_zero:
+                    return self.copy().clear(True), self.copy(), self.copy().clear(False)
+                return None, self.copy(), None
+
+            at_start = self.get_start(isinstance(at_end, int))
+
         start_pos_abs = None
         if isinstance(at_start, int):
             start_pos_abs = at_start
@@ -384,13 +394,25 @@ class Fragment():
         return result[0] if len(result) == 1 else tuple(result)
 
 
-    def slice_block(self, at_start, at_end, after_inner=False, output_zero=True,
+    def slice_block(self, at_start=None, at_end=None, after_inner=False, output_zero=True,
                     include_before=False, include_after=False):
         """Returns a rectangular block defined by the start and end corners."""
+        if at_start is None and at_end is None:
+            if after_inner:
+                return self.copy()
+            elif not output_zero:
+                return None, self.copy(), None
+
         if isinstance(at_start, int):
             at_start = self.pos_to_lincol(at_start)
         if isinstance(at_end, int):
             at_end = self.pos_to_lincol(at_end)
+
+        if at_start is None:
+            at_start = self.loc_to_abs((0, at_end[1] if at_end is not None else 0))
+        if at_end is None:
+            at_end = self.loc_to_abs((max(len(self.content) - 1, 0), at_start[1]))
+
         is_diff_column = bool(at_start[1] != at_end[1])
 
         cuts = [FragmentBundle()]
@@ -1131,13 +1153,16 @@ class FragmentBundle():
             return self.slice(at_start, at_end, after_inner, output_zero)
 
 
-    def slice(self, at_start, at_end=None, after_inner=False, output_zero=True):
-        if not self:
-            if after_inner:
-                return None
-            if not at_end:
-                return None, None
-            return None, None, None
+    def slice(self, at_start=None, at_end=None, after_inner=False, output_zero=True):
+        if not self or at_start is None:
+            if not self or at_end is None:
+                if after_inner:
+                    return self.copy()
+                if output_zero:
+                    return self.copy().clear(True), self.copy(), self.copy().clear(False)
+                return None, self.copy(), None
+
+            at_start = self.get_start(isinstance(at_end, int))
 
         if at_end is not None and at_end < at_start:
             at_end = at_start
@@ -1203,12 +1228,24 @@ class FragmentBundle():
         return result[0] if len(result) == 1 else tuple(result)
 
 
-    def slice_block(self, at_start, at_end, after_inner=False, output_zero=True,
+    def slice_block(self, at_start=None, at_end=None, after_inner=False, output_zero=True,
                     include_before=False, include_after=False):
+        if not self or (at_start is None and at_end is None):
+            if after_inner:
+                return self.copy()
+            elif not output_zero:
+                return None, self.copy(), None
+
         if isinstance(at_start, int):
             at_start = self.pos_to_lincol(at_start)
         if isinstance(at_end, int):
             at_end = self.pos_to_lincol(at_end)
+
+        if at_start is None:
+            at_start = self.loc_to_abs((0, at_end[1] if at_end is not None else 0))
+        if at_end is None:
+            at_end = self.bundle[-1].loc_to_abs((sum(max(len(piece.content) - 1, 0)
+                                                 for piece in self.bundle), at_start[1]))
 
         cuts = [FragmentBundle()]
         if not after_inner:

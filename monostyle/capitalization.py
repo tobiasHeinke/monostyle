@@ -30,7 +30,7 @@ def titlecase(part_of_speech, word, is_first_word, is_last_word, name):
                 where = "at the end of a "
             message = Report.misformatted(what="lowercase", where=where + name)
 
-            fix = word.slice(word.start_pos, word.start_pos + 1, True)
+            fix = word.slice(at_end=word.start_pos + 1, after_inner=True)
             fix.replace(str(fix).swapcase())
 
             return message, fix
@@ -47,7 +47,7 @@ def titlecase(part_of_speech, word, is_first_word, is_last_word, name):
         fix = None
         if (not tag or (tag[0] != "preposition" and
                 (tag[-1] != "article" or word_str != "A"))):
-            fix = word.slice(word.start_pos, word.start_pos + 1, True)
+            fix = word.slice(at_end=word.start_pos + 1, after_inner=True)
             fix.replace(str(fix).swapcase())
 
         return message, fix
