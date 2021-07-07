@@ -72,7 +72,10 @@ Options:
    <dt>--cached, --staged</dt>
    <dd>Set the diff cached option (Git only).</dd>
    <dt>-s, --resolve</dt>
-   <dd>Resolve link titles and substitutions (file mode only).</dd>
+   <dd>Resolve link titles and substitutions
+      (recommended only for file mode because it can take a few minutes
+      and won't include newly created ones).
+   </dd>
 </dl>
 
 Post processing:

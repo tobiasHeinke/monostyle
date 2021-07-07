@@ -37,8 +37,6 @@ def unversioned_files(path, binary_ext):
 
 
 def difference(from_vsn, is_internal, filename_source, rev, cached):
-    op = diff if from_vsn else file_diff
-
     is_change = False
     if not rev:
         rev = "HEAD"
@@ -52,7 +50,7 @@ def difference(from_vsn, is_internal, filename_source, rev, cached):
     code = None
     messages = None
     body = False
-    for line in op(filename_source, rev, cached):
+    for line in (diff if from_vsn else file_diff)(filename_source, rev, cached):
         try:
             line = line.decode("utf-8")
         except UnicodeError:
