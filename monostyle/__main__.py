@@ -387,6 +387,10 @@ def main(descr=None, mod_selection=None, parse_options=None):
                             action="store_true", dest="cached", default=False,
                             help="set diff cached option (Git only)")
 
+        parser.add_argument("--unversioned", "--untracked",
+                            action="store_true", dest="unversioned", default=False,
+                            help="include unversioned files")
+
     parser.add_argument("-s", "--resolve",
                         action="store_true", dest="do_resolve", default=False,
                         help="resolve link titles and substitutions")
@@ -429,7 +433,8 @@ def main(descr=None, mod_selection=None, parse_options=None):
             "from_vsn": bool(args.patch is None),
             "is_internal": bool(args.internal is not None or args.external is None),
             "rev" : None,
-            "cached": args.cached}
+            "cached": args.cached,
+            "unversioned": args.unversioned}
         if args.patch is None:
             if args.internal:
                 version_options["rev"] = args.internal.strip()

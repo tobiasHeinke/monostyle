@@ -71,6 +71,8 @@ Options:
    </dd>
    <dt>--cached, --staged</dt>
    <dd>Set the diff cached option (Git only).</dd>
+   <dt>--unversioned, --untracked</dt>
+   <dd>Include unversioned/untracked files.</dd>
    <dt>-s, --resolve</dt>
    <dd>Resolve link titles and substitutions
       (recommended only for file mode because it can take a few minutes

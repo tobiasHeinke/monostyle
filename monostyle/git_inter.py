@@ -231,12 +231,12 @@ def norm_path_sep(filename):
     return re.sub(r"\\", "/", filename)
 
 
-def run_diff(from_vsn, is_internal, path, rev, cached):
+def run_diff(from_vsn, is_internal, path, rev, cached, unversioned=False):
     if from_vsn:
         remote_head = update_remotes(path)
         print("Current revision:", get_revision(path))
 
-    if from_vsn and is_internal:
+    if from_vsn and is_internal and unversioned:
         binary_ext = {".png", ".jpg", ".jpeg", ".gif", ".pyc"}
         for filename in unversioned_files(path, binary_ext):
             filename, text = single_text(filename)
