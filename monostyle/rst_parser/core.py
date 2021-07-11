@@ -949,6 +949,15 @@ class RSTParser:
         def row_sep(active, line, top_bottom):
             row = active.active.active
             last = row.body.code.start_lincol[1]
+            # double sep
+            is_new = False
+            if (not row or (not row.body.child_nodes.is_empty() and
+                            row.body.child_nodes.first().name_end)):
+                row = NodeRST("row", line)
+                row.append_part("body", line)
+                active.active.active = row
+                is_new = True
+
             for index, split_m in enumerate(re.finditer(r"(\+)([-=])?", line_info["line_str"])):
                 if index == 0:
                     last = split_m.start(1)
@@ -962,17 +971,18 @@ class RSTParser:
                     before, _ = line.slice(line.loc_to_abs(last))
                     border = before.combine(border)
 
-                if top_bottom:
+                if top_bottom or is_new:
                     cell_node = NodeRST("cell", FragmentBundle([border]))
                 else:
                     cell_node = row.body.child_nodes[index - 1]
 
                 last = split_m.start(1)
-                # double sep
                 if top_bottom:
                     cell_node.append_part("name_start", border)
                     row.body.append_child(cell_node, False)
                 else:
+                    if is_new:
+                        row.body.append_child(cell_node, False)
                     cell_node.append_part("name_end", border, True)
 
             if not top_bottom:
@@ -1101,7 +1111,6 @@ class RSTParser:
                 else:
                     cell_node = row.body.child_nodes[index + index_offset]
                 last = split_m.end(0)
-                # double sep
                 if top_bottom:
                     cell_node.append_part("name_start", border)
                     row.body.append_child(cell_node, False)
