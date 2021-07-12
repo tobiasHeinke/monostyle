@@ -418,7 +418,7 @@ class Report():
         """Extract a single line.
         start_end -- use start or end as location.
         """
-        lineno = self.output.start(False)[0] if start_end else self.output.end(False)[0]
+        lineno = self.output.get_start(False)[0] if start_end else self.output.get_end(False)[0]
         self.line = code.slice((lineno, 0), (lineno+1, 0), True)
         return self
 
@@ -428,7 +428,7 @@ class Report():
         n -- number of lines to include around the line (odds below).
         start_end -- use start or end as location.
         """
-        lineno = self.output.start(False)[0] if start_end else self.output.end(False)[0]
+        lineno = self.output.get_start(False)[0] if start_end else self.output.get_end(False)[0]
         start = (lineno - ceil(n / 2), 0)
         end = (lineno + (n // 2) + 1, 0)
         self.line = code.slice(start, end, True)

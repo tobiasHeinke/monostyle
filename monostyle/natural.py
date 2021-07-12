@@ -507,6 +507,7 @@ def metric(toolname, document, reports):
                 if is_last:
                     counter["para_short"] = 0
                     node_prev = None
+                    sen_full = None
 
                 if (rst_walker.is_of(part, "dir", {"code-block", "default"}) or
                         rst_walker.is_of(part, "comment")):
@@ -531,6 +532,7 @@ def metric(toolname, document, reports):
                 reports = compare(node_prev, sen_full, counter, reports, is_last=True)
                 counter["para_short"] = 0
                 node_prev = None
+                sen_full = None
 
         if node_cur and part.child_nodes.is_empty():
             if part.code.end_pos <= node_cur.code.end_pos:

@@ -391,7 +391,8 @@ def long_line(toolname, document, reports):
                                     continue
 
                     reports.append(Report('W', toolname, line.copy().clear(False),
-                                          "long line", line, "reflow"))
+                                          "long line", fix="reflow")
+                                   .set_line_newline(document.code, 1))
 
             if buf or is_last:
                 line = buf
