@@ -22,17 +22,11 @@ def run(reports, rst_parser, filenames_conflicted=None):
     """Sort reports into groups for each fix tool."""
     monostyle_io.print_over("autofix", ellipsis="...")
 
-    group_fix = []
-    for report in reports:
-        if report.fix is not None:
-            group_fix.append(report)
-
-    if len(group_fix) == 0:
-        monostyle_io.print_over("done")
-        return None
-
     group_file = {}
-    for report in group_fix:
+    for report in reports:
+        if report.fix is None:
+            continue
+
         filename = monostyle_io.path_to_abs(report.output.filename, "doc")
         if filename not in group_file.keys():
             group_file.setdefault(filename, {})
@@ -42,6 +36,10 @@ def run(reports, rst_parser, filenames_conflicted=None):
             group_file[filename].setdefault(tool, [])
 
         group_file[filename][tool].append(report)
+
+    if not group_file:
+        monostyle_io.print_over("done")
+        return
 
     reports_unfixed = []
     for filename, tools in group_file.items():

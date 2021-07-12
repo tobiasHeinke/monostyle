@@ -379,8 +379,8 @@ def pos_weight(part_of_speech, word):
         "interjection": [0, 0],
         "determiner": {
             "article": [2, -5],
-            "demonstrative": [0, 0],
-            "possessive": [0, 0],
+            "demonstrative": [1, -3],
+            "possessive": [1, -3],
             "quantifier": [0, -3],
             "numeral": {
                 "cardinal": [-1, -3],
