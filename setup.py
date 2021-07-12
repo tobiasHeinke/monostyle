@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 import monostyle
 
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
@@ -29,7 +29,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={
-        "": ["*.json", "*.txt"],
+        "": ["*.json", "*.txt", "*.md"],
     },
     entry_points={
         "console_scripts": [
