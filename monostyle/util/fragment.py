@@ -971,7 +971,7 @@ class FragmentBundle():
         if not other:
             return self
 
-        is_before = bool(not self or other.get_end(pos_lincol) < self.get_end(pos_lincol))
+        is_before = bool(not self or other.get_start(pos_lincol) < self.get_end(pos_lincol))
 
         if keep_end and self:
             end_cur = self.get_end(pos_lincol)
