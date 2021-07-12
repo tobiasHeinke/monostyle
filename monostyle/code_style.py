@@ -24,7 +24,6 @@ def is_blank_node(node):
 
 def blank_line(toolname, document, reports):
     """Blank line markup formatting."""
-
     def counter(node, skip=False, stop_cond=None, invert=False):
         count = 0
         node_walk = node.prev if not invert else node
@@ -172,7 +171,6 @@ def blank_line(toolname, document, reports):
 
 def flavor(toolname, document, reports):
     """Check if the preferred markup is used."""
-
     dash_re = re.compile(r"(?:\D |\A)\-(?= \D|$|\Z)")
     emdash_re = re.compile(r"(?:[^-]|\A)\-{3}(?=[^-]|\Z)")
 
@@ -234,7 +232,6 @@ def flavor(toolname, document, reports):
 
 def heading_lines(toolname, document, reports):
     """Heading over/underline char count and indent."""
-
     for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
         heading_char = str(node.name_end.code)[0]
         ind = 0 if heading_char not in {'%', '#'} else 2
@@ -404,7 +401,6 @@ def long_line(toolname, document, reports):
 
 def style_extra(toolname, document, reports):
     """Check for additional markup style."""
-
     for node in rst_walker.iter_node(document.body):
         if node.node_name == "hyperlink":
             if (re.match(r"https?\:\/\/", str(node.id.code)) and

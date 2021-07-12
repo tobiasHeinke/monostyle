@@ -48,7 +48,6 @@ def glossary_pre(_):
 
 def glossary(toolname, document, reports, data):
     """Unused glossary terms or within glossary only."""
-
     if document.code.filename not in data["glossary_filenames"]:
         return reports
 
@@ -77,7 +76,6 @@ def link_titles_pre(_):
 
 def link_titles(toolname, document, reports, data):
     """Find internal (ref) links title mismatches the heading title."""
-
     for node in rst_walker.iter_node(document.body, "role"):
         if rst_walker.is_of(node, "*", "ref") and node.head:
             id_str = str(node.id.code).strip()
@@ -117,7 +115,6 @@ def local_targets_pre(_):
 
 def local_targets(toolname, reports, data):
     """Find internal (ref) links used on same page only."""
-
     for node in data["targets"]:
         is_same_file = False
         is_multi = False
@@ -201,7 +198,6 @@ def page_name(toolname, document, reports):
 
 def tool_title(toolname, document, reports):
     """Check if a heading matches the tool name in the ref box."""
-
     last_re = re.compile(r"(?:\-> |\A)([^>]*?)(?:\.\.\.)?\Z")
     for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
         node_next = node.next
@@ -260,7 +256,6 @@ def unused_targets_pre(_):
 
 def unused_targets(toolname, reports, data):
     """Find unused internal (ref) targets."""
-
     for node in data["targets"]:
         if str(node.id.code).strip() not in data["links"]:
             reports.append(Report('W', toolname, node.id.code, "unused target"))

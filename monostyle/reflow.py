@@ -359,7 +359,6 @@ def pos_weight(part_of_speech, word):
     a line before/after this part of speech tag,
     The structure has to by the same as the pos data.
     """
-
     weights = {
         "noun": [0, 0],
         "verb": [0, 0],

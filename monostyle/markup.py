@@ -135,7 +135,6 @@ def highlight(toolname, document, reports, config):
 
 def heading_level(toolname, document, reports):
     """Heading hierarchy defined by the under/overline char."""
-
     level_chars = ('%', '#', '*', '=', '-', '^', '"', "'")
     levels = {level_char: index for index, level_char in enumerate(level_chars)}
     title_count = 0
@@ -195,7 +194,6 @@ def heading_level(toolname, document, reports):
 
 def indention(toolname, document, reports):
     """Check RST code line indention."""
-
     default_indent = 3
     field_ind_hanging = 3
     field_ind_fix = 15
@@ -500,7 +498,6 @@ def kbd_pre(_):
 
 def kbd(toolname, document, reports, re_lib):
     """Report non-conforming uses of the :kbd: role."""
-
     valid_kbd = re_lib["valid_kbd"]
     repeat_kbd = re_lib["repeat_kbd"]
 
@@ -718,7 +715,6 @@ def leak_pre(_):
 
 def leak(toolname, document, reports, re_lib, data):
     """Find pieces of leaked markup and suspicious patterns."""
-
     names = set(data[0].keys()) if not "*" in data[0].keys() else None
     for node in rst_walker.iter_node(document.body, names, leafs_only=True):
         mapper_portion = (data[0][node.node_name] if node.node_name in data[0].keys()
@@ -817,7 +813,6 @@ def leak(toolname, document, reports, re_lib, data):
 
 def markup_names(toolname, document, reports):
     """Find unknown/uncommon role and directive names."""
-
     roles = (
         # standard docutils
         'index', 'sub', 'sup', 'math',

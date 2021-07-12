@@ -412,7 +412,6 @@ def hyphen(toolname, document, reports, data, config):
 
 def metric(toolname, document, reports):
     """Measure length of segments like paragraphs, sentences and words."""
-
     # source: https://www.gov.uk/guidance/content-design/writing-for-gov-uk
     conf = {
         "sect_len": 69,
@@ -812,7 +811,6 @@ def repeated_pre(toolname):
 
 def repeated(toolname, document, reports, config):
     """Find repeated words e.g. the the example."""
-
     def stemmer_patch(porter_stemmer, word_lower):
         """Distinguish some words."""
         # on vs. one

@@ -16,7 +16,6 @@ from monostyle.util.char_catalog import CharCatalog
 
 def char_search(toolname, document, reports):
     """All chars outside of the defined Unicode region or explicit search."""
-
     char_catalog = CharCatalog()
     text = str(document.code)
     chars = (
@@ -50,7 +49,6 @@ def char_search(toolname, document, reports):
 
 def encoding(toolname, reports):
     """Check text encoding."""
-
     # standard Unicode replace char <?>
     repchar_re = re.compile("\uFFFD")
     for filename in monostyle_io.doc_files():
@@ -85,7 +83,6 @@ def eof_pre(_):
 
 def eof(toolname, document, reports, re_lib, config):
     """Check blank lines at end of file."""
-
     if "_at_eof" in config and config["_at_eof"]:
         if m := re.search(re_lib["end"], str(document.code)):
             output = document.body.code.slice_match_obj(m, 0, True)

@@ -317,7 +317,6 @@ def number_pre(_):
 
 def number(toolname, document, reports, re_lib):
     """Check for numbers and units formatting."""
-
     instr_pos = {
         "field": {"*": ["body"]},
         "*": {"*": ["head", "body"]}
@@ -364,7 +363,6 @@ def pairs_pre(toolname):
 
 def pairs(toolname, document, reports, re_lib, config):
     """Check if pairs of inline markup, brackets, quote marks are closed."""
-
     instr_pos = {
         "sect": {"*": ["name"]},
         "field": {"*": ["name", "body"]},
@@ -456,7 +454,6 @@ def whitespace_pre(_):
 
 def whitespace(toolname, document, reports, re_lib):
     """Check whitespace chars."""
-
     text = str(document.code)
     for key, value in re_lib.items():
         if key in {"multispace", "multispacestart"}:

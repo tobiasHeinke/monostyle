@@ -100,7 +100,6 @@ def heading_caps_pre(_):
 
 def heading_caps(toolname, document, reports, re_lib):
     """Check the heading title capitalization."""
-
     segmenter = Segmenter()
     part_of_speech = PartofSpeech()
     instr_pos = {
@@ -326,7 +325,6 @@ def start_case_pre(_):
 
 def start_case(toolname, document, reports, re_lib):
     """Check case at the start of paragraphs, sentences and parenthesis."""
-
     instr_pos = {
         "field": {"*": ["name", "body"]},
         "*": {"*": ["head", "body"]}

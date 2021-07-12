@@ -73,7 +73,7 @@ def resolve_link_title(document, titles, targets):
 
 
 def resolve_subst(document, gobal_substdef):
-    """Insert the refenced content in substitutions.
+    """Insert the referenced content in substitutions.
 
     Iterative dependency graph resolution.
 
@@ -81,7 +81,6 @@ def resolve_subst(document, gobal_substdef):
     Dependency resolution example in Python by Mario Vilas (mvilas at gmail dot com).
     https://breakingcode.wordpress.com/2013/03/11/an-example-dependency-resolution-algorithm-in-python/
     """
-
     graph = dict((key, {"content": value, "deps": set(), "global": True})
                  for key, value in gobal_substdef.items())
 
