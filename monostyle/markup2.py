@@ -83,7 +83,7 @@ def link_titles(toolname, document, reports, data):
             id_str = str(node.id.code).strip()
             for target, title_head in data.items():
                 if target == id_str:
-                    sim = SequenceMatcher(lambda x: x == " ", str(title_head).lower(),
+                    sim = SequenceMatcher(lambda x: x == " ", str(title_head.code).lower(),
                                           str(node.head.code).lower()).ratio()
                     if sim < 0.9:
                         reports.append(

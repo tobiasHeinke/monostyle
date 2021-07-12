@@ -12,6 +12,11 @@ import monostyle.rst_parser.walker as rst_walker
 
 def get_link_titles(rst_parser):
     """Get titles."""
+    def detach(node, child):
+        node.child_nodes.remove(child)
+        child.detach()
+        return child
+
     targets = {}
     titles = {}
 
@@ -22,7 +27,7 @@ def get_link_titles(rst_parser):
             filename = monostyle_io.path_to_rel(filename, "doc")
             filename = '/' + filename[:-4]
 
-            titles[filename] = node.name
+            titles[filename] = detach(node, node.name)
             break
 
         for node in rst_walker.iter_node(doc.body, "target"):
@@ -34,9 +39,9 @@ def get_link_titles(rst_parser):
                     node_next = node_next.next
                 else:
                     if node_next.node_name == "sect":
-                        targeted = node_next.name
+                        targeted = detach(node_next, node_next.name)
                     else:
-                        targeted = node_next.body
+                        targeted = detach(node_next, node_next.body)
                     targets[str(node.id.code).strip()] = targeted
                     break
 

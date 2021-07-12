@@ -19,6 +19,14 @@ class Node:
         self.child_nodes = LinkedList(self)
 
 
+    def detach(self):
+        """Remove links of the node."""
+        self.prev = None
+        self.next = None
+        self.parent_node = None
+        return self
+
+
     def prev_leaf(self):
         """Return the previous leaf node."""
         node = self
