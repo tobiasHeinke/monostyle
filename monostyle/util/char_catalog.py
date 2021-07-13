@@ -95,6 +95,7 @@ class CharCatalog:
                 regions.append(char)
 
         regions = self.contract(regions)
+        # Memoize pattern
         if store:
             self.unicode_set.storage[pattern_str + str(start_block) + "-" +
                                      str(end_block)] = regions
