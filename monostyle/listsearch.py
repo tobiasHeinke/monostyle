@@ -33,16 +33,21 @@ def compile_terms(terms, conf):
         overline -- match over whitespace including line wraps.
         boundary -- pattern start and end with word boundaries.
     """
-    def combine_message(message, has_message, conf):
-        if "message" in conf and not has_message:
-            message = conf["message"]
-        else:
-            if not isinstance(message, str):
-                message = '/'.join(message)
+    def combine_message(pattern_str, message, conf):
+        has_default = False
+        if not message:
+            if "message" in conf:
+                message = conf["message"]
+                has_default = True
+            else:
+                message = pattern_str
 
-        return conf.get("message prefix", "") + message + conf.get("message suffix", "")
+        if not has_default and not isinstance(message, str):
+            message = '/'.join(message)
 
-    def compile_pattern(pattern_str, conf, porter_stemmer):
+        return conf.get("message prefix", "") + message + conf.get("message suffix", ""), has_default
+
+    def combine_pattern(pattern_str, conf, porter_stemmer):
         # ignore this single term
         if pattern_str == "" or pattern_str.startswith('?'):
             return None
@@ -67,11 +72,7 @@ def compile_terms(terms, conf):
             if conf["flags"]["boundary"]:
                 pattern_str = r'\b' + pattern_str + r'\b'
 
-        if not conf["flags"]["word"]:
-            pattern = re.compile(pattern_str, flags)
-        else:
-            pattern = pattern_str
-        return pattern
+        return pattern_str
 
     porter_stemmer = Porterstemmer()
     terms_compiled = []
@@ -83,33 +84,48 @@ def compile_terms(terms, conf):
     if conf["flags"]["dotall"]:
         flags = flags | re.DOTALL
 
+    pattern_str_default = []
+    message_default = None
     for term in terms:
+        message = None
         if isinstance(term, str):
             pattern_strs = term
-            message = combine_message(pattern_strs, False, conf)
         elif len(term) == 1:
             pattern_strs = term[0]
-            message = combine_message(pattern_strs, False, conf)
         elif len(term) == 2:
             pattern_strs = term[0]
-            message = combine_message(term[1], True, conf)
+            message = term[1]
         else:
-            print("list: wrong form:", term)
+            print("listsearch: misformatted list entry:", term)
             continue
+
+        message, has_default = combine_message(pattern_strs, message, conf)
 
         if isinstance(pattern_strs, str):
             pattern_strs = (pattern_strs,)
 
+        pattern_str_combined = []
         for pattern_str in pattern_strs:
             # comment skip entire entry
             if pattern_str.startswith('#'):
                 break
 
-            pattern = compile_pattern(pattern_str, conf, porter_stemmer)
-            if not pattern:
+            pattern_str = combine_pattern(pattern_str, conf, porter_stemmer)
+            if not pattern_str:
                 continue
+            if conf["flags"]["word"]:
+                terms_compiled.append((pattern_str, message))
+            else:
+                pattern_str_combined.append(pattern_str)
 
-            terms_compiled.append((pattern, message))
+        if has_default:
+            pattern_str_default.extend(pattern_str_combined)
+            message_default = message
+        elif pattern_str_combined:
+            terms_compiled.append((re.compile("|".join(pattern_str_combined), flags), message))
+
+    if pattern_str_default:
+        terms_compiled.append((re.compile("|".join(pattern_str_default), flags), message_default))
 
     return terms_compiled
 
