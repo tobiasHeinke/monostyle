@@ -948,7 +948,6 @@ class RSTParser:
     def grid_table(self, node, line, line_info):
         def row_sep(active, line, top_bottom):
             row = active.active.active
-            last = row.body.code.start_lincol[1]
             # double sep
             is_new = False
             if (not row or (not row.body.child_nodes.is_empty() and
@@ -958,32 +957,39 @@ class RSTParser:
                 active.active.active = row
                 is_new = True
 
-            for index, split_m in enumerate(re.finditer(r"(\+)([-=])?", line_info["line_str"])):
-                if index == 0:
-                    last = split_m.start(1)
+            col_prev = None
+            new_cell = row.body.child_nodes.first()
+            is_first = True
+            for split_m in re.finditer(r"(\+)([-=])?", line_info["line_str"]):
+                if col_prev is None:
+                    col_prev = split_m.start(1)
                     continue
-                border = line.slice(line.loc_to_abs(last),
+                border = line.slice(line.loc_to_abs(col_prev),
                                     line.loc_to_abs(split_m.start(1)), True)
                 if not split_m.group(2):
                     after = line.slice(line.loc_to_abs(split_m.start(1)), after_inner=True)
                     border.combine(after)
-                if index == 1:
-                    before, _ = line.slice(line.loc_to_abs(last))
+
+                if is_first:
+                    before = line.slice(at_end=line.loc_to_abs(col_prev), after_inner=True)
                     border = before.combine(border)
+                    is_first = False
 
                 if top_bottom or is_new:
-                    cell_node = NodeRST("cell", FragmentBundle([border]))
+                    new_cell = NodeRST("cell", FragmentBundle([border]))
                 else:
-                    cell_node = row.body.child_nodes[index - 1]
+                    if split_m.start(0) >= new_cell.body_end.code.end_lincol[1]:
+                        new_cell = new_cell.next
 
-                last = split_m.start(1)
                 if top_bottom:
-                    cell_node.append_part("name_start", border)
-                    row.body.append_child(cell_node, False)
+                    new_cell.append_part("name_start", border)
+                    row.body.append_child(new_cell, False)
                 else:
                     if is_new:
-                        row.body.append_child(cell_node, False)
-                    cell_node.append_part("name_end", border, True)
+                        row.body.append_child(new_cell, False)
+                    new_cell.append_part("name_end", border, True)
+
+                col_prev = split_m.start(1)
 
             if not top_bottom:
                 row.body.append_code(line)
@@ -1003,45 +1009,50 @@ class RSTParser:
                 row.body.append_code(line)
                 is_new = False
 
-            for index, cell_def_node in enumerate(table_def.body.child_nodes):
-                cols = (line.loc_to_abs(cell_def_node.name_start.code.start_lincol[1]),
-                        line.loc_to_abs(cell_def_node.name_start.code.end_lincol[1]))
-                is_last = bool(not cell_def_node.next)
-                if index == 0:
-                    first_m = re.search(r"(\s|\A)\+", str(cell_def_node.name_start.code))
-                    cols = (line.loc_to_abs(cell_def_node.name_start.code
-                                            .loc_to_abs((0, first_m.end(0)))[1]), cols[1])
+            def_start = table_def.body.child_nodes.first()
+            new_cell = row.body.child_nodes.first()
+            for def_end in table_def.body.child_nodes:
+                col_start = line.loc_to_abs(def_start.name_start.code.start_lincol[1])
+                col_end = line.loc_to_abs(def_end.name_start.code.end_lincol[1])
+                is_last = bool(not def_end.next)
+                if not def_start.prev:
+                    first_m = re.search(r"(\s|\A)\+", str(def_start.name_start.code))
+                    col_start = line.loc_to_abs(def_start.name_start.code
+                                                .loc_to_abs((0, first_m.end(0)))[1])
                 if is_last:
-                    last_m = re.search(r"\+(\s|\Z)", str(cell_def_node.name_start.code))
-                    cols = (cols[0], line.loc_to_abs(cell_def_node.name_start.code
-                                                     .loc_to_abs((0, last_m.start(0)))[1]))
+                    last_m = re.search(r"\+(\s|\Z)", str(def_end.name_start.code))
+                    col_end = line.loc_to_abs(def_end.name_start.code
+                                              .loc_to_abs((0, last_m.start(0)))[1])
 
-                border_right = line.slice(cols[1], cols[1] + 1, True)
-                if str(border_right) in {"", "+", "|", "\n"}:
-                    code = line.slice(cols[0] + 1, cols[1], True)
-                    trim_m = re.match(r"\s*(.*?)\s*\Z", str(code))
-                    left, inner, right = code.slice_match_obj(trim_m, 1)
-                    if is_new:
-                        new_cell = NodeRST("cell", FragmentBundle([code]))
-                        row.body.append_child(new_cell, False)
-                    else:
-                        new_cell = row.body.child_nodes[index]
-                        new_cell.append_code(code)
+                border_right = line.slice(col_end, col_end + 1, True)
+                if str(border_right) not in {"", "+", "|", "\n"} and not is_last:
+                    continue
 
-                    if is_last:
-                        after = line.slice(border_right.end_pos, after_inner=True)
-                        border_right.combine(after)
-                    if not new_cell.body:
-                        new_cell.append_part("body_start", left)
-                        new_cell.append_part("body", inner)
-                        new_cell.append_part("body_end", right.combine(border_right))
-                    else:
-                        new_cell.body_start.code.combine(left)
-                        new_cell.body.code.combine(inner)
-                        new_cell.body_end.code.combine(right.combine(border_right))
+                code = line.slice(col_start + 1, col_end, True)
+                code_str = str(code)
+                if re.search(r"(?!\\)\\\Z", code_str) and not is_last:
+                    continue
 
+                left, inner, right = code.slice_match_obj(re.match(r"\s*(.*?)\s*\Z", code_str), 1)
+                if is_new:
+                    new_cell = NodeRST("cell", FragmentBundle([code]))
+                    row.body.append_child(new_cell, False)
                 else:
-                    self.warning(line, "grid table columns not conforming")
+                    new_cell.append_code(code)
+
+                if is_last:
+                    after = line.slice(border_right.end_pos, after_inner=True)
+                    border_right.combine(after)
+                if not new_cell.body:
+                    new_cell.append_part("body_start", left)
+                    new_cell.append_part("body", inner)
+                    new_cell.append_part("body_end", right.combine(border_right))
+                else:
+                    new_cell.body_start.code.combine(left)
+                    new_cell.body.code.combine(inner)
+                    new_cell.body_end.code.combine(right.combine(border_right))
+                new_cell = new_cell.next
+                def_start = def_start.next
 
         if not node.active or node.active.node_name != "grid-table":
             if m := re.match(self.re_lib["grid_border"], line_info["line_str"]):
@@ -1098,24 +1109,24 @@ class RSTParser:
     def simple_table(self, node, line, line_info):
         def row_sep(active, line, top_bottom):
             row = active.active.active
-            last = row.body.code.start_lincol[1]
-            index_offset = 0
-            for index, split_m in enumerate(re.finditer(r"\s+", line_info["line_str"])):
-                if index == 0 and last == 0 and split_m.start() == 0:
-                    index_offset = -1
+            col_prev = row.body.code.start_lincol[1]
+            new_cell = row.body.child_nodes.first()
+            for split_m in re.finditer(r"\s+", line_info["line_str"]):
+                if col_prev == 0 and split_m.start() == 0:
                     continue
-                border = line.slice(line.loc_to_abs(last),
+                border = line.slice(line.loc_to_abs(col_prev),
                                     line.loc_to_abs(split_m.start(0)), True)
                 if top_bottom:
-                    cell_node = NodeRST("cell", FragmentBundle([border]))
+                    new_cell = NodeRST("cell", FragmentBundle([border]))
                 else:
-                    cell_node = row.body.child_nodes[index + index_offset]
-                last = split_m.end(0)
+                    if split_m.start(0) >= new_cell.body_end.code.end_lincol[1]:
+                        new_cell = new_cell.next
                 if top_bottom:
-                    cell_node.append_part("name_start", border)
-                    row.body.append_child(cell_node, False)
+                    new_cell.append_part("name_start", border)
+                    row.body.append_child(new_cell, False)
                 else:
-                    cell_node.append_part("name_end", border, True)
+                    new_cell.append_part("name_end", border, True)
+                col_prev = split_m.end(0)
 
             if not top_bottom:
                 row.body.append_code(line)
@@ -1135,39 +1146,43 @@ class RSTParser:
                 row.body.append_code(line)
                 is_new = False
 
-            for index, cell_def_node in enumerate(table_def.body.child_nodes):
-                cols = (line.loc_to_abs(cell_def_node.name_start.code.start_lincol[1]),
-                        line.loc_to_abs(cell_def_node.name_start.code.end_lincol[1]))
-                is_last = bool(not cell_def_node.next)
+            def_start = table_def.body.child_nodes.first()
+            new_cell = row.body.child_nodes.first()
+            for def_end in table_def.body.child_nodes:
+                col_end = line.loc_to_abs(def_end.name_start.code.end_lincol[1])
+                is_last = bool(not def_end.next)
                 if not is_last:
-                    border_right = line.slice(cols[1], cols[1] + 1, True)
+                    border_right = line.slice(col_end, col_end + 1, True)
                 else:
                     border_right = line.copy().clear(False)
-                if str(border_right) in {"", " ", "\n"}:
-                    if not is_last:
-                        code = line.slice(cols[0], cols[1], True)
-                    else:
-                        code = line.slice(cols[0], after_inner=True)
-                    trim_m = re.match(r"\s*(.*?)\s*\Z", str(code))
-                    left, inner, right = code.slice_match_obj(trim_m, 1)
-                    if is_new:
-                        new_cell = NodeRST("cell", FragmentBundle([code]))
-                        row.body.append_child(new_cell, False)
-                    else:
-                        new_cell = row.body.child_nodes[index]
-                        new_cell.append_code(code)
+                if str(border_right) not in {"", " ", "\n"} and not is_last:
+                    continue
 
-                    if not new_cell.body:
-                        new_cell.append_part("body_start", left)
-                        new_cell.append_part("body", inner)
-                        new_cell.append_part("body_end", right.combine(border_right))
-                    else:
-                        new_cell.body_start.code.combine(left)
-                        new_cell.body.code.combine(inner)
-                        new_cell.body_end.code.combine(right.combine(border_right))
+                if is_last:
+                    col_end = None
+                code = line.slice(line.loc_to_abs(def_start.name_start.code
+                                                  .start_lincol[1]), col_end, after_inner=True)
+                code_str = str(code)
+                if re.search(r"(?!\\)\\\Z", code_str) and not is_last:
+                    continue
 
+                left, inner, right = code.slice_match_obj(re.match(r"\s*(.*?)\s*\Z", code_str), 1)
+                if is_new:
+                    new_cell = NodeRST("cell", FragmentBundle([code]))
+                    row.body.append_child(new_cell, False)
                 else:
-                    self.warning(line, "simple table columns not conforming")
+                    new_cell.append_code(code)
+
+                if not new_cell.body:
+                    new_cell.append_part("body_start", left)
+                    new_cell.append_part("body", inner)
+                    new_cell.append_part("body_end", right.combine(border_right))
+                else:
+                    new_cell.body_start.code.combine(left)
+                    new_cell.body.code.combine(inner)
+                    new_cell.body_end.code.combine(right.combine(border_right))
+                new_cell = new_cell.next
+                def_start = def_start.next
 
         if not node.active or node.active.node_name != "simple-table":
             if m := re.match(self.re_lib["simple_row_border"], line_info["line_str"]):
@@ -1210,6 +1225,8 @@ class RSTParser:
                             node.active.active.active.body.child_nodes.first().body):
                         node.active.active.append_child(node.active.active.active)
                     cell(node.active, line)
+                else:
+                    self.warning(line, "simple table column span not implemented")
             elif node.active.active.node_name == "body":
                 if not re.match(self.re_lib["simple_row_border"], line_info["line_str"]):
                     if node.active.active.active:
@@ -1373,7 +1390,7 @@ class RSTParser:
                     if len(id_node.next.body.code) != 0:
                         node.insert_part("body", id_node.next.body.code, node.id_end)
                     if id_node.next.next:
-                        self.warning(id_node.next.next, "inline body unexpected content")
+                        self.warning(id_node.next.next.code, "inline body unexpected content")
 
             else:
                 if name_str is None or name_str not in {"term", "abbr"}:

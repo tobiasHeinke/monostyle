@@ -221,7 +221,7 @@ Default directive requires a blank line between start and body.
 Default directive no multi line head.
 Options lists option name itself and aliases are not split.
 Options lists arguments limited allowed chars.
-Tables no row or column spans.
+Tables simple no head column spans.
 Tables head borders are in the first/last row.
 
 
