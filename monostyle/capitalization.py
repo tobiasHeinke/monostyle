@@ -161,8 +161,8 @@ def pos_case(toolname, document, reports):
     instr_neg = {
         "dir": {
             "figure": ["head"],
-            "admonition": ["head"], "hint": ["head"], "important": ["head"],
-            "note": ["head"], "tip": ["head"], "warning": ["head"], "rubric": ["head"],
+            "hint": ["head"], "important": ["head"], "note": ["head"],
+            "tip": ["head"], "warning": ["head"], "rubric": ["head"],
             "code-block": "*", "default": "*", "include": "*", "index": "*", "toctree": "*",
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
         },

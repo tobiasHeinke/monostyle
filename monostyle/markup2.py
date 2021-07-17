@@ -203,8 +203,7 @@ def tool_title(toolname, document, reports):
         node_next = node.next
         if node_next.node_name == "text" and node.code.isspace():
             node_next = node_next.next
-        if (not rst_walker.is_of(node_next, "dir", "admonition") or
-                str(rst_walker.get_attr(node_next, "class")).strip() != "refbox"):
+        if not rst_walker.is_of(node_next, "dir", "reference"):
             continue
 
         heading_str = str(node.name.code).strip()

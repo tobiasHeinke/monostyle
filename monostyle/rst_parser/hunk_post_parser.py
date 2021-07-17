@@ -70,16 +70,7 @@ def toctree(rst_parser, document):
 
 
 def refbox(rst_parser, document):
-    """Find partial admonition directives with refbox class."""
-    def rename(rst_parser, node, add_class):
-        node.node_name = "dir"
-        doc = rst_parser.parse(rst_parser.document(
-                  code=Fragment(document.code.filename,
-                                [".. admonition:: Reference\n",
-                                 "   :class: refbox\n" if add_class else ""],
-                                 -2, -2, (-2, 0), (-2, 0))))
-        part_transfer(node, doc.body.child_nodes.first())
-
+    """Find partial reference directives."""
     node = document.body.child_nodes.first()
     if node.node_name == "text" and node.code.isspace():
         node = node.next
@@ -88,27 +79,17 @@ def refbox(rst_parser, document):
 
     node_child = node.body.child_nodes.first()
     if node_child and node_child.node_name == "field-list":
-        field_node = node_child.body.child_nodes.first()
-        if (str(field_node.name).strip() == "class" and
-                str(field_node.body).strip() == "refbox"):
-            rename(rst_parser, node, False)
-            node_child.body.child_nodes.shift()
-            prime = NodeRST("field-list", None)
-            prime.append_part("body", None)
-            prime.body.append_child(field_node)
-            node.attr = NodePartRST("attr", field_node.code)
-            node.attr.append_child(prime, False)
-            node.child_nodes.prepend(node.attr)
-
+        for field_node in node_child.body.child_nodes:
+            if (str(field_node.name).strip() not in
+                    {"Shortcut", "Menu", "Panel", "Mode", "Tool",
+                     "Editor", "Header", "Type", "Context"}):
+                break
         else:
-            for field_node in node_child.body.child_nodes:
-                if (str(field_node.name).strip() not in
-                        {"Shortcut", "Menu", "Panel", "Mode", "Tool",
-                         "Editor", "Header", "Type", "Context"}):
-                    break
-
-            else:
-                rename(rst_parser, node, True)
+            node.node_name = "dir"
+            doc = rst_parser.parse(rst_parser.document(
+                      code=Fragment(document.code.filename, [".. reference::\n"],
+                                    -1, -1, (-1, 0), (-1, 0))))
+            part_transfer(node, doc.body.child_nodes.first())
 
     return document
 

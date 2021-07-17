@@ -259,8 +259,7 @@ def indention(toolname, document, reports):
 
         # limit: groups of aligned fields, todo favor fix on refbox
         elif node.node_name == "field-list":
-            # if (rst_walker.is_of(node.parent_node, "dir", "admonition") and
-                  # str(rst_walker.get_attr(node.parent_node, "class")).strip() == "refbox"):
+            # if rst_walker.is_of(node.parent_node, "dir", "reference"):
 
             inds = []
             for node_field in rst_walker.iter_node(node.body, "field"):
@@ -825,14 +824,14 @@ def markup_names(toolname, document, reports):
     directives = (
         # standard docutils
         #   admonition
-        'admonition', 'hint', 'important', 'note', 'tip', 'warning',
+        'hint', 'important', 'note', 'tip', 'warning',
         #    other
         'container', 'figure', 'image', 'include', 'list-table', 'math',
         'parsed-literal', 'replace', 'rubric', 'unicode',
         # Sphinx custom
         'code-block', 'glossary', 'highlight', 'hlist', 'index', 'only', 'seealso', 'toctree',
         # Sphinx extension
-        'vimeo', 'youtube'
+        'reference', 'vimeo', 'youtube'
     )
 
     for node in rst_walker.iter_node(document.body, {"dir", "role", "block-quote"}):
@@ -932,12 +931,14 @@ def structure_pre(_):
               {"output": False, "message": "transition not between text"}),
              ("dir(figure, list-table) - def-list \\ * + dir(figure, list-table) & def-list",
               {"output": True, "message": "image splitting definition list"}),
-             ("dir(admonition) = *[!class: refbox]",
-              {"severity": 'W', "output": True,
-               "message": "admonition directive without refbox class"}),
-             ("dir(admonition)[class: refbox] - !sect = !None",
-              {"output": True, "message": "refbox admonition not at section start"}),
-             ("sect + dir(figure, admonition, list-table, toctree) & !text, def-list, sect = !None",
+             ("dir(reference) - !sect = !None",
+              {"output": True, "message": "reference box not at section start"}),
+             ("dir(reference) / head > !None",
+              {"output": False, "message": "reference box head misplaced content"}),
+             ("dir(reference) / body > * == !field-list + !None",
+              {"output": False,
+               "message": "reference box body should contain (only) a field-list"}),
+             ("sect + dir(figure, reference, list-table, toctree) & !text, def-list, sect = !None",
               {"output": False, "message": "section not starting with a text"}),
              ("bullet-list, enum-list - !text = !None",
               {"output": True, "message": "list without an introductory text"}),

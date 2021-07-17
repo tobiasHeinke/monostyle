@@ -147,7 +147,7 @@ def blank_line(toolname, document, reports):
 
             fix = None
             if (rst_walker.is_of(node.parent_node, "dir",
-                                {"admonition", "hint", "important", "note", "tip",
+                                {"hint", "important", "note", "reference", "tip",
                                  "warning", "seealso", "code-block"}, "head") and
                  node.parent_node.code.start_lincol[0] - node.code.start_lincol[0] < 2):
 

@@ -177,8 +177,8 @@ def mark(toolname, document, reports, re_lib):
     instr_neg = {
         "dir": {
             "figure": ["head"], "toctree": "*", "include": "*", "index": "*",
-            "admonition": ["head"], "hint": ["head"], "important": ["head"],
-            "note": ["head"], "tip": ["head"], "warning": ["head"], "rubric": ["head"],
+            "hint": ["head"], "important": ["head"], "note": ["head"],
+            "tip": ["head"], "warning": ["head"], "rubric": ["head"],
             "code-block": "*", "default": "*", "highlight": "*", "youtube": "*", "vimeo": "*"
         },
         "substdef": "*",
