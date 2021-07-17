@@ -84,7 +84,7 @@ def image_filename(toolname, reports):
         for char_m in re.finditer(char_re, name):
             reports.append(
                 Report('E' if not re.match(upper_re, char_m.group(0)) else 'I', toolname,
-                       Fragment(name + ext, name).slice_match_obj(char_m, 0, True),
+                       Fragment(name + ext, name).slice_match(char_m, 0, True),
                        "not allowed char in image filename"))
 
         if ext not in pos:

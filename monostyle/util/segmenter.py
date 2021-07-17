@@ -84,7 +84,7 @@ class Segmenter:
         for para_m in re.finditer(para_re, text):
             yield (source.slice(source.loc_to_abs(buf_start),
                                 source.loc_to_abs(para_m.end(0)), True),
-                   source.slice_match_obj(para_m, 0, True))
+                   source.slice_match(para_m, 0, True))
             buf_start = para_m.end(0)
 
         if source.loc_to_abs(buf_start) != source.end_pos:
@@ -108,7 +108,7 @@ class Segmenter:
 
             yield (source.slice(source.loc_to_abs(buf_start),
                                 source.loc_to_abs(sent_m.end(0)), True),
-                   source.slice_match_obj(sent_m, 2, True))
+                   source.slice_match(sent_m, 2, True))
 
             buf_start = sent_m.end(0)
 
@@ -188,7 +188,7 @@ class Segmenter:
                 if buf_start != pare_m.start(0):
                     yield source.slice(source.loc_to_abs(buf_start),
                                        source.loc_to_abs(pare_m.start(0)), True)
-                yield source.slice_match_obj(pare_m, 0, True)
+                yield source.slice_match(pare_m, 0, True)
                 buf_start = pare_m.end(0)
 
         if buf_start != len(text):
@@ -201,7 +201,7 @@ class Segmenter:
         text = str(source)
         for word_m in re.finditer(word_re, text):
             if not filter_numbers or not re.match(number_filter_re, word_m.group(0)):
-                yield source.slice_match_obj(word_m, 1, True)
+                yield source.slice_match(word_m, 1, True)
 
 
     def iter_wordsub(self, source, filter_numbers=True):
@@ -210,11 +210,11 @@ class Segmenter:
         text = str(source)
         for wordsub_m in re.finditer(wordsub_re, text):
             if not filter_numbers or not re.match(number_filter_re, wordsub_m.group(0)):
-                yield source.slice_match_obj(wordsub_m, 0, True)
+                yield source.slice_match(wordsub_m, 0, True)
 
 
     def iter_number(self, source):
         number_re = self.number_re
         text = str(source)
         for number_m in re.finditer(number_re, text):
-            yield source.slice_match_obj(number_m, 0, True)
+            yield source.slice_match(number_m, 0, True)

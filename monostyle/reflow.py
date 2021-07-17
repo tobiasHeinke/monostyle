@@ -193,7 +193,7 @@ def process_para(node, ind_offset, options):
                 if m.start() == 0:
                     continue
 
-            space = part.code.slice_match_obj(m, 0, True)
+            space = part.code.slice_match(m, 0, True)
             word = node.code.slice(last, space.start_pos, True)
             demerits = 0
             if part.node_name == "id_start":

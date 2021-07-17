@@ -176,7 +176,7 @@ def search_free(toolname, document, reports, data):
         for pattern, message in data:
             for m in re.finditer(pattern, part_str):
                 reports.append(
-                    Report('I', toolname, part.code.slice_match_obj(m, 0, True), message)
+                    Report('I', toolname, part.code.slice_match(m, 0, True), message)
                     .set_line_punc(document.body.code, 50, 30))
 
     return reports

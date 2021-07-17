@@ -233,7 +233,7 @@ def article(toolname, document, reports, re_lib, data):
                         key = "a" if is_cons else "an"
                         token = word
                         if token_m := re.match(token_re, word_str):
-                            token = word.slice_match_obj(token_m, 1, True)
+                            token = word.slice_match(token_m, 1, True)
                         if (len(token) == 1 or part_of_speech.isacr(token) or
                                 part_of_speech.isabbr(token)):
                             if word_str[0].lower() in data[key]["letter"]:
@@ -799,7 +799,7 @@ def search_pure(toolname, document, reports, re_lib, config):
             for m in re.finditer(pattern, part_str):
                 reports.append(
                     Report(config.get("severity"), toolname,
-                           part.code.slice_match_obj(m, 0, True), message)
+                           part.code.slice_match(m, 0, True), message)
                     .set_line_punc(document.body.code, 50, 30))
 
     return reports

@@ -219,12 +219,12 @@ def flavor(toolname, document, reports):
             node_content = str(node.body.code)
             for dash_m in re.finditer(dash_re, node_content):
                 reports.append(
-                    Report('W', toolname, node.body.code.slice_match_obj(dash_m, 0, True),
+                    Report('W', toolname, node.body.code.slice_match(dash_m, 0, True),
                            Report.substitution(what="dash", with_what="en-dash")))
 
             for emdash_m in re.finditer(emdash_re, node_content):
                 reports.append(
-                    Report('W', toolname, node.body.code.slice_match_obj(emdash_m, 0, True),
+                    Report('W', toolname, node.body.code.slice_match(emdash_m, 0, True),
                            Report.substitution(what="em-dash", with_what="en-dash")))
 
     return reports
@@ -274,7 +274,7 @@ def heading_lines(toolname, document, reports):
 
         title_ind_m = re.match(r" *", str(node.name.code))
         if title_ind_m and len(title_ind_m.group(0)) != ind:
-            fix = node.name.code.slice_match_obj(title_ind_m, 0, True)
+            fix = node.name.code.slice_match(title_ind_m, 0, True)
             fix.replace_fill([" " * ind])
             reports.append(
                 Report('W', toolname, node.name.code.copy().clear(True),
@@ -348,7 +348,7 @@ def line_style(toolname, document, reports, re_lib):
                     continue
 
                 reports.append(
-                    Report('I', toolname, node.code.slice_match_obj(m, 0, True),
+                    Report('I', toolname, node.code.slice_match(m, 0, True),
                            message, fix="reflow")
                     .set_line_offset(node.code, 100))
 
@@ -460,7 +460,7 @@ def style_extra(toolname, document, reports):
                                                                                 node.name))
                 reports.append(
                     Report('W', toolname, node.body.code, message,
-                           fix=node.body.code.slice_match_obj(dash_m, 1, True).replace("-->")))
+                           fix=node.body.code.slice_match(dash_m, 1, True).replace("-->")))
 
     return reports
 

@@ -738,7 +738,7 @@ def leak(toolname, document, reports, re_lib, data):
                     if on_mc_trans:
                         continue
                     reports.append(
-                        Report('F', toolname, part.code.slice_match_obj(m, 0, True),
+                        Report('F', toolname, part.code.slice_match(m, 0, True),
                                re_lib[key][1])
                         .set_line_offset(part.parent_node.code, 100))
 
@@ -804,7 +804,7 @@ def leak(toolname, document, reports, re_lib, data):
                     else:
                         message = re_lib[key][1]
                     reports.append(
-                        Report('F', toolname, part.code.slice_match_obj(m, 0, True), message)
+                        Report('F', toolname, part.code.slice_match(m, 0, True), message)
                         .set_line_offset(part.parent_node.parent_node.code, 100))
 
     return reports

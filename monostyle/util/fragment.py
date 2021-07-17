@@ -301,7 +301,7 @@ class Fragment():
         return new
 
 
-    def slice_match_obj(self, match_obj, groupno, after_inner=False, output_zero=True, **_):
+    def slice_match(self, match_obj, groupno, after_inner=False, output_zero=True, **_):
         """Slice by span defined by a regex match object."""
         if len(match_obj.groups()) >= groupno and match_obj.group(groupno) is not None:
             at_start = self.loc_to_abs(match_obj.start(groupno))
@@ -1141,7 +1141,7 @@ class FragmentBundle():
         return new
 
 
-    def slice_match_obj(self, match_obj, groupno, after_inner=False, output_zero=True,
+    def slice_match(self, match_obj, groupno, after_inner=False, output_zero=True,
                         filler=None, filler_mode=None):
         """relative to first."""
         if not self:

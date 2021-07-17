@@ -143,7 +143,7 @@ def heading_caps(toolname, document, reports, re_lib):
             part_str = str(part.code)
             for pattern, message in re_lib.values():
                 for m in re.finditer(pattern, part_str):
-                    reports.append(Report('W', toolname, part.code.slice_match_obj(m, 0, True),
+                    reports.append(Report('W', toolname, part.code.slice_match(m, 0, True),
                                           message, node.name.code))
 
     return reports
@@ -361,7 +361,7 @@ def start_case(toolname, document, reports, re_lib):
                 pattern = value[0]
                 for m in re.finditer(pattern, part_str):
                     reports.append(
-                        Report('W', toolname, part.code.slice_match_obj(m, 0, True), value[1])
+                        Report('W', toolname, part.code.slice_match(m, 0, True), value[1])
                         .set_line_offset(document.body.code, 100, True))
 
     return reports

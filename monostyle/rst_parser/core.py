@@ -411,8 +411,8 @@ class RSTParser:
             if line_info["is_block_start"]:
                 if m := re.match(self.re_lib["trans"], line_info["line_str"]):
                     new_node = NodeRST("trans", line)
-                    new_node.append_part("indent", line.slice_match_obj(m, 1, True))
-                    new_node.append_part("name_start", line.slice_match_obj(m, 2, True))
+                    new_node.append_part("indent", line.slice_match(m, 1, True))
+                    new_node.append_part("name_start", line.slice_match(m, 2, True))
                     node.active = new_node
 
         elif line_info["is_blank"]:
@@ -598,19 +598,19 @@ class RSTParser:
         if (not line_info["indented"] and not line_info["is_blank"]) or not node.active:
             if m := re.match(self.re_lib["bullet"], line_info["line_str"]):
                 new_node = NodeRST("bullet", line)
-                new_node.append_part("indent", line.slice_match_obj(m, 1, True))
-                _, inner, after_name = line.slice_match_obj(m, 2)
+                new_node.append_part("indent", line.slice_match(m, 1, True))
+                _, inner, after_name = line.slice_match(m, 2)
                 new_node.append_part("name_start", inner)
                 new_node.append_part("body", after_name)
 
             else:
                 if m := re.match(self.re_lib["enum"], line_info["line_str"]):
                     new_node = NodeRST("enum", line)
-                    new_node.append_part("indent", line.slice_match_obj(m, 1, True))
+                    new_node.append_part("indent", line.slice_match(m, 1, True))
                     if m.group(2):
-                        new_node.append_part("name_start", line.slice_match_obj(m, 2, True))
-                    new_node.append_part("name", line.slice_match_obj(m, 3, True))
-                    _, inner, after_name = line.slice_match_obj(m, 4)
+                        new_node.append_part("name_start", line.slice_match(m, 2, True))
+                    new_node.append_part("name", line.slice_match(m, 3, True))
+                    _, inner, after_name = line.slice_match(m, 4)
                     new_node.append_part("name_end", inner)
                     new_node.append_part("body", after_name)
 
@@ -650,8 +650,8 @@ class RSTParser:
         if (not line_info["indented"] and not line_info["is_blank"]) or not node.active:
             if m := re.match(self.re_lib["line"], line_info["line_str"]):
                 new_node = NodeRST("line", line)
-                new_node.append_part("indent", line.slice_match_obj(m, 1, True))
-                _, inner, after_name = line.slice_match_obj(m, 2)
+                new_node.append_part("indent", line.slice_match(m, 1, True))
+                _, inner, after_name = line.slice_match(m, 2)
                 new_node.append_part("name_start", inner)
                 new_node.append_part("body", after_name)
 
@@ -682,10 +682,10 @@ class RSTParser:
         if (not line_info["indented"] and not line_info["is_blank"]) or not node.active:
             if m := re.match(self.re_lib["field"], line_info["line_str"]):
                 new_node = NodeRST("field", line)
-                new_node.append_part("indent", line.slice_match_obj(m, 1, True))
-                new_node.append_part("name_start", line.slice_match_obj(m, 2, True))
-                new_node.append_part("name", line.slice_match_obj(m, 3, True))
-                _, inner, after_name = line.slice_match_obj(m, 4)
+                new_node.append_part("indent", line.slice_match(m, 1, True))
+                new_node.append_part("name_start", line.slice_match(m, 2, True))
+                new_node.append_part("name", line.slice_match(m, 3, True))
+                _, inner, after_name = line.slice_match(m, 4)
                 new_node.append_part("name_end", inner)
                 new_node.append_part("body", after_name)
 
@@ -716,11 +716,11 @@ class RSTParser:
         if (not line_info["indented"] and not line_info["is_blank"]) or not node.active:
             if m := re.match(self.re_lib["option"], line_info["line_str"]):
                 new_node = NodeRST("option", line)
-                new_node.append_part("indent", line.slice_match_obj(m, 1, True))
-                new_node.append_part("name", line.slice_match_obj(m, 2, True))
+                new_node.append_part("indent", line.slice_match(m, 1, True))
+                new_node.append_part("name", line.slice_match(m, 2, True))
 
                 if m.group(3).startswith(" "):
-                    new_node.append_part("name_end", line.slice_match_obj(m, 3, True))
+                    new_node.append_part("name_end", line.slice_match(m, 3, True))
                     new_node.append_part("body", line.slice(line.loc_to_abs(m.end(3)),
                                                            after_inner=True))
                 else:
@@ -757,13 +757,13 @@ class RSTParser:
                 if sub_m := re.match(self.re_lib["substdef"], line_info["line_str"]):
                     new_node.node_name = "substdef"
 
-                    new_node.append_part("id_start", line.slice_match_obj(sub_m, 3, True))
-                    new_node.append_part("id", line.slice_match_obj(sub_m, 4, True))
-                    _, inner, after_id = line.slice_match_obj(sub_m, 5)
+                    new_node.append_part("id_start", line.slice_match(sub_m, 3, True))
+                    new_node.append_part("id", line.slice_match(sub_m, 4, True))
+                    _, inner, after_id = line.slice_match(sub_m, 5)
                     new_node.append_part("id_end", inner)
                     if sub_m.group(5):
-                        new_node.append_part("name", line.slice_match_obj(sub_m, 6, True))
-                        _, inner, after_name = line.slice_match_obj(sub_m, 7)
+                        new_node.append_part("name", line.slice_match(sub_m, 6, True))
+                        _, inner, after_name = line.slice_match(sub_m, 7)
                         new_node.append_part("name_end", inner)
                         new_node.append_part("head", after_name)
                     else:
@@ -773,9 +773,9 @@ class RSTParser:
 
                 if foot_m := re.match(self.re_lib["footdef"], line_info["line_str"]):
                     new_node.node_name = "footdef"
-                    new_node.append_part("id_start", line.slice_match_obj(foot_m, 3, True))
-                    new_node.append_part("id", line.slice_match_obj(foot_m, 4, True))
-                    _, inner, after_id = line.slice_match_obj(foot_m, 5)
+                    new_node.append_part("id_start", line.slice_match(foot_m, 3, True))
+                    new_node.append_part("id", line.slice_match(foot_m, 4, True))
+                    _, inner, after_id = line.slice_match(foot_m, 5)
                     new_node.append_part("id_end", inner)
                     new_node.append_part("head", after_id)
                     new_node.active = new_node.head
@@ -783,9 +783,9 @@ class RSTParser:
 
                 if cit_m := re.match(self.re_lib["citdef"], line_info["line_str"]):
                     new_node.node_name = "citdef"
-                    new_node.append_part("id_start", line.slice_match_obj(cit_m, 3, True))
-                    new_node.append_part("id", line.slice_match_obj(cit_m, 4, True))
-                    _, inner, after_id = line.slice_match_obj(cit_m, 5)
+                    new_node.append_part("id_start", line.slice_match(cit_m, 3, True))
+                    new_node.append_part("id", line.slice_match(cit_m, 4, True))
+                    _, inner, after_id = line.slice_match(cit_m, 5)
                     new_node.append_part("id_end", inner)
                     new_node.append_part("head", after_id)
                     new_node.active = new_node.head
@@ -793,17 +793,17 @@ class RSTParser:
 
                 if target_m := re.match(self.re_lib["target"], line_info["line_str"]):
                     new_node.node_name = "target"
-                    _, inner, after_id = line.slice_match_obj(target_m, 3)
+                    _, inner, after_id = line.slice_match(target_m, 3)
                     new_node.name_start.code.combine(inner)
                     if target_m.group(4) is not None:
                         # has literal
-                        new_node.append_part("id_start", line.slice_match_obj(target_m, 4, True))
-                        new_node.append_part("id", line.slice_match_obj(target_m, 5, True))
-                        new_node.append_part("id_end", line.slice_match_obj(target_m, 6, True))
+                        new_node.append_part("id_start", line.slice_match(target_m, 4, True))
+                        new_node.append_part("id", line.slice_match(target_m, 5, True))
+                        new_node.append_part("id_end", line.slice_match(target_m, 6, True))
                     else:
-                        new_node.append_part("id", line.slice_match_obj(target_m, 7, True))
+                        new_node.append_part("id", line.slice_match(target_m, 7, True))
 
-                    _, inner, after_name = line.slice_match_obj(target_m, 8)
+                    _, inner, after_name = line.slice_match(target_m, 8)
                     new_node.append_part("name_end", inner)
                     new_node.append_part("head", after_name)
                     new_node.active = new_node.head
@@ -811,8 +811,8 @@ class RSTParser:
 
                 if dir_m := re.match(self.re_lib["dir"], line_info["line_str"]):
                     new_node.node_name = "dir"
-                    new_node.append_part("name", line.slice_match_obj(dir_m, 3, True))
-                    _, inner, after_name = line.slice_match_obj(dir_m, 4)
+                    new_node.append_part("name", line.slice_match(dir_m, 3, True))
+                    _, inner, after_name = line.slice_match(dir_m, 4)
                     new_node.append_part("name_end", inner)
                     new_node.append_part("head", after_name)
                     new_node.active = new_node.head
@@ -826,15 +826,15 @@ class RSTParser:
                 if target_anon_m:
                     new_node.node_name = "target"
                     if target_anon_m.group(3) is None:
-                        _, __, after_id = line.slice_match_obj(target_anon_m, 2)
+                        _, __, after_id = line.slice_match(target_anon_m, 2)
                     else:
-                        _, inner, after_id = line.slice_match_obj(target_anon_m, 3)
+                        _, inner, after_id = line.slice_match(target_anon_m, 3)
                         if target_anon_m.group(2) is not None:
                             # has double dot
                             new_node.name_start.code.combine(inner)
                     if target_anon_m.group(4) is not None:
                         # has double colon
-                        _, inner, after_id = line.slice_match_obj(target_anon_m, 4)
+                        _, inner, after_id = line.slice_match(target_anon_m, 4)
                         new_node.append_part("name_end", inner)
 
                     new_node.append_part("head", after_id)
@@ -868,8 +868,8 @@ class RSTParser:
 
             if starter_m := re.match(self.re_lib["expl"], line_info["line_str"]):
                 new_node = NodeRST("expl", line)
-                new_node.append_part("indent", line.slice_match_obj(starter_m, 1, True))
-                _, inner, after_starter = line.slice_match_obj(starter_m, 2)
+                new_node.append_part("indent", line.slice_match(starter_m, 1, True))
+                _, inner, after_starter = line.slice_match(starter_m, 2)
                 new_node.append_part("name_start", inner)
                 is_anon_target = bool(str(starter_m.group(2)).startswith("__"))
                 new_node = factory(line, line_info, new_node, is_anon_target)
@@ -878,8 +878,8 @@ class RSTParser:
                 if starter_m := re.search(self.re_lib["dftdir"], line_info["line_str"]):
                     new_node = NodeRST("dir", None)
                     if starter_m.group(1):
-                        new_node.append_part("indent", line.slice_match_obj(starter_m, 1, True))
-                    before_starter, inner, after_starter = line.slice_match_obj(starter_m, 2)
+                        new_node.append_part("indent", line.slice_match(starter_m, 1, True))
+                    before_starter, inner, after_starter = line.slice_match(starter_m, 2)
                     new_node.append_part("name_end", inner, True)
                     new_node.append_part("head", after_starter, True)
                     new_node.active = NodePartRST("body", None)
@@ -1033,7 +1033,7 @@ class RSTParser:
                 if re.search(r"(?!\\)\\\Z", code_str) and not is_last:
                     continue
 
-                left, inner, right = code.slice_match_obj(re.match(r"\s*(.*?)\s*\Z", code_str), 1)
+                left, inner, right = code.slice_match(re.match(r"\s*(.*?)\s*\Z", code_str), 1)
                 if is_new:
                     new_cell = NodeRST("cell", FragmentBundle([code]))
                     row.body.append_child(new_cell, False)
@@ -1057,7 +1057,7 @@ class RSTParser:
         if not node.active or node.active.node_name != "grid-table":
             if m := re.match(self.re_lib["grid_border"], line_info["line_str"]):
                 new_node = NodeRST("row", line)
-                _, ind, after = line.slice_match_obj(m, 1)
+                _, ind, after = line.slice_match(m, 1)
                 new_node.append_part("indent", ind)
                 new_node.append_part("body", after)
 
@@ -1166,7 +1166,7 @@ class RSTParser:
                 if re.search(r"(?!\\)\\\Z", code_str) and not is_last:
                     continue
 
-                left, inner, right = code.slice_match_obj(re.match(r"\s*(.*?)\s*\Z", code_str), 1)
+                left, inner, right = code.slice_match(re.match(r"\s*(.*?)\s*\Z", code_str), 1)
                 if is_new:
                     new_cell = NodeRST("cell", FragmentBundle([code]))
                     row.body.append_child(new_cell, False)
@@ -1187,7 +1187,7 @@ class RSTParser:
         if not node.active or node.active.node_name != "simple-table":
             if m := re.match(self.re_lib["simple_row_border"], line_info["line_str"]):
                 new_node = NodeRST("row", line)
-                _, ind, after = line.slice_match_obj(m, 1)
+                _, ind, after = line.slice_match(m, 1)
                 new_node.append_part("indent", ind)
                 new_node.append_part("body", after)
 
@@ -1258,8 +1258,8 @@ class RSTParser:
                 node.active.code = before
 
                 new_node = NodeRST(name, inner)
-                new_node.append_part("body_start", code.slice_match_obj(m, 1, True))
-                new_node.append_part("body", code.slice_match_obj(m, 2, True))
+                new_node.append_part("body_start", code.slice_match(m, 1, True))
+                new_node.append_part("body", code.slice_match(m, 2, True))
                 if name == "hyperlink":
                     new_node = self.interpret_inline(new_node)
                 elif name == "dftrole":
@@ -1268,7 +1268,7 @@ class RSTParser:
                     new_node.id = new_node.body
                     new_node.id.node_name = "id"
                     new_node.body = None
-                new_node.append_part("body_end", code.slice_match_obj(m, 3, True))
+                new_node.append_part("body_end", code.slice_match(m, 3, True))
                 node.child_nodes.insert_after(node.active, new_node)
                 new_node.is_parsed = True
                 split = True
@@ -1294,19 +1294,19 @@ class RSTParser:
 
                 new_node = NodeRST("role", inner)
                 if name == "role-ft":
-                    new_node.append_part("name_start", code.slice_match_obj(m, 1, True))
-                    new_node.append_part("name", code.slice_match_obj(m, 2, True))
-                    new_node.append_part("name_end", code.slice_match_obj(m, 3, True))
-                    new_node.append_part("body_start", code.slice_match_obj(m, 4, True))
-                    new_node.append_part("body", code.slice_match_obj(m, 5, True))
-                    new_node.append_part("body_end", code.slice_match_obj(m, 6, True))
+                    new_node.append_part("name_start", code.slice_match(m, 1, True))
+                    new_node.append_part("name", code.slice_match(m, 2, True))
+                    new_node.append_part("name_end", code.slice_match(m, 3, True))
+                    new_node.append_part("body_start", code.slice_match(m, 4, True))
+                    new_node.append_part("body", code.slice_match(m, 5, True))
+                    new_node.append_part("body_end", code.slice_match(m, 6, True))
                 else:
-                    new_node.append_part("body_start", code.slice_match_obj(m, 1, True))
-                    new_node.append_part("body", code.slice_match_obj(m, 2, True))
-                    new_node.append_part("body_end", code.slice_match_obj(m, 3, True))
-                    new_node.append_part("name_start", code.slice_match_obj(m, 4, True))
-                    new_node.append_part("name", code.slice_match_obj(m, 5, True))
-                    new_node.append_part("name_end", code.slice_match_obj(m, 6, True))
+                    new_node.append_part("body_start", code.slice_match(m, 1, True))
+                    new_node.append_part("body", code.slice_match(m, 2, True))
+                    new_node.append_part("body_end", code.slice_match(m, 3, True))
+                    new_node.append_part("name_start", code.slice_match(m, 4, True))
+                    new_node.append_part("name", code.slice_match(m, 5, True))
+                    new_node.append_part("name_end", code.slice_match(m, 6, True))
 
                 new_node = self.interpret_inline(new_node)
                 node.child_nodes.insert_after(node.active, new_node)
@@ -1335,11 +1335,11 @@ class RSTParser:
                 if name in {"int-target-sw", "hyperlink-sw"}:
                     new_node = NodeRST(name[:-3], inner)
                     if name in "int-target-sw":
-                        new_node.append_part("body_start", code.slice_match_obj(m, 1, True))
-                        new_node.append_part("body", code.slice_match_obj(m, 2, True))
+                        new_node.append_part("body_start", code.slice_match(m, 1, True))
+                        new_node.append_part("body", code.slice_match(m, 2, True))
                     else:
-                        new_node.append_part("id", code.slice_match_obj(m, 2, True))
-                        new_node.append_part("body_end", code.slice_match_obj(m, 3, True))
+                        new_node.append_part("id", code.slice_match(m, 2, True))
+                        new_node.append_part("body_end", code.slice_match(m, 3, True))
 
                 else:
                     if name == "mail":

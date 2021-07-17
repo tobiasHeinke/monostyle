@@ -218,7 +218,7 @@ def tool_title(toolname, document, reports):
                     sim = SequenceMatcher(lambda x: x == " ", last_m.group(1),
                                           heading_str).ratio()
                     if max(sim, 0) > sim_max:
-                        tool_max = node_role.body.code.slice_match_obj(last_m, 1, True)
+                        tool_max = node_role.body.code.slice_match(last_m, 1, True)
                         sim_max = sim
 
         else:
