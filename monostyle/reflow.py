@@ -522,7 +522,7 @@ def measure_indent(node):
                 # indent style
                 if (rst_walker.is_of(par_node,
                         {"dir", "target", "substdef", "footdef", "citdef"}, "*", "head")):
-                    ind_cur = par_node.parent_node.name_start.code.start_lincol[1] + 3
+                    ind_cur = par_node.parent_node.indent.code.end_lincol[1] + 3
                 else:
                     ind_cur = node.code.start_lincol[1]
         else:

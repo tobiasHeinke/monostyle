@@ -94,7 +94,7 @@ Option list:
 
 Explicit Block:
 
-	.. {name_start}
+	.. {name_start, optional for anonymous targets}
 
 		substdef
 			| {id} | {name} :: {name_end} {head}
@@ -106,10 +106,10 @@ Explicit Block:
 			[ {id} ] {head}
 
 		target
-			_ {+ name_start} ` {id_start, optional} {id} ` {id_end, optional} : {name_end} {head, only}
+			_ {id_start} ` {+id_start, optional} {id} ` {id_end, optional} : {name_end} {head, only}
 
 			anonymous target
-				__ {+ name_start} : {name_end, optional} {head, only}
+				__ {id_start} : {name_end, optional} {head, only}
 
 		dir
 			{name} :: {head}

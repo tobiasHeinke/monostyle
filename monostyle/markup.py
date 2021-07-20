@@ -596,19 +596,19 @@ def leak_pre(_):
 
     # List
     re_lib["unordend"] = (
-        re.compile(r"\n *" + rst_parser.re_lib["bullet"].pattern
+        re.compile(r"\n *" + rst_parser.re_lib["bullet"][0].pattern
                    .replace(space_end, r"[A-Za-z]"), re.MULTILINE),
         Report.missing(what="space", where="after unordered list"))
 
     re_lib["ordend"] = (
-        re.compile(r"\n *" + rst_parser.re_lib["enum"].pattern
+        re.compile(r"\n *" + rst_parser.re_lib["enum"][0].pattern
                    .replace(space_end, r"[A-Za-z]").replace(r"\w", ""), re.MULTILINE),
         Report.missing(what="space", where="after ordered list"))
 
     # todo add line, field
     re_lib["overlist"] = (
-        re.compile(r"\n *(?:" + '|'.join((rst_parser.re_lib["bullet"].pattern,
-                                          rst_parser.re_lib["enum"].pattern)) + r")",
+        re.compile(r"\n *(?:" + '|'.join((rst_parser.re_lib["bullet"][0].pattern,
+                                          rst_parser.re_lib["enum"][0].pattern)) + r")",
                    re.MULTILINE),
         Report.missing(what="blank line", where="over list"))
 

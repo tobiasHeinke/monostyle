@@ -79,35 +79,47 @@ class RSTParser:
 
         blocks = (
             ("trans", (ind, r"(([", r''.join(map(re.escape, self.trans_chars)), r"])\3*",
-                       eol_end)),
+                       eol_end), ("indent", "name_start")),
             ("bullet", (ind, r"([", r''.join(map(re.escape, self.bullet_chars)), r"]",
-                        space_end, r")")),
-            ("enum", (ind, r"(\()?([#\w]|\d+)([\.\)]", space_end, r")")),
-            ("line", (ind, r"(\|", space_end, r")")),
-            ("field", (ind, r"(\:(?!", ref_name, r"\:`))([^:].*?)((?<!\\)\:", space_end, r")")),
-            ("option", (ind, r"(", option_arg, r"(?:, ", option_arg, r")*)( ", space_end, ")")),
+                        space_end, r")"), ("indent", "name_start", "body")),
+            ("enum", (ind, r"(\()?([#\w]|\d+)([\.\)]", space_end, r")"),
+                ("indent", "name_start", "name", "name_end", "body")),
+            ("line", (ind, r"(\|", space_end, r")"), ("indent", "name_start", "body")),
+            ("field", (ind, r"(\:(?!", ref_name, r"\:`))([^:].*?)((?<!\\)\:", space_end, r")"),
+                ("indent", "name_start", "name", "name_end", "body")),
+            ("option", (ind, r"(", option_arg, r"(?:, ", option_arg, r")*)",
+                        r"( ", space_end, r"|(?:", eol_end, r")"),
+                ("indent", "name", "name_end", "body")),
+            ("expl", (ind, r"((?:\.\.|__)", space_end, r")"), None),
+            ("comment", (ind, r"(\.\.", space_end, r")"), ("indent", "name_start", "body")),
+            ("dftdir",(r"(\A *)?(?<![^\\]\\)(\:\:", space_end, ")"),
+                ("indent", "name_end", "head")),
+            ("dir", (expl, direc), ("indent", "name_start", "name", "name_end", "head")),
+            ("substdef", (expl, r"(\|)(", ref_name, r")(\|\s+)(?:", direc, r")?"),
+                ("indent", "name_start", "id_start", "id", "id_end", "name", "name_end", "head")),
+            ("footdef", (expl, r"(\[)(", foot_name, r")(\]", space_end, r")"),
+                ("indent", "name_start", "id_start", "id", "id_end", "head")),
+            ("citdef", (expl, r"(\[)(", ref_name, r")(\]", space_end, r")"),
+                ("indent", "name_start", "id_start", "id", "id_end", "head")),
+            ("target", (expl, r"(_ *(`)?)(?(4)(?:((?:[^`]*?[^\\", mid_b, r"(`))|",
+                        mid_a, mid_b, r")", r"(\:", space_end, r")"),
+                ("indent", "name_start", "id_start", None, "id", "id_end",
+                 "id", "name_end", "head")),
+            ("target-anon", (expl, r"?(__ *)(\:", space_end, r")?"),
+                ("indent", "name_start", "id_start", "name_end", "head")),
+            ("quoted", (ind, r"[", r''.join(map(re.escape, self.trans_chars)), r"]"), None),
+            ("doctest", (ind, r">>>\s"), ("indent", "body")),
 
-            ("expl", (ind, r"((?:\.\.|__)", space_end, r")")),
-            ("dftdir",(r"(\A *)?(?<![^\\]\\)(\:\:", space_end, ")")),
-            ("dir", (expl, direc)),
-            ("substdef", (expl, r"(\|)(", ref_name, r")(\|\s+)(?:", direc, r")?")),
-            ("footdef", (expl, r"(\[)(", foot_name, r")(\]", space_end, r")")),
-            ("citdef", (expl, r"(\[)(", ref_name, r")(\]", space_end, r")")),
-            ("target", (expl, r"(_ *)(`)?(?(4)(?:((?:[^`]*?[^\\", mid_b, r"(`))|",
-                        mid_a, mid_b, r")", r"(\:", space_end, r")")),
-            ("target-anon", (expl, r"?(__ *)(\:", space_end, r")?")),
-            ("quoted", (ind, r"[", r''.join(map(re.escape, self.trans_chars)), r"]")),
-            ("doctest", (ind, r">>>\s")),
-
-            ("grid_border", (ind, r"((?:\+\-+?)*\+\-+\+", eol_end)),
-            ("grid_row_frame", (ind, r"[+|].+[+|]", space_end)),
-            ("grid_cell_border", (r"[\+-]\Z",)),
-            ("grid_head_border", (ind, r"((?:\+=+?)*\+=+\+", eol_end)),
-            ("simple_row_border", (ind, r"((?:=+?\s+)*=+", eol_end)),
-            ("simple_column_span", (ind, r"((?:\-+?\s+)*\-+", eol_end)),
+            ("grid_border", (ind, r"((?:\+\-+?)*\+\-+\+", eol_end), None),
+            ("grid_row_frame", (ind, r"[+|].+[+|]", space_end), None),
+            ("grid_cell_border", (r"[\+-]\Z",), None),
+            ("grid_head_border", (ind, r"((?:\+=+?)*\+=+\+", eol_end), None),
+            ("simple_row_border", (ind, r"((?:=+?\s+)*=+", eol_end), None),
+            ("simple_column_span", (ind, r"((?:\-+?\s+)*\-+", eol_end), None),
         )
-        for name, pattern_str in blocks:
-            re_lib[name] = re.compile(''.join(pattern_str))
+        for name, pattern_str, part_names in blocks:
+            pattern = re.compile(''.join(pattern_str))
+            re_lib[name] = (pattern, part_names) if part_names is not None else pattern
 
         # Inline
         before_a = r"(?:(?<=[^\w\\"
@@ -117,28 +129,34 @@ class RSTParser:
         url_chars = r"[-_.!?~#*'()[\];/:&=+$,%a-zA-Z0-9]"
         url = r"(?:\\[*_])?" + url_chars + r"*\b(?:\\[*_]" + url_chars + r"*)*"
 
+        part_names_default =  ("body_start", "body", "body_end")
         inlines = {
-            ("literal", r"`", r"``", True, r"", r"``", r"`"),
-            ("strong", r"\*", r"\*\*", True, r"*", r"\*\*", r"\*"),
-            ("emphasis", r"\*", r"\*", True, r"*", r"\*", r"\*"),
-            ("subst", "", r"\|", True, r"\|", r"\|_{0,2}", ""),
-            ("int-target", "", r"_`", True, "", r"`", r"`"),
-            ("dftrole", r"_:`", r"`", True, r"`", r"`", r"`"),
-            ("hyperlink", r"`:_", r"`", True, r"`", r"`__?", ""),
-            ("role-ft", "", r"\:)(" + ref_name + r")(\:)(`", True, "", r"`", ""),
-            ("role-bk", "", r"`", True, "", r"`)(\:)(" + ref_name + r")(\:", ""),
-            ("foot", "", r"\[", False, foot_name, r"\]_", ""),
-            ("cit", "", r"\[", False, ref_name, r"\]_", ""),
-            ("int-target-sw", "", r"_(?!_)", False, ref_name, "", ""),
-            ("hyperlink-sw", "", "", False, ref_name, r"_(?!_)", ""),
-            ("standalone", r"", "", False, r"\b(?<!\\)(?:https?\:\/\/|mailto\:)" + url, "", ""),
-            ("mail", r"<`/", "", False, r"\b" + url + r"(?<!\\)@" + url + r"\." + url, "", ""),
-            ("link", "", r"<", True, "", r">", ""),
-            ("parenthesis", "", r"\(", True, "", r"\)", "")
+            ("literal", (r"`", r"``", True, r"", r"``", r"`"), part_names_default),
+            ("strong", (r"\*", r"\*\*", True, r"*", r"\*\*", r"\*"), part_names_default),
+            ("emphasis", (r"\*", r"\*", True, r"*", r"\*", r"\*"), part_names_default),
+            ("subst", ("", r"\|", True, r"\|", r"\|_{0,2}", ""), ("body_start", "id", "body_end")),
+            ("int-target", ("", r"_`", True, "", r"`", r"`"), part_names_default),
+            ("dftrole", (r"_:`", r"`", True, r"`", r"`", r"`"), part_names_default),
+            ("hyperlink", (r"`:_", r"`", True, r"`", r"`__?", ""), part_names_default),
+            ("role-ft", ("", r"\:)(" + ref_name + r")(\:)(`", True, "", r"`", ""),
+                ("name_start", "name", "name_end", "body_start", "body", "body_end")),
+            ("role-bk", ("", r"`", True, "", r"`)(\:)(" + ref_name + r")(\:", ""),
+                ("body_start", "body", "body_end", "name_start", "name", "name_end")),
+            ("foot", ("", r"\[", False, foot_name, r"\]_", ""), part_names_default),
+            ("cit", ("", r"\[", False, ref_name, r"\]_", ""), part_names_default),
+            ("int-target-sw", ("", r"_(?!_)", False, ref_name, "", ""), ("body_start", "body")),
+            ("hyperlink-sw", ("", "", False, ref_name, r"_(?!_)", ""), ("id", "body_end")),
+            ("standalone", (r"", "", False, r"\b(?<!\\)(?:https?\:\/\/|mailto\:)" + url, "", ""),
+                ("body",)),
+            ("mail", (r"<`/", "", False, r"\b" + url + r"(?<!\\)@" + url + r"\." + url, "", ""),
+                ("body",)),
+            ("link", ("", r"<", True, "", r">", ""), part_names_default),
+            ("parenthesis", ("", r"\(", True, "", r"\)", ""), part_names_default),
             # ("arrow", r"-", "", False, r"\-{1,2}>", "", "")
             # ("dash", r"-", "", False, r"\-{2,3}", "", "")
         }
-        for name, before_no, start, is_dot_mid, mid, end, after_no in inlines:
+        for name, pattern_strs, part_names in inlines:
+            before_no, start, is_dot_mid, mid, end, after_no = pattern_strs
             if name not in {"link", "parenthesis"}:
                 before = (before_a, before_no, before_b)
             else:
@@ -158,9 +176,18 @@ class RSTParser:
             pattern_str = (*before, r"(", start, r")",
                            *mid,
                            r"(", end, r")", *after)
-            re_lib[name] = re.compile(''.join(pattern_str), re.DOTALL)
+            re_lib[name] = (re.compile(''.join(pattern_str), re.DOTALL), part_names)
 
         return re_lib
+
+
+    _key_node_name = {
+        "target-anon": "target",
+        "role-ft": "role", "role-bk": "role", "dftrole": "role",
+        "int-target-sw": "int-target",
+        "hyperlink-sw": "hyperlink",
+        "mail": "standalone",
+    }
 
 
     def warning(self, code, message):
@@ -213,8 +240,20 @@ class RSTParser:
         is_first = True
         is_sec = True
         indented_prev = False
-
         node.is_parsing = True
+        recorder = (({"block-quote",}, self.block_quote),
+                    ({"field", "bullet", "enum", "line", "option"}, self.listing),
+                    ({"dir", "target", "comment", "substdef", "footdef", "citdef"},
+                     self.explicit_block),
+                    ({"trans",}, self.transition),
+                    ({"sect", "trans", "text"}, self.section),
+                    ({"doctest",}, self.doctest),
+                    ({"grid-table",}, self.grid_table),
+                    ({"simple-table",}, self.simple_table),
+                    ({"def", "text"}, self.def_list),
+                    ({"text",}, self.explicit_block), # default dir
+                    ({"text",}, self.paragraph))
+
         for line, line_info in lines:
             line_info["block_ind"] = block_ind
             if not line_info["is_blank"]:
@@ -243,23 +282,6 @@ class RSTParser:
                 line_info["indented"] = indented_prev
 
             indented_prev = line_info["indented"]
-
-
-            recorder = (({"block-quote",}, self.block_quote),
-                        ({"field",}, self.field),
-                        ({"bullet", "enum"}, self.be_list),
-                        ({"line",}, self.line_block),
-                        ({"option",}, self.option),
-                        ({"dir", "target", "comment", "substdef", "footdef", "citdef"},
-                         self.explicit_block),
-                        ({"trans",}, self.transition),
-                        ({"sect", "trans", "text"}, self.section),
-                        ({"doctest",}, self.doctest),
-                        ({"grid-table",}, self.grid_table),
-                        ({"simple-table",}, self.simple_table),
-                        ({"def", "text"}, self.def_list),
-                        ({"text",}, self.explicit_block), # default dir
-                        ({"text",}, self.paragraph))
 
             free = True
             if node.active:
@@ -300,32 +322,25 @@ class RSTParser:
         new_node.append_part("body", node.code)
         node.child_nodes.append(new_node)
 
-        recorder = ((("literal", "strong", "emphasis", "int-target"), self.inline),
-            (("role-ft", "role-bk"), self.role),
-            (("hyperlink", "dftrole", "subst", "foot", "cit"), self.inline),
-            (("standalone", "mail", "int-target-sw", "hyperlink-sw"), self.single))
-        if name:
-            for names, node_typ in recorder:
-                if name in names:
-                    recorder = (((name,), node_typ),)
-                    break
-            else:
-                recorder = (((name,), self.inline),)
+        recorder = ("literal", "strong", "emphasis", "int-target",
+                    "role-ft", "role-bk", "hyperlink", "dftrole", "subst", "foot", "cit",
+                    "standalone", "mail", "int-target-sw", "hyperlink-sw")
+        if name is not None:
+            recorder = (name,)
 
-        for names, node_typ in recorder:
-            for name in names:
-                node.is_parsing = True
-                node.active = node.child_nodes.first()
-                while node.active:
-                    split = False
-                    if not node.active.is_parsed and node.active.body:
-                        node, split = node_typ(node, node.active.body.code, name)
+        for name in recorder:
+            node.is_parsing = True
+            node.active = node.child_nodes.first()
+            while node.active:
+                split = False
+                if not node.active.is_parsed and node.active.body:
+                    node, split = self.inline(node, node.active.body.code, name)
 
-                    if not split or node.active.is_parsed:
-                        if name == node.active.node_name:
-                            self.warning(node.active.code, "unclosed inline (within paragraph)")
+                if not split or node.active.is_parsed:
+                    if name == node.active.node_name:
+                        self.warning(node.active.code, "unclosed inline (within paragraph)")
 
-                        node.active = node.active.next
+                    node.active = node.active.next
 
         return node
 
@@ -391,6 +406,23 @@ class RSTParser:
         return root
 
 
+    def _map_parts(self, node, code, match_obj, part_names, open_end=False):
+        """Map the match groups to node parts."""
+        index_last = 0
+        for index, part_name in enumerate(part_names, 1):
+            if part_name is None: # nested
+                continue
+            if open_end and index == len(part_names):
+                code_part = code.slice(code.loc_to_abs(match_obj.end(index_last)), after_inner=True)
+            else:
+                if match_obj.group(index) is None:
+                    continue
+                code_part = code.slice_match(match_obj, index, True)
+            node.append_part(part_name, code_part)
+            index_last = index
+        return node
+
+
     # -----------------------------------------------------------------------------
     # Block
 
@@ -409,10 +441,9 @@ class RSTParser:
     def transition(self, node, line, line_info):
         if not node.active:
             if line_info["is_block_start"]:
-                if m := re.match(self.re_lib["trans"], line_info["line_str"]):
+                if m := re.match(self.re_lib["trans"][0], line_info["line_str"]):
                     new_node = NodeRST("trans", line)
-                    new_node.append_part("indent", line.slice_match(m, 1, True))
-                    new_node.append_part("name_start", line.slice_match(m, 2, True))
+                    new_node = self._map_parts(new_node, line, m, self.re_lib["trans"][1])
                     node.active = new_node
 
         elif line_info["is_blank"]:
@@ -430,7 +461,7 @@ class RSTParser:
                     node.append_child(node.active)
                     node.active = None
                     return node
-                if not re.match(self.re_lib["trans"], line_info["line_str_next"]):
+                if not re.match(self.re_lib["trans"][0], line_info["line_str_next"]):
                     # only if short overline else warn
                     node.active.node_name = "text"
                     node.active.indent.code.combine(node.active.name_start.code)
@@ -445,7 +476,7 @@ class RSTParser:
 
             elif node.active.node_name in {"text", "sect"}:
                 if (not line_info["indented"] and
-                        re.match(self.re_lib["trans"], line_info["line_str"])):
+                        re.match(self.re_lib["trans"][0], line_info["line_str"])):
                     node.active.node_name = "sect"
                     if node.active.body:
                         # move inside node
@@ -493,11 +524,9 @@ class RSTParser:
     def doctest(self, node, line, line_info):
         if not node.active:
             if line_info["is_block_start"]:
-                if m := re.match(self.re_lib["doctest"], line_info["line_str"]):
+                if m := re.match(self.re_lib["doctest"][0], line_info["line_str"]):
                     new_node = NodeRST("doctest", line)
-                    ind, after = line.slice(line.loc_to_abs(m.end(1)))
-                    new_node.append_part("indent", ind)
-                    new_node.append_part("body", after)
+                    new_node = self._map_parts(new_node, line, m, self.re_lib["doctest"][1], True)
                     node.active = new_node
         else:
             node.active.body.append_code(line)
@@ -594,41 +623,26 @@ class RSTParser:
         return node
 
 
-    def be_list(self, node, line, line_info):
+    def listing(self, node, line, line_info):
+        recorder = ("field", "bullet", "enum", "line", "option")
+        if node.active and node.active.node_name in recorder:
+            recorder = (node.active.node_name,)
         if (not line_info["indented"] and not line_info["is_blank"]) or not node.active:
-            if m := re.match(self.re_lib["bullet"], line_info["line_str"]):
-                new_node = NodeRST("bullet", line)
-                new_node.append_part("indent", line.slice_match(m, 1, True))
-                _, inner, after_name = line.slice_match(m, 2)
-                new_node.append_part("name_start", inner)
-                new_node.append_part("body", after_name)
-
+            for name in recorder:
+                if m := re.match(self.re_lib[name][0], line_info["line_str"]):
+                    break
             else:
-                if m := re.match(self.re_lib["enum"], line_info["line_str"]):
-                    new_node = NodeRST("enum", line)
-                    new_node.append_part("indent", line.slice_match(m, 1, True))
-                    if m.group(2):
-                        new_node.append_part("name_start", line.slice_match(m, 2, True))
-                    new_node.append_part("name", line.slice_match(m, 3, True))
-                    _, inner, after_name = line.slice_match(m, 4)
-                    new_node.append_part("name_end", inner)
-                    new_node.append_part("body", after_name)
-
-                else:
-                    if node.active and node.active.node_name in {"bullet", "enum"}:
-                        node.append_child(node.active)
-                        node.active = None
-                        if node.parent_node.parent_node:
-                            node = node.parent_node.parent_node
-                    return node
-
-            if line_info["is_block_start"]:
-                # different list type after another
-                if node.active and node.active.node_name != new_node.node_name:
+                if len(recorder) == 1:
                     node.append_child(node.active)
                     node.active = None
-                    node = node.parent_node.parent_node
+                    if node.parent_node.parent_node:
+                        node = node.parent_node.parent_node
+                return node
 
+            new_node = NodeRST(name, line)
+            new_node = self._map_parts(new_node, line, m, self.re_lib[name][1], True)
+
+            if line_info["is_block_start"]:
                 if node.parent_node.node_name != new_node.node_name + "-list":
                     prime = NodeRST(new_node.node_name + "-list", None)
                     prime.append_part("indent", new_node.indent.code.copy().clear(True))
@@ -640,206 +654,28 @@ class RSTParser:
                 node.append_child(node.active)
             node.active = new_node
 
-        elif node.active and node.active.node_name in {"bullet", "enum"}:
-            node.active.body.append_code(line)
-
-        return node
-
-
-    def line_block(self, node, line, line_info):
-        if (not line_info["indented"] and not line_info["is_blank"]) or not node.active:
-            if m := re.match(self.re_lib["line"], line_info["line_str"]):
-                new_node = NodeRST("line", line)
-                new_node.append_part("indent", line.slice_match(m, 1, True))
-                _, inner, after_name = line.slice_match(m, 2)
-                new_node.append_part("name_start", inner)
-                new_node.append_part("body", after_name)
-
-                if line_info["is_block_start"] and node.parent_node.node_name != "line-list":
-                    prime = NodeRST(new_node.node_name + "-list", None)
-                    prime.append_part("indent", new_node.indent.code.copy().clear(True))
-                    prime.append_part("body", None)
-                    node.append_child(prime)
-                    node = prime.body
-
-                if node.active:
-                    node.append_child(node.active)
-                node.active = new_node
-
-            elif node.active and node.active.node_name == "line":
-                node.append_child(node.active)
-                node.active = None
-                if node.parent_node:
-                    node = node.parent_node.parent_node
-
-        elif node.active and node.active.node_name == "line":
-            node.active.body.append_code(line)
-
-        return node
-
-
-    def field(self, node, line, line_info):
-        if (not line_info["indented"] and not line_info["is_blank"]) or not node.active:
-            if m := re.match(self.re_lib["field"], line_info["line_str"]):
-                new_node = NodeRST("field", line)
-                new_node.append_part("indent", line.slice_match(m, 1, True))
-                new_node.append_part("name_start", line.slice_match(m, 2, True))
-                new_node.append_part("name", line.slice_match(m, 3, True))
-                _, inner, after_name = line.slice_match(m, 4)
-                new_node.append_part("name_end", inner)
-                new_node.append_part("body", after_name)
-
-                if line_info["is_block_start"] and node.parent_node.node_name != "field-list":
-                    prime = NodeRST(new_node.node_name + "-list", None)
-                    prime.append_part("indent", new_node.indent.code.copy().clear(True))
-                    prime.append_part("body", None)
-                    node.append_child(prime)
-                    node = prime.body
-
-                if node.active:
-                    node.append_child(node.active)
-                node.active = new_node
-
-            elif node.active and node.active.node_name == "field":
-                node.append_child(node.active)
-                node.active = None
-                if node.parent_node:
-                    node = node.parent_node.parent_node
-
-        elif node.active and node.active.node_name == "field":
-            node.active.body.append_code(line)
-
-        return node
-
-
-    def option(self, node, line, line_info):
-        if (not line_info["indented"] and not line_info["is_blank"]) or not node.active:
-            if m := re.match(self.re_lib["option"], line_info["line_str"]):
-                new_node = NodeRST("option", line)
-                new_node.append_part("indent", line.slice_match(m, 1, True))
-                new_node.append_part("name", line.slice_match(m, 2, True))
-
-                if m.group(3).startswith(" "):
-                    new_node.append_part("name_end", line.slice_match(m, 3, True))
-                    new_node.append_part("body", line.slice(line.loc_to_abs(m.end(3)),
-                                                           after_inner=True))
-                else:
-                    new_node.append_part("body", line.slice(line.loc_to_abs(m.end(2)),
-                                                           after_inner=True))
-
-                if line_info["is_block_start"] and node.parent_node.node_name != "option-list":
-                    prime = NodeRST(new_node.node_name + "-list", None)
-                    prime.append_part("indent", new_node.indent.code.copy().clear(True))
-                    prime.append_part("body", None)
-                    node.append_child(prime)
-                    node = prime.body
-
-                if node.active:
-                    node.append_child(node.active)
-                node.active = new_node
-
-            elif node.active and node.active.node_name == "option":
-                node.append_child(node.active)
-                node.active = None
-                if node.parent_node:
-                    node = node.parent_node.parent_node
-
-        elif node.active and node.active.node_name == "option":
+        elif node.active and node.active.node_name in recorder:
             node.active.body.append_code(line)
 
         return node
 
 
     def explicit_block(self, node, line, line_info):
-        def factory(line, line_info, new_node, is_anon_target):
-            target_anon_m = re.match(self.re_lib["target-anon"], line_info["line_str"])
-            if not (is_anon_target or target_anon_m):
-                if sub_m := re.match(self.re_lib["substdef"], line_info["line_str"]):
-                    new_node.node_name = "substdef"
-
-                    new_node.append_part("id_start", line.slice_match(sub_m, 3, True))
-                    new_node.append_part("id", line.slice_match(sub_m, 4, True))
-                    _, inner, after_id = line.slice_match(sub_m, 5)
-                    new_node.append_part("id_end", inner)
-                    if sub_m.group(5):
-                        new_node.append_part("name", line.slice_match(sub_m, 6, True))
-                        _, inner, after_name = line.slice_match(sub_m, 7)
-                        new_node.append_part("name_end", inner)
-                        new_node.append_part("head", after_name)
-                    else:
-                        new_node.append_part("head", after_id)
+        def factory(line, line_info, starter_m):
+            is_anon_target = bool(str(starter_m.group(2)).startswith("__"))
+            for name in ("target-anon", "substdef", "footdef", "citdef", "target", "dir"):
+                if m := re.match(self.re_lib[name][0], line_info["line_str"]):
+                    new_node = NodeRST(self._key_node_name.get(name, name), line)
+                    new_node = self._map_parts(new_node, line, m, self.re_lib[name][1], True)
                     new_node.active = new_node.head
                     return new_node
+                elif is_anon_target:
+                    return
 
-                if foot_m := re.match(self.re_lib["footdef"], line_info["line_str"]):
-                    new_node.node_name = "footdef"
-                    new_node.append_part("id_start", line.slice_match(foot_m, 3, True))
-                    new_node.append_part("id", line.slice_match(foot_m, 4, True))
-                    _, inner, after_id = line.slice_match(foot_m, 5)
-                    new_node.append_part("id_end", inner)
-                    new_node.append_part("head", after_id)
-                    new_node.active = new_node.head
-                    return new_node
-
-                if cit_m := re.match(self.re_lib["citdef"], line_info["line_str"]):
-                    new_node.node_name = "citdef"
-                    new_node.append_part("id_start", line.slice_match(cit_m, 3, True))
-                    new_node.append_part("id", line.slice_match(cit_m, 4, True))
-                    _, inner, after_id = line.slice_match(cit_m, 5)
-                    new_node.append_part("id_end", inner)
-                    new_node.append_part("head", after_id)
-                    new_node.active = new_node.head
-                    return new_node
-
-                if target_m := re.match(self.re_lib["target"], line_info["line_str"]):
-                    new_node.node_name = "target"
-                    _, inner, after_id = line.slice_match(target_m, 3)
-                    new_node.name_start.code.combine(inner)
-                    if target_m.group(4) is not None:
-                        # has literal
-                        new_node.append_part("id_start", line.slice_match(target_m, 4, True))
-                        new_node.append_part("id", line.slice_match(target_m, 5, True))
-                        new_node.append_part("id_end", line.slice_match(target_m, 6, True))
-                    else:
-                        new_node.append_part("id", line.slice_match(target_m, 7, True))
-
-                    _, inner, after_name = line.slice_match(target_m, 8)
-                    new_node.append_part("name_end", inner)
-                    new_node.append_part("head", after_name)
-                    new_node.active = new_node.head
-                    return new_node
-
-                if dir_m := re.match(self.re_lib["dir"], line_info["line_str"]):
-                    new_node.node_name = "dir"
-                    new_node.append_part("name", line.slice_match(dir_m, 3, True))
-                    _, inner, after_name = line.slice_match(dir_m, 4)
-                    new_node.append_part("name_end", inner)
-                    new_node.append_part("head", after_name)
-                    new_node.active = new_node.head
-                    return new_node
-
-                new_node.node_name = "comment"
-                new_node.append_part("body", after_starter)
-                new_node.active = new_node.body
-                return new_node
-            else:
-                if target_anon_m:
-                    new_node.node_name = "target"
-                    if target_anon_m.group(3) is None:
-                        _, __, after_id = line.slice_match(target_anon_m, 2)
-                    else:
-                        _, inner, after_id = line.slice_match(target_anon_m, 3)
-                        if target_anon_m.group(2) is not None:
-                            # has double dot
-                            new_node.name_start.code.combine(inner)
-                    if target_anon_m.group(4) is not None:
-                        # has double colon
-                        _, inner, after_id = line.slice_match(target_anon_m, 4)
-                        new_node.append_part("name_end", inner)
-
-                    new_node.append_part("head", after_id)
-                    new_node.active = new_node.head
-                    return new_node
+            new_node = NodeRST("comment", line)
+            new_node = self._map_parts(new_node, line, starter_m, self.re_lib["comment"][1], True)
+            new_node.active = new_node.body
+            return new_node
 
 
         def quoted(node, line, line_info):
@@ -867,34 +703,26 @@ class RSTParser:
                 return node
 
             if starter_m := re.match(self.re_lib["expl"], line_info["line_str"]):
-                new_node = NodeRST("expl", line)
-                new_node.append_part("indent", line.slice_match(starter_m, 1, True))
-                _, inner, after_starter = line.slice_match(starter_m, 2)
-                new_node.append_part("name_start", inner)
-                is_anon_target = bool(str(starter_m.group(2)).startswith("__"))
-                new_node = factory(line, line_info, new_node, is_anon_target)
-
+                new_node = factory(line, line_info, starter_m)
             else:
-                if starter_m := re.search(self.re_lib["dftdir"], line_info["line_str"]):
+                if starter_m := re.search(self.re_lib["dftdir"][0], line_info["line_str"]):
                     new_node = NodeRST("dir", None)
-                    if starter_m.group(1):
-                        new_node.append_part("indent", line.slice_match(starter_m, 1, True))
-                    before_starter, inner, after_starter = line.slice_match(starter_m, 2)
-                    new_node.append_part("name_end", inner, True)
-                    new_node.append_part("head", after_starter, True)
+                    new_node = self._map_parts(new_node, line, starter_m,
+                                               self.re_lib["dftdir"][1], True)
                     new_node.active = NodePartRST("body", None)
                     if starter_m.start(0) != 0:
                         if node.active and not is_text:
                             node.append_child(node.active)
                             node.active.active = None
                             node.active = None
-                        self.paragraph(node, before_starter, line_info)
+                        self.paragraph(node, line.slice(
+                            at_end=line.loc_to_abs(starter_m.start(2)), after_inner=True),
+                            line_info)
 
                     if node.active:
                         node.append_child(node.active)
                         node.active.active = None
                         node.active = None
-
 
                 else:
                     return node
@@ -907,7 +735,7 @@ class RSTParser:
         elif node.active and not is_text:
             if node.active.active.node_name == "head":
                 if not line_info["is_blank"]:
-                    if re.match(self.re_lib["field"], line_info["line_str"]):
+                    if re.match(self.re_lib["field"][0], line_info["line_str"]):
                         node.active.append_part("attr", line, True)
                         node.active.active = node.active.attr
                         return node
@@ -1250,106 +1078,19 @@ class RSTParser:
         split = False
 
         if node.active.node_name == "text":
-            if m := re.search(self.re_lib[name], str(code)):
-                before, inner, after = node.active.body.code.slice(
-                                           code.loc_to_abs(m.start(1)),
-                                           code.loc_to_abs(m.end(3)))
+            if m := re.search(self.re_lib[name][0], str(code)):
+                before, inner, after = node.active.body.code.slice_match(m, 0)
                 node.active.body.code = before
                 node.active.code = before
 
-                new_node = NodeRST(name, inner)
-                new_node.append_part("body_start", code.slice_match(m, 1, True))
-                new_node.append_part("body", code.slice_match(m, 2, True))
-                if name == "hyperlink":
+                new_node = NodeRST(self._key_node_name.get(name, name), inner)
+                new_node = self._map_parts(new_node, code, m, self.re_lib[name][1])
+                node.child_nodes.insert_after(node.active, new_node)
+                split = True
+
+                if new_node.node_name in {"hyperlink", "role"}:
                     new_node = self.interpret_inline(new_node)
-                elif name == "dftrole":
-                    new_node.node_name = "role"
-                elif name == "subst":
-                    new_node.id = new_node.body
-                    new_node.id.node_name = "id"
-                    new_node.body = None
-                new_node.append_part("body_end", code.slice_match(m, 3, True))
-                node.child_nodes.insert_after(node.active, new_node)
                 new_node.is_parsed = True
-                split = True
-
-                node_after = NodeRST("text", after)
-                node_after.append_part("body", after)
-                node.child_nodes.insert_after(new_node, node_after)
-                node.active = node_after
-
-        return node, split
-
-
-    def role(self, node, code, name):
-        split = False
-
-        if node.active.node_name == "text":
-            if m := re.search(self.re_lib[name], str(code)):
-                before, inner, after = node.active.body.code.slice(
-                                           code.loc_to_abs(m.start(0)),
-                                           code.loc_to_abs(m.end(6)))
-                node.active.body.code = before
-                node.active.code = before
-
-                new_node = NodeRST("role", inner)
-                if name == "role-ft":
-                    new_node.append_part("name_start", code.slice_match(m, 1, True))
-                    new_node.append_part("name", code.slice_match(m, 2, True))
-                    new_node.append_part("name_end", code.slice_match(m, 3, True))
-                    new_node.append_part("body_start", code.slice_match(m, 4, True))
-                    new_node.append_part("body", code.slice_match(m, 5, True))
-                    new_node.append_part("body_end", code.slice_match(m, 6, True))
-                else:
-                    new_node.append_part("body_start", code.slice_match(m, 1, True))
-                    new_node.append_part("body", code.slice_match(m, 2, True))
-                    new_node.append_part("body_end", code.slice_match(m, 3, True))
-                    new_node.append_part("name_start", code.slice_match(m, 4, True))
-                    new_node.append_part("name", code.slice_match(m, 5, True))
-                    new_node.append_part("name_end", code.slice_match(m, 6, True))
-
-                new_node = self.interpret_inline(new_node)
-                node.child_nodes.insert_after(node.active, new_node)
-                new_node.is_parsed = True
-                split = True
-
-                node_after = NodeRST("text", after)
-                node_after.append_part("body", after)
-                node.child_nodes.insert_after(new_node, node_after)
-                node.active = node_after
-
-        return node, split
-
-
-    def single(self, node, code, name):
-        split = False
-
-        if node.active.node_name == "text":
-            if m := re.search(self.re_lib[name], str(code)):
-                before, inner, after = node.active.body.code.slice(
-                                           code.loc_to_abs(m.start(0)),
-                                           code.loc_to_abs(m.end(3)))
-                node.active.body.code = before
-                node.active.code = before
-
-                if name in {"int-target-sw", "hyperlink-sw"}:
-                    new_node = NodeRST(name[:-3], inner)
-                    if name in "int-target-sw":
-                        new_node.append_part("body_start", code.slice_match(m, 1, True))
-                        new_node.append_part("body", code.slice_match(m, 2, True))
-                    else:
-                        new_node.append_part("id", code.slice_match(m, 2, True))
-                        new_node.append_part("body_end", code.slice_match(m, 3, True))
-
-                else:
-                    if name == "mail":
-                        name = "standalone"
-                    new_node = NodeRST(name, inner)
-                    new_node.append_part("body", inner)
-                new_node.is_parsed = True
-
-                node.child_nodes.insert_after(node.active, new_node)
-                split = True
 
                 node_after = NodeRST("text", after)
                 node_after.append_part("body", after)
@@ -1434,6 +1175,7 @@ def print_node(root, output=None, ind=-1, branch=None, show_loc=False, show_pos=
                     else:
                         code_str = str(part.code).replace('\n', '¶')
 
-                    output.append(''.join((" " * ind,"{", branch, part.node_name[0], "} ", code_str)))
+                    output.append(''.join((" " * ind,"{", branch, part.node_name[0], "} ",
+                                           code_str)))
 
     return output
