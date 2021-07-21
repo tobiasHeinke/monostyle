@@ -716,7 +716,7 @@ class RSTParser:
                             node.active.active = None
                             node.active = None
                         self.paragraph(node, line.slice(
-                            at_end=line.loc_to_abs(starter_m.start(2)), after_inner=True),
+                            end=line.loc_to_abs(starter_m.start(2)), after_inner=True),
                             line_info)
 
                     if node.active:
@@ -799,7 +799,7 @@ class RSTParser:
                     border.combine(after)
 
                 if is_first:
-                    before = line.slice(at_end=line.loc_to_abs(col_prev), after_inner=True)
+                    before = line.slice(end=line.loc_to_abs(col_prev), after_inner=True)
                     border = before.combine(border)
                     is_first = False
 
