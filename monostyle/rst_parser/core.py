@@ -309,10 +309,12 @@ class RSTParser:
                     node.child_nodes.last().node_name == node.active.node_name or
                     node.parent_node.node_name == node.active.node_name + "-list"):
                 node.append_child(node.active)
-                if node.parent_node.node_name.endswith("-list") and root.active:
-                    root.append_child(root.active)
+            elif (node.active.active and node.active.active.active and
+                    node.active.active.active.node_name == "row"):
+                node.active.active.append_child(node.active.active.active)
+                root.append_child(root.active)
             else:
-                root.append_child(node.active)
+                root.append_child(root.active)
 
         return root
 
