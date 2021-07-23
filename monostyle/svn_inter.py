@@ -38,7 +38,7 @@ def unversioned_files(path, binary_ext):
             yield filename
 
 
-def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
+def difference(from_vsn, is_internal, path, rev, binary_ext):
     is_change = False
     if not rev:
         rev = "BASE"
@@ -78,12 +78,11 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
                         rev += "HEAD"
 
     loc_re = re.compile(r"@@ \-\d+?(?:,\d+?)? \+(\d+?)(?:,\d+?)? @@")
-    lineno = 0
+    code = None
     context = []
     skip = False
-    code = None
     body = False
-    for line in (diff if from_vsn else file_diff)(filename_source, rev, is_change):
+    for line in (diff if from_vsn else file_diff)(path, rev, is_change):
         try:
             line = line.decode("utf-8")
         except UnicodeError:
@@ -91,10 +90,11 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
             continue
 
         if line.startswith("Index: "):
-            filename = line[len("Index: "):]
-            filename = norm_path_sep(filename)
-            # skip whole file
-            skip = bool(binary_ext is not None and os.path.splitext(filename)[1] in binary_ext)
+            code = Fragment(norm_path_sep(line[len("Index: "):]), [])
+            if binary_ext is not None and os.path.splitext(code.filename)[1] in binary_ext:
+                # skip whole file
+                code = None
+                skip = True
             body = False
 
         elif (line.startswith("Property changes on: ") or
@@ -109,21 +109,16 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
             if code is not None and len(code.content) != len(context):
                 yield code, context
 
-            loc_m = re.match(loc_re, line)
-            start_lincol = (int(loc_m.group(1)) - 1, 0)
-            code = Fragment(filename, [], 0, 0, start_lincol, start_lincol)
+            code.add_offset(offset_lincol=(int(re.match(loc_re, line).group(1)) - 1, 0))
             context = []
-            lineno = start_lincol[0]
             body = True
 
         elif body:
             if line.startswith(' '):
                 code.extend(line[1:] + '\n')
-                context.append(lineno)
-                lineno += 1
+                context.append(code.end_lincol[0])
             elif line.startswith('+'):
                 code.extend(line[1:] + '\n')
-                lineno += 1
 
             elif line.startswith('\\'):
                 # backslash + space
@@ -133,7 +128,7 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
                         code = code.slice(end=code.end_pos - 1, after_inner=True)
                 else:
                     print("{0}:{1}: unexpected version control message: {2}"
-                          .format(filename, lineno, message))
+                          .format(code.filename, code.end_lincol[0], message))
 
     if code and len(code.content) != len(context):
         yield code, context
