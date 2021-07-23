@@ -92,19 +92,9 @@ def get_hunks_version(path, parse_options, version_options):
     filter_options = {"tools": {"blank-line", "flavor", "indention", "heading-level",
                                 "heading-line-length", "mark", "markup-names",
                                 "start-case", "structure", "ui"}}
-    for code, context, messages in vsn_inter.run_diff(path=path, **version_options):
+    for code, context in vsn_inter.run_diff(path=path, **version_options):
         filter_options["context"] = context
-        config_dynamic = {"_at_eof": False}
-        if messages is not None:
-            if "No newline at end of file" in messages:
-                config_dynamic["_at_eof"] = True
-                messages.remove("No newline at end of file")
-            if messages:
-                for message in messages:
-                    print("{0}:{1}: unexpected version control message: {2}"
-                                    .format(monostyle_io.path_to_rel(code.filename),
-                                            code.end_lincol[0], message))
-
+        config_dynamic = {"_at_eof": not code.content[-1].endswith('\n')}
         yield code, parse_options, filter_options, config_dynamic
 
 

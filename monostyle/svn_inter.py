@@ -82,7 +82,6 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
     context = []
     skip = False
     code = None
-    messages = None
     body = False
     for line in (diff if from_vsn else file_diff)(filename_source, rev, is_change):
         try:
@@ -108,13 +107,12 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
 
         if line.startswith("@@"):
             if code is not None and len(code.content) != len(context):
-                yield code, context, messages
+                yield code, context
 
             loc_m = re.match(loc_re, line)
             start_lincol = (int(loc_m.group(1)) - 1, 0)
             code = Fragment(filename, [], 0, 0, start_lincol, start_lincol)
             context = []
-            messages = None
             lineno = start_lincol[0]
             body = True
 
@@ -128,13 +126,17 @@ def difference(from_vsn, is_internal, filename_source, rev, binary_ext):
                 lineno += 1
 
             elif line.startswith('\\'):
-                if not messages:
-                    messages = []
                 # backslash + space
-                messages.append(line[2:])
+                message = line[2:]
+                if message == "No newline at end of file":
+                    if code.content: # remove previously added newline
+                        code = code.slice(end=code.end_pos - 1, after_inner=True)
+                else:
+                    print("{0}:{1}: unexpected version control message: {2}"
+                          .format(filename, lineno, message))
 
     if code and len(code.content) != len(context):
-        yield code, context, messages
+        yield code, context
 
 
 def update_files(path, rev=None):
