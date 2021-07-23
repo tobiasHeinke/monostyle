@@ -331,17 +331,13 @@ class RSTParser:
             recorder = (name,)
 
         for name in recorder:
-            node.is_parsing = True
             node.active = node.child_nodes.first()
             while node.active:
-                split = False
-                if not node.active.is_parsed and node.active.body:
-                    node, split = self.inline(node, node.active.body.code, name)
-
-                if not split or node.active.is_parsed:
-                    if name == node.active.node_name:
+                if node.active.node_name == "text":
+                    node = self.inline(node, node.active.body.code, name)
+                    if node.active and name == node.active.node_name:
                         self.warning(node.active.code, "unclosed inline (within paragraph)")
-
+                else:
                     node.active = node.active.next
 
         return node
@@ -1077,29 +1073,27 @@ class RSTParser:
 
 
     def inline(self, node, code, name):
-        split = False
+        if m := re.search(self.re_lib[name][0], str(code)):
+            before, inner, after = node.active.body.code.slice_match(m, 0)
+            node.active.body.code = before
+            node.active.code = before
 
-        if node.active.node_name == "text":
-            if m := re.search(self.re_lib[name][0], str(code)):
-                before, inner, after = node.active.body.code.slice_match(m, 0)
-                node.active.body.code = before
-                node.active.code = before
+            new_node = NodeRST(self._key_node_name.get(name, name), inner)
+            new_node = self._map_parts(new_node, code, m, self.re_lib[name][1])
+            node.child_nodes.insert_after(node.active, new_node)
 
-                new_node = NodeRST(self._key_node_name.get(name, name), inner)
-                new_node = self._map_parts(new_node, code, m, self.re_lib[name][1])
-                node.child_nodes.insert_after(node.active, new_node)
-                split = True
+            if (new_node.node_name == "hyperlink" or
+                    (new_node.node_name == "role" and new_node.name)):
+                new_node = self.interpret_inline(new_node)
+            new_node.is_parsed = True
 
-                if new_node.node_name in {"hyperlink", "role"}:
-                    new_node = self.interpret_inline(new_node)
-                new_node.is_parsed = True
-
-                node_after = NodeRST("text", after)
-                node_after.append_part("body", after)
-                node.child_nodes.insert_after(new_node, node_after)
-                node.active = node_after
-
-        return node, split
+            node_after = NodeRST("text", after)
+            node_after.append_part("body", after)
+            node.child_nodes.insert_after(new_node, node_after)
+            node.active = node_after
+        else:
+            node.active = node.active.next
+        return node
 
 
     def interpret_inline(self, node):
