@@ -440,7 +440,7 @@ def kbd_pre(_):
     pattern_str = ''.join((
         # Keyboard
         # Modifier
-        r"^(Shift(?:\-|\Z))?(Ctrl(?:\-|\Z))?(Alt(?:\-|\Z))?((?:Cmd|OSKey)(?:\-|\Z))?",
+        r"^(Shift(?:\-|\Z))?(Ctrl(?:\-|\Z))?(Alt(?:\-|\Z))?((?:Cmd|OSKey)(?:\-|\Z))?(Fn(?:\-|\Z))?",
 
         # Note, shifted keys such as '!?:<>"' should not be included.
         r"((?:",
