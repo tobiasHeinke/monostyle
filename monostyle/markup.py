@@ -831,7 +831,7 @@ def markup_names(toolname, document, reports):
         # Sphinx custom
         'code-block', 'glossary', 'highlight', 'hlist', 'index', 'only', 'seealso', 'toctree',
         # Sphinx extension
-        'reference', 'vimeo', 'youtube'
+        'reference', 'peertube', 'vimeo', 'youtube'
     )
 
     for node in rst_walker.iter_node(document.body, {"dir", "role", "block-quote"}):

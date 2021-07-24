@@ -148,7 +148,7 @@ def mark(toolname, document, reports, re_lib):
     instr_neg = {
         "dir": {
             "figure": ["head"], "toctree": "*", "include": "*", "index": "*",
-            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
+            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*",
@@ -179,7 +179,7 @@ def mark(toolname, document, reports, re_lib):
             "figure": ["head"], "toctree": "*", "include": "*", "index": "*",
             "hint": ["head"], "important": ["head"], "note": ["head"],
             "tip": ["head"], "warning": ["head"], "rubric": ["head"],
-            "code-block": "*", "default": "*", "highlight": "*", "youtube": "*", "vimeo": "*"
+            "code-block": "*", "default": "*", "highlight": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": "*",
         "def": {"*": ["head"]}, "target": {"*": ["head"]},
@@ -324,7 +324,7 @@ def number(toolname, document, reports, re_lib):
     instr_neg = {
         "dir": {
             "figure": ["head"],
-            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
+            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "comment": "*",
@@ -369,7 +369,7 @@ def pairs(toolname, document, reports, re_lib, config):
         "*": {"*": ["head", "body"]}
     }
     instr_neg = {
-        "dir": {"code-block": "*", "default": "*", "math": "*", "youtube": "*", "vimeo": "*"},
+        "dir": {"code-block": "*", "default": "*", "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"},
         "substdef": {"unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*", "comment": "*",
         "role": {"kbd": "*", "menuselection": "*", "math": "*"},

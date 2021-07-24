@@ -78,7 +78,7 @@ def word_filtered(document):
         "dir": {
             "figure": ["head"],
             "code-block": "*", "default": "*", "include": "*", "index": "*", "toctree": "*",
-            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
+            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*", "comment": "*",

@@ -49,7 +49,7 @@ def abbreviation_pre(_):
         "dir": {
             "figure": ["head"],
             "code-block": "*", "default": "*", "include": "*", "index": "*",
-            "math": "*", "youtube": "*", "vimeo": "*"
+            "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*", "comment": "*",
@@ -200,7 +200,7 @@ def article(toolname, document, reports, re_lib, data):
         "dir": {
             "figure": ["head"],
             "code-block": "*", "default": "*", "include": "*", "index": "*", "toctree": "*",
-            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
+            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*",
@@ -477,7 +477,7 @@ def metric(toolname, document, reports):
     instr_neg = {
         "dir": {
             "*": ["head"], "include": "*", "index": "*", "toctree": "*",
-            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
+            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "def": {"*": ["head"]},
         "substdef": {"*": ["head"], "unicode": "*", "replace": "*"},
@@ -646,7 +646,7 @@ def overuse(toolname, document, reports, config):
         "dir": {
             "figure": ["head"],
             "code-block": "*", "default": "*", "include": "*", "index": "*",
-            "math": "*", "youtube": "*", "vimeo": "*"
+            "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*",
@@ -783,7 +783,7 @@ def search_pure(toolname, document, reports, re_lib, config):
         "dir": {
             "figure": ["head"],
             "code-block": "*", "default": "*", "include": "*", "index": "*",
-            "math": "*", "youtube": "*", "vimeo": "*"
+            "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*",
@@ -837,7 +837,7 @@ def repeated(toolname, document, reports, config):
         "dir": {
             "figure": ["head"],
             "code-block": "*", "default": "*", "include": "*", "index": "*", "toctree": "*",
-            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
+            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*",

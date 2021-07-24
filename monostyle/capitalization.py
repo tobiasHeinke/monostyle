@@ -164,7 +164,7 @@ def pos_case(toolname, document, reports):
             "hint": ["head"], "important": ["head"], "note": ["head"],
             "tip": ["head"], "warning": ["head"], "rubric": ["head"],
             "code-block": "*", "default": "*", "include": "*", "index": "*", "toctree": "*",
-            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
+            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "def": {"*": ["head"]},
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
@@ -221,7 +221,7 @@ def proper_noun_pre(_):
         "dir": {
             "figure": ["head"],
             "code-block": "*", "default": "*", "include": "*", "index": "*", "toctree": "*",
-            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*"
+            "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*", "comment": "*",
@@ -332,7 +332,7 @@ def start_case(toolname, document, reports, re_lib):
     instr_neg = {
         "dir": {
             "figure": ["head"], "toctree": "*", "include": "*", "index": "*", "highlight": "*",
-            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*"
+            "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*",

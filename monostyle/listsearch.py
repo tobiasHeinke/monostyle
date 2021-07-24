@@ -161,7 +161,7 @@ def search_free(toolname, document, reports, data):
         "dir": {
             "figure": ["head"],
             "code-block": "*", "default": "*", "include": "*", "index": "*",
-            "math": "*", "toctree": "*", "youtube": "*", "vimeo": "*"
+            "math": "*", "toctree": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "comment": "*", "doctest": "*", "target": "*",
@@ -197,7 +197,7 @@ def search_word(toolname, document, reports, data, config):
         "dir": {
             "figure": ["head"],
             "code-block": "*", "default": "*", "include": "*", "index": "*",
-            "math": "*", "toctree": "*", "youtube": "*", "vimeo": "*"
+            "math": "*", "toctree": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "comment": "*", "doctest": "*", "target": "*",
