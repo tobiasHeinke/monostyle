@@ -282,6 +282,7 @@
 	"flags": "BI",
 	"terms":[
 		"as you",
+		"!-B:\\bat all\\S",
 		"bring(ing|s)?(?! out)",
 		"bunch of",
 		"carry(ing)?",
@@ -323,6 +324,7 @@
 		"what ?ever",
 		"what not",
 		"what so ever",
+		"!-B:((?-i:W)|[-,] w)ell\\b",
 		"why not"
 	]
 },

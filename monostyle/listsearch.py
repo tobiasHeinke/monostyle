@@ -26,13 +26,25 @@ def compile_terms(terms, conf):
              Inline:
              If the first string starts with a '#' the entry is skipped.
              If a string starts with a '?' the term is skipped.
+             Flags can be overridden per term with an initial '!' and delimited by a ':'.
+             Following re group syntax: added flags and after '-' the removed ones.
              These can be escaped with a backslash.
-             If a string ends with a '|' the term will not be stemed.
+
     conf:flags -- regex flags.
         stem -- stem the pattern string.
         overline -- match over whitespace including line wraps.
         boundary -- pattern start and end with word boundaries.
     """
+    def convert_flags(conf_flags):
+        flags = 0
+        if conf_flags["ignorecase"]:
+            flags = re.IGNORECASE
+        if conf_flags["mulitline"] or conf_flags["overline"]:
+            flags = flags | re.MULTILINE
+        if conf_flags["dotall"]:
+            flags = flags | re.DOTALL
+        return flags
+
     def combine_message(pattern_str, message, conf):
         has_default = False
         if not message:
@@ -52,37 +64,39 @@ def compile_terms(terms, conf):
         if pattern_str == "" or pattern_str.startswith('?'):
             return None
 
+        if m := re.match(r"!([a-zA-Z]*)(?:\-([a-zA-Z]+))?\:", pattern_str):
+            conf_flags_local = conf["flags"].copy()
+            if m.group(1):
+                conf_flags_local = parse_flags(m.group(1), conf_flags_local)
+            if m.group(2):
+                conf_flags_local = parse_flags(m.group(2), conf_flags_local, True)
+            pattern_str = pattern_str[m.end(0):]
+        else:
+            conf_flags_local = conf["flags"]
+
         # remove escape
-        if pattern_str.startswith('\\#') or pattern_str.startswith('\\?'):
+        if re.match(r"\\[#?!]", pattern_str):
             pattern_str = pattern_str[1:]
 
         if conf["flags"]["stem"]:
-            if not pattern_str.endswith('|'):
+            if conf_flags_local["stem"]:
                 pattern_str = porter_stemmer.stem(pattern_str, 0, len(pattern_str)-1)
-            else:
-                pattern_str = pattern_str[:-1]
             pattern_str = (conf.get("pattern prefix", "") + pattern_str +
                            conf.get("pattern suffix", ""))
         else:
             pattern_str = (conf.get("pattern prefix", "") + pattern_str +
                            conf.get("pattern suffix", ""))
 
-            if conf["flags"]["overline"]:
+            if conf_flags_local["overline"]:
                 pattern_str = re.sub(r" +", "\\\\s+?", pattern_str)
-            if conf["flags"]["boundary"]:
+            if conf_flags_local["boundary"]:
                 pattern_str = r'\b' + pattern_str + r'\b'
 
-        return pattern_str
+        return pattern_str, conf_flags_local if conf_flags_local is not conf["flags"] else None
 
     porter_stemmer = Porterstemmer()
     terms_compiled = []
-    flags = 0
-    if conf["flags"]["ignorecase"]:
-        flags = re.IGNORECASE
-    if conf["flags"]["mulitline"] or conf["flags"]["overline"]:
-        flags = flags | re.MULTILINE
-    if conf["flags"]["dotall"]:
-        flags = flags | re.DOTALL
+    flags = convert_flags(conf["flags"])
 
     pattern_str_default = []
     message_default = None
@@ -110,11 +124,14 @@ def compile_terms(terms, conf):
             if pattern_str.startswith('#'):
                 break
 
-            pattern_str = combine_pattern(pattern_str, conf, porter_stemmer)
+            pattern_str, conf_flags_local = combine_pattern(pattern_str, conf, porter_stemmer)
             if not pattern_str:
                 continue
             if conf["flags"]["word"]:
                 terms_compiled.append((pattern_str, message))
+            elif conf_flags_local:
+                terms_compiled.append((re.compile(pattern_str, convert_flags(conf_flags_local)),
+                                       message))
             else:
                 pattern_str_combined.append(pattern_str)
 
@@ -130,10 +147,10 @@ def compile_terms(terms, conf):
     return terms_compiled
 
 
-def parse_flags(re_conf_str):
-    """Parse config to Booleans."""
+def parse_flags(re_conf_str, override=None, negate=False):
+    """Parse config to Boolean values."""
     re_conf_str = re_conf_str.upper()
-    re_conf = {
+    re_conf_map = {
         "boundary": "B",
         "dotall": "D",
         "ignorecase": "I",
@@ -142,8 +159,12 @@ def parse_flags(re_conf_str):
         "stem": "S",
         "word": "W"
     }
-    for key in re_conf.keys():
-        re_conf[key] = bool(re_conf[key] in re_conf_str)
+    re_conf = re_conf_map if override is None else override
+    for key in re_conf_map.keys():
+        if re_conf_map[key] in re_conf_str:
+            re_conf[key] = not negate
+        elif override is None:
+            re_conf[key] = False
 
     return re_conf
 
