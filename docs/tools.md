@@ -35,7 +35,7 @@ Explicit search for terms and capitalization.
   - pronoun: non gender neutral pronouns.
   - uncertainty: requires the reader to make an assessment or the writer is unsure.
   - modal verb: same as uncertainty.
-  - informal: words and phrases unsuited for docs.
+  - tone: informal or too formal words and phrases unsuited for docs.
   - promotional: adjectives that praise the result of the program and thereby advertise for it.
   - syntactic expletive: superficial constructs.
   - style: miscellaneous rules.
