@@ -28,11 +28,10 @@ def print_over(*text, is_temp=False, ellipsis=None):
     cur_len = len(text.splitlines()[-1]) if is_temp else 0
     if not getattr(print_over, "was_ellipsis", False):
         if cur_len < prev_len:
-            sys.__stdout__.write("\033[2K\r")
-        sys.__stdout__.write(text + ("" if ellipsis is not None else '\r' if is_temp else '\n'))
-        sys.__stdout__.flush()
+            print("\033[2K", end="\r")
+        print(text, end="" if ellipsis is not None else '\r' if is_temp else '\n', flush=True)
     else:
-        sys.__stdout__.write('\b' * prev_len + "{0: <{1}}\n".format(text, prev_len))
+        print('\b' * prev_len + "{0: <{1}}".format(text, prev_len), end="\n")
 
     if not ellipsis:
         print_over.prev_len = cur_len
