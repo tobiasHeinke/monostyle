@@ -686,8 +686,9 @@ def leak_pre(_):
     markup_keys.update({"arrow", "arrowlen", "dash", "escape"})
 
     # Merge Conflict
-    # FP = transition
-    re_lib["mc"] = (re.compile(r"(?:[<>|]{7} \.(?:r\d+?|mine))|(?:^={7}\n)", re.MULTILINE),
+    # FP transition with = char
+    re_lib["mc"] = (re.compile(r"^[<>|]{7} (\.(r\d+?|mine)|HEAD|[a-f0-9]{4,40}\b)" +
+                               r"|^={7}\n", re.MULTILINE),
         Report.existing(what="merge conflict"))
 
     node_pattern_map = (
