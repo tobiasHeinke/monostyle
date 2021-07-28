@@ -26,19 +26,24 @@ Explicit search for terms and capitalization.
 - avoid
   - vague: unspecific verbs like 'make'.
   - qualifier: requires the reader to make an assessment, e.g. 'very' can often be removed.
-  - difficulty: simplicity is subjective. Can be condescending.
+  - difficulty: simplicity is subjective. Can be condescending and
+    not encouraging as it might be intended to.
   - anthropomorphism: verbs that attribute programs or algorithms human qualities,
     e.g. 'wants' thus a will.
   - computer characteristic: adverbs that superficially describe expected characteristics of
     computer programs like speed thus 'instant' results.
   - voice: how to address the reader.
   - pronoun: non gender neutral pronouns.
-  - uncertainty: requires the reader to make an assessment or the writer is unsure.
+  - uncertainty: requires the reader to make an assessment or the writer is unsure (hedges).
   - modal verb: same as uncertainty.
   - tone: informal or too formal words and phrases unsuited for docs.
+  - cross-reference: references to other parts of the docs
+    for example figures or a previous section.
+    Also containing relative user interface references like 'next to the Submit button'
+    which are time-consuming to maintain.
+  - interaction: idioms for user interaction e.g. 'hit a button'.
   - promotional: adjectives that praise the result of the program and thereby advertise for it.
   - syntactic expletive: superficial constructs.
-  - style: miscellaneous rules.
 
 - dev
   - development: wording for release nodes not belonging in docs and

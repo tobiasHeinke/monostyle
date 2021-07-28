@@ -9,8 +9,8 @@
 
 		[["textbox"], "text field"],
 		[["search ?box"], "search field"],
-		[["check[ -]box", "\\btick", "tickbox", "toogle button"], "checkbox"],
-		[["number input", "number button"], "number field"],
+		[["check[ -]box", "tickbox", "toggle button"], "checkbox"],
+		[["number input", "number button", "stepper", "spin box"], "number field"],
 		[["drop[ -]?down", "drop[ -]?list"], "pop up (menu), selector"],
 		[["flyout", "dialog", "message box"], "pop up"],
 		[["right[ -]click menu", "contextual menu"], "context menu"],
@@ -35,6 +35,10 @@
 
 		[["3D View(?!port)"], "3D Viewport"],
 		[["command prompt", "terminal"], "console"]
+	],
+	"ignore":[
+		"bento, breadcrumbs, d[öo]ner, (cheese|ham)?burger, kebab, meatball, sandwich",
+		"expando, marquee, slideshow, carousel, zippy, wizard"
 	]
 },
 "Editors":{
