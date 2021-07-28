@@ -600,7 +600,7 @@ def overuse(toolname, document, reports, config):
             reports.append(
                 Report(Report.map_severity(thresholds, score), toolname, word,
                        Report.quantity(what="overused word",
-                                       how=str(count) + " times " + str(score)))
+                                       how=str(count) + " times"))
                 .set_line_punc(document.code, 50, 30))
 
             return reports

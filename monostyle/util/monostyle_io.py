@@ -6,7 +6,6 @@ util.monostyle_io
 Input/Output utility for Monostyle.
 """
 
-import sys
 import os
 import json
 

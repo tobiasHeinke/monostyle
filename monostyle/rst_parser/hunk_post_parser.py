@@ -13,6 +13,9 @@ from monostyle.rst_parser.rst_node import NodeRST, NodePartRST
 
 def parse(rst_parser, document):
     """Find partial markup by deriving the node_name from the node's body."""
+    if not document.body or document.body.child_nodes.is_empty():
+        return document
+
     document = toctree(rst_parser, document)
     document = refbox(rst_parser, document)
 

@@ -449,12 +449,12 @@ def style_extra(toolname, document, reports):
         elif rst_walker.is_of(node, "dir", {"hint", "important", "note", "reference", "tip",
                                             "warning", "seealso"}):
             if not node.body and node.head.code.span_len(False)[0] > 2:
-               reports.append(
-                   Report('I', toolname, node.head.code.clear(True),
-                          Report.misplaced(what="long content",
-                                           where="of " + rst_walker.write_out(node.node_name,
-                                                                              node.name),
-                                           to_where="in the body")))
+                reports.append(
+                    Report('I', toolname, node.head.code.clear(True),
+                           Report.misplaced(what="long content",
+                                            where="of " + rst_walker.write_out(node.node_name,
+                                                                               node.name),
+                                            to_where="in the body")))
 
         elif rst_walker.is_of(node, "role", "menuselection"):
             dash_re = re.compile(r"(?:\A| )(\-{1,3}|\->|\-{3}>)(?: |\Z)")
