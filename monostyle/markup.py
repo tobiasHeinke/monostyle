@@ -950,7 +950,7 @@ def structure_pre(_):
                " consider moving them into a list-table"}),
              ("- sect & {1} = None \\ * + sect && {2} = !None",
               {"output": True, "message": "three or more headings in a row"}),
-             ("dir(figure) / body = None",
+             ("dir(figure) / body = None \\ * + !None",
               {"output": True, "message": "figure without a caption"}),
              ("strong, emphasis << sect",
               {"output": True, "message": "font styling in heading"}),
@@ -963,6 +963,8 @@ def structure_pre(_):
               {"output": True, "message": "seealso admonition not at section end"}),
              ("dir(index) - target, comment",
               {"output": True, "message": "index directive not at top"}),
+             ("dir(container) / head > None",
+              {"output": False, "message": "container directive without head"}),
             )
     operators_start = {
         "^": " + None \\ *",

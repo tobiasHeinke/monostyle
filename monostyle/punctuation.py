@@ -179,7 +179,8 @@ def mark(toolname, document, reports, re_lib):
             "figure": ["head"], "toctree": "*", "include": "*", "index": "*",
             "hint": ["head"], "important": ["head"], "note": ["head"],
             "tip": ["head"], "warning": ["head"], "rubric": ["head"],
-            "code-block": "*", "default": "*", "highlight": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
+            "code-block": "*", "default": "*", "highlight": "*",
+            "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": "*",
         "def": {"*": ["head"]}, "target": {"*": ["head"]},
@@ -369,7 +370,8 @@ def pairs(toolname, document, reports, re_lib, config):
         "*": {"*": ["head", "body"]}
     }
     instr_neg = {
-        "dir": {"code-block": "*", "default": "*", "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"},
+        "dir": {"code-block": "*", "default": "*", "math": "*",
+                "youtube": "*", "vimeo": "*", "peertube": "*"},
         "substdef": {"unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*", "comment": "*",
         "role": {"kbd": "*", "menuselection": "*", "math": "*"},
