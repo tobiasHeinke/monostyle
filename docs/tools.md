@@ -16,7 +16,8 @@ Find rare or new words. This is a multi tool because it detects:
 - Compounding/hyphenation (if the words are not used individually like 'well defined').
 - Acronyms and capitalization within a word.
 - Homophones (similar sounding words) when one of the pair is rare.
-- Singulare/plurale tantum (singular/plural-only nouns)
+- Singulare/plurale tantum (singular/plural-only nouns).
+- Possessive form of inanimate objects.
 
 
 ## List Search
@@ -37,13 +38,14 @@ Explicit search for terms and capitalization.
   - uncertainty: requires the reader to make an assessment or the writer is unsure (hedges).
   - modal verb: same as uncertainty.
   - tone: informal or too formal words and phrases unsuited for docs.
-  - cross-reference: references to other parts of the docs
+  - reference: cross-references to other parts of the docs
     for example figures or a previous section.
-    Also containing relative user interface references like 'next to the Submit button'
+    As well as relative user interface references like 'next to the Submit button'
     which are time-consuming to maintain.
   - interaction: idioms for user interaction e.g. 'hit a button'.
   - promotional: adjectives that praise the result of the program and thereby advertise for it.
   - syntactic expletive: superficial constructs.
+  - sidetrack: transitions to secondary topics.
 
 - dev
   - development: wording for release nodes not belonging in docs and

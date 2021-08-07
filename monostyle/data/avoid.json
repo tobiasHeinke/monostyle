@@ -53,6 +53,38 @@
 		"set"
 	]
 },
+"sidetrack":{
+	"flags": "BI",
+	"terms":[
+		"alongside",
+		"among(st)?",
+		"anyway",
+		"aside",
+		"beyond that",
+		"besides",
+		"by the way",
+		"compared to",
+		"correspondingly",
+		"incidentally",
+		"just (as|like)",
+		"likewise",
+		"mention",
+		"moreover",
+		"notably",
+		"note also", "also note",
+		"other respects",
+		"other than that",
+		"related manner",
+		"similarly",
+		"unlike",
+		"whereas",
+		"over and above"
+	],
+	"ignore":[
+		"furthermore",
+		"similar to"
+	]
+},
 "qualifier":{
 	"flags": "BI",
 	"terms":[
@@ -221,6 +253,7 @@
 		"commonly",
 		"consider(able|ed)",
 		"doubt",
+		"despite",
 		"enough",
 		"estimate[ds]?",
 		"eventual(ly)?",
@@ -232,6 +265,7 @@
 		"guess", "be guessed",
 		"hopefully",
 		"ideally",
+		"if necessary",
 		"irregularly",
 		"maybe",
 		"most(ly| of)",
@@ -248,6 +282,7 @@
 		"really",
 		"reasonab(e|ly)",
 		"relatively",
+		"rel(ied|y|ying)",
 		"seeks?",
 		"seem(ing|ingly|s)?",
 		"situations?",
@@ -289,24 +324,20 @@
 	"message": "informal tone (or too formal)",
 	"flags": "BI",
 	"terms":[
-		"and alike", "the like",
 		"(and|for|right) now",
 		"as you",
 		"!-B:\\bat all\\S",
-		"at least",
 		"benefit from",
 		"bring(ing|s)?(?! out)",
-		"bunch of",
 		"!-B:\\bby (that|this)\\S",
 		"carry(ing)?",
 		"comes",
 		"couple of",
-		"do(es|ing)? (an?|it|so|that|the|this)",
+		"do(es|ing)? (an?|it|so(me)?|that|the|this)",
+		"essential(ly)?",
 		"fee?d(ing|s)?",
-		"end (in|up)",
 		"(?<!even )(?-i:though)",
-		"(forget|scratch) that",
-		"for that",
+		"for (that|you)",
 		"get (an?|the)",
 		"get(s|ting)",
 		"going(?! to)",
@@ -314,17 +345,16 @@
 		"indeed",
 		"imagine",
 		["in it", ["containing", "including", "with(in)"]],
-		"interesting",
+		"interesting(ly)?",
 		"just (about|as|in|so|that|to)",
 		[["kinds? of", "sorts? of"], "type of"],
+		"lots of",
 		"matters?",
 		"meaningful",
-		"more or less",
 		"(meaning|point|purport|sense|use)less(ly)?",
 		"much else",
 		"(no|some) reason",
 		"now,? (that|this|to)",
-		"now you should have",
 		"on it",
 		"pretty",
 		"roughly",
@@ -336,10 +366,7 @@
 		"(?-i:S)o,|(and|or) (so(?! on)|such(?! as))",
 		"so[ -]called",
 		"some sort",
-		"sort of",
 		"some(how|what)",
-		"sooner or later",
-		"one by one",
 		"there,? you", "!-B\\bthere\\S",
 		"think",
 		"to get",
@@ -348,32 +375,40 @@
 		"what (an?|the)",
 		"what ?ever",
 		"what not",
+		"what('s |is)",
 		"what so ever",
 		"!-B:((?-i:W)|[-,] w)ell\\b",
-		"wish",
+		"will want",
+		"wish", "would like",
 		"wi(th|ch) what",
 		"why not",
 		"!-B:\\b(Yes|No),",
 		"you('ll| will) (find|see)"
+	],
+	"ignore":[
+		"please, sorry, thank(s| you)"
 	]
 },
-"cross-reference":{
+"reference":{
 	"flags": "BI",
 	"terms":[
 		["(as( we)?|already|being) (known|said)", "don't use"],
-		["check ( it)?out", ["please refer to", "see"]],
+		[["check ( it)?out", "refer to"], "see"],
 		"found in",
 		["head (over|to)", "don't use for cross references"], 
 		["jump to", "don't use for cross references"],
 		["know(ing)? (this|that)", "don't use"],
 		["look at", "don't use for cross references"],
 		"seen",
+		["speaking of", "don't use"],
 
 		["above", ["preceding", "previous", "earlier"]],
-		["(before|after) (an?|the)", "relative UI reference"],
-		["below", ["following", "later"]],
-		["(next|previous) to", "relative UI reference"],
-		["on (top|bottom) of (an?|the)", "relative UI reference"]
+		[["(before|after) (an?|the)",
+				"(left|right) of (an?|the)",
+				"(next|previous) to",
+				"(top|bottom) of (an?|the)"],
+			"relative GUI reference"],
+		["below", ["following", "later"]]
 	]
 },
 "interaction":{
@@ -384,9 +419,14 @@
 		["drag ('n|&) drop", "drag-and-drop"],
 		["go(ing)? in(to)?", ["switch to", "enter", "open"]],
 		[["hit(ting)?", "strik(e|ing)", "depress(ing)?"], "don't use for user input"],
+		[["accelerator key", "key(board)? accelerator",
+				"hot[ -]?key",
+				"key(board)? comb(ination|o)"],
+			"shortcut"],
 		[["lift", "let go"], "release (the button)"],
 		["manipulat(e[ds]?|ing)", "edit..."],
 		"(moved?|drag(ged)?) (it )?around",
+		["notifi(cations?|e[ds])", "displays/shows a message, icon, dialog"],
 		"occupie[ds]",
 		["open(ing|s)? up", "just open"],
 		["plug(ged)? in(to)?", "link"],
@@ -394,16 +434,27 @@
 		["shows? up", "is shown"],
 		["springs? (in(to)?|up)", "pops up"],
 		["switch(ed?|ing) (on|off)", "switch to/between"],
-		["tick(ed|ing)?", ["(de)activate", "(dis)enable"]],
 		["toggl(ed?|ing) (on|off)", "toggle (between)"],
-		["turn(ed|ing)?( it)? (on|off)", ["(de)activate", "(dis)enable"]],
+		[["turn(ed|ing)?( it)? (on|off)",
+				"(un)?check(ed|ing)?",
+				"(un)?tick(ed|ing)?"],
+			["(de)activate", "(dis)enable"]],
 		["vanish(es)?", ["is hidden", "don't mention"]]
 	],
 	"ignore":[
 		"call up",
+		"check",
+		"choose",
+		"clear the checkbox",
+		"click (in|on|this|that|the|an?)",
+		"enter, close, exit",
+		"go to",
+		"highlight",
 		"hover",
+		"navigate to",
 		"point to",
-		"click (in|on|this|that|the|an?)"
+		"unselect",
+		"(un)?set"
 	]
 },
 "promotional":{
@@ -448,7 +499,8 @@
 		"great",
 		"leading",
 		"next-gen",
-		"polished"
+		"polished",
+		"reliable"
 	]
 }
 }
