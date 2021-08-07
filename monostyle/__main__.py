@@ -66,11 +66,12 @@ def init(ops, op_names, mod_name):
     if isinstance(op_names, str):
         op_names = [op_names]
 
-    lexicon_exist = None
     for op_name in op_names:
         if op_name in {"collocation", "hyphen", "new-word"}:
-            if lexicon_exist is None:
-                lexicon_exist = import_module("update_lexicon").setup_lexicon()
+            if init.lexicon_exist is None:
+                init.lexicon_exist = import_module("update_lexicon").setup_lexicon()
+            if init.lexicon_exist is False:
+                continue
 
         for op in ops:
             if op_name == op[0]:
@@ -85,6 +86,8 @@ def init(ops, op_names, mod_name):
             print("{0}: unknown operation: {1}".format(mod_name, op_name))
 
     return ops_sel
+
+init.lexicon_exist = None
 
 
 def get_hunks_version(path, parse_options, version_options):
@@ -277,7 +280,7 @@ def setup(root, patch=None):
     if root is not None:
         if not os.path.exists(os.path.normpath(root)):
             print('Error: root {0} does not exists'.format(root))
-            return False
+            return False, False
 
         root = monostyle_io.norm_path_sep(root)
         if len(cwd) < len(root) and root.startswith(cwd):
@@ -301,30 +304,32 @@ def setup(root, patch=None):
     else:
         is_git = patch_flavor(patch)
         if is_git is None:
-            return False
+            return False, is_repo
 
     global vsn_inter
     vsn_inter = import_module("git_inter" if is_git else "svn_inter", "vsn_inter")
 
     config_dir = os.path.normpath(os.path.join(root, "monostyle"))
+    use_default_config = False
     if not os.path.isdir(config_dir):
-        if not monostyle_io.ask_user("Create user config folder in '", root, "'",
-                                     "" if is_repo else " even though it's not the top folder "
-                                     "of a repository"):
-            # run with default config
-            return True
+        if monostyle_io.ask_user(
+                "Create user config folder in '", root, "'",
+                "" if is_repo else
+                " even though it's not the top folder of a repository"):
 
-        try:
-            os.mkdir(config_dir)
+            try:
+                os.mkdir(config_dir)
 
-        except (IOError, OSError) as err:
-            print("{0}: cannot create: {1}".format(config_dir, err))
-            return False
+            except (IOError, OSError) as err:
+                print("{0}: cannot create: {1}".format(config_dir, err))
+                return False, is_repo
+        else:
+            use_default_config = True
 
-    success = config.init(root, cwd[len(root):])
+    success = config.init(root, cwd[len(root):], use_default_config)
     if success:
         Report.override_templates(config.template_override)
-    return success
+    return success, is_repo
 
 
 def main_mod(mod_doc, ops, mod_file, do_parse=True):
@@ -400,7 +405,7 @@ def main(descr=None, mod_selection=None, parse_options=None):
 
     args = parser.parse_args()
 
-    setup_sucess = setup(args.root, args.patch)
+    setup_sucess, is_repo = setup(args.root, args.patch)
     if not setup_sucess:
         return 2
 
@@ -440,6 +445,10 @@ def main(descr=None, mod_selection=None, parse_options=None):
 
     if path:
         path = monostyle_io.norm_path_sep(path)
+    if version_options and version_options["from_vsn"] and not is_repo:
+        print("error: directory is not a repository")
+        return 2
+
     reports = apply(mods, path, rst_parser, parse_options, version_options)
     if args.patch is not None:
         for report in reports:# custom root

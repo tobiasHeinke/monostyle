@@ -38,7 +38,7 @@ class Lexicon:
         if blank:
             self.data = dict()
         else:
-            self.data = self.__default__.copy()
+            self.data = self.__default__.copy() if self.__default__ is not None else None
 
 
     def __bool__(self):
@@ -75,6 +75,9 @@ class Lexicon:
 
     def split(self, lexicon_flat):
         """Split lexicon by first char."""
+        if lexicon_flat is None:
+            return None
+
         lexicon = dict()
         for entry in lexicon_flat:
             word = entry[0]

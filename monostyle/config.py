@@ -16,12 +16,15 @@ config_override = None
 template_override = None
 
 
-def init(root, cwd):
+def init(root, cwd, use_default):
     """Create user config file or override config."""
     config_default, source_default = read_file(root, True)
     for key, value in config_default.items():
         globals()[key] = value
     globals()["project_dirs"]["cwd"] = cwd
+
+    if use_default:
+        return True
 
     try:
         config_user, _ = read_file(root, False)
@@ -58,9 +61,8 @@ def read_file(root, from_default):
     with open(filename, 'r', encoding='utf-8') as config_file:
         text = config_file.read()
 
-    text = remove_comments(text)
     try:
-        return json.loads(text), text
+        return json.loads(remove_comments(text)), text
     except json.JSONDecodeError as err:
         raise ValueError("{0}: cannot decode user config: {1}".format(filename, err)) from err
 
