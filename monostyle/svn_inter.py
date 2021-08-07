@@ -90,11 +90,9 @@ def difference(from_vsn, is_internal, path, rev, binary_ext):
             continue
 
         if line.startswith("Index: "):
-            code = Fragment(norm_path_sep(line[len("Index: "):]), [])
-            if binary_ext is not None and os.path.splitext(code.filename)[1] in binary_ext:
-                # skip whole file
-                code = None
-                skip = True
+            filename = norm_path_sep(line[len("Index: "):])
+            # skip whole file
+            skip = bool(binary_ext is not None and os.path.splitext(filename)[1] in binary_ext)
             body = False
 
         elif (line.startswith("Property changes on: ") or
@@ -106,10 +104,11 @@ def difference(from_vsn, is_internal, path, rev, binary_ext):
             continue
 
         if line.startswith("@@"):
-            if code is not None and len(code.content) != len(context):
+            if code and len(code.content) != len(context):
                 yield code, context
 
-            code.add_offset(offset_lincol=(int(re.match(loc_re, line).group(1)) - 1, 0))
+            code = Fragment(filename, [],
+                            start_lincol=(int(re.match(loc_re, line).group(1)) - 1, 0))
             context = []
             body = True
 
@@ -124,7 +123,7 @@ def difference(from_vsn, is_internal, path, rev, binary_ext):
                 # backslash + space
                 message = line[2:]
                 if message == "No newline at end of file":
-                    if code.content: # remove previously added newline
+                    if code and code.content: # remove previously added newline
                         code = code.slice(end=code.end_pos - 1, after_inner=True)
                 else:
                     print("{0}:{1}: unexpected version control message: {2}"

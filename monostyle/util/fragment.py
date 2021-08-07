@@ -84,22 +84,21 @@ class Fragment():
         if isinstance(new_content, str):
             new_content = [line for line in new_content.splitlines(keepends=True)]
 
-        is_nl_end = bool(not self.content or self.content[-1].endswith('\n'))
-        if is_nl_end:
-            self.content.append(new_content[0])
+        is_empty = bool(not self.content)
+        is_nl_end = bool(not is_empty and self.content[-1].endswith('\n'))
+        if is_nl_end or is_empty:
+            self.content.extend(new_content)
         else:
             self.content[-1] += new_content[0]
+            self.content.extend(new_content[1:])
 
         if not keep_end:
             self.end_pos += sum(map(len, new_content))
 
             if self.end_lincol:
-                self.end_lincol = (self.end_lincol[0] + (len(new_content) if is_nl_end
-                                                         else max(0, len(new_content) - 1)),
-                                   (0 if is_nl_end else self.end_lincol[1]) +
-                                   len(new_content[-1]) if len(new_content) != 0 else 0)
+                self.end_lincol = (self.end_lincol[0] + len(new_content) -
+                                   bool(not is_nl_end or is_empty), len(self.content[-1]))
 
-            self.content.extend(new_content[1:])
         return self
 
 

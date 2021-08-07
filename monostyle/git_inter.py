@@ -55,23 +55,23 @@ def difference(from_vsn, is_internal, path, rev, cached):
             continue
 
         if line.startswith("+++"):
-            code = Fragment(norm_path_sep(line[len("+++ b/"):]), [])
+            filename = norm_path_sep(line[len("+++ b/"):])
             skip = False
             body = False
 
         elif line.startswith("Binary files"):
             # skip whole file
-            code = None
             skip = True
 
         if skip:
             continue
 
         if line.startswith("@@"):
-            if code is not None and len(code.content) != len(context):
+            if code and len(code.content) != len(context):
                 yield code, context
 
-            code.add_offset(offset_lincol=(int(re.match(loc_re, line).group(1)) - 1, 0))
+            code = Fragment(filename, [],
+                            start_lincol=(int(re.match(loc_re, line).group(1)) - 1, 0))
             context = []
             body = True
 
@@ -86,7 +86,7 @@ def difference(from_vsn, is_internal, path, rev, cached):
                 # backslash + space
                 message = line[2:]
                 if message == "No newline at end of file":
-                    if code.content: # remove previously added newline
+                    if code and code.content: # remove previously added newline
                         code = code.slice(end=code.end_pos - 1, after_inner=True)
                 else:
                     print("{0}:{1}: unexpected version control message: {2}"
