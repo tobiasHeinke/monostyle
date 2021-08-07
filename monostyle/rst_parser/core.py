@@ -1082,7 +1082,7 @@ class RSTParser:
             new_node = self._map_parts(new_node, code, m, self.re_lib[name][1])
             node.child_nodes.insert_after(node.active, new_node)
 
-            if (new_node.node_name == "hyperlink" or
+            if ((new_node.node_name == "hyperlink" and new_node.body) or
                     (new_node.node_name == "role" and new_node.name)):
                 new_node = self.interpret_inline(new_node)
             new_node.is_parsed = True
