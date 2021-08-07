@@ -328,14 +328,14 @@ def collocation_pre(_):
             terms.append((list(" ".join(group) for group in result), word))
 
     args = dict()
-    args["config"] = listsearch.parse_flags("BIO")
-    args["data"] = listsearch.compile_terms(terms, {"flags": args["config"]})
+    args["config"] = {}
+    args["data"] = listsearch.compile_terms(terms, {"flags": listsearch.parse_flags("BIO")})
 
     return args
 
 
 def collocation(toolname, document, reports, data, config):
-    return listsearch.search(toolname, document, reports, data, config)
+    return listsearch.search_char(toolname, document, reports, data, config)
 
 
 def grammar_pre(_):
@@ -400,14 +400,14 @@ def hyphen_pre(_):
             terms.append([re.sub(dash_re, " ", word), word])
 
     args = dict()
-    args["config"] = listsearch.parse_flags("BIO")
-    args["data"] = listsearch.compile_terms(terms, {"flags": args["config"]})
+    args["config"] = {}
+    args["data"] = listsearch.compile_terms(terms, {"flags": listsearch.parse_flags("BIO")})
 
     return args
 
 
 def hyphen(toolname, document, reports, data, config):
-    return listsearch.search(toolname, document, reports, data, config)
+    return listsearch.search_char(toolname, document, reports, data, config)
 
 
 def metric(toolname, document, reports):

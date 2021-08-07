@@ -448,14 +448,14 @@ def typ_case_pre(_):
                 terms = typ_titles(document, kind, terms)
 
     args = dict()
-    args["config"] = listsearch.parse_flags("")
-    args["data"] = listsearch.compile_terms(terms, {"flags": args["config"]})
+    args["config"] = {}
+    args["data"] = listsearch.compile_terms(terms, {"flags": listsearch.parse_flags("")})
 
     return args
 
 
 def typ_case(toolname, document, reports, data, config):
-    return listsearch.search(toolname, document, reports, data, config)
+    return listsearch.search_char(toolname, document, reports, data, config)
 
 
 def ui_case(toolname, document, reports):

@@ -12,6 +12,7 @@ import monostyle.util.monostyle_io as monostyle_io
 from monostyle.util.report import Report
 import monostyle.rst_parser.walker as rst_walker
 from monostyle.util.segmenter import Segmenter
+from monostyle.util.fragment import Fragment
 from monostyle.util.porter_stemmer import Porterstemmer
 
 
@@ -57,9 +58,21 @@ def compile_terms(terms, conf):
         if not has_default and not isinstance(message, str):
             message = '/'.join(message)
 
-        return conf.get("message prefix", "") + message + conf.get("message suffix", ""), has_default
+        return (conf.get("message prefix", "") + message + conf.get("message suffix", ""),
+                has_default)
 
-    def combine_pattern(pattern_str, conf, porter_stemmer):
+    def compile_tokenized(pattern_str, conf_flags_local, porter_stemmer):
+        segmenter = Segmenter()
+        pattern = []
+        for word in segmenter.iter_word(Fragment("", pattern_str)):
+            if not conf_flags_local or conf_flags_local["stem"]:
+                pattern.append(porter_stemmer.stem(str(word), 0, len(word)-1))
+            else:
+                pattern.append(str(word))
+
+        return [tuple(pattern), 0, conf_flags_local, None]
+
+    def combine_pattern(pattern_str, conf):
         # ignore this single term
         if pattern_str == "" or pattern_str.startswith('?'):
             return None
@@ -78,15 +91,13 @@ def compile_terms(terms, conf):
         if re.match(r"\\[#?!]", pattern_str):
             pattern_str = pattern_str[1:]
 
-        if conf["flags"]["stem"]:
-            if conf_flags_local["stem"]:
-                pattern_str = porter_stemmer.stem(pattern_str, 0, len(pattern_str)-1)
-            pattern_str = (conf.get("pattern prefix", "") + pattern_str +
-                           conf.get("pattern suffix", ""))
-        else:
-            pattern_str = (conf.get("pattern prefix", "") + pattern_str +
-                           conf.get("pattern suffix", ""))
+        pattern_str = (conf.get("pattern prefix", "") + pattern_str +
+                       conf.get("pattern suffix", ""))
 
+        if conf["flags"]["token"]:
+            if conf["flags"]["ignorecase"]:
+                pattern_str = pattern_str.lower()
+        else:
             if conf_flags_local["overline"]:
                 pattern_str = re.sub(r" +", "\\\\s+?", pattern_str)
             if conf_flags_local["boundary"]:
@@ -124,11 +135,12 @@ def compile_terms(terms, conf):
             if pattern_str.startswith('#'):
                 break
 
-            pattern_str, conf_flags_local = combine_pattern(pattern_str, conf, porter_stemmer)
+            pattern_str, conf_flags_local = combine_pattern(pattern_str, conf)
             if not pattern_str:
                 continue
-            if conf["flags"]["word"]:
-                terms_compiled.append((pattern_str, message))
+            if conf["flags"]["token"]:
+                terms_compiled.append((compile_tokenized(pattern_str, conf_flags_local,
+                                       porter_stemmer), message))
             elif conf_flags_local:
                 terms_compiled.append((re.compile(pattern_str, convert_flags(conf_flags_local)),
                                        message))
@@ -157,7 +169,7 @@ def parse_flags(re_conf_str, override=None, negate=False):
         "mulitline": "M",
         "overline": "O",
         "stem": "S",
-        "word": "W"
+        "token": "T"
     }
     re_conf = re_conf_map if override is None else override
     for key in re_conf_map.keys():
@@ -166,10 +178,12 @@ def parse_flags(re_conf_str, override=None, negate=False):
         elif override is None:
             re_conf[key] = False
 
+    if re_conf["stem"]:
+        re_conf["token"] = re_conf["stem"]
     return re_conf
 
 
-def search_free(toolname, document, reports, data):
+def search_char(toolname, document, reports, data, config):
     """Search terms in document."""
     toolname = "list-search"
 
@@ -197,15 +211,16 @@ def search_free(toolname, document, reports, data):
         for pattern, message in data:
             for m in re.finditer(pattern, part_str):
                 reports.append(
-                    Report('I', toolname, part.code.slice_match(m, 0, True), message)
+                    Report(config.get("severity", 'I'), toolname,
+                           part.code.slice_match(m, 0, True), message)
                     .set_line_punc(document.body.code, 50, 30))
 
     return reports
 
 
-def search_word(toolname, document, reports, data, config):
+def search_token(toolname, document, reports, data, config):
     """Search terms in document within word boundaries."""
-    toolname = "search-word"
+    toolname = "search-token"
     segmenter = Segmenter()
     porter_stemmer = Porterstemmer()
 
@@ -231,25 +246,31 @@ def search_word(toolname, document, reports, data, config):
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
         for word in segmenter.iter_word(part.code):
             word_str = str(word)
-            if config["ignorecase"]:
+            if config["flags"]["ignorecase"]:
                 word_str = word_str.lower()
-            if config["stem"]:
+            if config["flags"]["stem"]:
                 word_stem = porter_stemmer.stem(word_str, 0, len(word_str)-1)
 
             for pattern, message in data:
-                if config["stem"]:
-                    if not pattern.endswith('|'):
-                        if pattern != word_stem:
-                            continue
-                    else:
-                        if pattern[:-1] != word_str:
-                            continue
+                word_match = word_str
+                if not pattern[2] or pattern[2]["stem"]:
+                    word_match = word_stem
 
-                if pattern != word_str:
+                if pattern[0][pattern[1]] == word_match:
+                    pattern[1] += 1
+                elif pattern[0][0] == word_match:
+                    pattern[1] = 1
+                else:
                     continue
 
-                reports.append(Report('I', toolname, word, message)
-                               .set_line_punc(document.body.code, 50, 30))
+                if pattern[1] == 1:
+                    pattern[3] = word.start_pos
+                if pattern[1] == len(pattern[0]):
+                    reports.append(
+                        Report(config.get("severity", 'I'), toolname,
+                               document.code.slice(pattern[3], word.end_pos, True),
+                               message).set_line_punc(document.code, 50, 30))
+                    pattern[1] = 0
 
     return reports
 
@@ -267,37 +288,34 @@ def search_pre(toolname):
         """Split terms and config."""
         conf = {"message": toolname}
         for key in ("message", "message prefix", "message suffix",
-                "pattern prefix", "pattern suffix"):
+                "pattern prefix", "pattern suffix", "severity"):
             if key in obj:
                 conf[key] = obj[key]
 
         conf["flags"] = parse_flags(obj.get("flags", ""))
         return obj["terms"], conf
 
+    data = []
     if not toolname.endswith("/*"):
         # last path segment as default message.
         terms, conf = split_obj(monostyle_io.get_data_file(toolname), toolname.split('/')[-1])
-        terms_compiled = compile_terms(terms, conf)
+        data.append((compile_terms(terms, conf), conf))
     else:
-        terms_compiled = []
         for key, value in wildcard_leaf(monostyle_io.get_data_file(toolname[:-2])):
             # key as default message.
             terms, conf = split_obj(value, key)
-            terms_compiled.extend(compile_terms(terms, conf))
+            data.append((compile_terms(terms, conf), conf))
 
-    args = dict()
-    args["data"] = terms_compiled
-    args["config"] = conf["flags"]
-
-    return args
+    return {"data": data}
 
 
-def search(toolname, document, reports, data, config):
-    """Switch between free and with boundary."""
-    if not config["word"]:
-        reports = search_free(toolname, document, reports, data)
-    else:
-        reports = search_word(toolname, document, reports, data, config)
+def search(toolname, document, reports, data):
+    """Switch between on char or token level search."""
+    for terms, conf in data:
+        if not conf["flags"]["token"]:
+            reports = search_char(toolname, document, reports, terms, conf)
+        else:
+            reports = search_token(toolname, document, reports, terms, conf)
 
     return reports
 
