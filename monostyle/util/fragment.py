@@ -560,20 +560,36 @@ class Fragment():
     #--------------------
     # Location
 
-    def add_offset(self, offset_pos=None, offset_lincol=None):
-        """Adds an offset to the location."""
-        if offset_pos:
-            self.start_pos += offset_pos
-            self.end_pos += offset_pos
-        if offset_lincol and self.start_lincol:
-            if self.start_lincol[0] == self.end_lincol[0]:
-                self.end_lincol = (self.end_lincol[0] + offset_lincol[0],
-                                   self.end_lincol[1] + offset_lincol[1])
-            else:
-                self.end_lincol = (self.end_lincol[0] + offset_lincol[0], self.end_lincol[1])
+    def move(self, pos=None, lincol=None):
+        """Moves the location."""
+        if pos:
+            self.end_pos = pos + self.span_len(True)
+            self.start_pos = pos
 
-            self.start_lincol = (self.start_lincol[0] + offset_lincol[0],
-                                 self.start_lincol[1] + offset_lincol[1])
+        if lincol and self.start_lincol:
+            if self.start_lincol[0] == self.end_lincol[0]:
+                self.end_lincol = lincol + self.span_len(False)
+            else:
+                self.end_lincol = (lincol[0] + self.span_len(False)[0], self.end_lincol[1])
+
+            self.start_lincol = lincol
+
+        return self
+
+
+    def add_offset(self, pos=None, lincol=None):
+        """Adds an offset to the location."""
+        if pos:
+            self.start_pos += pos
+            self.end_pos += pos
+
+        if lincol and self.start_lincol:
+            if self.start_lincol[0] == self.end_lincol[0]:
+                self.end_lincol += lincol
+            else:
+                self.end_lincol = (self.end_lincol[0] + lincol[0], self.end_lincol[1])
+
+            self.start_lincol += lincol
 
         return self
 
@@ -1370,13 +1386,26 @@ class FragmentBundle():
     #--------------------
     # Location
 
-    def add_offset(self, offset_pos=None, offset_lincol=None):
+    def move(self, pos=None, lincol=None):
+        for piece in self:
+            lincol_piece = None
+            if lincol:
+                if piece.start_lincol[0] == self.start_lincol[0]:
+                    lincol_piece = lincol[0] + self.loc_to_rel(piece.start_lincol)
+                else:
+                    lincol_piece = (lincol[0] + self.loc_to_rel(piece.start_lincol)[0],
+                                    piece.start_lincol[1])
+            piece.move(pos + self.loc_to_rel(piece.start_pos), lincol_piece)
+        return self
+
+
+    def add_offset(self, pos=None, lincol=None):
         first_line = True
         for piece in self:
-            if offset_lincol and first_line and piece.start_lincol[0] != self.start_lincol[0]:
-                offset_lincol = (offset_lincol[0], 0)
+            if lincol and first_line and piece.start_lincol[0] != self.start_lincol[0]:
+                lincol = (lincol[0], 0)
                 first_line = False
-            piece.add_offset(offset_pos, offset_lincol)
+            piece.add_offset(pos, lincol)
         return self
 
 
