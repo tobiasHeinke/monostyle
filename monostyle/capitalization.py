@@ -459,10 +459,20 @@ def typ_case(toolname, document, reports, data, config):
 
 
 def ui_case(toolname, document, reports):
-    """Check the capitalization in definition list terms."""
-    def check_words(part, code, is_first_word, part_name, line, do_fix=False):
+    """Check the capitalization of UI terms in reference lists."""
+    def check_words(part, code, is_first_word, part_name, line, is_field=False):
         buf = None
+        do_fix = False
         ui_terms = {"menu", "context", "node", "tab", "panel", "region", "editor", "editors"}
+        attr_terms = {
+            "align", "alt", "class", "encoding", "end-before", "end-line", "figclass", "figwidth",
+            "header-rows", "height", "literal", "name", "number-lines", "parser",
+            "scale", "start-after", "start-line", "stub-columns", "subtitle", "tab-width",
+            "target", "width", "widths",
+        }
+        if is_field and str(code) not in attr_terms:
+            do_fix = True
+
         for word in segmenter.iter_word(code):
             if buf:
                 if str(buf) in ui_terms:

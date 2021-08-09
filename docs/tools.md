@@ -224,7 +224,7 @@ Find lowercase versions of a type.
 
 ### ui
 
-Check capitalization of user interface labels in definition terms.
+Check capitalization of user interface labels in reference lists.
 
 
 ## Markup 2
