@@ -61,6 +61,7 @@
 		// options: 'severity', 'tool', 'start_pos', 'start_lincol, 'autofix'
 		"sort_key": "",
 
+		// options: 'tool', 'severity', 'filename', 'location', 'output', 'message, 'fix', 'line'
 		"formatting": [
 			["filename", "location", "severity", "output", "message", "fix"],
 			["line"]
@@ -93,6 +94,7 @@
 		"marker_both": "▌",
 
 		"show_autofix": true,
+		"show_autofix_always": false,
 		// options: same as severity_display
 		"autofix_display": "long"
 	},
