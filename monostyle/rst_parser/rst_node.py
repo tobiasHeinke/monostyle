@@ -12,7 +12,7 @@ class NodeRST(Node):
     __slots__ = ('node_name',
                  'indent', 'name_start', 'name', 'name_end', 'id_start', 'id', 'id_end',
                  'head', 'attr', 'body_start', 'body', 'body_end', 'code',
-                 'active', 'is_parsed', 'is_parsing')
+                 'active')
 
 
     def __init__(self, node_name, code):
@@ -42,8 +42,6 @@ class NodeRST(Node):
         self.code = code
 
         self.active = None
-        self.is_parsed = False
-        self.is_parsing = False
 
 
     def append_part(self, name, code, is_full_line=False):
@@ -75,7 +73,7 @@ class NodeRST(Node):
             else:
                 self.code = code.copy()
         else:
-            if code is not None and not self.is_parsing:
+            if code is not None and not self.code.is_overlapped(code, True):
                 self.code.combine(code)
 
 
@@ -133,7 +131,7 @@ class NodeRST(Node):
 class NodePartRST(Node):
     """Child node parts of RST nodes."""
 
-    __slots__ = ('node_name', 'code', 'active', 'is_parsed', 'is_parsing')
+    __slots__ = ('node_name', 'code', 'active')
 
 
     def __init__(self, node_name, code):
@@ -150,8 +148,6 @@ class NodePartRST(Node):
         self.code = code
 
         self.active = None
-        self.is_parsed = False
-        self.is_parsing = False
 
 
     def append_child(self, new_node, prop_code=True):
@@ -159,18 +155,13 @@ class NodePartRST(Node):
         prop_code -- propagate code to parent.
         """
         self.child_nodes.append(new_node)
-        if prop_code:
+        if prop_code and new_node.code is not None:
 
-            if not self.is_parsing:
+            if not self.code or not self.code.is_overlapped(new_node.code, True):
                 self.append_code(new_node.code)
 
-            if (new_node.code is not None and
-                    (self.parent_node.node_name.endswith("-list") or
-                     self.parent_node.node_name.endswith("-table")) and
-                    self.parent_node.parent_node is not None and
-                    not self.parent_node.is_parsing and
-                    not self.parent_node.parent_node.is_parsing):
-                self.parent_node.parent_node.append_code(new_node.code)
+                if self.parent_node.parent_node is not None:
+                    self.parent_node.parent_node.append_code(new_node.code)
 
 
     def append_code(self, code):
@@ -181,10 +172,10 @@ class NodePartRST(Node):
             else:
                 self.code = code.copy()
         else:
-            if code is not None and not self.is_parsing:
+            if code is not None and not self.code.is_overlapped(code, True):
                 self.code.combine(code)
 
-        if code is not None and self.parent_node is not None and not self.parent_node.is_parsing:
+        if code is not None and self.parent_node is not None:
             self.parent_node.append_code(code)
 
 

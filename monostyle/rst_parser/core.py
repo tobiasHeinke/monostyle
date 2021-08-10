@@ -239,7 +239,6 @@ class RSTParser:
         is_first = True
         is_sec = True
         indented_prev = False
-        node.is_parsing = True
         recorder = (({"block-quote",}, self.block_quote),
                     ({"field", "bullet", "enum", "line", "option"}, self.listing),
                     ({"dir", "target", "comment", "substdef", "footdef", "citdef"},
@@ -343,11 +342,9 @@ class RSTParser:
 
 
     def parse(self, doc):
-        doc.is_parsing = True
         doc.body = self.parse_block(doc.body)
         doc.body = self.parse_node(doc.body)
         doc.body = self.parse_node_inline(doc.body)
-        doc.is_parsed = True
         return doc
 
 
@@ -371,11 +368,9 @@ class RSTParser:
                                                         part.code.start_lincol)
 
                             part = self.parse_block(part, ind_first_unknown)
-                            part.is_parsed = True
                             if not part.child_nodes.is_empty():
                                 self.parse_node(part)
 
-            node.is_parsed = True
         return root
 
 
@@ -1079,7 +1074,6 @@ class RSTParser:
             if ((new_node.node_name == "hyperlink" and new_node.body) or
                     (new_node.node_name == "role" and new_node.name)):
                 new_node = self.interpret_inline(new_node)
-            new_node.is_parsed = True
 
             node_after = NodeRST("text", after)
             node_after.append_part("body", after)
