@@ -1146,32 +1146,3 @@ class RSTParser:
             node.id.child_nodes = LinkedList(node.id)
 
         return node
-
-
-# -----------------------------------------------------------------------------
-
-
-def print_node(root, output=None, ind=-1, branch=None, show_loc=False, show_pos=False):
-    if output is None:
-        output = []
-    if branch is None:
-        branch = ""
-
-    ind += 1
-    for node in root.child_nodes:
-        output.append((" " * ind) + node.node_name)
-        for part in node.child_nodes:
-            if part.node_name in {"name", "head", "id", "attr", "body"}:
-                if not part.child_nodes.is_empty():
-                    branch_new = branch + part.node_name[0]
-                    output = print_node(part, output, ind, branch_new, show_loc, show_pos)
-                else:
-                    if show_loc:
-                        code_str = part.code.repr(show_pos)
-                    else:
-                        code_str = str(part.code).replace('\n', '¶')
-
-                    output.append(''.join((" " * ind,"{", branch, part.node_name[0], "} ",
-                                           code_str)))
-
-    return output
