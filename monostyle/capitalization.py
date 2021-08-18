@@ -107,7 +107,7 @@ def heading_caps(toolname, document, reports, re_lib):
     }
     instr_neg = {
         "role": {
-            "kbd": "*", "menuselection": "*", "math": "*"
+            "kbd": "*", "menuselection": "*", "math": "*", "default": "*"
         },
         "literal": "*", "standalone": "*"
     }
@@ -226,7 +226,7 @@ def proper_noun_pre(_):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*", "comment": "*",
         "role": {
-            "kbd": "*", "math": "*"
+            "kbd": "*", "math": "*", "default": "*"
         },
         "literal": "*", "standalone": "*"
     }
@@ -506,9 +506,9 @@ def ui_case(toolname, document, reports):
     }
     instr_neg = {
         "role": {
-            "kbd": "*", "menuselection": "*", "math": "*"
+            "kbd": "*", "menuselection": "*", "math": "*", "default": "*"
         },
-        "standalone": "*", "literal": "*", "substitution": "*"
+        "literal": "*", "standalone": "*", "substitution": "*"
     }
     icon_re = re.compile(r"\([^\)]*?\)\s*\Z")
     arrow_re = re.compile(r"\s*\-+>\s*\b")

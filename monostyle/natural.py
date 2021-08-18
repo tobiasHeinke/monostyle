@@ -54,7 +54,7 @@ def abbreviation_pre(_):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*", "comment": "*",
         "role": {
-            "kbd": "*", "math": "*", "term": "*"
+            "kbd": "*", "math": "*", "term": "*", "default": "*"
         },
         "literal": "*", "standalone": "*"
     }
@@ -204,7 +204,7 @@ def article(toolname, document, reports, re_lib, data):
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*",
-        "role": {"math": "*"},
+        "role": {"math": "*", "default": "*"},
         "literal": "*", "standalone": "*"
     }
 
@@ -483,7 +483,7 @@ def metric(toolname, document, reports):
         "substdef": {"*": ["head"], "unicode": "*", "replace": "*"},
         "target": "*", "comment": "*",
         "role": {
-            "kbd": "*", "menuselection": "*", "math": "*"
+            "kbd": "*", "menuselection": "*", "math": "*", "default": "*"
         },
         "standalone": "*", "literal": "*", "substitution": "*"
     }
@@ -651,7 +651,7 @@ def overuse(toolname, document, reports, config):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*",
         "role": {
-            "kbd": "*", "math": "*"
+            "kbd": "*", "math": "*", "default": "*"
         },
         "literal": "*", "standalone": "*"
     }
@@ -788,7 +788,7 @@ def search_pure(toolname, document, reports, re_lib, config):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*",
         "role": {
-            "kbd": "*", "math": "*"
+            "kbd": "*", "math": "*", "default": "*"
         },
         "literal": "*", "standalone": "*"
     }
@@ -842,7 +842,7 @@ def repeated(toolname, document, reports, config):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*",
         "role": {
-            "kbd": "*", "menuselection": "*", "math": "*"
+            "kbd": "*", "menuselection": "*", "math": "*", "default": "*"
         },
         "literal": "*", "standalone": "*"
     }

@@ -201,9 +201,9 @@ def search_char(toolname, document, reports, data, config):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "comment": "*", "doctest": "*", "target": "*",
         "role": {
-            "kbd": "*", "math": "*"
+            "kbd": "*", "math": "*", "default": "*"
         },
-        "standalone": "*"
+        "literal": "*", "standalone": "*"
     }
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
@@ -238,9 +238,9 @@ def search_token(toolname, document, reports, data, config):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "comment": "*", "doctest": "*", "target": "*",
         "role": {
-            "kbd": "*", "math": "*"
+            "kbd": "*", "math": "*", "default": "*"
         },
-        "standalone": "*"
+        "literal": "*", "standalone": "*"
     }
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):

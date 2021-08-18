@@ -83,7 +83,7 @@ def word_filtered(document):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "doctest": "*", "target": "*", "comment": "*",
         "role": {
-            "kbd": "*", "math": "*"
+            "kbd": "*", "math": "*", "default": "*"
         },
         "literal": "*", "standalone": "*"
     }
