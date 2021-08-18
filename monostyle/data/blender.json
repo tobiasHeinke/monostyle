@@ -10,7 +10,7 @@
 		[["text-?box", "text[ -]?area", "entry[ -](box|field)", "input[ -](box|field)"],
 			"text field"],
 		[["search ?box"], "search field"],
-		[["check[ -]box", "check[ -]?button", "tick[ -]?box", "toggle[ -]button"], "checkbox"],
+		[["check[ -]box", "check[ -]?button", "tick[ -]?box", "toggle[ -]switch"], "checkbox"],
 		[["number input", "number button", "stepper", "spin[ -]?box"], "number field"],
 		[["slide[ -]?bar"], "slider"],
 		[["progress-?bar"], "progress bar"],
