@@ -57,7 +57,7 @@ Monostyle has four modes:
    <dd>To check a file or directory.
       Files can have a line selection at the end split with a colon and
       the span separated by a dash. For example `test.rst:10-25`.
-      If the start or end are ommitted the start and end of the file are used accordingly.
+      If the start or end are omitted the start and end of the file are used accordingly.
    </dd>
 </dl>
 

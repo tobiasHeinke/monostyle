@@ -19,6 +19,10 @@ Find rare or new words. This is a multi tool because it detects:
 - Singulare/plurale tantum (singular/plural-only nouns).
 - Possessive form of inanimate objects.
 
+Options:
+
+- `threshold` (integer): the highest count to report.
+
 
 ## List Search
 
@@ -66,6 +70,10 @@ Explicit search for terms and capitalization.
 
 Find overuse of inline markup which change the font weight or color, etc.
 Especially a high amount of style alternations reduce the readability.
+
+Options:
+
+- `thresholds` (list of floats): first is minimum threshold further values will raise the severity
 
 ### heading-level
 
@@ -153,6 +161,10 @@ Measures the length of segments like paragraphs, sentences and words.
 
 Find repetitive word usage on a broad scale. Mainly to find repeated transitions (e.g. 'however').
 
+Options:
+
+- `thresholds` (list of floats): first is minimum threshold further values will raise the severity.
+
 ### passive
 
 Detect the use of passive voice.
@@ -160,6 +172,10 @@ Detect the use of passive voice.
 ### repeated
 
 Repeated words inside a small range of words.
+
+Options:
+
+- `buf_size` (integer): length in words of the search range.
 
 
 ## Punctuation
@@ -175,6 +191,10 @@ Number and unit formatting.
 ### pairs
 
 Check pairs of parenthesis/brackets, quote marks for not being matched.
+
+Options:
+
+- `max_line_span` (integer): the maximum lines an inline markup can span.
 
 ### whitespace
 
@@ -275,6 +295,10 @@ Images not referenced in the docs.
 
 Monitor files/directories for changes.
 
+Options:
+
+- `files` (list of strings): path to directories (ending with a slash) or files.
+
 
 # Missing Tools
 
@@ -282,3 +306,4 @@ Monitor files/directories for changes.
 - positive language: explain what to do instead of what not to.
 - caps: link titles and emphasis
 - verbosity/ pleonasm
+- agreement: grammatical number of determiner and noun e.g. 'these galaxy'.
