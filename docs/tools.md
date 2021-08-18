@@ -14,14 +14,15 @@ Find rare or new words. This is a multi tool because it detects:
   words that are not in a general dictionary like business and product names.
 - Word choices like not simple words, interjection like 'heck', etc.
 - Compounding/hyphenation (if the words are not used individually like 'well defined').
-- Acronyms and capitalization within a word.
+- Abbreviations (acronyms, initialisms, contractions) and capitalization within a word.
 - Homophones (similar sounding words) when one of the pair is rare.
-- Singulare/plurale tantum (singular/plural-only nouns).
+- Singulare/plurale tantum (singular/plural-only nouns) e.g. information and scissors.
 - Possessive form of inanimate objects.
 
 Options:
 
-- `threshold` (integer): the highest count to report.
+- `threshold` (integer): the highest count to report
+  (within the docs when the lexicon/dictionary was build).
 
 
 ## List Search
@@ -29,7 +30,8 @@ Options:
 Explicit search for terms and capitalization.
 
 - avoid
-  - vague: unspecific verbs like 'make'.
+  - vague: unspecific verbs like 'make'
+    also forming wordy nominalization like 'making a change' instead of 'changing'.
   - qualifier: requires the reader to make an assessment, e.g. 'very' can often be removed.
   - difficulty: simplicity is subjective. Can be condescending and
     not encouraging as it might be intended to.
@@ -52,7 +54,7 @@ Explicit search for terms and capitalization.
   - sidetrack: transitions to secondary topics.
 
 - dev
-  - development: wording for release nodes not belonging in docs and
+  - development: wording for release notes not belonging in docs and
     limitations that might be outdated.
   - CS technical term: software development jargon.
 
@@ -73,7 +75,7 @@ Especially a high amount of style alternations reduce the readability.
 
 Options:
 
-- `thresholds` (list of floats): first is minimum threshold further values will raise the severity
+- `thresholds` (list of floats): first is minimum threshold further values will raise the severity.
 
 ### heading-level
 
@@ -135,7 +137,7 @@ Additional markup conventions.
 ### abbreviation
 
 Find abbreviations/acronyms without an explanation.
-(It will not find explanations that are split by phrases like 'stands for'.)
+It will not find explanations that are split by phrases like 'stands for'.
 
 ### article
 
@@ -151,7 +153,8 @@ Limited grammar linting.
 
 ### hyphen
 
-Search for space-separated or joined versions of hyphened compounds like 'sub step' vs. 'substep' vs. 'sub-step'.
+Search for space-separated or joined versions of hyphened compounds
+like 'sub step' vs. 'substep' vs. 'sub-step'.
 
 ### metric
 
@@ -190,11 +193,11 @@ Number and unit formatting.
 
 ### pairs
 
-Check pairs of parenthesis/brackets, quote marks for not being matched.
+Check pairs of parenthesis, brackets, and quote marks for not being matched.
 
 Options:
 
-- `max_line_span` (integer): the maximum lines an inline markup can span.
+- `max_line_span` (integer): the maximum number of lines an inline markup can span.
 
 ### whitespace
 
@@ -209,7 +212,7 @@ Find specified chars and chars outside of the defined Unicode region.
 
 ### encoding
 
-Check files for Unicode encoding for errors.
+Check files for encoding errors.
 
 ### EOF
 
@@ -228,7 +231,8 @@ Check the title capitalization convention of headings.
 
 ### pos-case
 
-Find uppercase part of speech types in continuous text (either a typo or missing sentence punctuation).
+Find uppercase part of speech types in continuous text
+(either a typo or missing sentence punctuation).
 
 ### proper-noun
 
@@ -240,7 +244,7 @@ Find lowercase at the start of paragraphs, sentences and parenthesis.
 
 ### type
 
-Find lowercase versions of a type.
+Find lowercase versions of Blender-specific types like modifiers, constraints, nodes.
 
 ### ui
 
@@ -267,7 +271,7 @@ Compares the page title with the file name.
 
 ### tool-title
 
-Check if a heading matches the tool name in the admonition reference box.
+Check if a heading matches the tool name in the reference box.
 
 ### unused-targets
 
@@ -302,8 +306,10 @@ Options:
 
 # Missing Tools
 
-- present tense
+- present tense: use only one time level to reduce complexity
+  e.g. don't write 'the button will'.
 - positive language: explain what to do instead of what not to.
+  Describe the effect of the activated option.
 - caps: link titles and emphasis
 - verbosity/ pleonasm
-- agreement: grammatical number of determiner and noun e.g. 'these galaxy'.
+- agreement: grammatical number of determiner and noun e.g. 'these galaxy', and more.
