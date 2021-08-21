@@ -195,8 +195,7 @@ class RSTParser:
         self.warnings.append("{0}:{1}: {2}".format(code.filename, code.start_lincol[0], message))
 
 
-    # -----------------------------------------------------------------------------
-
+    # ------------------------------------------------------------------------
 
     def parse_block(self, node, ind_first_unknown=False):
         lines = []
@@ -421,8 +420,7 @@ class RSTParser:
         return node
 
 
-    # -----------------------------------------------------------------------------
-    # Block
+    # -- Block ---------------------------------------------------------------
 
     def document(self, filename=None, text=None, code=None):
         if filename is None and text is None and code is None:
@@ -1068,9 +1066,7 @@ class RSTParser:
         return node
 
 
-    # -----------------------------------------------------------------------------
-    # Inline
-
+    # -- Inline --------------------------------------------------------------
 
     def inline(self, node, code, name):
         if m := re.search(self.re_lib[name][0], str(code)):

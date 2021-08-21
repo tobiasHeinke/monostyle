@@ -101,8 +101,7 @@ class Report():
         self.fix = fix
 
 
-    #--------------------
-    # Severity
+    # -- Severity ------------------------------------------------------------
 
     fatal = 'F'
     error = 'E'
@@ -184,8 +183,7 @@ class Report():
                               len(severities) - 1)]
 
 
-    #--------------------
-    # Message
+    # -- Message -------------------------------------------------------------
 
     quantity = MessageTemplate("{what} {?where} {?how}").substitute
     existing = MessageTemplate("{what} {?where}").substitute
@@ -250,8 +248,7 @@ class Report():
         return str(number) + " " + subject
 
 
-    #--------------------
-    # Fix
+    # -- Fix -----------------------------------------------------------------
 
     fix_map = (
         {"letter": "/_/",
@@ -271,8 +268,7 @@ class Report():
         "shape": "\U0001F6A9\uFE0E"})
 
 
-    #--------------------
-    # Line
+    # -- Line ----------------------------------------------------------------
 
     def set_line_lineno(self, code, start_end=True):
         """Extract a single line.
@@ -354,8 +350,7 @@ class Report():
         return self
 
 
-    #--------------------
-
+    # ------------------------------------------------------------------------
 
     def repr(self, options=None):
         def join_entries(entries, options, formatting):
@@ -505,8 +500,7 @@ class Report():
                           self.line.copy(), self.fix.copy())
 
 
-#------------------------
-
+# ----------------------------------------------------------------------------
 
 def options_overide(options=None):
     """Override the default print options."""

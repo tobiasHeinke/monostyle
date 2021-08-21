@@ -253,8 +253,8 @@ def update(path=None, rev=None):
             filenames_conflicted.add(filename)
     return filenames_conflicted
 
-#------------------------
 
+# ----------------------------------------------------------------------------
 
 def patch_flavor(filename):
     """Detect whether the patch is Git flavor."""

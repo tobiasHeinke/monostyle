@@ -65,14 +65,14 @@ class Fragment():
     def get_end(self, pos_lincol):
         return self.end_pos if pos_lincol else self.end_lincol
 
-    #--------------------
-    # Filename
+
+    # -- Filename ------------------------------------------------------------
 
     def has_consistent_filenames(self):
         return True
 
-    #--------------------
-    # Content
+
+    # -- Content -------------------------------------------------------------
 
     def extend(self, new_content, keep_end=False):
         """Adds lines to the content. Join first with last if not newline end."""
@@ -557,8 +557,8 @@ class Fragment():
     def sort(self, *_):
         return None
 
-    #--------------------
-    # Location
+
+    # -- Location ------------------------------------------------------------
 
     def move(self, pos=None, lincol=None):
         """Moves the location."""
@@ -749,8 +749,8 @@ class Fragment():
     def is_complete(self, *_):
         return True
 
-    #--------------------
-    # Size
+
+    # -- Size ----------------------------------------------------------------
 
     def __len__(self):
         """Returns the content char length."""
@@ -789,8 +789,8 @@ class Fragment():
     def is_empty(self):
         return len(self.content) == 0
 
-    #--------------------
-    # Iterate, Compare & Convert
+
+    # -- Iterate, Compare & Convert ------------------------------------------
 
     def __iter__(self):
         yield self
@@ -950,8 +950,8 @@ class FragmentBundle():
     def get_end(self, pos_lincol):
         return self.end_pos if pos_lincol else self.end_lincol
 
-    #--------------------
-    # Filename
+
+    # -- Filename ------------------------------------------------------------
 
     def has_consistent_filenames(self):
         """All filenames are the same."""
@@ -962,8 +962,8 @@ class FragmentBundle():
             prev = piece
         return True
 
-    #--------------------
-    # Content
+
+    # -- Content -------------------------------------------------------------
 
     def extend(self, new_content, keep_end=False):
         if not self:
@@ -1383,8 +1383,8 @@ class FragmentBundle():
                              (lambda piece: (piece.get_end(pos_lincol),
                                              piece.get_start(pos_lincol))))
 
-    #--------------------
-    # Location
+
+    # -- Location ------------------------------------------------------------
 
     def move(self, pos=None, lincol=None):
         for piece in self:
@@ -1615,8 +1615,8 @@ class FragmentBundle():
             prev = piece
         return True
 
-    #--------------------
-    # Size
+
+    # -- Size ----------------------------------------------------------------
 
     def __len__(self):
         if not self:
@@ -1678,8 +1678,8 @@ class FragmentBundle():
                 return False
         return True
 
-    #--------------------
-    # Iterate, Compare & Convert
+
+    # -- Iterate, Compare & Convert ------------------------------------------
 
     def __iter__(self):
         """Iterate over bundle list."""

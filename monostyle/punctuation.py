@@ -289,7 +289,7 @@ def number_pre(_):
     re_lib["percentlimit"] = (re.compile(r"\D(?:0|100)%"),
         Report.option(what="percentage limits", with_what="written out no or fully"))
 
-    #-----------------
+    # ------------------------------------------------------------------------
 
     re_lib["dimension"] = (re.compile(r"\b[0-9]d\b"),
         Report.misformatted(what="lowercase dimension letter"))

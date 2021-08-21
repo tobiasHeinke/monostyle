@@ -186,8 +186,7 @@ class Lexicon:
                     tuple(sorted(data.difference(other))))
 
 
-    #------------------------
-
+    # ------------------------------------------------------------------------
 
     def norm_punc(self, word_str):
         """Normalize the word's punctuation."""

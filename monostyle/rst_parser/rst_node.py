@@ -236,8 +236,7 @@ class NodePartRST(Node):
         return str(self.code)
 
 
-# -----------------------------------------------------------------------------
-
+# ----------------------------------------------------------------------------
 
 def print_node(root, output=None, ind=-1, branch=None, show_loc=False, show_pos=False):
     if output is None:

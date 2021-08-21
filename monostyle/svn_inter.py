@@ -189,8 +189,7 @@ def update(path, rev=None):
     return exec_command(cmd)
 
 
-# -------------
-
+# ----------------------------------------------------------------------------
 
 def add(path):
     if path == "":
@@ -219,8 +218,7 @@ def move(src, dst):
     return exec_command(cmd)
 
 
-# -------------
-
+# ----------------------------------------------------------------------------
 
 def prop_get(path, name):
     if path == "":
