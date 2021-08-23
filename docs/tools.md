@@ -22,7 +22,7 @@ Find rare or new words. This is a multi tool because it detects:
 Options:
 
 - `threshold` (integer): the highest count to report
-  (within the docs when the lexicon/dictionary was build).
+  (within the docs when the lexicon/dictionary has been built).
 
 
 ## List Search
@@ -136,7 +136,7 @@ Additional markup conventions.
 
 ### abbreviation
 
-Find abbreviations/acronyms without an explanation.
+Find abbreviations without an explanation.
 It will not find explanations that are split by phrases like 'stands for'.
 
 ### article
@@ -297,7 +297,7 @@ Images not referenced in the docs.
 
 ### monitor
 
-Monitor files/directories for changes.
+Monitor files or directories for changes.
 
 Options:
 
@@ -306,8 +306,8 @@ Options:
 
 # Missing Tools
 
-- present tense: use only one time level to reduce complexity
-  e.g. don't write 'the button will'.
+- present tense: use only one time level to reduce the complexity
+  e.g. do not write 'clicking the button will'.
 - positive language: explain what to do instead of what not to.
   Describe the effect of the activated option.
 - caps: link titles and emphasis
