@@ -52,7 +52,7 @@ def abbreviation_pre(_):
             "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*", "target": "*", "comment": "*",
+        "comment": "*", "doctest": "*", "target": "*",
         "role": {
             "kbd": "*", "math": "*", "term": "*", "default": "*"
         },
@@ -203,7 +203,7 @@ def article(toolname, document, reports, re_lib, data):
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*", "target": "*",
+        "comment": "*", "doctest": "*", "target": "*",
         "role": {"math": "*", "default": "*"},
         "literal": "*", "standalone": "*"
     }
@@ -481,7 +481,7 @@ def metric(toolname, document, reports):
         },
         "def": {"*": ["head"]},
         "substdef": {"*": ["head"], "unicode": "*", "replace": "*"},
-        "target": "*", "comment": "*",
+        "comment": "*", "doctest": "*", "target": "*",
         "role": {
             "kbd": "*", "menuselection": "*", "math": "*", "default": "*"
         },
@@ -649,7 +649,7 @@ def overuse(toolname, document, reports, config):
             "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*", "target": "*",
+        "comment": "*", "doctest": "*", "target": "*",
         "role": {
             "kbd": "*", "math": "*", "default": "*"
         },
@@ -786,7 +786,7 @@ def search_pure(toolname, document, reports, re_lib, config):
             "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*", "target": "*",
+        "comment": "*", "doctest": "*", "target": "*",
         "role": {
             "kbd": "*", "math": "*", "default": "*"
         },
@@ -840,7 +840,7 @@ def repeated(toolname, document, reports, config):
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*", "target": "*",
+        "comment": "*", "doctest": "*", "target": "*",
         "role": {
             "kbd": "*", "menuselection": "*", "math": "*", "default": "*"
         },

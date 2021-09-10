@@ -328,7 +328,7 @@ def number(toolname, document, reports, re_lib):
             "code-block": "*", "default": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*", "comment": "*",
+        "comment": "*", "doctest": "*", "target": "*",
         "role": {"kbd": "*", "default": "*"},
         "literal": "*", "standalone": "*", "footref": "*", "citref": "*"
     }
@@ -373,7 +373,7 @@ def pairs(toolname, document, reports, re_lib, config):
         "dir": {"code-block": "*", "default": "*", "math": "*",
                 "youtube": "*", "vimeo": "*", "peertube": "*"},
         "substdef": {"unicode": "*", "replace": "*"},
-        "doctest": "*", "target": "*", "comment": "*",
+        "comment": "*", "doctest": "*", "target": "*",
         "role": {"kbd": "*", "menuselection": "*", "math": "*", "default": "*"},
         "literal": "*", "standalone": "*"
     }

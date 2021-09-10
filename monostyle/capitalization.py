@@ -168,7 +168,7 @@ def pos_case(toolname, document, reports):
         },
         "def": {"*": ["head"]},
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*", "target": "*", "comment": "*",
+        "comment": "*", "doctest": "*", "target": "*",
         "role": "*", "emphasis": "*", "int-target": "*", "hyperlink": "*",
         "literal": "*", "standalone": "*"
     }
@@ -224,7 +224,7 @@ def proper_noun_pre(_):
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*", "target": "*", "comment": "*",
+        "comment": "*", "doctest": "*", "target": "*",
         "role": {
             "kbd": "*", "math": "*", "default": "*"
         },

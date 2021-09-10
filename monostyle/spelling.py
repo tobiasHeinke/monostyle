@@ -81,7 +81,7 @@ def word_filtered(document):
             "parsed-literal": "*", "math": "*", "youtube": "*", "vimeo": "*", "peertube": "*"
         },
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
-        "doctest": "*", "target": "*", "comment": "*",
+        "comment": "*", "doctest": "*", "target": "*",
         "role": {
             "kbd": "*", "math": "*", "default": "*"
         },
