@@ -159,6 +159,7 @@
 		"asks?",
 		"chooses",
 		"comes? up",
+		"complains?",
 		"concern",
 		"controls",
 		"decides",
@@ -313,6 +314,7 @@
 		"(un)usual(ly)?"
 	],
 	"ignore":[
+		"alternative(ly)?",
 		"appears? to",
 		"approximat(e(ly)?|ions?)",
 		"around",
@@ -442,6 +444,7 @@
 				"hot[ -]?key",
 				"key(board)? comb(ination|o)"],
 			"shortcut"],
+		[["alert(ing|s)?", "notifi(cations?|e[ds])"], "displays/shows a message, icon, dialog"],
 		["drag ('n|&) drop", "drag-and-drop"],
 		["go(ing)? in(to)?", ["switch to", "enter", "open"]],
 		["gr[ae]y(ed)?[ -]out", ["not /unavailable", "don't mention if not relevant"]],
@@ -450,7 +453,6 @@
 		[["lift", "let go"], "release (the button)"],
 		["manipulat(e[ds]?|ing)", "edit..."],
 		"(moved?|drag(ged)?) (it )?around",
-		["notifi(cations?|e[ds])", "displays/shows a message, icon, dialog"],
 		"occupie[ds]",
 		["open(ing|s)? up", "just open"],
 		["plug(ged)? in(to)?", "link"],
@@ -477,6 +479,7 @@
 		"hover",
 		"navigate to",
 		"point to",
+		"pick",
 		"togglable",
 		"unselect",
 		"(un)?set"
@@ -504,6 +507,7 @@
 		"nice(ly|r)?",
 		"nifty",
 		"not only",
+		"offer(ed|ing|s)?",
 		"perfect(ly)?",
 		"popular",
 		"possibilit(y|ies)",

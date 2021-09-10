@@ -150,9 +150,11 @@
 		"request, report, roadmap, ticket, concern, feedback, approval, triage",
 		"since, still",
 		"specifications?, standard, deviat(es?|ing), (non-)?normative, formulice, meets",
+		"comply, conform",
 		"(fast|slow) pace, rampant, stagnant",
 		"troubles?, problems?, friction, recover",
 		"the new",
+		"teach|taught",
 		"todo, fix me",
 		"transition(ing|s)?"
 	]

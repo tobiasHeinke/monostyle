@@ -33,9 +33,10 @@
 		[["node graph", "node map"], "node tree"],
 		[["noodles"], "node setup"],
 		[["node wires?"], "node link"],
+		[["play[ -]head", "!-I:playhead", "time cursor"], "Playhead"],
 		[["command(?![ -]line)"], "tool (if not console command)"],
 		[["windows?"], "as an UI element only for an OS window"],
-		[["title[ -]bar"], "titlebar"],
+		[["title[ -]bar"], "titlebar (of the OS window)"],
 
 		[["top header", "Info editor header"], "Topbar"],
 		[["tools? ?shelf"], "Sidebar"],
