@@ -97,7 +97,7 @@ def apply(filename, tools, reports_unfixed, rst_parser):
         changes_file = filter_tool_overlap(changes_file, changes)
         reports_unfixed.extend(unlocated)
 
-    if changes_file.is_empty():
+    if not changes_file:
         return reports_unfixed
 
     editor = Editor(source if source is not None else Fragment(filename, text), changes_file)

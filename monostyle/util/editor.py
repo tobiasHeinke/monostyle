@@ -73,8 +73,10 @@ class Editor:
         virtual -- return the output text or write it to the file.
         """
         text_src = self._read()
-        if self._changes.is_empty() or text_src is None:
-            return text_src
+        if not self._changes or text_src is None:
+            if not use_conflict_handling:
+                return text_src
+            return text_src, self._changes
 
         self._remove_doubles()
         conflicted = []
