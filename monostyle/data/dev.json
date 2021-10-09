@@ -139,7 +139,7 @@
 		"audit, vulnerability, compromise",
 		"branch, fork, build",
 		"caveat, pitfall, gotcha",
-		"clean up, polish, restore, adapt, modernize",
+		"clean up, polish, restore, adapt, modernize, remade",
 		"detect, discover, eliminate",
 		"distribution, service, ship, bundle",
 		"end[ -]of[ -]life, life(cycle|time), out-of-band",
@@ -153,7 +153,7 @@
 		"comply, conform",
 		"(fast|slow) pace, rampant, stagnant",
 		"troubles?, problems?, friction, recover",
-		"the new",
+		"the new, novel",
 		"teach|taught",
 		"todo, fix me",
 		"transition(ing|s)?"
@@ -242,7 +242,7 @@
 		"exhaust(ed|ing|ion|s)?",
 		"(ex|in)trinsic",
 		"expandos?",
-		"expos(ed|ing)",
+		"expos(e[ds]?|ing)",
 		"express(es|ing|ions?)?",
 		"extens(ions?|ible|ibility)",
 		"fall(ing|s)?[ -]?backs?",
@@ -394,7 +394,7 @@
 		"format(ted|ting), bounds, conversion, containment, deep, shallow, transient",
 		"consist, fault tolerant, flex, effort, express, interoperate, port, robust, scale, use",
 		"cohesion, coupling, connascence",
-		"sources?, p(-|seudo)code"
+		"sources?, p(-|seudo)code, cruft"
 	]
 }
 }

@@ -255,7 +255,7 @@
 		"ambivalent",
 		"appropriat(e(ly)?|ions?)",
 		"arbitrar(ily|y)",
-		"as expected",
+		"as (anticipated|expected)",
 		"assum(ed?|ing|ption)",
 		"attempt(ed|ing|s)?",
 		"(be |make |un)sure",
@@ -309,9 +309,10 @@
 		"tr(ied|y|ying)",
 		"typical(ly)?",
 		"(un)?likel(ier|y(ness)?)",
+		"(un)?predict(ab(le|ility))",
 		"(un)?succe(eds|ss(ful)?)",
 		"(un)?surpris(e|ing(ly)?)",
-		"(un)usual(ly)?"
+		"(un)?usual(ly)?"
 	],
 	"ignore":[
 		"alternative(ly)?",
@@ -357,7 +358,7 @@
 		"(?<!even )(?-i:though)",
 		"fee?d(ing|s)?",
 		"find yourself",
-		"for (that|you)",
+		"for (th(at|ese|is|ose)|you)",
 		"get (an?|the)",
 		"get(s|ting)",
 		"going(?! to)",
@@ -379,7 +380,7 @@
 		"pretty",
 		"remember",
 		"roughly",
-		"say you|let's say",
+		"say you|let's say", "!-B\\bsay,\\S",
 		"seldom",
 		"senses?",
 		"serve to",
@@ -388,6 +389,7 @@
 		"so (forth|now|on|this|to|what)",
 		"some(how|what)",
 		"some sort",
+		"th(at|ese|is|ose) ones?",
 		"there,? you", "!-B\\bthere\\S",
 		"think",
 		"to get",
@@ -481,6 +483,7 @@
 		"point to",
 		"pick",
 		"togglable",
+		["typ(e|ing)", "don't use for shortcuts"],
 		"unselect",
 		"(un)?set"
 	]
