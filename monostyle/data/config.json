@@ -14,7 +14,7 @@
 			"ext": ".rst"
 		},
 		"capitalization": {
-			"tools": ["heading-caps", "pos-case", "start-case", "ui"],
+			"tools": ["abbr-caps", "heading-caps", "pos-case", "start-case", "ui"],
 			"ext": ".rst"
 		},
 		"punctuation": {

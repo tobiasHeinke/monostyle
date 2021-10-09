@@ -221,6 +221,10 @@ Check blank lines at the end of the file.
 
 ## Capitalization
 
+### abbr-caps
+
+Checks if the uppercase letters of an abbreviation match those of the explanation.
+
 ### admonition-title
 
 Check the title case convention of the first line of admonitions.

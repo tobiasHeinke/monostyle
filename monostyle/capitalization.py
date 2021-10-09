@@ -53,6 +53,33 @@ def titlecase(part_of_speech, word, is_first_word, is_last_word, name):
         return message, fix
 
 
+def abbr_caps_pre(_):
+    char_catalog = CharCatalog()
+    re_lib = dict()
+    re_lib["noupper"] = re.compile(r"[^" + char_catalog.unicode_set("A-Z", 0, 7) + r"]")
+    return {"re_lib": re_lib}
+
+
+def abbr_caps(toolname, document, reports, re_lib):
+    """Check if uppercase letters of an abbreviation match those of the explanation."""
+    for node in rst_walker.iter_node(document.body, "role"):
+        if rst_walker.is_of(node, "*", "abbr"):
+            if not node.id:
+                reports.append(
+                    Report('F', toolname, node.code, "abbreviation without an explanation"))
+                continue
+
+            uppers_head = re.sub(re_lib["noupper"], "", str(node.head))
+            uppers_id = re.sub(re_lib["noupper"], "", str(node.id))
+            if uppers_head != uppers_id:
+                reports.append(
+                    Report('W', toolname, node.code,
+                           "abbreviation uppercase mismatch: {0} - {1}"
+                           .format(uppers_head, uppers_id)))
+
+    return reports
+
+
 def admonition_title(toolname, document, reports):
     """Case of admonition titles."""
     segmenter = Segmenter()
@@ -561,6 +588,7 @@ def ui_case(toolname, document, reports):
 
 
 OPS = (
+    ("abbr-caps", abbr_caps, abbr_caps_pre),
     ("admonition-title", admonition_title, None),
     ("heading-caps", heading_caps, heading_caps_pre),
     ("pos-case", pos_case, None),
