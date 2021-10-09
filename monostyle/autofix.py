@@ -72,14 +72,16 @@ def apply(filename, tools, reports_unfixed, rst_parser):
                 if entry_old.is_overlapped(entry, False) and entry_old.isspace():
                     break
             else:
-                new_changes.combine(entry_old, check_align=False, merge=False)
+                new_changes.combine(entry_old, check_align=False, pos_lincol=False, merge=False)
 
-        return new_changes.combine(changes, check_align=False, merge=False)
+        return new_changes.combine(changes, check_align=False, pos_lincol=False, merge=False)
 
     filename = monostyle_io.path_to_abs(filename, "doc")
     filename, text = monostyle_io.single_text(filename)
     if text is None:
-        return reports_unfixed.extend(tools[1])
+        for reports in tools.values():
+            reports_unfixed.extend(reports)
+        return reports_unfixed
 
     changes_file = FragmentBundle()
     source = None
@@ -87,7 +89,7 @@ def apply(filename, tools, reports_unfixed, rst_parser):
         if tool == "reflow":
             continue
         for report in reports:
-            changes_file.combine(report.fix, check_align=False, merge=False)
+            changes_file.combine(report.fix, check_align=False, pos_lincol=False, merge=False)
 
     if "reflow" in tools.keys():
         document = rst_parser.parse(rst_parser.document(filename, text))

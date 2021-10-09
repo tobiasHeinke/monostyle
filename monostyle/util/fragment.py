@@ -585,11 +585,11 @@ class Fragment():
 
         if lincol and self.start_lincol:
             if self.start_lincol[0] == self.end_lincol[0]:
-                self.end_lincol += lincol
+                self.end_lincol = (self.end_lincol[0] + lincol[0], self.end_lincol[1] + lincol[1])
             else:
                 self.end_lincol = (self.end_lincol[0] + lincol[0], self.end_lincol[1])
 
-            self.start_lincol += lincol
+            self.start_lincol = (self.start_lincol[0] + lincol[0], self.start_lincol[1] + lincol[1])
 
         return self
 
