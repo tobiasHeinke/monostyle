@@ -47,7 +47,7 @@ def lexicon_write_csv(lexicon):
     try:
         with open(lex_filename, 'w', newline='', encoding='utf-8') as csvfile:
             csv_writer = csv.writer(csvfile)
-            for entry in lexicon.join():
+            for entry in sorted(lexicon.join(), key=lambda entry: entry[1], reverse=True):
                 csv_writer.writerow(entry)
                 count += 1
 
