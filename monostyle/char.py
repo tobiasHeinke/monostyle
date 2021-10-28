@@ -76,7 +76,11 @@ def encoding(toolname, reports):
 
 def eof_pre(_):
     args = dict()
-    args["re_lib"] = {"end": re.compile(r"\n{2}\Z|(?<!\n)\Z")}
+    char_catalog = CharCatalog()
+    args["re_lib"] = {
+        "end": re.compile("".join((r"\n{2,}\Z|",
+                                   r"\n[", char_catalog.data["whitespace"]["inline"], r"]+\Z|"
+                                   r"(?<!\n)\Z")))}
     args["config"] = dict()
     return args
 
@@ -87,11 +91,11 @@ def eof(toolname, document, reports, re_lib, config):
         if m := re.search(re_lib["end"], str(document.code)):
             output = document.body.code.slice_match(m, 0, True)
             reports.append(
-                Report('W', toolname, output.clear(True),
+                Report('W', toolname, output.copy().clear(True),
                        Report.existing(what=Report.write_out_quantity(
                                                 str(m.group(0)).count('\n'), "blank line"),
                                        where="at the end of file"),
-                       fix=output.copy().replace('\n')))
+                       fix=output.replace('\n')))
 
     return reports
 

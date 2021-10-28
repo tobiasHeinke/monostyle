@@ -84,7 +84,8 @@
 	"interpunct": "·",
 	"dash": "‒–—―⁓⸺⸻",
 	"slash": "/\\\\⁄⧸",
-	"vert_line": "|¦‖⦀"
+	"vert_line": "|¦‖⦀",
+	"caret": "^‸⁁⎀"
 },
 "connector": {
 	"apostrophe": "'’",

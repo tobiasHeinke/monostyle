@@ -136,7 +136,7 @@ Additional markup conventions.
 
 ### abbreviation
 
-Find abbreviations without an explanation.
+Find abbreviations without or used before there introduction.
 It will not find explanations that are split by phrases like 'stands for'.
 
 ### article
@@ -217,6 +217,8 @@ Check files for encoding errors.
 ### EOF
 
 Check blank lines at the end of the file.
+To remove multiple blank lines containing other whitespaces
+the Whitespace tool has to be run first.
 
 
 ## Capitalization
