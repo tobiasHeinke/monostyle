@@ -460,10 +460,8 @@ class RSTParser:
                 if not re.match(self.re_lib["trans"][0], line_info["line_str_next"]):
                     # only if short overline else warn
                     node.active.node_name = "text"
-                    node.active.indent.code.combine(node.active.name_start.code)
-                    node.active.body = node.active.indent
+                    node.active.body = node.active.name_start
                     node.active.body.node_name = "body"
-                    node.active.indent = None
                     node.active.name_start = None
                     return node
 
