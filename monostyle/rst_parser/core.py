@@ -681,7 +681,8 @@ class RSTParser:
                 (not is_text or line_info["is_block_end"])):
 
             if node.active and not is_text:
-                if node.active.node_name == "dir" and node.active.name is None:
+                if (node.active.node_name == "dir" and node.active.name is None and
+                        (not node.active.body or node.active.body.code.isspace())):
                     node = quoted(node, line, line_info)
                 else:
                     if node.active:
