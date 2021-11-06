@@ -214,7 +214,11 @@ class RSTParser:
             if ind_m := re.match(ind_re, line_str):
                 ind_abs = line.loc_to_abs((0, ind_m.end(1)))[1]
                 if block_ind is None:
-                    block_ind = ind_abs
+                    # alternative when head first indent is unknown
+                    if (not ind_first_unknown or
+                            line.start_lincol[0] != node.code.start_lincol[0] or
+                            (node.active and node.active.node_name != "text")):
+                        block_ind = ind_abs
                 else:
                     block_ind = min(block_ind, ind_abs)
 
@@ -236,8 +240,6 @@ class RSTParser:
         block_ind = block_ind if block_ind is not None and node.parent_node.parent_node else 0
         root = node
 
-        is_first = True
-        is_sec = True
         indented_prev = False
         recorder = (({"block-quote",}, self.block_quote),
                     ({"field", "bullet", "enum", "line", "option"}, self.listing),
@@ -267,14 +269,10 @@ class RSTParser:
                     line_info["indented"] = False
                     line_info["is_block_start"] = True
 
-                if is_first and line.start_lincol[1] != 0:
+                if (ind_first_unknown and
+                        line.start_lincol[0] == root.code.start_lincol[0] and
+                        line.start_lincol[1] != 0):
                     line_info["indented"] = False
-                if is_sec and not is_first:
-                    # alternative when head first indent as unknown
-                    if ind_first_unknown and (not node.active or node.active.node_name == "text"):
-                        line_info["indented"] = False
-                    is_sec = False
-                is_first = False
             else:
                 # blank line does not change indented
                 line_info["indented"] = indented_prev
@@ -361,11 +359,12 @@ class RSTParser:
                         if not part.child_nodes.is_empty():
                             self.parse_node(part)
                         else:
-                            ind_first_unknown = False
-                            if part.prev and part.prev.node_name != "indent":
-                                ind_first_unknown = (lambda f, c: f[0] == c[0] and f[1] != c[1])(
-                                                        node.child_nodes.first().code.start_lincol,
-                                                        part.code.start_lincol)
+                            ind_first_unknown = bool(
+                                (part.node_name == "head" or
+                                 (node.node_name in {"field", "option", "doctest"} and
+                                  part.node_name == "body")) and
+                                 node.child_nodes.first().code.start_lincol[0] ==
+                                 part.code.start_lincol[0])
 
                             part = self.parse_block(part, ind_first_unknown)
                             if not part.child_nodes.is_empty():
