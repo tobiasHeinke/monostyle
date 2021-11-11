@@ -91,6 +91,7 @@
 		"patch(e[ds])?",
 		"permanent(ly)?",
 		"plan(n(ed|ings?)|s)?",
+		"port(ed|ing|s)",
 		"((post|pre|un)-?)?release[ds]?",
 		"priorit(ized?|y)",
 		"profiling",
@@ -155,8 +156,9 @@
 		"troubles?, problems?, friction, recover",
 		"the new, novel",
 		"teach|taught",
-		"todo, fix me",
-		"transition(ing|s)?"
+		"todo, fix me, TB[ACD], to be",
+		"transition(ing|s)?",
+		"you will notice, works again, now possible"
 	]
 },
 "cs-jargon":{
@@ -316,7 +318,7 @@
 		"protected",
 		"protocols?",
 		"public",
-		"quer(ies|y)",
+		"quer(ie[ds]|y)",
 		"queues?",
 		"read[ -]?(out|in)s?",
 		"(re)?boot(ed|ing|s)?",
@@ -382,11 +384,11 @@
 		"collection, component, record",
 		"context, domain, environment, workspaces?, ecosystem",
 		"curried, daemon, driver, hook, action, signal, echo, threshold",
-		"(de)?reference, (un)?define, (un)?bind, (un)?pack, dangle",
+		"(de)?reference, (un)?define, (un)?bind, (un)?pack, swap, dangle",
 		"greedy, (meta)?heuristic, brute, succinct, fuzzy, laz(il)?y, loss(y|less), exhaustive",
 		"adaptive, agnostic, dynamic, strict, relax",
 		"graceful, sloppy, (in)?elegant, clumsy, hastily, legible, correct, readable, descriptive",
-		"cobbled up, bunched up, crammed, muddled, repetitive, bloated, clean, dirty",
+		"cobbled up, bunched up, crammed, muddled, repetitive, bloated, bulky, clean, dirty",
 		"(un)?stable, mature, half-baked, secure, performant",
 		"instan(ced?|ing|tiate[ds]?|tiation), clone, override",
 		"interface, library, pipe(lines?)?, proxy, shim",
@@ -394,6 +396,7 @@
 		"format(ted|ting), bounds, conversion, containment, deep, shallow, transient",
 		"consist, fault tolerant, flex, effort, express, interoperate, port, robust, scale, use",
 		"cohesion, coupling, connascence",
+		"applicative, functor, monad",
 		"sources?, p(-|seudo)code, cruft"
 	]
 }
