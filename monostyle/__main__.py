@@ -170,7 +170,7 @@ def apply(mods, path, rst_parser, parse_options, version_options=None):
     if not path:
         path = monostyle_io.path_to_abs("")
     print_options = options_overide()
-    show_current = True
+    show_current = bool(version_options)
     filename_prev = None
     if parse_options["resolve"]:
         titles, targets = env.get_link_titles(rst_parser)
