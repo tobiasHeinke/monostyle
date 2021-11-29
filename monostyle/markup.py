@@ -65,6 +65,7 @@ def highlight(toolname, document, reports, config):
     score_global = 0
     counter = 0
     line_trim_re = re.compile(r"^\s*(\S.*?)\s*$", re.MULTILINE)
+    space_re = re.compile(r"\S\s")
     text_chars = 0
     for node_parent in rst_walker.iter_node(document.body, {"text", "dir", "sect"}, False):
         if node_parent.node_name != "text":
@@ -125,6 +126,19 @@ def highlight(toolname, document, reports, config):
                                                           score_cur, text_chars)
             score_cur = score_next
             text_chars = 0
+
+            # individual whitespace-based word count
+            if node.node_name in {"emphasis", "strong"}:
+                space_counter = sum(1 for _ in re.finditer(space_re, str(node.body.code)))
+                threshold_len = (4, 6) if node.node_name == "emphasis" else (3, 5)
+                if space_counter >= threshold_len[0]:
+                    reports.append(
+                        Report(Report.map_severity(threshold_len, space_counter),
+                               toolname, node.body.code.copy().clear(True),
+                               Report.existing(what="long",
+                                               where=node.node_name +
+                                                     ": {0} words".format(space_counter + 1)),
+                               node.body.code))
 
     if score_cur:
         reports, score_global, counter = evaluate(reports, score_global, counter,

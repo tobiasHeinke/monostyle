@@ -72,6 +72,7 @@ Explicit search for terms and capitalization.
 
 Find overuse of inline markup which change the font weight or color, etc.
 Especially a high amount of style alternations reduce the readability.
+While individual markups are measured by word count.
 
 Options:
 
