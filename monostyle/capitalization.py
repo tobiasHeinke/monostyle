@@ -437,7 +437,11 @@ def typ_case_pre(_):
                         pattern_str.extend(words[index + 1:])
                         term.append(r"\b" + " ".join(pattern_str))
 
-            terms.append([term, head])
+            for _, head_rec in terms:
+                if head_rec == head:
+                    break
+            else:
+                terms.append([term, head])
 
             break
 
@@ -449,7 +453,7 @@ def typ_case_pre(_):
         ("Node", "compositing/types/", ["groups"]),
         ("Node", "render/shader_nodes/", ["osl"]),
         ("Node", "editors/texture_node/types/", []),
-        ("Node", "modeling/modifiers/nodes/", []),
+        ("Node", "modeling/geometry_nodes/", ["group"]),
         ("Strip", "video_editing/sequencer/strips/", [])
     )
     terms = []
@@ -477,7 +481,6 @@ def typ_case_pre(_):
     args = dict()
     args["config"] = {}
     args["data"] = listsearch.compile_terms(terms, {"flags": listsearch.parse_flags("")})
-
     return args
 
 
