@@ -410,7 +410,7 @@ def style_extra(toolname, document, reports):
                     Report('W', toolname, node.id.code,
                            Report.missing(what="underscore",
                                           where="after external link (same tab)"),
-                           fix=node.body_end.code.copy().clear(True).replace("_")))
+                           fix=node.body_end.code.copy().clear(False).replace("_")))
 
         elif node.node_name == "target":
             next_node = node.next
@@ -450,7 +450,7 @@ def style_extra(toolname, document, reports):
                                             "warning", "seealso"}):
             if not node.body and node.head.code.span_len(False)[0] > 2:
                 reports.append(
-                    Report('I', toolname, node.head.code.clear(True),
+                    Report('I', toolname, node.head.code.copy().clear(True),
                            Report.misplaced(what="long content",
                                             where="of " + rst_walker.write_out(node.node_name,
                                                                                node.name),
