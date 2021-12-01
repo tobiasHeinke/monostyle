@@ -8,7 +8,7 @@
 		[["menu[ -]?bar"], ["menus", "header"]],
 		[["tool[ -]bar", "!-I:toolbar"], "Toolbar"],
 		[["top[ -]bar", "!-I:topbar"], "Topbar"],
-		[["side[ -]bar", "!-I:sidebar"], "Sidebar"],
+		[["side[ -]bar", "!-I:sidebar", "side[- ]?panel"], "Sidebar"],
 		[["status-?bar", "!-I:Status bar"], "status bar"],
 
 		[["text-?box", "text[ -]?area", "entry[ -](box|field)", "input[ -](box|field)"],

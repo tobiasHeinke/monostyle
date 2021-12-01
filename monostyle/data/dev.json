@@ -380,7 +380,7 @@
 		"block, buffer, cache, ind(ex(ed|ing)|ices)(?!\\.rst), resources?, bitmap",
 		"enter, exit, reach, break, emit, raise, catch, produces",
 		"clamp, crop, flip(ped|ing|s)?, trace, cast, flatten, blit, slice, offset",
-		"attach, clean(se)?, clear",
+		"attach, clean(se)?, clear, ingest",
 		"collection, component, record",
 		"context, domain, environment, workspaces?, ecosystem",
 		"curried, daemon, driver, hook, action, signal, echo, threshold",

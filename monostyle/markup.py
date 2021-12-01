@@ -964,6 +964,8 @@ def structure_pre(_):
                " consider moving them into a list-table"}),
              ("- sect & {1} = None \\ * + sect && {2} = !None",
               {"output": True, "message": "three or more headings in a row"}),
+             ("dir(rubric) << !document",
+              {"output": True, "message": "nested rubric"}),
              ("dir(figure) / body = None \\ * + !None",
               {"output": True, "message": "figure without a caption"}),
              ("strong, emphasis << sect",
