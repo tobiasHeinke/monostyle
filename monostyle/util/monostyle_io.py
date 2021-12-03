@@ -108,8 +108,11 @@ def path_to_abs(path, base=None):
 
 def norm_path_sep(path):
     """Replace backslash in Windows path and multiple slashes to one."""
-    return '/'.join(s for s in path.replace("\\", "/").split("/")
-                    if len(s) != 0 and (len(s) != 1 or s != "."))
+    new_path = []
+    for index, seg in enumerate(path.replace("\\", "/").split("/")):
+        if (len(seg) != 0 or index == 0) and (len(seg) != 1 or seg != "."):
+            new_path.append(seg)
+    return '/'.join(new_path)
 
 
 def split_path_appendix(path, sep=':'):
