@@ -100,9 +100,9 @@ def path_to_abs(path, base=None):
         base = (norm_path_sep(os.path.normpath(config.project_dirs[base])).lstrip(".")
                 if base and base in config.project_dirs else None)
         if base is not None and not path.startswith(base + '/'):
-            path = '/'.join((root, base, path)).strip("/")
+            path = '/'.join((root, base, path)).rstrip("/")
         else:
-            path = '/'.join((root, path)).strip("/")
+            path = '/'.join((root, path)).rstrip("/")
     return path
 
 
