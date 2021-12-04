@@ -376,7 +376,7 @@
 		"graph, tree, root, branch, leaf, node, parent, child, ancestor, sibling, descendant...",
 		"art[ei]facts?, glitch(es)?, lags?, flicker, delay, jank, tearing, volatile, collision",
 		"attributes?, constants?, decorator, descriptor, default, members?, methods?, owner",
-		"propert(ies|y), values?, virtual, modal",
+		"object, propert(ies|y), values?, virtual, modal",
 		"block, buffer, cache, ind(ex(ed|ing)|ices)(?!\\.rst), resources?, bitmap",
 		"enter, exit, reach, break, emit, raise, catch, produces",
 		"clamp, crop, flip(ped|ing|s)?, trace, cast, flatten, blit, slice, offset",

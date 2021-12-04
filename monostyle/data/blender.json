@@ -102,6 +102,7 @@
 		[["workbench", "[wW]ork.bench"], "Workbench"],
 		[["[gG]rease pencil", "grease [pP]encil"], "Grease Pencil"],
 		[["free[sS]tyle"], "Freestyle"],
+		[["[lL]ine art", "line [aA]rt"], "Line Art"],
 		[["[dD]ynamic paint", "dynamic [pP]aint"], "Dynamic Paint"],
 
 		[["!I:3D View(?!port)"], "3D Viewport"],

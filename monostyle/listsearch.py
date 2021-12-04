@@ -101,7 +101,7 @@ def compile_terms(terms, conf):
             if conf_flags_local["overline"]:
                 pattern_str = re.sub(r" +", "\\\\s+?", pattern_str)
             if conf_flags_local["boundary"]:
-                pattern_str = r'\b' + pattern_str + r'\b'
+                pattern_str = r'\b(?:' + pattern_str + r')\b'
 
         return pattern_str, conf_flags_local if conf_flags_local is not conf["flags"] else None
 
