@@ -311,7 +311,10 @@ def proper_noun(toolname, document, reports, data, config):
     for part in rst_walker.iter_nodeparts_instr(document.body, config["instr_pos"],
                                                 config["instr_neg"]):
         for word in segmenter.iter_word(part.code):
-            if entry := data.find(str(word)):
+            word_str = str(word)
+            if not word_str[0].islower():
+                continue
+            if entry := data.find(word_str):
                 reports.append(
                     Report('W', toolname, word, "proper noun: {:4.0%}".format(entry["ratio"]))
                     .set_line_punc(document.code, 50, 30))
