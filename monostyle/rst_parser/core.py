@@ -129,7 +129,7 @@ class RSTParser:
         url_chars = r"[-_.!?~#*'()[\];/:&=+$,%a-zA-Z0-9]"
         url = r"(?:\\[*_])?" + url_chars + r"*\b(?:\\[*_]" + url_chars + r"*)*"
 
-        part_names_default =  ("body_start", "body", "body_end")
+        part_names_default = ("body_start", "body", "body_end")
         inlines = {
             ("literal", (r"`", r"``", True, r"", r"``", r"`"), part_names_default),
             ("strong", (r"\*", r"\*\*", True, r"*", r"\*\*", r"\*"), part_names_default),

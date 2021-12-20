@@ -546,7 +546,7 @@ def ui_case(toolname, document, reports):
     icon_re = re.compile(r"\([^\)]*?\)\s*\Z")
     arrow_re = re.compile(r"\s*\-+>\s*\b")
     for node in rst_walker.iter_node(document.body, {"def", "field", "role"}):
-        if node.node_name ==  "role":
+        if node.node_name == "role":
             if rst_walker.is_of(node, "role", "menuselection"):
                 body_str = str(node.body.code)
                 last = 0

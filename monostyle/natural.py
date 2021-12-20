@@ -228,7 +228,7 @@ def article(toolname, document, reports, re_lib, data):
                                        Report.existing(what="an", where="before digit"))
                                 .set_line_punc(document.body.code, 50, 30))
                     else:
-                        is_cons =  bool(not re.match(vowel_re, word_str))
+                        is_cons = bool(not re.match(vowel_re, word_str))
                         is_cons_sound = is_cons
                         key = "a" if is_cons else "an"
                         token = word
@@ -249,7 +249,7 @@ def article(toolname, document, reports, re_lib, data):
                                                 is_cons_sound = not is_cons
                                             break
                                     else:
-                                        is_cons_sound =  not is_cons
+                                        is_cons_sound = not is_cons
                                     break
 
                         if is_a != is_cons_sound:
