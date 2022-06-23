@@ -85,10 +85,10 @@ class LinkedList:
 
     def copy(self):
         """Create a copy."""
-        new_list = type(self)(self.parent)
+        items = type(self)(self.parent)
         for node in self:
-            new_list.append(node.copy(linked=False))
-        return new_list
+            items.append(node.copy(linked=False))
+        return items
 
 
     def clear(self):
@@ -96,10 +96,10 @@ class LinkedList:
         return self.__init__(self.parent)
 
 
-    def is_linked(self, node):
+    def is_linked(self, item):
         """Check if the node is connected with other nodes."""
-        return not ((node and node.prev is None and node.next is None
-                     and self._tail is not node and self._head is not node)
+        return not ((item and item.prev is None and item.next is None
+                     and self._tail is not item and self._head is not item)
                     or self.is_empty())
 
 
@@ -161,179 +161,179 @@ class LinkedList:
             node = node.prev
 
 
-    def __contains__(self, ref_node):
+    def __contains__(self, item):
         """Checks if the node is in the list."""
-        if not self.is_linked(ref_node):
+        if not self.is_linked(item):
             return False
 
         for node in self:
-            if node is ref_node:
+            if node is item:
                 return True
 
         return False
 
 
-    def count(self, ref_node):
+    def count(self, item):
         """Return count of the node."""
-        if not hasattr(ref_node, "__eq__"):
+        if not hasattr(item, "__eq__"):
             raise NotImplementedError("Node requires an __eq__ method to check"
                                       "if payload is identical")
 
         counter = 0
-        if not self.is_linked(ref_node):
+        if not self.is_linked(item):
             return counter
 
         for node in self:
-            if node is ref_node:
+            if node is item:
                 counter += 1
 
         return counter
 
 
-    def index(self, ref_node, start=None, end=None):
+    def index(self, item, start=None, end=None):
         """Return index of node."""
-        if not self.is_linked(ref_node):
+        if not self.is_linked(item):
             return None
 
         for index, node in enumerate(self):
             if ((start is None or index > start) and
                     (end is None or index < end) and
-                    ref_node is node):
+                    item is node):
                 return index
 
 
-    def __getitem__(self, at):
+    def __getitem__(self, key):
         """Return node at index."""
-        if abs(at) >= self._list_size or not isinstance(at, int):
+        if abs(key) >= self._list_size or not isinstance(key, int):
             raise IndexError()
-        if at < 0:
-            at = self._list_size - at
+        if key < 0:
+            key = self._list_size - key
 
         for index, node in enumerate(self):
-            if at == index:
+            if key == index:
                 return node
 
 
-    def __setitem__(self, at, new_node):
+    def __setitem__(self, key, value):
         """Insert node at index."""
-        if abs(at) >= self._list_size or not isinstance(at, int):
+        if abs(key) >= self._list_size or not isinstance(key, int):
             raise IndexError()
-        if at < 0:
-            at = self._list_size - at
+        if key < 0:
+            key = self._list_size - key
 
-        node = self.__getitem__(at)
+        node = self.__getitem__(key)
         if node:
-            self.insert_before(node, new_node)
+            self.insert_before(node, value)
 
 
-    def __delitem__(self, at):
+    def __delitem__(self, key):
         """Remove node."""
-        if abs(at) >= self._list_size or not isinstance(at, int):
+        if abs(key) >= self._list_size or not isinstance(key, int):
             raise IndexError()
-        if at < 0:
-            at = self._list_size - at
+        if key < 0:
+            key = self._list_size - key
 
-        node = self.__getitem__(at)
+        node = self.__getitem__(key)
         if node:
             self.remove(node)
 
 
-    def insert_after(self, node, new_node):
+    def insert_after(self, key, item):
         """Add node after reference node."""
-        if not self.is_linked(node):
+        if not self.is_linked(key):
             return self
 
-        new_node.parent_node = self.parent
-        new_node.prev = node
-        new_node.next = node.next
-        if node.next is None:
-            self._tail = new_node
+        item.parent_node = self.parent
+        item.prev = key
+        item.next = key.next
+        if key.next is None:
+            self._tail = item
         else:
-            node.next.prev = new_node
+            key.next.prev = item
 
-        node.next = new_node
+        key.next = item
         self._list_size += 1
         return self
 
 
-    def insert_before(self, node, new_node):
+    def insert_before(self, key, item):
         """Add node before reference node."""
-        if not self.is_linked(node):
+        if not self.is_linked(key):
             return self
 
-        new_node.parent_node = self.parent
-        new_node.prev = node.prev
-        new_node.next = node
-        if node.prev is None:
-            self._head = new_node
+        item.parent_node = self.parent
+        item.prev = key.prev
+        item.next = key
+        if key.prev is None:
+            self._head = item
         else:
-            node.prev.next = new_node
+            key.prev.next = item
 
-        node.prev = new_node
+        key.prev = item
         self._list_size += 1
         return self
 
 
-    def append(self, new_node):
+    def append(self, item):
         """Add node at end."""
         if self._head is None:
-            self.prepend(new_node)
+            self.prepend(item)
         else:
-            self.insert_after(self._tail, new_node)
+            self.insert_after(self._tail, item)
 
         return self
 
 
-    def prepend(self, new_node):
+    def prepend(self, item):
         """Add node at start."""
         if self._head is None:
-            self._head = new_node
-            self._tail = new_node
-            new_node.parent_node = self.parent
-            new_node.prev = None
-            new_node.next = None
+            self._head = item
+            self._tail = item
+            item.parent_node = self.parent
+            item.prev = None
+            item.next = None
             self._list_size += 1
         else:
-            self.insert_before(self._head, new_node)
+            self.insert_before(self._head, item)
 
         return self
 
 
-    def extend(self, new_list):
+    def extend(self, items):
         """Add list at end."""
         if self._head is None:
-            self._head = new_list._head
-            self._tail = new_list._tail
-            self.parent = new_list.parent
-            self._list_size = new_list._list_size
+            self._head = items._head
+            self._tail = items._tail
+            self.parent = items.parent
+            self._list_size = items._list_size
         else:
-            new_list._head.prev = self._tail
-            self._tail.next = new_list._head
-            self._tail = new_list._tail
-            new_list.parent = self.parent
-            self._list_size += new_list._list_size
+            items._head.prev = self._tail
+            self._tail.next = items._head
+            self._tail = items._tail
+            items.parent = self.parent
+            self._list_size += items._list_size
 
-        for node in new_list:
+        for node in items:
             node.parent_node = self.parent
 
         return self
 
 
 
-    def remove(self, node):
+    def remove(self, item):
         """Remove node."""
-        if not self.is_linked(node):
+        if not self.is_linked(item):
             return self
 
-        if node.prev is None:
-            self._head = node.next
+        if item.prev is None:
+            self._head = item.next
         else:
-            node.prev.next = node.next
+            item.prev.next = item.next
 
-        if node.next is None:
-            self._tail = node.prev
+        if item.next is None:
+            self._tail = item.prev
         else:
-            node.next.prev = node.prev
+            item.next.prev = item.prev
 
         self._list_size -= 1
         return self
@@ -343,25 +343,25 @@ class LinkedList:
         """Remove last."""
         if self.is_empty():
             return None
-        node = self._tail
+        item = self._tail
         if self._tail.prev is not None:
             self._tail.prev.next = None
         self._tail = self._tail.prev
         self._list_size -= 1
-        node.prev = None
-        node.next = None
-        return node
+        item.prev = None
+        item.next = None
+        return item
 
 
     def shift(self):
         """Remove first."""
         if self.is_empty():
             return None
-        node = self._head
+        item = self._head
         if self._head.next is not None:
             self._head.next.prev = None
         self._head = self._head.next
         self._list_size -= 1
-        node.prev = None
-        node.next = None
-        return node
+        item.prev = None
+        item.next = None
+        return item
