@@ -19,6 +19,11 @@ class Node:
         self.child_nodes = LinkedList(self)
 
 
+    def __index__(self):
+        if node.parent_node is not None:
+            return node.parent_node.child_nodes.index(self)
+
+
     def detach(self):
         """Remove links of the node."""
         self.prev = None
@@ -65,7 +70,7 @@ class Node:
         """Create a copy the node."""
         new = type(self)()
         for prop in self.__dict__.keys():
-            if linked or prop not in self.__slots__.keys():
+            if linked or prop not in self.__slots__:
                 setattr(new, prop, getattr(self, prop))
         return new
 
@@ -190,51 +195,92 @@ class LinkedList:
         return counter
 
 
-    def index(self, item, start=None, end=None):
+    def index(self, item, start=None, stop=None):
         """Return index of node."""
         if not self.is_linked(item):
             return None
 
         for index, node in enumerate(self):
-            if ((start is None or index > start) and
-                    (end is None or index < end) and
-                    item is node):
+            if start is not None and index < start:
+                continue
+            if stop is not None and index > stop:
+                break
+            if item is node:
                 return index
+
+
+    def iter_slice(self, key, include_stop=False):
+        if isinstance(key, int):
+            key = slice(key, key + 1) if key > 0 else slice(key - 1, key)
+
+        if key.step is not None and key.step != 1:
+            raise NotImplementedError("Node slice step is not implemented")
+
+        on = False
+        if isinstance(key.start, int) or isinstance(key.stop, int):
+            indices = key.indices(self._list_size)
+            for index, node in enumerate(self):
+                if not on and indices[0] == index:
+                    on = True
+                if on:
+                    if indices[1] == index:
+                        if include_stop:
+                            yield node, True
+                        return
+                    yield node if not include_stop else (node, False)
+        else:
+            for node in self:
+                if not on and key.start is node:
+                    on = True
+                if on:
+                    if key.stop is node:
+                        if include_stop:
+                            yield node, True
+                        return
+                    yield node if not include_stop else (node, False)
+
+        if include_stop:
+            yield None, True
 
 
     def __getitem__(self, key):
         """Return node at index."""
-        if abs(key) >= self._list_size or not isinstance(key, int):
-            raise IndexError()
-        if key < 0:
-            key = self._list_size - key
-
-        for index, node in enumerate(self):
-            if key == index:
+        if isinstance(key, int):
+            for node in self.iter_slice(key):
                 return node
+
+        items = type(self)(self.parent)
+        for node in self.iter_slice(key):
+            items.append(node.copy(linked=False))
+        return items
 
 
     def __setitem__(self, key, value):
-        """Insert node at index."""
-        if abs(key) >= self._list_size or not isinstance(key, int):
-            raise IndexError()
-        if key < 0:
-            key = self._list_size - key
+        """Replace node at index."""
+        node_stop = None
+        for node, is_stop in self.iter_slice(key, include_stop=True):
+            if not is_stop:
+                self.remove(node)
+            else:
+                node_stop = node
 
-        node = self.__getitem__(key)
-        if node:
-            self.insert_before(node, value)
+        if node_stop:
+            if type(value) == type(self):
+                for node_value in value:
+                    self.insert_before(node_stop, node_value.copy(linked=False))
+            else:
+                self.insert_before(node_stop, value)
+        else:
+            if type(value) == type(self):
+                for node_value in value:
+                    self.append(node_value.copy(linked=False))
+            else:
+                self.append(value)
 
 
     def __delitem__(self, key):
         """Remove node."""
-        if abs(key) >= self._list_size or not isinstance(key, int):
-            raise IndexError()
-        if key < 0:
-            key = self._list_size - key
-
-        node = self.__getitem__(key)
-        if node:
+        for node in self.iter_slice(key):
             self.remove(node)
 
 
@@ -317,7 +363,6 @@ class LinkedList:
             node.parent_node = self.parent
 
         return self
-
 
 
     def remove(self, item):
