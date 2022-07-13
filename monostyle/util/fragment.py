@@ -192,7 +192,7 @@ class Fragment():
     def union(self, other, pos_lincol):
         """Overlay other (A(B)B)."""
         new = FragmentBundle()
-        before, _ = other.slice(self.get_start(pos_lincol), output_zero=False)
+        before = other.slice(end=self.get_start(pos_lincol), output_zero=False)
         if before:
             new.combine(before, False, pos_lincol=pos_lincol)
         if (self.is_in_span(other.get_start(pos_lincol), True, True) or
@@ -204,14 +204,15 @@ class Fragment():
                 if piece.get_start(pos_lincol) > self.get_end(pos_lincol):
                     break
                 before, _, after = after.slice(piece.get_start(pos_lincol),
-                                               piece.get_end(pos_lincol), output_zero=False)
+                                               piece.get_end(pos_lincol),
+                                               plenary=True, output_zero=False)
                 if before:
                     new.combine(before, False, pos_lincol=pos_lincol, merge=False)
                 new.combine(piece, False, pos_lincol=pos_lincol, merge=False)
 
             if after:
                 new.combine(after, False, pos_lincol=pos_lincol, merge=False)
-        after = other.slice(self.get_end(pos_lincol), after_inner=True, output_zero=False)
+        after = other.slice(self.get_end(pos_lincol), output_zero=False)
         if after:
             new.combine(after, False, pos_lincol=pos_lincol, merge=False)
 
@@ -234,7 +235,7 @@ class Fragment():
             if piece.get_end(pos_lincol) < self.get_start(pos_lincol):
                 continue
             new.combine(self.slice(piece.get_start(pos_lincol), piece.get_end(pos_lincol),
-                                   True, output_zero=True), pos_lincol=pos_lincol, merge=False)
+                                   output_zero=True), pos_lincol=pos_lincol, merge=False)
 
         result = new.to_fragment()
         if result:
@@ -256,7 +257,8 @@ class Fragment():
             if piece.get_start(pos_lincol) > self.get_end(pos_lincol):
                 break
             before, _, after = after.slice(piece.get_start(pos_lincol),
-                                           piece.get_end(pos_lincol), output_zero=False)
+                                           piece.get_end(pos_lincol),
+                                           plenary=True, output_zero=False)
             if before:
                 new.combine(before, False, pos_lincol=pos_lincol, merge=False)
 
@@ -272,7 +274,7 @@ class Fragment():
     def symmetric_difference(self, other, pos_lincol):
         """Cut gaps with overlaps of other (A(_)B)."""
         new = FragmentBundle()
-        before, _ = other.slice(self.get_start(pos_lincol), output_zero=False)
+        before = other.slice(end=self.get_start(pos_lincol), output_zero=False)
         if before:
             new.combine(before, False, pos_lincol=pos_lincol)
         if (self.is_in_span(other.get_start(pos_lincol), True, True) or
@@ -284,13 +286,14 @@ class Fragment():
                 if piece.get_start(pos_lincol) > self.get_end(pos_lincol):
                     break
                 before, _, after = after.slice(piece.get_start(pos_lincol),
-                                               piece.get_end(pos_lincol), output_zero=False)
+                                               piece.get_end(pos_lincol),
+                                               plenary=True, output_zero=False)
                 if before:
                     new.combine(before, False, pos_lincol=pos_lincol, merge=False)
 
             if after:
                 new.combine(after, False, pos_lincol=pos_lincol, merge=False)
-        after = other.slice(self.get_end(pos_lincol), after_inner=True, output_zero=False)
+        after = other.slice(self.get_end(pos_lincol), output_zero=False)
         if after:
             new.combine(after, False, pos_lincol=pos_lincol, merge=False)
 
@@ -341,7 +344,8 @@ class Fragment():
         if isinstance(key, int):
             key = slice(key, key + 1)
 
-        return self.slice(start=key.start, end=key.stop, after_inner=True)
+        return self.slice(start=self.loc_to_abs(key.start),
+                          end=self.loc_to_abs(key.stop))
 
 
     def __setitem__(self, key, value):
@@ -370,19 +374,19 @@ class Fragment():
         return self.__setitem__(key, "")
 
 
-    def slice_match(self, match_obj, groupno, after_inner=False, output_zero=True, **_):
+    def slice_match(self, match_obj, groupno, plenary=False, output_zero=True, **_):
         """Slice by span defined by a regex match object."""
         if len(match_obj.groups()) >= groupno and match_obj.group(groupno) is not None:
             return self.slice(self.loc_to_abs(match_obj.start(groupno)),
                               self.loc_to_abs(match_obj.end(groupno)),
-                              after_inner, output_zero)
+                              plenary, output_zero)
 
 
-    def slice(self, start=None, end=None, after_inner=False, output_zero=True):
+    def slice(self, start=None, end=None, plenary=False, output_zero=True):
         """Cut span."""
         if start is None:
             if end is None:
-                if after_inner:
+                if not plenary:
                     return self.copy()
                 if output_zero:
                     return self.copy().clear(True), self.copy(), self.copy().clear(False)
@@ -408,13 +412,13 @@ class Fragment():
             self_end_rel = self.loc_to_rel(self.pos_to_lincol(self.end_pos, True))
 
         cuts = []
-        if not after_inner:
+        if plenary:
             cuts.append((self_start_rel, start_rel, self.start_pos, self.start_lincol))
         if end is None:
             cuts.append((start_rel, self_end_rel, start_pos_abs, start))
         else:
             cuts.append((start_rel, end_rel, start_pos_abs, start))
-            if not after_inner:
+            if plenary:
                 cuts.append((end_rel, self_end_rel, None, end))
 
         start_lincol_abs = start
@@ -463,11 +467,11 @@ class Fragment():
         return result[0] if len(result) == 1 else tuple(result)
 
 
-    def slice_block(self, start=None, end=None, after_inner=False, output_zero=True,
+    def slice_block(self, start=None, end=None, plenary=False, output_zero=True,
                     include_before=False, include_after=False):
         """Returns a rectangular block defined by the start and end corners."""
         if start is None and end is None:
-            if after_inner:
+            if not plenary:
                 return self.copy()
             elif not output_zero:
                 return None, self.copy(), None
@@ -485,17 +489,16 @@ class Fragment():
         is_diff_column = bool(start[1] != end[1])
 
         cuts = [FragmentBundle()]
-        if not after_inner:
+        if plenary:
             cuts.append(FragmentBundle())
         if is_diff_column:
             cuts.append(FragmentBundle())
 
         for line in self.slice(start if not include_before else (start[0], 0),
-                               end if not include_after else (end[0]+1, 0),
-                               True).splitlines():
+                               end if not include_after else (end[0]+1, 0)).splitlines():
             result = line.slice((line.start_lincol[0], start[1]),
                                 (line.start_lincol[0], end[1]) if is_diff_column else None,
-                                after_inner, output_zero)
+                                plenary, output_zero)
             for cut, piece in zip(cuts, result):
                 if piece is not None:
                     cut.combine(piece, merge=False)
@@ -1155,14 +1158,14 @@ class FragmentBundle(Fragment):
 
     def union(self, other, pos_lincol):
         new = FragmentBundle()
-        before, _ = other.slice(self.get_start(pos_lincol), output_zero=False)
+        before = other.slice(end=self.get_start(pos_lincol), output_zero=False)
         if before:
             new.combine(before, False, pos_lincol=pos_lincol)
         after = self
         for piece_own in self:
             other_cut = other.slice(new.get_end(pos_lincol) if new
                                     else other.get_start(pos_lincol),
-                                    piece_own.get_end(pos_lincol), after_inner=True,
+                                    piece_own.get_end(pos_lincol),
                                     output_zero=False)
             if not other_cut:
                 continue
@@ -1170,7 +1173,7 @@ class FragmentBundle(Fragment):
             new.combine(piece_own.union(other_cut, pos_lincol), False, pos_lincol=pos_lincol,
                         merge=False)
 
-        after = other.slice(self.get_end(pos_lincol), after_inner=True, output_zero=False)
+        after = other.slice(self.get_end(pos_lincol), output_zero=False)
         if after:
             new.combine(after, False, pos_lincol=pos_lincol, merge=False)
 
@@ -1212,13 +1215,13 @@ class FragmentBundle(Fragment):
 
     def symmetric_difference(self, other, pos_lincol):
         new = FragmentBundle()
-        before, _ = other.slice(self.get_start(pos_lincol), output_zero=False)
+        before = other.slice(end=self.get_start(pos_lincol), output_zero=False)
         if before:
             new.combine(before, False, pos_lincol=pos_lincol)
         for piece in self:
             other_cut = other.slice(new.get_end(pos_lincol) if new
                                     else other.get_start(pos_lincol),
-                                    piece.get_end(pos_lincol), after_inner=True,
+                                    piece.get_end(pos_lincol),
                                     output_zero=False)
             if not other_cut:
                 continue
@@ -1226,7 +1229,7 @@ class FragmentBundle(Fragment):
             new.combine(piece.symmetric_difference(other_cut, pos_lincol), False,
                         pos_lincol=pos_lincol, merge=False)
 
-        after = other.slice(self.get_end(pos_lincol), after_inner=True, output_zero=False)
+        after = other.slice(self.get_end(pos_lincol), output_zero=False)
         if after:
             new.combine(after, False, pos_lincol=pos_lincol, merge=False)
 
@@ -1271,7 +1274,7 @@ class FragmentBundle(Fragment):
         self._transfere_attr(result)
 
 
-    def slice_match(self, match_obj, groupno, after_inner=False, output_zero=True,
+    def slice_match(self, match_obj, groupno, plenary=False, output_zero=True,
                         filler=None, filler_mode=None):
         """relative to first."""
         if not self:
@@ -1279,13 +1282,13 @@ class FragmentBundle(Fragment):
         if len(match_obj.groups()) >= groupno and match_obj.group(groupno) is not None:
             return self.slice(self.loc_to_abs(match_obj.start(groupno), filler, filler_mode),
                               self.loc_to_abs(match_obj.end(groupno), filler, filler_mode),
-                              after_inner, output_zero)
+                              plenary, output_zero)
 
 
-    def slice(self, start=None, end=None, after_inner=False, output_zero=True):
+    def slice(self, start=None, end=None, plenary=False, output_zero=True):
         if not self or start is None:
             if not self or end is None:
-                if after_inner:
+                if not plenary:
                     return self.copy()
                 if output_zero:
                     return self.copy().clear(True), self.copy(), self.copy().clear(False)
@@ -1299,7 +1302,7 @@ class FragmentBundle(Fragment):
         pos_lincol = bool(isinstance(start, int))
         cuts = []
         start_index = self.index_clip(start, False)
-        if not after_inner:
+        if plenary:
             cuts.append(((0, True), self.bundle[0].get_start(pos_lincol),
                          start_index, start))
         if not end:
@@ -1309,7 +1312,7 @@ class FragmentBundle(Fragment):
         else:
             end_index = self.index_clip(end, True)
             cuts.append((start_index, start, end_index, end))
-            if not after_inner:
+            if plenary:
                 cuts.append((end_index, end,
                              (max(0, len(self.bundle) - 1), True),
                              self.bundle[-1].get_end(pos_lincol)))
@@ -1328,9 +1331,9 @@ class FragmentBundle(Fragment):
                 new = FragmentBundle()
                 if index_start[1]:
                     if index_start[0] == index_end[0]:
-                        piece_first = self.bundle[index_start[0]].slice(start, end, True)
+                        piece_first = self.bundle[index_start[0]].slice(start, end)
                     else:
-                        piece_first = self.bundle[index_start[0]].slice(start, after_inner=True)
+                        piece_first = self.bundle[index_start[0]].slice(start)
 
                     if piece_first is not None and len(piece_first) != 0:
                         new.bundle.append(piece_first)
@@ -1348,7 +1351,7 @@ class FragmentBundle(Fragment):
                     if index_end[1]:
                         piece_last = self.bundle[index_end[0]].slice(self.bundle[index_end[0]]
                                                                      .get_start(pos_lincol),
-                                                                     end, True)
+                                                                     end)
                         if piece_last is not None and len(piece_last) != 0:
                             new.bundle.append(piece_last)
 
@@ -1357,10 +1360,10 @@ class FragmentBundle(Fragment):
         return result[0] if len(result) == 1 else tuple(result)
 
 
-    def slice_block(self, start=None, end=None, after_inner=False, output_zero=True,
+    def slice_block(self, start=None, end=None, plenary=False, output_zero=True,
                     include_before=False, include_after=False):
         if not self or (start is None and end is None):
-            if after_inner:
+            if not plenary:
                 return self.copy()
             elif not output_zero:
                 return None, self.copy(), None
@@ -1377,12 +1380,12 @@ class FragmentBundle(Fragment):
                                                   for piece in self.bundle), start[1]))
 
         cuts = [FragmentBundle()]
-        if not after_inner:
+        if plenary:
             cuts.append(FragmentBundle())
         if start[1] != end[1]:
             cuts.append(FragmentBundle())
         for index, piece in enumerate(self):
-            result = piece.slice_block(start, end, after_inner, output_zero,
+            result = piece.slice_block(start, end, plenary, output_zero,
                                        include_before or index != 0,
                                        include_after or index != len(self.bundle) - 1)
             for cut, bundle in zip(cuts, result):

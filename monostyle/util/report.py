@@ -275,7 +275,7 @@ class Report():
         start_end -- use start or end as location.
         """
         lineno = self.output.get_start(False)[0] if start_end else self.output.get_end(False)[0]
-        self.line = code.slice((lineno, 0), (lineno+1, 0), True)
+        self.line = code.slice((lineno, 0), (lineno+1, 0))
         return self
 
 
@@ -287,7 +287,7 @@ class Report():
         lineno = self.output.get_start(False)[0] if start_end else self.output.get_end(False)[0]
         start = (lineno - ceil(n / 2), 0)
         end = (lineno + (n // 2) + 1, 0)
-        self.line = code.slice(start, end, True)
+        self.line = code.slice(start, end)
         return self
 
 
@@ -298,9 +298,9 @@ class Report():
         """
         start = self.output.start_pos - min_chars - margin
         end = self.output.end_pos + min_chars + margin
-        buf = code.slice(start, end, True)
+        buf = code.slice(start, end)
 
-        margin_start, _, margin_end = buf.slice(start + margin, end - margin)
+        margin_start, _, margin_end = buf.slice(start + margin, end - margin, plenary=True)
 
         if margin_start and len(margin_start) != 0:
             margin_start_str = str(margin_start)
@@ -314,7 +314,7 @@ class Report():
             if end_m := re.search(r"[.?!:,;]", str(margin_end)):
                 end = margin_end.loc_to_abs(end_m.end(0))
 
-        self.line = buf.slice(start, end, True)
+        self.line = buf.slice(start, end)
         return self
 
 
@@ -346,7 +346,7 @@ class Report():
             else:
                 start = tuple(a - b for a, b in zip(start, offset))
 
-        self.line = code.slice(start, end, True)
+        self.line = code.slice(start, end)
         return self
 
 
@@ -467,7 +467,8 @@ class Report():
                      not self.line.is_in_span(self.output.end_pos))):
                 line_str = str(self.line)
             else:
-                before, inner, after = self.line.slice(self.output.start_pos, self.output.end_pos)
+                before, inner, after = self.line.slice(self.output.start_pos, self.output.end_pos,
+                                                       plenary=True)
                 if len(inner) == 0:
                     line_str = "".join((str(before), options["marker_both"], str(after)))
                 else:

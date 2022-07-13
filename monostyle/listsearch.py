@@ -212,7 +212,7 @@ def search_char(toolname, document, reports, data, config):
             for m in re.finditer(pattern, part_str):
                 reports.append(
                     Report(config.get("severity", 'I'), toolname,
-                           part.code.slice_match(m, 0, True), message)
+                           part.code.slice_match(m, 0), message)
                     .set_line_punc(document.body.code, 50, 30))
 
     return reports
@@ -268,7 +268,7 @@ def search_token(toolname, document, reports, data, config):
                 if pattern[1] == len(pattern[0]):
                     reports.append(
                         Report(config.get("severity", 'I'), toolname,
-                               document.code.slice(pattern[3], word.end_pos, True),
+                               document.code.slice(pattern[3], word.end_pos),
                                message).set_line_punc(document.code, 50, 30))
                     pattern[1] = 0
 

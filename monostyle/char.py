@@ -32,7 +32,7 @@ def char_search(toolname, document, reports):
         char_re = re.compile(r"[" + pattern + r"]")
         explicits += pattern
         for char_m in re.finditer(char_re, text):
-            output = document.code.slice_match(char_m, 0, True)
+            output = document.code.slice_match(char_m, 0)
             reports.append(
                 Report('E', toolname, output, message,
                        fix=output.copy().replace_fill(repl) if repl else None))
@@ -41,7 +41,7 @@ def char_search(toolname, document, reports):
     for char_m in re.finditer(char_re, text):
         reports.append(
             Report('E', toolname,
-                   document.code.slice_match(char_m, 0, True),
+                   document.code.slice_match(char_m, 0),
                    "uncommon char: {0}, 0x{0:04x}".format(ord(char_m.group(0)))))
 
     return reports
@@ -68,7 +68,7 @@ def encoding(toolname, reports):
                 code = Fragment(filename, text)
                 for repchar_m in re.finditer(repchar_re, text):
                     reports.append(
-                        Report('E', toolname, code.slice_match(repchar_m, 0, True),
+                        Report('E', toolname, code.slice_match(repchar_m, 0),
                                "unsupported character"))
 
     return reports
@@ -89,7 +89,7 @@ def eof(toolname, document, reports, re_lib, config):
     """Check blank lines at end of file."""
     if "_at_eof" in config and config["_at_eof"]:
         if m := re.search(re_lib["end"], str(document.code)):
-            output = document.body.code.slice_match(m, 0, True)
+            output = document.body.code.slice_match(m, 0)
             reports.append(
                 Report('W', toolname, output.copy().clear(True),
                        Report.existing(what=Report.write_out_quantity(

@@ -225,7 +225,7 @@ def indention(toolname, document, reports):
 
                 ind_cur = len(line) - len(str(line).lstrip(' \n'))
                 if block_line is None or ind_cur < block_line.start_lincol[1]:
-                    block_line = line.slice(line.loc_to_abs(ind_cur), after_inner=True)
+                    block_line = line.slice(line.loc_to_abs(ind_cur))
                     block_line_full = line
 
             if (block_line is not None and offset != block_line.start_lincol[1] and
@@ -753,8 +753,7 @@ def leak(toolname, document, reports, re_lib, data):
                     if on_mc_trans:
                         continue
                     reports.append(
-                        Report('F', toolname, part.code.slice_match(m, 0, True),
-                               re_lib[key][1])
+                        Report('F', toolname, part.code.slice_match(m, 0), re_lib[key][1])
                         .set_line_offset(part.parent_node.code, 100))
 
 
@@ -819,7 +818,7 @@ def leak(toolname, document, reports, re_lib, data):
                     else:
                         message = re_lib[key][1]
                     reports.append(
-                        Report('F', toolname, part.code.slice_match(m, 0, True), message)
+                        Report('F', toolname, part.code.slice_match(m, 0), message)
                         .set_line_offset(part.parent_node.parent_node.code, 100))
 
     return reports

@@ -83,12 +83,12 @@ class Segmenter:
         text = str(source)
         for para_m in re.finditer(para_re, text):
             yield (source.slice(source.loc_to_abs(buf_start),
-                                source.loc_to_abs(para_m.end(0)), True),
-                   source.slice_match(para_m, 0, True))
+                                source.loc_to_abs(para_m.end(0))),
+                   source.slice_match(para_m, 0))
             buf_start = para_m.end(0)
 
         if source.loc_to_abs(buf_start) != source.end_pos:
-            yield source.slice(source.loc_to_abs(buf_start), after_inner=True), None
+            yield source.slice(source.loc_to_abs(buf_start)), None
 
 
     def iter_sentence(self, source, crop_start=False, crop_end=False):
@@ -107,13 +107,13 @@ class Segmenter:
                 continue
 
             yield (source.slice(source.loc_to_abs(buf_start),
-                                source.loc_to_abs(sent_m.end(0)), True),
-                   source.slice_match(sent_m, 2, True))
+                                source.loc_to_abs(sent_m.end(0))),
+                   source.slice_match(sent_m, 2))
 
             buf_start = sent_m.end(0)
 
         if not crop_end and buf_start != len(text):
-            yield source.slice(source.loc_to_abs(buf_start), after_inner=True), None
+            yield source.slice(source.loc_to_abs(buf_start)), None
 
 
     def iter_clause(self, source):
@@ -145,7 +145,7 @@ class Segmenter:
         was_non_oxford = False
         for clause_m in re.finditer(clause_re, text):
             clause_source = source.slice(source.loc_to_abs(buf_start),
-                                         source.loc_to_abs(clause_m.end(0)), True)
+                                         source.loc_to_abs(clause_m.end(0)))
             if do_not_skip(source, clause_source, bool(clause_m.group(2)),
                            bool(buf), was_non_oxford):
                 if buf is not None:
@@ -162,7 +162,7 @@ class Segmenter:
             was_non_oxford = clause_m.group(2)
 
         if buf_start != len(text):
-            clause_source = source.slice(source.loc_to_abs(buf_start), after_inner=True)
+            clause_source = source.slice(source.loc_to_abs(buf_start))
             if do_not_skip(source, clause_source, False, bool(buf), was_non_oxford):
                 if buf is not None:
                     yield buf
@@ -187,12 +187,12 @@ class Segmenter:
             if space_count > threshold:
                 if buf_start != pare_m.start(0):
                     yield source.slice(source.loc_to_abs(buf_start),
-                                       source.loc_to_abs(pare_m.start(0)), True)
-                yield source.slice_match(pare_m, 0, True)
+                                       source.loc_to_abs(pare_m.start(0)))
+                yield source.slice_match(pare_m, 0)
                 buf_start = pare_m.end(0)
 
         if buf_start != len(text):
-            yield source.slice(source.loc_to_abs(buf_start), after_inner=True)
+            yield source.slice(source.loc_to_abs(buf_start))
 
 
     def iter_word(self, source, filter_numbers=True):
@@ -201,7 +201,7 @@ class Segmenter:
         text = str(source)
         for word_m in re.finditer(word_re, text):
             if not filter_numbers or not re.match(number_filter_re, word_m.group(0)):
-                yield source.slice_match(word_m, 1, True)
+                yield source.slice_match(word_m, 1)
 
 
     def iter_wordsub(self, source, filter_numbers=True):
@@ -210,11 +210,11 @@ class Segmenter:
         text = str(source)
         for wordsub_m in re.finditer(wordsub_re, text):
             if not filter_numbers or not re.match(number_filter_re, wordsub_m.group(0)):
-                yield source.slice_match(wordsub_m, 0, True)
+                yield source.slice_match(wordsub_m, 0)
 
 
     def iter_number(self, source):
         number_re = self.number_re
         text = str(source)
         for number_m in re.finditer(number_re, text):
-            yield source.slice_match(number_m, 0, True)
+            yield source.slice_match(number_m, 0)

@@ -129,7 +129,7 @@ def get_hunks_file(path, parse_options, *_):
     for filename, text in monostyle_io.doc_texts(path):
         code = Fragment(filename, text)
         if span:
-            code = code.slice(span[0], span[1], True)
+            code = code.slice(span[0], span[1])
             if code.span_len(True) == 0:
                 continue
             if code.start_pos != 0:

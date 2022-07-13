@@ -30,7 +30,7 @@ def titlecase(part_of_speech, word, is_first_word, is_last_word, name):
                 where = "at the end of a "
             message = Report.misformatted(what="lowercase", where=where + name)
 
-            fix = word.slice(end=word.start_pos + 1, after_inner=True)
+            fix = word.slice(end=word.start_pos + 1)
             fix.replace(str(fix).swapcase())
 
             return message, fix
@@ -47,7 +47,7 @@ def titlecase(part_of_speech, word, is_first_word, is_last_word, name):
         fix = None
         if (not tag or (tag[0] != "preposition" and
                 (tag[-1] != "article" or word_str != "A"))):
-            fix = word.slice(end=word.start_pos + 1, after_inner=True)
+            fix = word.slice(end=word.start_pos + 1)
             fix.replace(str(fix).swapcase())
 
         return message, fix
@@ -170,7 +170,7 @@ def heading_caps(toolname, document, reports, re_lib):
             part_str = str(part.code)
             for pattern, message in re_lib.values():
                 for m in re.finditer(pattern, part_str):
-                    reports.append(Report('W', toolname, part.code.slice_match(m, 0, True),
+                    reports.append(Report('W', toolname, part.code.slice_match(m, 0),
                                           message, node.name.code))
 
     return reports
@@ -391,7 +391,7 @@ def start_case(toolname, document, reports, re_lib):
                 pattern = value[0]
                 for m in re.finditer(pattern, part_str):
                     reports.append(
-                        Report('W', toolname, part.code.slice_match(m, 0, True), value[1])
+                        Report('W', toolname, part.code.slice_match(m, 0), value[1])
                         .set_line_offset(document.body.code, 100, True))
 
     return reports
@@ -552,14 +552,12 @@ def ui_case(toolname, document, reports):
                 last = 0
                 for arrow_m in re.finditer(arrow_re, body_str):
                     entry_code = node.body.code.slice(node.body.code.loc_to_abs(last),
-                                                      node.body.code.loc_to_abs(arrow_m.start()),
-                                                      after_inner=True)
+                                                      node.body.code.loc_to_abs(arrow_m.start()))
                     last = arrow_m.end()
                     reports, _ = check_words(node.body, entry_code, True,
                                              "menuselection item", node.body.code)
                 if last != len(body_str):
-                    entry_code = node.body.code.slice(node.body.code.loc_to_abs(last),
-                                                      after_inner=True)
+                    entry_code = node.body.code.slice(node.body.code.loc_to_abs(last))
                     reports, _ = check_words(node.body, entry_code, True,
                                              "menuselection item", node.body.code)
 
@@ -585,7 +583,7 @@ def ui_case(toolname, document, reports):
             if not is_field:
                 if icon_m := re.search(icon_re, str(part.code)):
                     part_code = part.code.slice(part.code.start_pos,
-                                                part.code.loc_to_abs(icon_m.start(0)), True)
+                                                part.code.loc_to_abs(icon_m.start(0)))
 
             reports, is_first_word = check_words(part, part_code, is_first_word, part_name,
                                                  child.code, is_field)

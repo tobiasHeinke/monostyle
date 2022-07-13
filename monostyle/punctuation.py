@@ -166,7 +166,7 @@ def mark(toolname, document, reports, re_lib):
                     if m.start() == 0 and key == "closesol" and part.parent_node.prev:
                         continue
                     reports.append(
-                        Report('W', toolname, part.code.slice_match(m, 0, True), value[1])
+                        Report('W', toolname, part.code.slice_match(m, 0), value[1])
                         .set_line_punc(document.body.code, 50, 30))
 
 
@@ -222,7 +222,7 @@ def mark(toolname, document, reports, re_lib):
                 else:
                     if comma_m := re.search(comma_re, part_str):
                         reports.append(
-                            Report('W', toolname, part.code.slice_match(comma_m, 0, True),
+                            Report('W', toolname, part.code.slice_match(comma_m, 0),
                                    re_lib["commaend"][1].format(
                                        rst_walker.write_out(part.parent_node.node_name) +
                                                             " " + part.node_name)))
@@ -344,7 +344,7 @@ def number(toolname, document, reports, re_lib):
                     continue
 
                 reports.append(
-                    Report('W', toolname, part.code.slice_match(m, 0, True), value[1])
+                    Report('W', toolname, part.code.slice_match(m, 0), value[1])
                     .set_line_punc(document.body.code, 50, 30))
 
     return reports
@@ -386,7 +386,7 @@ def pairs(toolname, document, reports, re_lib, config):
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
         part_str = str(part.code)
         for pair_m in re.finditer(pair_re, part_str):
-            pair_char = part.code.slice_match(pair_m, 0, True)
+            pair_char = part.code.slice_match(pair_m, 0)
             pair_char_str = pair_m.group(0)
             for index, entry in enumerate(reversed(stack)):
                 if (entry[0] == pair_char_str or
@@ -462,10 +462,10 @@ def whitespace(toolname, document, reports, re_lib):
             continue
         pattern = value[0]
         for m in re.finditer(pattern, text):
-            fix = document.body.code.slice_match(m, 1, True)
+            fix = document.body.code.slice_match(m, 1)
             fix.replace_fill(value[2])
             reports.append(
-                Report('W', toolname, document.body.code.slice_match(m, 0, True),
+                Report('W', toolname, document.body.code.slice_match(m, 0),
                        value[1], fix=fix)
                 .set_line_punc(document.body.code, 50, 30))
 
@@ -477,14 +477,14 @@ def whitespace(toolname, document, reports, re_lib):
         node_str = str(node.code)
         if node.prev:
             if multi_start_m := re.match(multi_start_re, node_str):
-                output = node.code.slice_match(multi_start_m, 1, True)
+                output = node.code.slice_match(multi_start_m, 1)
                 reports.append(
                     Report('W', toolname, output, re_lib["multispacestart"][1],
                            fix=output.copy().replace_fill(value[2]) if not is_cell else None)
                     .set_line_punc(document.body.code, 50, 30))
 
         for multi_m in re.finditer(multi_re, node_str):
-            output = node.code.slice_match(multi_m, 1, True)
+            output = node.code.slice_match(multi_m, 1)
             reports.append(
                 Report('W', toolname, output, re_lib["multispace"][1],
                        fix=output.copy().replace_fill(value[2]) if not is_cell else None)

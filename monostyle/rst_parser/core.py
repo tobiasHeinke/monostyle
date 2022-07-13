@@ -404,11 +404,11 @@ class RSTParser:
             if part_name is None: # nested
                 continue
             if open_end and index == len(part_names):
-                code_part = code.slice(code.loc_to_abs(match_obj.end(index_last)), after_inner=True)
+                code_part = code.slice(code.loc_to_abs(match_obj.end(index_last)))
             else:
                 if match_obj.group(index) is None:
                     continue
-                code_part = code.slice_match(match_obj, index, True)
+                code_part = code.slice_match(match_obj, index)
             node.append_part(part_name, code_part)
             index_last = index
         return node
@@ -494,7 +494,7 @@ class RSTParser:
 
         else:
             new_node = NodeRST("text", line)
-            ind, after = line.slice((line.start_lincol[0], line_info["ind_cur"]))
+            ind, after = line.slice((line.start_lincol[0], line_info["ind_cur"]), plenary=True)
             new_node.append_part("indent", ind)
             new_node.append_part("body", after)
 
@@ -598,7 +598,8 @@ class RSTParser:
 
             elif not node.active:
                 new_node = NodeRST("block-quote", line)
-                ind, after = line.slice((line.start_lincol[0], line_info["block_ind"]))
+                ind, after = line.slice((line.start_lincol[0], line_info["block_ind"]),
+                                        plenary=True)
                 new_node.append_part("indent", ind)
                 new_node.append_part("body", after)
                 node.active = new_node
@@ -704,8 +705,7 @@ class RSTParser:
                             node.append_child(node.active)
                             node.active.active = None
                             node.active = None
-                        self.paragraph(node, line.slice(
-                            end=line.loc_to_abs(starter_m.start(2)), after_inner=True),
+                        self.paragraph(node, line.slice(end=line.loc_to_abs(starter_m.start(2))),
                             line_info)
 
                     if node.active:
@@ -782,13 +782,13 @@ class RSTParser:
                     col_prev = split_m.start(1)
                     continue
                 border = line.slice(line.loc_to_abs(col_prev),
-                                    line.loc_to_abs(split_m.start(1)), True)
+                                    line.loc_to_abs(split_m.start(1)))
                 if not split_m.group(2):
-                    after = line.slice(line.loc_to_abs(split_m.start(1)), after_inner=True)
+                    after = line.slice(line.loc_to_abs(split_m.start(1)))
                     border.combine(after)
 
                 if is_first:
-                    before = line.slice(end=line.loc_to_abs(col_prev), after_inner=True)
+                    before = line.slice(end=line.loc_to_abs(col_prev))
                     border = before.combine(border)
                     is_first = False
 
@@ -841,16 +841,17 @@ class RSTParser:
                     col_end = line.loc_to_abs(def_end.name_start.code
                                               .loc_to_abs((0, last_m.start(0)))[1])
 
-                border_right = line.slice(col_end, col_end + 1, True)
+                border_right = line.slice(col_end, col_end + 1)
                 if str(border_right) not in {"", "+", "|", "\n"} and not is_last:
                     continue
 
-                code = line.slice(col_start + 1, col_end, True)
+                code = line.slice(col_start + 1, col_end)
                 code_str = str(code)
                 if re.search(r"(?!\\)\\\Z", code_str) and not is_last:
                     continue
 
-                left, inner, right = code.slice_match(re.match(r"\s*(.*?)\s*\Z", code_str), 1)
+                left, inner, right = code.slice_match(re.match(r"\s*(.*?)\s*\Z", code_str), 1,
+                                                      plenary=True)
                 if is_new:
                     new_cell = NodeRST("cell", FragmentBundle([code]))
                     row.body.append_child(new_cell, False)
@@ -858,7 +859,7 @@ class RSTParser:
                     new_cell.append_code(code)
 
                 if is_last:
-                    after = line.slice(border_right.end_pos, after_inner=True)
+                    after = line.slice(border_right.end_pos)
                     border_right.combine(after)
                 if not new_cell.body:
                     new_cell.append_part("body_start", left)
@@ -874,7 +875,7 @@ class RSTParser:
         if not node.active or node.active.node_name != "grid-table":
             if m := re.match(self.re_lib["grid_border"], line_info["line_str"]):
                 new_node = NodeRST("row", line)
-                _, ind, after = line.slice_match(m, 1)
+                _, ind, after = line.slice_match(m, 1, plenary=True)
                 new_node.append_part("indent", ind)
                 new_node.append_part("body", after)
 
@@ -932,7 +933,7 @@ class RSTParser:
                 if col_prev == 0 and split_m.start() == 0:
                     continue
                 border = line.slice(line.loc_to_abs(col_prev),
-                                    line.loc_to_abs(split_m.start(0)), True)
+                                    line.loc_to_abs(split_m.start(0)))
                 if top_bottom:
                     new_cell = NodeRST("cell", FragmentBundle([border]))
                 else:
@@ -969,7 +970,7 @@ class RSTParser:
                 col_end = line.loc_to_abs(def_end.name_start.code.end_lincol[1])
                 is_last = bool(not def_end.next)
                 if not is_last:
-                    border_right = line.slice(col_end, col_end + 1, True)
+                    border_right = line.slice(col_end, col_end + 1)
                 else:
                     border_right = line.copy().clear(False)
                 if str(border_right) not in {"", " ", "\n"} and not is_last:
@@ -978,12 +979,13 @@ class RSTParser:
                 if is_last:
                     col_end = None
                 code = line.slice(line.loc_to_abs(def_start.name_start.code
-                                                  .start_lincol[1]), col_end, after_inner=True)
+                                                  .start_lincol[1]), col_end)
                 code_str = str(code)
                 if re.search(r"(?!\\)\\\Z", code_str) and not is_last:
                     continue
 
-                left, inner, right = code.slice_match(re.match(r"\s*(.*?)\s*\Z", code_str), 1)
+                left, inner, right = code.slice_match(re.match(r"\s*(.*?)\s*\Z", code_str), 1,
+                                                      plenary=True)
                 if is_new:
                     new_cell = NodeRST("cell", FragmentBundle([code]))
                     row.body.append_child(new_cell, False)
@@ -1004,7 +1006,7 @@ class RSTParser:
         if not node.active or node.active.node_name != "simple-table":
             if m := re.match(self.re_lib["simple_row_border"], line_info["line_str"]):
                 new_node = NodeRST("row", line)
-                _, ind, after = line.slice_match(m, 1)
+                _, ind, after = line.slice_match(m, 1, plenary=True)
                 new_node.append_part("indent", ind)
                 new_node.append_part("body", after)
 
@@ -1063,7 +1065,7 @@ class RSTParser:
 
     def inline(self, node, code, name):
         if m := re.search(self.re_lib[name][0], str(code)):
-            before, inner, after = node.active.body.code.slice_match(m, 0)
+            before, inner, after = node.active.body.code.slice_match(m, 0, plenary=True)
             node.active.body.code = before
             node.active.code = before
 

@@ -83,7 +83,7 @@ def abbreviation_pre(_):
                     continue
 
                 word_str = str(word).strip()
-                before, _, after = part.code.slice(word.start_pos, word.end_pos)
+                before, _, after = part.code.slice(word.start_pos, word.end_pos, plenary=True)
                 if re.match(after_test_re, str(after)):
                     if after_m := re.match(after_re, str(after)):
                         if is_explanation(word_str, after_m.group(1)):
@@ -233,7 +233,7 @@ def article(toolname, document, reports, re_lib, data):
                         key = "a" if is_cons else "an"
                         token = word
                         if token_m := re.match(token_re, word_str):
-                            token = word.slice_match(token_m, 1, True)
+                            token = word.slice_match(token_m, 1)
                         if (len(token) == 1 or part_of_speech.isacr(token) or
                                 part_of_speech.isabbr(token)):
                             if word_str[0].lower() in data[key]["letter"]:
@@ -553,7 +553,7 @@ def metric(toolname, document, reports):
                             sen_full = sen
                         else:
                             sen_full = document.body.code.slice(
-                                           sen_full.start_lincol, sen.end_lincol, True)
+                                           sen_full.start_lincol, sen.end_lincol)
 
                         if stop:
                             reports = compare(node_cur, sen_full, counter, reports, True)
@@ -799,7 +799,7 @@ def search_pure(toolname, document, reports, re_lib, config):
             for m in re.finditer(pattern, part_str):
                 reports.append(
                     Report(config.get("severity"), toolname,
-                           part.code.slice_match(m, 0, True), message)
+                           part.code.slice_match(m, 0), message)
                     .set_line_punc(document.body.code, 50, 30))
 
     return reports
