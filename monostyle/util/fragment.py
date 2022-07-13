@@ -337,6 +337,39 @@ class Fragment():
             raise ValueError("Fragment.symmetric_difference_update result is not complete")
 
 
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            key = slice(key, key + 1)
+
+        return self.slice(start=key.start, end=key.stop, after_inner=True)
+
+
+    def __setitem__(self, key, value):
+        if isinstance(value, (Fragment, FragmentBundle)):
+            value = value.copy()
+        else:
+            value = Fragment(self.filename, value)
+
+        if isinstance(key, int):
+            value.start_pos = key
+            value.end_pos = key + 1
+            pos_lincol = True
+        else:
+            pos_lincol = bool(isinstance(key.start, int))
+            if pos_lincol:
+                value.start_pos = key.start
+                value.end_pos = key.stop
+            else:
+                value.start_lincol = key.start
+                value.end_lincol = key.stop
+
+        return self.union_update(value, pos_lincol)
+
+
+    def __delitem__(self, key):
+        return self.__setitem__(key, "")
+
+
     def slice_match(self, match_obj, groupno, after_inner=False, output_zero=True, **_):
         """Slice by span defined by a regex match object."""
         if len(match_obj.groups()) >= groupno and match_obj.group(groupno) is not None:
@@ -912,7 +945,10 @@ class Fragment():
                         bool(self.start_lincol is not None))
 
 
-class FragmentBundle():
+# ============================================================================
+
+
+class FragmentBundle(Fragment):
     """A list of Fragments. Well formed if: sorted, non overlapping."""
 
     __slots__ = ('bundle',)
@@ -934,6 +970,13 @@ class FragmentBundle():
             piece.filename = value
 
     filename = property(get_filename, set_filename)
+
+
+    def attr_content(self, *_):
+        """Delete inherited content attribute by overriding it."""
+        raise AttributeError("'FragmentBundle' object has no attribute 'content'")
+
+    content = property(attr_content, attr_content, attr_content)
 
 
     def get_start_pos(self):
