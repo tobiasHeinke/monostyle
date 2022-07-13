@@ -406,12 +406,14 @@ class Fragment():
         return self.__setitem__(key, "")
 
 
-    def slice_match(self, match_obj, groupno, plenary=False, output_zero=True, **_):
+    def slice_match(self, match_obj, group, plenary=False, output_zero=True, **_):
         """Slice by span defined by a regex match object."""
-        if len(match_obj.groups()) >= groupno and match_obj.group(groupno) is not None:
-            return self.slice(self.loc_to_abs(match_obj.start(groupno)),
-                              self.loc_to_abs(match_obj.end(groupno)),
-                              plenary, output_zero)
+        if match_obj.group(group) is None:
+            return None if not plenary else (None, None, None)
+
+        return self.slice(self.loc_to_abs(match_obj.start(group)),
+                          self.loc_to_abs(match_obj.end(group)),
+                          plenary, output_zero)
 
 
     def slice(self, start=None, end=None, plenary=False, output_zero=True):
@@ -1298,15 +1300,18 @@ class FragmentBundle(Fragment):
         self._transfere_attr(result)
 
 
-    def slice_match(self, match_obj, groupno, plenary=False, output_zero=True,
+    def slice_match(self, match_obj, group, plenary=False, output_zero=True,
                         filler=None, filler_mode=None):
         """relative to first."""
         if not self:
             return self.copy()
-        if len(match_obj.groups()) >= groupno and match_obj.group(groupno) is not None:
-            return self.slice(self.loc_to_abs(match_obj.start(groupno), filler, filler_mode),
-                              self.loc_to_abs(match_obj.end(groupno), filler, filler_mode),
-                              plenary, output_zero)
+
+        if match_obj.group(group) is None:
+            return None if not plenary else (None, None, None)
+
+        return self.slice(self.loc_to_abs(match_obj.start(group), filler, filler_mode),
+                          self.loc_to_abs(match_obj.end(group), filler, filler_mode),
+                          plenary, output_zero)
 
 
     def slice(self, start=None, end=None, plenary=False, output_zero=True):
