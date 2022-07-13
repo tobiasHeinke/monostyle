@@ -300,6 +300,43 @@ class Fragment():
         return new
 
 
+    def _transfere_attr(self, other):
+        for prop in self.__slots__:
+            setattr(self, prop, getattr(other, prop))
+
+
+    def union_update(self, *args):
+        result = self.union(*args)
+        if not result.is_bundle():
+            self._transfere_attr(result)
+        else:
+            raise ValueError("Fragment.union_update result is not complete")
+
+
+    def intersection_update(self, *args):
+        result = self.intersection(*args)
+        if not result.is_bundle():
+            self._transfere_attr(result)
+        else:
+            raise ValueError("Fragment.intersection_update result is not complete")
+
+
+    def difference_update(self, *args):
+        result = self.difference(*args)
+        if not result.is_bundle():
+            self._transfere_attr(result)
+        else:
+            raise ValueError("Fragment.difference_update result is not complete")
+
+
+    def symmetric_difference_update(self, *args):
+        result = self.symmetric_difference(*args)
+        if not result.is_bundle():
+            self._transfere_attr(result)
+        else:
+            raise ValueError("Fragment.symmetric_difference_update result is not complete")
+
+
     def slice_match(self, match_obj, groupno, after_inner=False, output_zero=True, **_):
         """Slice by span defined by a regex match object."""
         if len(match_obj.groups()) >= groupno and match_obj.group(groupno) is not None:
@@ -1154,6 +1191,41 @@ class FragmentBundle():
         if result:
             return result
         return new
+
+
+    def _transfere_attr(self, other):
+        for prop in super().__slots__ + self.__slots__:
+            if prop == "content":
+                continue
+            setattr(self, prop, getattr(other, prop))
+
+
+    def union_update(self, *args):
+        result = self.union(*args)
+        if not result.is_bundle():
+            result = result.to_bundle()
+        self._transfere_attr(result)
+
+
+    def intersection_update(self, *args):
+        result = self.intersection(*args)
+        if not result.is_bundle():
+            result = result.to_bundle()
+        self._transfere_attr(result)
+
+
+    def difference_update(self, *args):
+        result = self.difference(*args)
+        if not result.is_bundle():
+            result = result.to_bundle()
+        self._transfere_attr(result)
+
+
+    def symmetric_difference_update(self, *args):
+        result = self.symmetric_difference(*args)
+        if not result.is_bundle():
+            result = result.to_bundle()
+        self._transfere_attr(result)
 
 
     def slice_match(self, match_obj, groupno, after_inner=False, output_zero=True,
