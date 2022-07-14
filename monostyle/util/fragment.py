@@ -197,26 +197,26 @@ class Fragment():
 
     def issubset(self, other, pos_lincol):
         """Is within the spans of other."""
-        if (not other.is_in_span(self.get_start(pos_lincol), True, True) or
-                not other.is_in_span(self.get_end(pos_lincol), True, True)):
+        if (not other.is_in_span(self.get_start(pos_lincol), False, True, True) or
+                not other.is_in_span(self.get_end(pos_lincol), False, True, True)):
             return False
 
         for piece in other:
-            if (piece.is_in_span(self.get_start(pos_lincol), True, True) and
-                    piece.is_in_span(self.get_end(pos_lincol), True, True)):
+            if (piece.is_in_span(self.get_start(pos_lincol), False, True, True) and
+                    piece.is_in_span(self.get_end(pos_lincol), False, True, True)):
                 return True
         return False
 
 
     def issuperset(self, other, pos_lincol):
         """Other is within span."""
-        if (not self.is_in_span(other.get_start(pos_lincol), True, True) or
-                not self.is_in_span(other.get_end(pos_lincol), True, True)):
+        if (not self.is_in_span(other.get_start(pos_lincol), False, True, True) or
+                not self.is_in_span(other.get_end(pos_lincol), False, True, True)):
             return False
 
         for piece in other:
-            if (not self.is_in_span(piece.get_start(pos_lincol), True, True) or
-                    not self.is_in_span(piece.get_end(pos_lincol), True, True)):
+            if (not self.is_in_span(piece.get_start(pos_lincol), False, True, True) or
+                    not self.is_in_span(piece.get_end(pos_lincol), False, True, True)):
                 return False
         return True
 
@@ -227,8 +227,8 @@ class Fragment():
         before = other.slice(end=self.get_start(pos_lincol), output_zero=False)
         if before:
             new.combine(before, False, pos_lincol=pos_lincol)
-        if (self.is_in_span(other.get_start(pos_lincol), True, True) or
-                self.is_in_span(other.get_end(pos_lincol), True, True)):
+        if (self.is_in_span(other.get_start(pos_lincol), False, True, True) or
+                self.is_in_span(other.get_end(pos_lincol), False, True, True)):
             after = self
             for piece in other:
                 if piece.get_end(pos_lincol) < self.get_start(pos_lincol):
@@ -256,8 +256,8 @@ class Fragment():
 
     def intersection(self, other, pos_lincol):
         """Cut out with other (_(A)_)."""
-        if (not self.is_in_span(other.get_start(pos_lincol), True, True) and
-                not self.is_in_span(other.get_end(pos_lincol), True, True)):
+        if (not self.is_in_span(other.get_start(pos_lincol), False, True, True) and
+                not self.is_in_span(other.get_end(pos_lincol), False, True, True)):
             return self
 
         new = FragmentBundle()
@@ -277,8 +277,8 @@ class Fragment():
 
     def difference(self, other, pos_lincol):
         """Cut gaps with other (A(_)_)."""
-        if (not self.is_in_span(other.get_start(pos_lincol), True, True) and
-                not self.is_in_span(other.get_end(pos_lincol), True, True)):
+        if (not self.is_in_span(other.get_start(pos_lincol), False, True, True) and
+                not self.is_in_span(other.get_end(pos_lincol), False, True, True)):
             return self
 
         new = FragmentBundle()
@@ -309,8 +309,8 @@ class Fragment():
         before = other.slice(end=self.get_start(pos_lincol), output_zero=False)
         if before:
             new.combine(before, False, pos_lincol=pos_lincol)
-        if (self.is_in_span(other.get_start(pos_lincol), True, True) or
-                self.is_in_span(other.get_end(pos_lincol), True, True)):
+        if (self.is_in_span(other.get_start(pos_lincol), False, True, True) or
+                self.is_in_span(other.get_end(pos_lincol), False, True, True)):
             after = self
             for piece in other:
                 if piece.get_end(pos_lincol) < self.get_start(pos_lincol):
@@ -431,9 +431,9 @@ class Fragment():
         start_pos_abs = None
         if isinstance(start, int):
             start_pos_abs = start
-            start = self.pos_to_lincol(start, True)
-            if end is not None:
-                end = self.pos_to_lincol(end, True)
+            start = self.pos_to_lincol(start, keep_bounds=True)
+        if isinstance(end, int):
+            end = self.pos_to_lincol(end, keep_bounds=True)
 
         start_rel = self.loc_to_rel(start)
         if end is not None:
@@ -443,7 +443,7 @@ class Fragment():
         if self.end_lincol is not None:
             self_end_rel = self.loc_to_rel(self.end_lincol)
         else:
-            self_end_rel = self.loc_to_rel(self.pos_to_lincol(self.end_pos, True))
+            self_end_rel = self.loc_to_rel(self.pos_to_lincol(self.end_pos, keep_bounds=True))
 
         cuts = []
         if plenary:
@@ -485,7 +485,7 @@ class Fragment():
                     if start_pos_abs is not None:
                         pos_abs = start_pos_abs
                     else:
-                        pos_abs = self.lincol_to_pos(start_lincol_abs, True)
+                        pos_abs = self.lincol_to_pos(start_lincol_abs, keep_bounds=True)
 
                 pos_abs = max(pos_abs, self.start_pos)
                 if self.start_lincol:
@@ -752,50 +752,58 @@ class Fragment():
         return (loc_rel_lineno, loc_rel_colno)
 
 
-    def lincol_to_pos(self, lincol, keep_bounds=False):
+    def lincol_to_pos(self, lincol, is_rel=False, output_rel=False, keep_bounds=False):
         """Convert a lincol location to a pos location."""
-        lincol = self.loc_to_rel(lincol)
+        if not is_rel:
+            lincol = self.loc_to_rel(lincol)
         if lincol < (0, 0):
             if keep_bounds:
-                return self.start_pos
+                return self.start_pos if not output_rel else 0
             return None
 
         cursor = 0
         for index, line in enumerate(self.content):
             if lincol[0] == index:
-                return self.loc_to_abs(cursor + lincol[1])
+                cursor += lincol[1]
+                return self.loc_to_abs(cursor) if not output_rel else cursor
 
             cursor += len(line)
 
         if keep_bounds:
-            return self.loc_to_abs(cursor)
+            return self.loc_to_abs(cursor) if not output_rel else cursor
 
 
-    def pos_to_lincol(self, pos, keep_bounds=False):
+    def pos_to_lincol(self, pos, is_rel=False, output_rel=False, keep_bounds=False):
         """Convert a pos location to a lincol location."""
-        pos = self.loc_to_rel(pos)
+        if not is_rel:
+            pos = self.loc_to_rel(pos)
         if pos < 0:
             if keep_bounds:
-                return self.start_lincol if self.start_lincol else (0, 0)
+                return self.start_lincol if not output_rel and self.start_lincol else (0, 0)
             return None
 
         cursor = 0
         for index, line in enumerate(self.content):
             # favor next line start over current end
             if pos >= cursor and pos - cursor < len(line):
-                return self.loc_to_abs((index, pos - cursor))
+                cursor = (index, pos - cursor)
+                return self.loc_to_abs(cursor) if not output_rel else cursor
 
             cursor += len(line)
 
         if keep_bounds:
             if len(self.content) == 0:
-                return self.loc_to_abs((0, 0))
+                return self.loc_to_abs((0, 0)) if not output_rel else (0, 0)
 
-            return self.loc_to_abs((len(self.content) - 1, len(self.content[-1])))
+            cursor = (len(self.content) - 1, len(self.content[-1]))
+            return self.loc_to_abs(cursor) if not output_rel else cursor
 
 
-    def is_in_span(self, loc, include_start=True, include_end=True):
+    def is_in_span(self, loc, is_rel=False, include_start=True, include_end=True):
         """Check if the location is between start and end."""
+        if is_rel:
+            loc = self.loc_to_abs(loc)
+
         pos_lincol = bool(isinstance(loc, int))
         self_start = self.get_start(pos_lincol)
         self_end = self.get_end(pos_lincol)
@@ -838,10 +846,10 @@ class Fragment():
             pos_lincol = True
         if (other.get_start(pos_lincol) == other.get_end(pos_lincol) or
                 self.get_start(pos_lincol) == self.get_end(pos_lincol)):
-            if self.is_in_span(other.get_start(pos_lincol), False, False):
+            if self.is_in_span(other.get_start(pos_lincol), False, False, False):
                 return True
-        elif (self.is_in_span(other.get_start(pos_lincol), True, False) or
-                self.is_in_span(other.get_end(pos_lincol), False, True)):
+        elif (self.is_in_span(other.get_start(pos_lincol), False, True, False) or
+                self.is_in_span(other.get_end(pos_lincol), False, False, True)):
             return True
 
         if not _is_recursive and other.is_overlapped(self, pos_lincol, _is_recursive=True):
@@ -1157,14 +1165,14 @@ class FragmentBundle(Fragment):
 
 
     def issubset(self, other, pos_lincol):
-        if (not other.is_in_span(self.get_start(pos_lincol), True, True) or
-                not other.is_in_span(self.get_end(pos_lincol), True, True)):
+        if (not other.is_in_span(self.get_start(pos_lincol), False, True, True) or
+                not other.is_in_span(self.get_end(pos_lincol), False, True, True)):
             return False
 
         for piece_own in self:
             for piece_other in other:
-                if (piece_other.is_in_span(piece_own.get_start(pos_lincol), True, True) and
-                        piece_other.is_in_span(piece_own.get_end(pos_lincol), True, True)):
+                if (piece_other.is_in_span(piece_own.get_start(pos_lincol), False, True, True) and
+                        piece_other.is_in_span(piece_own.get_end(pos_lincol), False, True, True)):
                     break
             else:
                 return False
@@ -1172,14 +1180,14 @@ class FragmentBundle(Fragment):
 
 
     def issuperset(self, other, pos_lincol):
-        if (not self.is_in_span(other.get_start(pos_lincol), True, True) or
-                not self.is_in_span(other.get_end(pos_lincol), True, True)):
+        if (not self.is_in_span(other.get_start(pos_lincol), False, True, True) or
+                not self.is_in_span(other.get_end(pos_lincol), False, True, True)):
             return False
 
         for piece_other in other:
             for piece_own in self:
-                if (piece_own.is_in_span(piece_other.get_start(pos_lincol), True, True) and
-                        piece_own.is_in_span(piece_other.get_end(pos_lincol), True, True)):
+                if (piece_own.is_in_span(piece_other.get_start(pos_lincol), False, True, True) and
+                        piece_own.is_in_span(piece_other.get_end(pos_lincol), False, True, True)):
                     break
             else:
                 return False
@@ -1214,8 +1222,8 @@ class FragmentBundle(Fragment):
 
 
     def intersection(self, other, pos_lincol):
-        if (not self.is_in_span(other.get_start(pos_lincol), True, True) and
-                not self.is_in_span(other.get_end(pos_lincol), True, True)):
+        if (not self.is_in_span(other.get_start(pos_lincol), False, True, True) and
+                not self.is_in_span(other.get_end(pos_lincol), False, True, True)):
             return self
 
         new = FragmentBundle()
@@ -1229,8 +1237,8 @@ class FragmentBundle(Fragment):
 
 
     def difference(self, other, pos_lincol):
-        if (not self.is_in_span(other.get_start(pos_lincol), True, True) and
-                not self.is_in_span(other.get_end(pos_lincol), True, True)):
+        if (not self.is_in_span(other.get_start(pos_lincol), False, True, True) and
+                not self.is_in_span(other.get_end(pos_lincol), False, True, True)):
             return self
 
         new = FragmentBundle()
@@ -1650,51 +1658,57 @@ class FragmentBundle(Fragment):
                     return (rel[0] + cursor, rel[1])
 
 
-    def lincol_to_pos(self, lincol, keep_bounds=False):
+    def lincol_to_pos(self, lincol, is_rel=False, output_rel=False, keep_bounds=False):
         if not self:
             return None
 
+        if is_rel:
+            lincol = self.loc_to_abs(lincol)
         if lincol < self.start_lincol:
             if keep_bounds:
-                return self.start_pos
+                return self.start_pos if not output_rel else 0
             return None
 
         for piece in self:
             if piece.is_in_span(lincol):
-                return piece.lincol_to_pos(lincol, keep_bounds)
+                return piece.lincol_to_pos(lincol, False, output_rel, keep_bounds)
 
         if keep_bounds:
-            return self.end_pos
+            return self.end_pos if not output_rel else self.loc_to_rel(self.end_pos)
 
 
-    def pos_to_lincol(self, pos, keep_bounds=False):
+    def pos_to_lincol(self, pos, is_rel=False, output_rel=False, keep_bounds=False):
         if not self:
             return None
 
+        if is_rel:
+            pos = self.loc_to_abs(pos)
         if pos < self.start_pos:
             if keep_bounds:
-                return self.start_lincol
+                return self.start_lincol if not output_rel else (0, 0)
             return None
 
         for piece in self:
             if piece.is_in_span(pos):
-                return piece.pos_to_lincol(pos, keep_bounds)
+                return piece.pos_to_lincol(pos, False, output_rel, keep_bounds)
 
         if keep_bounds:
-            return self.end_lincol
+            return self.end_pos if not output_rel else self.loc_to_rel(self.end_lincol)
 
 
-    def index_at(self, loc, include_start=True, include_end=True):
+    def index_at(self, loc, is_rel=False, include_start=True, include_end=True):
         """Return index of the first Fragment which has the loc within it's span."""
         for index, piece in enumerate(self):
-            if piece.is_in_span(loc, include_start, include_end):
+            if piece.is_in_span(loc, is_rel, include_start, include_end):
                 return index
 
 
-    def index_clip(self, loc, prev_next):
+    def index_clip(self, loc, prev_next, is_rel=False):
         """Return index of the Fragment which has the loc within it's span or
         when in between the previous or next Fragment.
         """
+        if is_rel:
+            loc = self.loc_to_abs(loc)
         pos_lincol = bool(isinstance(loc, int))
         for index, piece in enumerate(self):
             if loc < piece.get_start(pos_lincol):
@@ -1705,13 +1719,13 @@ class FragmentBundle(Fragment):
         return index, False
 
 
-    def is_in_span(self, loc, include_start=True, include_end=True):
+    def is_in_span(self, loc, is_rel=False, include_start=True, include_end=True):
         """include for each."""
         if not self:
             return False
 
         for piece in self:
-            if piece.is_in_span(loc, include_start, include_end):
+            if piece.is_in_span(loc, is_rel, include_start, include_end):
                 return True
 
         return False
