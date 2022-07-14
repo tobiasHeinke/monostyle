@@ -58,12 +58,44 @@ class Fragment():
         self.end_lincol = end_lincol
 
 
-    def get_start(self, pos_lincol):
+    def get_start(self, pos_lincol=True):
         return self.start_pos if pos_lincol else self.start_lincol
 
+    def set_start(self, loc, lincol=None):
+        """Note can impede a type error."""
+        if lincol is not None:
+            self.start_pos = loc
+            self.start_lincol = lincol
+        else:
+            if isinstance(loc, int):
+                self.start_pos = loc
+                if self.start_lincol is not None:
+                    self.start_lincol = self.pos_to_lincol(loc)
+            else:
+                self.start_pos = self.lincol_to_pos(loc)
+                self.start_lincol = loc
 
-    def get_end(self, pos_lincol):
+    start = property(get_start, set_start)
+
+
+    def get_end(self, pos_lincol=True):
         return self.end_pos if pos_lincol else self.end_lincol
+
+    def set_end(self, loc, lincol=None):
+        """Note can impede a type error."""
+        if lincol is not None:
+            self.end_pos = loc
+            self.end_lincol = lincol
+        else:
+            if isinstance(loc, int):
+                self.end_pos = loc
+                if self.end_lincol is not None:
+                    self.end_lincol = self.pos_to_lincol(loc)
+            else:
+                self.end_pos = self.lincol_to_pos(loc)
+                self.end_lincol = loc
+
+    end = property(get_end, set_end)
 
 
     # -- Filename ------------------------------------------------------------
@@ -1024,14 +1056,6 @@ class FragmentBundle(Fragment):
         self.bundle[-1].end_lincol = value
 
     end_lincol = property(get_end_lincol, set_end_lincol)
-
-
-    def get_start(self, pos_lincol):
-        return self.start_pos if pos_lincol else self.start_lincol
-
-
-    def get_end(self, pos_lincol):
-        return self.end_pos if pos_lincol else self.end_lincol
 
 
     # -- Filename ------------------------------------------------------------
