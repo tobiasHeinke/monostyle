@@ -376,8 +376,7 @@ class Fragment():
         if isinstance(key, int):
             key = slice(key, key + 1)
 
-        return self.slice(start=self.loc_to_abs(key.start),
-                          end=self.loc_to_abs(key.stop))
+        return self.slice(start=key.start, end=key.stop, is_rel=True)
 
 
     def __setitem__(self, key, value):
@@ -411,12 +410,11 @@ class Fragment():
         if match_obj.group(group) is None:
             return None if not plenary else (None, None, None)
 
-        return self.slice(self.loc_to_abs(match_obj.start(group)),
-                          self.loc_to_abs(match_obj.end(group)),
-                          plenary, output_zero)
+        return self.slice(match_obj.start(group), match_obj.end(group),
+                          True, plenary, output_zero)
 
 
-    def slice(self, start=None, end=None, plenary=False, output_zero=True):
+    def slice(self, start=None, end=None, is_rel=False, plenary=False, output_zero=True):
         """Cut span."""
         if start is None:
             if end is None:
@@ -430,14 +428,24 @@ class Fragment():
 
         start_pos_abs = None
         if isinstance(start, int):
-            start_pos_abs = start
-            start = self.pos_to_lincol(start, keep_bounds=True)
+            if not is_rel:
+                start_pos_abs = start
+            start = self.pos_to_lincol(start, is_rel=is_rel, output_rel=is_rel, keep_bounds=True)
         if isinstance(end, int):
-            end = self.pos_to_lincol(end, keep_bounds=True)
+            end = self.pos_to_lincol(end, is_rel=is_rel, output_rel=is_rel, keep_bounds=True)
 
-        start_rel = self.loc_to_rel(start)
+        if not is_rel:
+            start_rel = self.loc_to_rel(start)
+        else:
+            start_rel = start
+            start = self.loc_to_abs(start)
+
         if end is not None:
-            end_rel = self.loc_to_rel(end)
+            if not is_rel:
+                end_rel = self.loc_to_rel(end)
+            else:
+                end_rel = end
+                end = self.loc_to_abs(end)
 
         self_start_rel = (0, 0)
         if self.end_lincol is not None:
@@ -501,7 +509,7 @@ class Fragment():
         return result[0] if len(result) == 1 else tuple(result)
 
 
-    def slice_block(self, start=None, end=None, plenary=False, output_zero=True,
+    def slice_block(self, start=None, end=None, is_rel=False, plenary=False, output_zero=True,
                     include_before=False, include_after=False):
         """Returns a rectangular block defined by the start and end corners."""
         if start is None and end is None:
@@ -509,6 +517,11 @@ class Fragment():
                 return self.copy()
             elif not output_zero:
                 return None, self.copy(), None
+
+        if is_rel:
+            start = self.loc_to_abs(start)
+            if end is not None:
+                end = self.loc_to_abs(end)
 
         if isinstance(start, int):
             start = self.pos_to_lincol(start)
@@ -1325,7 +1338,7 @@ class FragmentBundle(Fragment):
                           plenary, output_zero)
 
 
-    def slice(self, start=None, end=None, plenary=False, output_zero=True):
+    def slice(self, start=None, end=None, is_rel=False, plenary=False, output_zero=True):
         if not self or start is None:
             if not self or end is None:
                 if not plenary:
@@ -1338,6 +1351,11 @@ class FragmentBundle(Fragment):
 
         if end is not None and end < start:
             end = start
+
+        if is_rel:
+            start = self.loc_to_abs(start)
+            if end is not None:
+                end = self.loc_to_abs(end)
 
         pos_lincol = bool(isinstance(start, int))
         cuts = []
@@ -1400,13 +1418,18 @@ class FragmentBundle(Fragment):
         return result[0] if len(result) == 1 else tuple(result)
 
 
-    def slice_block(self, start=None, end=None, plenary=False, output_zero=True,
+    def slice_block(self, start=None, end=None, is_rel=False, plenary=False, output_zero=True,
                     include_before=False, include_after=False):
         if not self or (start is None and end is None):
             if not plenary:
                 return self.copy()
             elif not output_zero:
                 return None, self.copy(), None
+
+        if is_rel:
+            start = self.loc_to_abs(start)
+            if end is not None:
+                end = self.loc_to_abs(end)
 
         if isinstance(start, int):
             start = self.pos_to_lincol(start)

@@ -551,13 +551,12 @@ def ui_case(toolname, document, reports):
                 body_str = str(node.body.code)
                 last = 0
                 for arrow_m in re.finditer(arrow_re, body_str):
-                    entry_code = node.body.code.slice(node.body.code.loc_to_abs(last),
-                                                      node.body.code.loc_to_abs(arrow_m.start()))
+                    entry_code = node.body.code.slice(last, arrow_m.start(), is_rel=True)
                     last = arrow_m.end()
                     reports, _ = check_words(node.body, entry_code, True,
                                              "menuselection item", node.body.code)
                 if last != len(body_str):
-                    entry_code = node.body.code.slice(node.body.code.loc_to_abs(last))
+                    entry_code = node.body.code.slice(last, is_rel=True)
                     reports, _ = check_words(node.body, entry_code, True,
                                              "menuselection item", node.body.code)
 
@@ -582,8 +581,7 @@ def ui_case(toolname, document, reports):
             part_code = part.code
             if not is_field:
                 if icon_m := re.search(icon_re, str(part.code)):
-                    part_code = part.code.slice(part.code.start_pos,
-                                                part.code.loc_to_abs(icon_m.start(0)))
+                    part_code = part.code.slice(end=icon_m.start(0), is_rel=True)
 
             reports, is_first_word = check_words(part, part_code, is_first_word, part_name,
                                                  child.code, is_field)

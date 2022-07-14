@@ -82,13 +82,12 @@ class Segmenter:
         para_re = self.para_re
         text = str(source)
         for para_m in re.finditer(para_re, text):
-            yield (source.slice(source.loc_to_abs(buf_start),
-                                source.loc_to_abs(para_m.end(0))),
+            yield (source.slice(buf_start, para_m.end(0), is_rel=True),
                    source.slice_match(para_m, 0))
             buf_start = para_m.end(0)
 
-        if source.loc_to_abs(buf_start) != source.end_pos:
-            yield source.slice(source.loc_to_abs(buf_start)), None
+        if buf_start != len(text):
+            yield source.slice(buf_start, is_rel=True), None
 
 
     def iter_sentence(self, source, crop_start=False, crop_end=False):
@@ -106,14 +105,13 @@ class Segmenter:
                 buf_start = sent_m.end(0)
                 continue
 
-            yield (source.slice(source.loc_to_abs(buf_start),
-                                source.loc_to_abs(sent_m.end(0))),
+            yield (source.slice(buf_start, sent_m.end(0), is_rel=True),
                    source.slice_match(sent_m, 2))
 
             buf_start = sent_m.end(0)
 
         if not crop_end and buf_start != len(text):
-            yield source.slice(source.loc_to_abs(buf_start)), None
+            yield source.slice(buf_start, is_rel=True), None
 
 
     def iter_clause(self, source):
@@ -144,8 +142,7 @@ class Segmenter:
         text = str(source)
         was_non_oxford = False
         for clause_m in re.finditer(clause_re, text):
-            clause_source = source.slice(source.loc_to_abs(buf_start),
-                                         source.loc_to_abs(clause_m.end(0)))
+            clause_source = source.slice(buf_start, clause_m.end(0), is_rel=True)
             if do_not_skip(source, clause_source, bool(clause_m.group(2)),
                            bool(buf), was_non_oxford):
                 if buf is not None:
@@ -162,7 +159,7 @@ class Segmenter:
             was_non_oxford = clause_m.group(2)
 
         if buf_start != len(text):
-            clause_source = source.slice(source.loc_to_abs(buf_start))
+            clause_source = source.slice(buf_start, is_rel=True)
             if do_not_skip(source, clause_source, False, bool(buf), was_non_oxford):
                 if buf is not None:
                     yield buf
@@ -186,13 +183,12 @@ class Segmenter:
             space_count = sum(1 for s in re.finditer(r"\S\s", pare_m.group(0))) - 1
             if space_count > threshold:
                 if buf_start != pare_m.start(0):
-                    yield source.slice(source.loc_to_abs(buf_start),
-                                       source.loc_to_abs(pare_m.start(0)))
+                    yield source.slice(buf_start, pare_m.start(0), is_rel=True)
                 yield source.slice_match(pare_m, 0)
                 buf_start = pare_m.end(0)
 
         if buf_start != len(text):
-            yield source.slice(source.loc_to_abs(buf_start))
+            yield source.slice(buf_start, is_rel=True)
 
 
     def iter_word(self, source, filter_numbers=True):

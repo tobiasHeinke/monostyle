@@ -404,7 +404,7 @@ class RSTParser:
             if part_name is None: # nested
                 continue
             if open_end and index == len(part_names):
-                code_part = code.slice(code.loc_to_abs(match_obj.end(index_last)))
+                code_part = code.slice(match_obj.end(index_last), is_rel=True)
             else:
                 if match_obj.group(index) is None:
                     continue
@@ -705,7 +705,7 @@ class RSTParser:
                             node.append_child(node.active)
                             node.active.active = None
                             node.active = None
-                        self.paragraph(node, line.slice(end=line.loc_to_abs(starter_m.start(2))),
+                        self.paragraph(node, line.slice(end=starter_m.start(2), is_rel=True),
                             line_info)
 
                     if node.active:
@@ -781,14 +781,13 @@ class RSTParser:
                 if col_prev is None:
                     col_prev = split_m.start(1)
                     continue
-                border = line.slice(line.loc_to_abs(col_prev),
-                                    line.loc_to_abs(split_m.start(1)))
+                border = line.slice(col_prev, split_m.start(1), is_rel=True)
                 if not split_m.group(2):
-                    after = line.slice(line.loc_to_abs(split_m.start(1)))
+                    after = line.slice(split_m.start(1), is_rel=True)
                     border.combine(after)
 
                 if is_first:
-                    before = line.slice(end=line.loc_to_abs(col_prev))
+                    before = line.slice(end=col_prev, is_rel=True)
                     border = before.combine(border)
                     is_first = False
 
@@ -932,8 +931,7 @@ class RSTParser:
             for split_m in re.finditer(r"\s+", line_info["line_str"]):
                 if col_prev == 0 and split_m.start() == 0:
                     continue
-                border = line.slice(line.loc_to_abs(col_prev),
-                                    line.loc_to_abs(split_m.start(0)))
+                border = line.slice(col_prev, split_m.start(0), is_rel=True)
                 if top_bottom:
                     new_cell = NodeRST("cell", FragmentBundle([border]))
                 else:
