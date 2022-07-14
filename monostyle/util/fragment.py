@@ -656,9 +656,9 @@ class Fragment():
         return True
 
 
-    def __contains__(self, term):
-        """Search content list."""
-        return term in self.content
+    def contains_line(self, line_str):
+        """Shallow search content list."""
+        return line_str in self.content
 
 
     def sort(self, *_):
@@ -935,6 +935,10 @@ class Fragment():
     def __bool__(self):
         """Returns is not None."""
         return True
+
+
+    def __contains__(self, other):
+        return other is self
 
 
     def to_fragment(self, **_):
@@ -1511,12 +1515,12 @@ class FragmentBundle(Fragment):
         return True
 
 
-    def __contains__(self, term):
+    def contains_line(self, line_str):
         if not self:
             return False
 
         for piece in self:
-            if term in piece:
+            if piece.contains_line(line_str):
                 return True
 
         return False
@@ -1868,6 +1872,10 @@ class FragmentBundle(Fragment):
 
     def __bool__(self):
         return bool(self.bundle)
+
+
+    def __contains__(self, other):
+        return other in self.bundle
 
 
     def to_fragment(self, pos_lincol=True, filler=None, filler_mode=None):
