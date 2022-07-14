@@ -59,7 +59,7 @@ def search(toolname, document, reports, config):
             reports.append(
                 Report(severity, toolname, entry_hunk["word"], message,
                        Fragment(document.code.filename, ", ".join(suggestions))
-                       .add_offset(-len(entry_hunk["word"]) * 8, (-1,0))))
+                       .move(-len(entry_hunk["word"]) * 8, (-1,0), is_rel=True)))
 
     return reports
 

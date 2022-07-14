@@ -205,7 +205,7 @@ class Editor:
             # detect alterations
             if ls != ls_orig:
                 self.add(Fragment(self.source.filename, ''.join(ls), m.start(),
-                                  m.end()).add_offset(text_src.start_pos))
+                                  m.end()).move(text_src.start_pos, is_rel=True))
 
 
     def is_conflicted(self, new_change, pos_lincol=True, ignore_filename=True):
