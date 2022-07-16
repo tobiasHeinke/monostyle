@@ -606,28 +606,20 @@ class Fragment():
             yield None
 
 
-    def replace(self, new_content, pos_lincol=True, open_end=True):
-        if isinstance(new_content, (Fragment, FragmentBundle)):
-            new = self.union(new_content, pos_lincol)
-            if new.is_bundle():
-                if not open_end:
-                    return self
-                new = new.bundle[0]
-            self.content = new.content
+    def replace(self, new_content, open_end=True):
+        if isinstance(new_content, str):
+            new_content = new_content.splitlines(keepends=True)
         else:
-            if isinstance(new_content, str):
-                new_content = new_content.splitlines(keepends=True)
-            else:
-                if len(new_content) != 0 and isinstance(new_content[0], list):
-                    if not open_end:
-                        new_content = new_content[0]
-                    else:
-                        new = []
-                        for content in new_content:
-                            new.extend(content)
-                        new_content = new
+            if len(new_content) != 0 and isinstance(new_content[0], list):
+                if not open_end:
+                    new_content = new_content[0]
+                else:
+                    new = []
+                    for content in new_content:
+                        new.extend(content)
+                    new_content = new
 
-            self.content = new_content
+        self.content = new_content
         return self
 
 
@@ -1517,17 +1509,14 @@ class FragmentBundle(Fragment):
             yield None
 
 
-    def replace(self, new_content, pos_lincol=True, open_end=True):
+    def replace(self, new_content, open_end=True):
         """Map list entry to entry in bundle."""
-        if isinstance(new_content, (Fragment, FragmentBundle)):
-            new = self.union(new_content, pos_lincol)
-            if not new.is_bundle():
-                new = new.to_bundle()
-            self.bundle = new.bundle
-        else:
-            if not self:
-                return self
+        if not self:
+            return self
 
+        if isinstance(new_content, str):
+            self.bundle[0].replace(new_content)
+        else:
             for piece, content in zip(self, new_content):
                 piece.replace(content)
 
