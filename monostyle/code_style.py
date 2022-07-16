@@ -238,11 +238,11 @@ def heading_lines(toolname, document, reports):
         title_len = len(str(node.name.code).strip()) + ind * 2
 
         if heading_char in {'%', '#', '*'} and not node.name_start:
-            fix = node.name.code.copy().replace_fill([heading_char * title_len + "\n"])
+            fix = node.name.code.copy().replace_over([heading_char * title_len + "\n"])
             fix = fix.clear(True)
             reports.append(
                 Report('W', toolname,
-                       node.name_end.code.copy().replace_fill(heading_char),
+                       node.name_end.code.copy().replace_over(heading_char),
                        Report.missing(what="overline"), fix=fix))
 
         if (len(str(node.name_end.code).strip()) != title_len or
@@ -261,21 +261,21 @@ def heading_lines(toolname, document, reports):
             if node.name_start:
                 lineno = node.name_start.code.start_lincol[0]
                 fix_over = node.name_start.code.slice((lineno, 0), (lineno + 1, 0))
-                fix_over.replace_fill([heading_char * title_len + "\n"])
+                fix_over.replace_over([heading_char * title_len + "\n"])
                 fix.combine(fix_over)
             lineno = node.name_end.code.start_lincol[0]
             fix_under = node.name_end.code.slice((lineno, 0), (lineno + 1, 0))
-            fix_under.replace_fill([heading_char * title_len + "\n"])
+            fix_under.replace_over([heading_char * title_len + "\n"])
             fix.combine(fix_under)
             reports.append(
                 Report('W', toolname,
-                       node.name_end.code.copy().replace_fill(heading_char),
+                       node.name_end.code.copy().replace_over(heading_char),
                        message, fix=fix))
 
         title_ind_m = re.match(r" *", str(node.name.code))
         if title_ind_m and len(title_ind_m.group(0)) != ind:
             fix = node.name.code.slice_match(title_ind_m, 0)
-            fix.replace_fill([" " * ind])
+            fix.replace_over([" " * ind])
             reports.append(
                 Report('W', toolname, node.name.code.copy().clear(True),
                        Report.quantity(what="wrong title indent",

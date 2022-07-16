@@ -35,7 +35,7 @@ def char_search(toolname, document, reports):
             output = document.code.slice_match(char_m, 0)
             reports.append(
                 Report('E', toolname, output, message,
-                       fix=output.copy().replace_fill(repl) if repl else None))
+                       fix=output.copy().replace_over(repl) if repl else None))
 
     char_re = re.compile(r"[^\n -~À-ʨ©®°±€™\t" + explicits + r"]")
     for char_m in re.finditer(char_re, text):

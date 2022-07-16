@@ -623,7 +623,7 @@ class Fragment():
         return self
 
 
-    def replace_fill(self, new_content, open_end=True):
+    def replace_over(self, new_content, open_end=True):
         if isinstance(new_content, str):
             if not open_end:
                 new_content = new_content[:len(self)]
@@ -1530,7 +1530,7 @@ class FragmentBundle(Fragment):
         return self
 
 
-    def replace_fill(self, new_content, open_end=True):
+    def replace_over(self, new_content, open_end=True):
         """Replace chars or lines distributed by current content length."""
         if not self:
             return self
@@ -1541,12 +1541,12 @@ class FragmentBundle(Fragment):
             if prev_end < len(new_content):
                 length = len(piece) if pos_lincol else len(piece.content)
                 if open_end and index == len(self.bundle) - 1:
-                    piece.replace_fill(new_content[prev_end:], open_end=True)
+                    piece.replace_over(new_content[prev_end:], open_end=True)
                 else:
-                    piece.replace_fill(new_content[prev_end:prev_end + length])
+                    piece.replace_over(new_content[prev_end:prev_end + length])
                     prev_end += length
             else:
-                piece.replace_fill("")
+                piece.replace_over("")
         return self
 
 

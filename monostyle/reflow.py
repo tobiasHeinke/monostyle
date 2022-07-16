@@ -430,11 +430,11 @@ def stringify_space(boxes, lastbreak):
                         new_content = []
                         for _ in range(max(1, nl_count)):
                             new_content.append('\n')
-                        box.space.replace_fill(new_content)
+                        box.space.replace_over(new_content)
                         changes_para.combine(box.space, check_align=False, merge=False)
                 is_last = False
             elif len(space_str) != 0 and (len(space_str) != 1 or space_str == '\n'):
-                box.space.replace_fill(' ')
+                box.space.replace_over(' ')
                 changes_para.combine(box.space, check_align=False, merge=False)
             box = box.prev
 

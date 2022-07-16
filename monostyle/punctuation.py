@@ -463,7 +463,7 @@ def whitespace(toolname, document, reports, re_lib):
         pattern = value[0]
         for m in re.finditer(pattern, text):
             fix = document.body.code.slice_match(m, 1)
-            fix.replace_fill(value[2])
+            fix.replace_over(value[2])
             reports.append(
                 Report('W', toolname, document.body.code.slice_match(m, 0),
                        value[1], fix=fix)
@@ -480,14 +480,14 @@ def whitespace(toolname, document, reports, re_lib):
                 output = node.code.slice_match(multi_start_m, 1)
                 reports.append(
                     Report('W', toolname, output, re_lib["multispacestart"][1],
-                           fix=output.copy().replace_fill(value[2]) if not is_cell else None)
+                           fix=output.copy().replace_over(value[2]) if not is_cell else None)
                     .set_line_punc(document.body.code, 50, 30))
 
         for multi_m in re.finditer(multi_re, node_str):
             output = node.code.slice_match(multi_m, 1)
             reports.append(
                 Report('W', toolname, output, re_lib["multispace"][1],
-                       fix=output.copy().replace_fill(value[2]) if not is_cell else None)
+                       fix=output.copy().replace_over(value[2]) if not is_cell else None)
                 .set_line_punc(document.body.code, 50, 30))
 
     return reports

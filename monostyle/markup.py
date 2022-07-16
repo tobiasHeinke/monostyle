@@ -201,7 +201,7 @@ def heading_level(toolname, document, reports):
         if message is not None:
             reports.append(
                 Report(severity, toolname,
-                       node.name_end.code.copy().replace_fill(heading_char), message))
+                       node.name_end.code.copy().replace_over(heading_char), message))
 
     return reports
 
