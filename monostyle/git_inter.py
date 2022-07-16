@@ -87,7 +87,7 @@ def difference(from_vsn, is_internal, path, rev, cached):
                 message = line[2:]
                 if message == "No newline at end of file":
                     if code and code.content: # remove previously added newline
-                        code = code.slice(end=code.end_pos - 1)
+                        code = code.slice(end=code.rel_to_start(-2), is_rel=True)
                 else:
                     print("{0}:{1}: unexpected version control message: {2}"
                           .format(code.filename, code.end_lincol[0], message))

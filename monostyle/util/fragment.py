@@ -764,6 +764,60 @@ class Fragment():
         return (loc_rel_lineno, loc_rel_colno)
 
 
+    def rel_to_start(self, loc, keep_bounds=True):
+        """Make a location relative to the end (negative numbers) relative to the start.
+        Negatives are shifted by one because of the lack of integer negative zero.
+        """
+        if isinstance(loc, int):
+            if loc < 0:
+                return loc
+            loc = self.span_len(True) + loc + 1
+            if keep_bounds:
+                loc = max(loc, 0)
+            return loc
+
+        lineno, colno = loc
+        if lineno < 0:
+            lineno = self.span_len(False)[0] - 1 + lineno + 1
+            if keep_bounds:
+                lineno = max(lineno, 0)
+        if colno < 0:
+            if lineno == len(self.content) - 1 and not self.content[lineno].endswith('\n'):
+                raise IndexError("Fragment relative loc out of range.")
+            colno = len(self.content[lineno]) + colno + 1
+            if keep_bounds:
+                colno = max(colno, 0)
+        return (lineno, colno)
+
+
+    def rel_to_end(self, loc, col_eol=True, keep_bounds=True):
+        """Make a location relative to the start relative to the end (negative numbers).
+        Negatives are shifted by one because of the lack of an integer negative zero.
+        """
+        if isinstance(loc, int):
+            if loc >= 0:
+                return loc
+            loc = self.span_len(True) - loc
+            if keep_bounds:
+                loc = max(loc, 0)
+            return -loc - 1
+
+        lineno, colno = loc
+        if lineno >= 0:
+            lineno = self.span_len(False)[0] - 1 - lineno
+            if keep_bounds:
+                lineno = max(lineno, 0)
+            lineno = -lineno - 1
+        if colno >= 0 and col_eol:
+            if loc[0] == len(self.content) - 1 and not self.content[loc[0]].endswith('\n'):
+                raise IndexError("Fragment relative loc out of range.")
+            colno = len(self.content[loc[0]]) - colno
+            if keep_bounds:
+                colno = max(colno, 0)
+            colno = -colno - 1
+        return (lineno, colno)
+
+
     def lincol_to_pos(self, lincol, is_rel=False, output_rel=False, keep_bounds=False):
         """Convert a lincol location to a pos location."""
         if not is_rel:
@@ -920,6 +974,10 @@ class Fragment():
     # -- Iterate, Compare & Convert ------------------------------------------
 
     def __iter__(self):
+        yield self
+
+
+    def __reversed__(self):
         yield self
 
 
@@ -1670,6 +1728,71 @@ class FragmentBundle(Fragment):
                     return (cursor[0] + rel[0], rel[1] if span_len[0] > 1 else cursor[1] + rel[1])
 
 
+    def rel_to_start(self, loc, keep_bounds=True):
+        if isinstance(loc, int):
+            if loc < 0:
+                return loc
+            loc = self.span_len(True) + loc + 1
+            if keep_bounds:
+                loc = max(loc, 0)
+            return loc
+
+        lineno, colno = loc
+        if lineno < 0:
+            lineno = self.span_len(False)[0] - 1 + lineno + 1
+            if keep_bounds:
+                lineno = max(lineno, 0)
+        if colno < 0:
+            loc_abs = self.loc_to_abs((lineno, 0))
+            if loc_abs is None:
+                raise IndexError("FragmentBundle relative loc out of range.")
+            for piece in reversed(self):
+                if loc_abs[0] <= piece.end_lincol[0]:
+                    colno = piece.rel_to_start((loc_abs[0] - piece.end_lincol[0], colno),
+                                               keep_bounds=False)[1]
+                    colno = piece.start_lincol[1] + colno
+                    break
+            else:
+                raise IndexError("FragmentBundle relative loc out of range.")
+            if loc_abs[0] == self.start_lincol[0]:
+                colno -= self.start_lincol[1]
+            if keep_bounds:
+                colno = max(colno, 0)
+        return (lineno, colno)
+
+
+    def rel_to_end(self, loc, col_eol=True, keep_bounds=True):
+        if isinstance(loc, int):
+            if loc >= 0:
+                return loc
+            loc = self.span_len(True) - loc
+            if keep_bounds:
+                loc = max(loc, 0)
+            return -loc - 1
+
+        lineno, colno = loc
+        if lineno >= 0:
+            lineno = self.span_len(False)[0] - 1 - lineno
+            if keep_bounds or lineno > 0:
+                lineno = max(lineno, 0)
+            lineno = -lineno - 1
+        if colno >= 0 and col_eol:
+            loc_abs = self.loc_to_abs(loc)
+            if loc_abs is None:
+                raise IndexError("FragmentBundle relative loc out of range.")
+
+            loc_abs_next = (loc_abs[0] + 1, 0)
+            for piece in reversed(self):
+                if piece.end_lincol <= loc_abs_next and piece.span_len(True) != 0:
+                    colno = piece.rel_to_end((loc_abs[0] - piece.start_lincol[0],
+                                              loc_abs[1] - piece.start_lincol[1]),
+                                             col_eol, keep_bounds=keep_bounds)[1]
+                    break
+            else:
+                raise IndexError("FragmentBundle relative loc out of range.")
+        return (lineno, colno)
+
+
     def lincol_to_pos(self, lincol, is_rel=False, output_rel=False, keep_bounds=False):
         if not self:
             return None
@@ -1861,6 +1984,11 @@ class FragmentBundle(Fragment):
     def __iter__(self):
         """Iterate over bundle list."""
         yield from self.bundle
+
+
+    def __reversed__(self):
+        """Reverse iterate over bundle list."""
+        yield from reversed(self.bundle)
 
 
     def is_bundle(self):
