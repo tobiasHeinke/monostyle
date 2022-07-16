@@ -1598,86 +1598,96 @@ class FragmentBundle(Fragment):
         return self
 
 
-    def loc_to_abs(self, loc_rel, filler=None, filler_mode=None):
+    def loc_to_abs(self, loc_rel, filler=None):
         if not self:
             return None
 
+        if filler is None:
+            return self.bundle[0].loc_to_abs(loc_rel)
+
         if isinstance(loc_rel, int):
+            filler = len(filler) if filler else 0
             cursor = 0
             prev = None
             for piece in self:
-                if filler and prev is not None:
-                    if filler_mode == "static":
-                        if loc_rel <= cursor + len(filler):
-                            return prev + loc_rel - cursor
-                        cursor += len(filler) if prev != piece.start_pos else 0
-                    else:
-                        if loc_rel <= cursor + piece.start_pos - prev:
-                            return prev + loc_rel - cursor
-                        cursor += piece.start_pos - prev
+                if prev is not None and prev != piece.start_pos:
+                    if loc_rel <= cursor + filler:
+                        return prev + loc_rel - cursor
+                    cursor += filler
                 if loc_rel <= cursor + piece.span_len(True):
                     return piece.loc_to_abs(loc_rel - cursor)
                 cursor += piece.span_len(True)
                 prev = piece.end_pos
 
         else:
-            cursor = 1
+            filler = ((filler.count('\n'), filler.rfind('\n'))
+                      if filler and '\n' in filler else (0, 0))
+            cursor = [0, 0]
             prev = None
             for piece in self:
-                if filler and prev is not None:
-                    if filler_mode == "static":
-                        cursor += filler.count('\n') if prev != piece.start_lincol[0] else 0
-                    else:
-                        cursor += piece.start_lincol[0] - prev
-                if loc_rel[0] <= cursor + len(piece.content):
-                    if cursor + self.start_lincol[0] == piece.start_lincol[0]:
-                        return piece.loc_to_abs((loc_rel[0] - cursor - 1,
-                                              loc_rel[1] - piece.start_lincol[1]))
+                if prev is not None and prev != piece.start_pos:
+                    cursor[0] += filler[0]
+                    cursor[1] = filler[1] if filler[0] != 0 else cursor[1] + filler[1]
+                span_len = piece.span_len(False)
+                cursor_end = cursor.copy()
+                cursor_end[0] += span_len[0] - 1
+                cursor_end[1] = (piece.end_lincol[1] if span_len[0] > 1 else
+                                 cursor[1] + piece.end_lincol[1])
+                if loc_rel <= tuple(cursor_end):
+                    return piece.loc_to_abs((loc_rel[0] - cursor[0], loc_rel[1] - cursor[1]))
+                cursor = cursor_end
+                if ((span_len[0] > 1 and piece.end_lincol[1] == 0) or
+                        (piece.content and piece.content[-1].endswith('\n'))):
+                    cursor[0] += 1
+                    cursor[1] = 0
 
-                    return piece.loc_to_abs((loc_rel[0] - cursor - 1, loc_rel[1]))
-                cursor += len(piece.content)
-                prev = piece.end_lincol[0]
+                prev = piece.end_pos
 
 
-    def loc_to_rel(self, loc_abs, filler=None, filler_mode=None):
+    def loc_to_rel(self, loc_abs, filler=None):
         if not self:
             return None
+
         if filler is None:
-            filler = ""
+            return self.bundle[0].loc_to_rel(loc_abs)
 
         if isinstance(loc_abs, int):
             for piece in self:
                 if piece.is_in_span(loc_abs):
-                    if filler and filler_mode != "static":
-                        return self.bundle[0].loc_to_rel(loc_abs)
-
+                    filler = len(filler) if filler else 0
                     cursor = 0
-                    is_first = True
+                    prev = None
                     for rec in self:
-                        if rec is not piece:
-                            cursor += ((len(filler) if is_first and rec.span_len(True) != 0
-                                        else 0) + rec.span_len(True))
-                        else:
+                        if prev is piece:
                             break
-                        is_first = False
+                        if prev is not None and prev != rec.start_pos:
+                            cursor += filler + rec.span_len(True)
+                        prev = piece.end_pos
                     return cursor + loc_abs - piece.start_pos
         else:
             for piece in self:
                 if piece.is_in_span(loc_abs):
-                    if filler and filler_mode != "static":
-                        return self.bundle[0].loc_to_rel(loc_abs)
-
-                    cursor = 0
-                    is_first = True
+                    filler = ((filler.count('\n'), filler.rfind('\n'))
+                              if filler and '\n' in filler else (0, 0))
+                    cursor = [0, 0]
+                    prev = None
                     for rec in self:
-                        if rec is not piece:
-                            cursor += ((filler.count('\n') if is_first and rec.span_len(True) != 0
-                                        else 0) + len(rec.content))
-                        else:
+                        if prev is not None and prev != rec.start_pos:
+                            cursor[0] += filler[0]
+                            cursor[1] = filler[1] if filler[0] != 0 else cursor[1] + filler[1]
+                        span_len = rec.span_len(False)
+                        if rec is piece:
                             break
-                        is_first = False
+                        cursor[0] += span_len[0] - 1
+                        cursor[1] = (rec.end_lincol[1] if span_len[0] > 1 else
+                                     cursor[1] + rec.end_lincol[1])
+                        if ((span_len[0] > 1 and rec.end_lincol[1] == 0) or
+                                (rec.content and rec.content[-1].endswith('\n'))):
+                            cursor[0] += 1
+                            cursor[1] = 0
+                        prev = rec.end_pos
                     rel = piece.loc_to_rel(loc_abs)
-                    return (rel[0] + cursor, rel[1])
+                    return (cursor[0] + rel[0], rel[1] if span_len[0] > 1 else cursor[1] + rel[1])
 
 
     def lincol_to_pos(self, lincol, is_rel=False, output_rel=False, keep_bounds=False):
