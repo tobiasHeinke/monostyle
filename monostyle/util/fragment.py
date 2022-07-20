@@ -636,6 +636,112 @@ class Fragment():
         return self
 
 
+    def replace_fill(self, filler, layout=None, spread=None, is_eol_end=None, _recursive=False):
+        if is_eol_end is None:
+            is_eol_end = bool((self.content and self.content[-1].endswith('\n')) or
+                              (self.end_lincol and self.end_lincol[1] == 0))
+
+        if not layout or layout == "fix":
+            new_content = filler
+        elif layout == "straight":
+            if not _recursive:
+                self.content.clear()
+                new_content = str(FragmentBundle([self]).replace_fill(
+                                  filler, layout, spread, is_eol_end, _recursive=True))
+            else:
+                new_content = filler
+        elif layout.startswith("padding"):
+            if not _recursive:
+                if not self.end_lincol:
+                    raise ValueError("'Fragment.replace_fill' {0} layout requires lincol"
+                                     .format(layout))
+                layout_line = bool(layout == "padding" or layout.endswith("-line"))
+                layout_col = bool(layout == "padding" or layout.endswith("-column"))
+                last = 0
+                span_len_lineno = self.span_len(False)[0] if layout_line else 1
+                new = FragmentBundle()
+                cur = 0
+                for index in range(span_len_lineno):
+                    if index == span_len_lineno - 1 and layout_col and not is_eol_end:
+                        cur = self.span_len(False)[1]
+
+                    cur += last
+                    new.combine(Fragment(self.filename, "\n" if (layout_line and
+                                         (index != span_len_lineno - 1 or is_eol_end)) else "",
+                                         last, cur), merge=False)
+                    last = cur
+
+                new.replace_fill(filler, layout, spread, is_eol_end, _recursive=True)
+                new_content = str(new)
+            else:
+                new_content = filler
+                if is_eol_end:
+                    new_content += "\n"
+        elif layout == "block":
+            if not _recursive:
+                if not self.end_lincol:
+                    raise ValueError("'Fragment.replace_fill' {0} layout requires lincol"
+                                     .format(layout))
+                span_len_lincol = self.span_len(False)
+                new = FragmentBundle()
+                line_len = abs(span_len_lincol[1])
+                for index in range(span_len_lincol[0]):
+                    cur = line_len
+                    if (index == 0 or index == span_len_lineno - 1):
+                        cur = max(span_len_lincol[1], 0)
+
+                    cur += last
+                    new.combine(Fragment(self.filename,
+                                         "\n" if (index != span_len_lincol[0] - 1 or is_eol_end)
+                                         else "", last, cur), merge=False)
+                    last = cur
+
+                new_content = str(new.replace_fill(filler, layout, spread,
+                                                   is_eol_end, _recursive=True))
+            else:
+                new_content = filler
+                if is_eol_end:
+                    new_content += "\n"
+        elif layout == "placeholder":
+            if not _recursive:
+                if not self.end_lincol:
+                    raise ValueError("'Fragment.replace_fill' {0} layout requires lincol"
+                                     .format(layout))
+                span_len_lineno = self.span_len(False)[0]
+                new = FragmentBundle()
+                last = 0
+                line_len = self.span_len(True) // span_len_lineno
+                last_len = self.end_lincol[1] if is_eol_end else line_len
+                for index in range(span_len_lineno):
+                    cur = line_len
+                    if index == 0:
+                        cur = line_len + (self.span_len(True) % span_len_lineno)
+                        if span_len_lineno > 1:
+                            cur += line_len - last_len
+                        cur = max(cur, 0)
+
+                    elif index == span_len_lineno - 1:
+                        if span_len_lineno > 1:
+                            cur = last_len
+
+                    cur += last
+                    new.combine(Fragment(self.filename, "\n" if (index != span_len_lineno - 1 or
+                                         is_eol_end) else "", last, cur), merge=False)
+                    last = cur
+
+                new_content = str(new.replace_fill(filler, layout, spread,
+                                                   is_eol_end, _recursive=True))
+            else:
+                new_content = filler
+                if is_eol_end:
+                    new_content += "\n"
+        else:
+            raise ValueError("'Fragment.replace_fill' unknown layout:", layout)
+
+        self.content = new_content.splitlines(keepends=True)
+        return self
+
+
     def clear(self, start_end):
         """Remove content. Turn into zero-length Fragment at start or end."""
         self.content.clear()
@@ -1531,7 +1637,7 @@ class FragmentBundle(Fragment):
 
 
     def replace_over(self, new_content, open_end=True):
-        """Replace chars or lines distributed by current content length."""
+        """Replace chars or lines distributed by the current content length."""
         if not self:
             return self
 
@@ -1547,6 +1653,68 @@ class FragmentBundle(Fragment):
                     prev_end += length
             else:
                 piece.replace_over("")
+        return self
+
+
+    def replace_fill(self, filler, layout=None, spread=None, is_eol_end=None, _recursive=False):
+        """Replace the content by filling the current span."""
+        def paired():
+            prev = None
+            for piece in self:
+                if prev:
+                    yield prev, piece
+                prev = piece
+            yield prev, None
+
+        if not self:
+            return self
+
+        if not isinstance(filler, str):
+            filler = "".join(filler)
+
+        if len(filler) == 0:
+            new_content = filler
+        elif not layout or layout == "fix" or spread == "fix":
+            new_content = filler
+            layout = None
+        elif not spread or spread == "repeat":
+            span = self.span_len(True)
+            new_content = filler * (span // len(filler))
+            if len(filler) != 1:
+                new_content += filler[:(span % len(filler))]
+            new_content = new_content[:span]
+        elif spread == "extend":
+            span = self.span_len(True)
+            new_content = filler[:span]
+            new_content += filler[-1] * (span - len(filler))
+        elif spread == "reflect":
+            span = self.span_len(True)
+            filler_reversed = filler[::-1]
+            new_content = [filler if not index % 2 else filler_reversed
+                           for index in range(span // len(filler) + 1)]
+            new_content = "".join(new_content)[:span]
+        else:
+            raise ValueError("'FragmentBundle.replace_fill' unknown spread:", spread)
+
+        last = 0
+        for piece, piece_next in paired():
+            is_eol_end_cur = bool((piece.content and piece.content[-1].endswith('\n')) or
+                                  (piece.end_lincol and piece.end_lincol[1] == 0))
+
+            if layout:
+                cur = last + max(piece.span_len(True) - (1 * is_eol_end_cur), 0)
+            else:
+                last = 0
+                cur = len(filler)
+            piece.replace_fill(new_content[last:cur], layout, spread,
+                               is_eol_end if piece_next is None else
+                               bool(is_eol_end_cur or
+                                    (piece.end_lincol and piece_next and
+                                     piece_next.start_lincol and
+                                     piece.end_pos == piece.start_pos and
+                                     piece.end_lincol[0] + 1 == piece.start_lincol[0])),
+                               _recursive=_recursive)
+            last = cur
         return self
 
 
@@ -2021,12 +2189,13 @@ class FragmentBundle(Fragment):
         return other in self.bundle
 
 
-    def to_fragment(self, pos_lincol=True, filler=None, filler_mode=None):
+    def to_fragment(self, pos_lincol=True, filler=None, layout=None, spread=None):
         if not self:
             return None
 
         if filler is not None:
-            return Fragment(self.bundle[0].filename, self.join(filler, filler_mode),
+            return Fragment(self.bundle[0].filename,
+                            self.join(filler, layout, spread),
                             self.bundle[0].start_pos, self.bundle[-1].end_pos,
                             self.bundle[0].start_lincol, self.bundle[-1].end_lincol,
                             bool(self.bundle[0].start_lincol is not None))
@@ -2042,28 +2211,27 @@ class FragmentBundle(Fragment):
         return self
 
 
-    def join(self, filler=None, filler_mode=None):
+    def join(self, filler=None, layout=None, spread=None):
         if not self:
             return ''
 
         if not filler:
             return str(self)
 
-        last = self.bundle[0].start_pos
+        last = None
         content = []
         for piece in self:
-            if last != piece.start_pos:
-                if filler_mode == "static":
-                    content.append(filler)
-                elif filler_mode == "extend":
-                    content.append(filler[:piece.start_pos - last])
-                    content.append(filler[-1] * (piece.start_pos - last - len(filler)))
-                else: # repeat
-                    content.append(filler * ((piece.start_pos - last) // len(filler)))
-                    if len(filler) != 1:
-                        content.append(filler[:(piece.start_pos - last) % len(filler)])
+            if last and last.end_pos != piece.start_pos:
+                between = Fragment(self.filename, "", last.end_pos, piece.start_pos,
+                                   last.end_lincol, piece.start_lincol)
+                between.replace_fill(filler, layout, spread, is_eol_end=bool(
+                                     last.end_lincol and piece.start_lincol and
+                                     last.end_lincol[0] != piece.start_lincol[0] and
+                                     piece.start_lincol[1] == 0))
+
+                content.append(str(between))
             content.append(str(piece))
-            last = piece.end_pos
+            last = piece
 
         return ''.join(content)
 
