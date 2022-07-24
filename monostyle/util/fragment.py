@@ -1386,31 +1386,12 @@ class FragmentBundle(Fragment):
                 new = None
             else:
                 new = FragmentBundle()
+                for piece in self.bundle[index_start[0]:index_end[0] + 1]:
+                    new.bundle.append(piece.copy())
                 if index_start[1]:
-                    if index_start[0] == index_end[0]:
-                        piece_first = self.bundle[index_start[0]].slice(start, end)
-                    else:
-                        piece_first = self.bundle[index_start[0]].slice(start)
-
-                    if piece_first is not None and len(piece_first) != 0:
-                        new.bundle.append(piece_first)
-                if index_start[0] == index_end[0] and not index_start[1] and not index_end[1]:
-                    pieces_inner = self.bundle[index_start[0]]
-                    new.bundle.append(pieces_inner.copy())
-                elif index_start[0] != index_end[0]:
-                    if not index_start[1] and not index_end[1]:
-                        pieces_inner = self.bundle[index_start[0]]
-                        new.bundle.append(pieces_inner.copy())
-                    else:
-                        for piece in self.bundle[min(len(self.bundle), index_start[0] + 1):
-                                                 index_end[0]]:
-                            new.bundle.append(piece.copy())
-                    if index_end[1]:
-                        piece_last = self.bundle[index_end[0]].slice(self.bundle[index_end[0]]
-                                                                     .get_start(pos_lincol),
-                                                                     end)
-                        if piece_last is not None and len(piece_last) != 0:
-                            new.bundle.append(piece_last)
+                    new.bundle[0] = new.bundle[0].slice(start)
+                if index_end[1]:
+                    new.bundle[-1] = new.bundle[-1].slice(end=end)
 
             result.append(new)
 
