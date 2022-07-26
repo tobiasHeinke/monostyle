@@ -32,6 +32,14 @@ class Node:
         return self
 
 
+    def get_root(self):
+        """Return the top-most parent."""
+        node = self.parent_node
+        while node:
+            node = node.parent_node
+        return node
+
+
     def prev_leaf(self):
         """Return the previous leaf node."""
         node = self
@@ -64,6 +72,14 @@ class Node:
                 node = node.child_nodes.first().child_nodes.first()
             else:
                 return node
+
+
+    def __contains__(self, item):
+        """Checks if the node is a descendent."""
+        for node in self.child_nodes:
+            if node is item or item in node:
+                return True
+        return False
 
 
     def copy(self, linked=False):
