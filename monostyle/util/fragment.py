@@ -1029,6 +1029,15 @@ class Fragment():
         return True
 
 
+    def copy_loc(self, other, *_):
+        """Copy the location from other."""
+        self.start_pos = other.start_pos
+        self.end_pos = other.end_pos
+        self.start_lincol = other.start_lincol
+        self.end_lincol = other.end_lincol
+        return self
+
+
     # -- Size ----------------------------------------------------------------
 
     def __len__(self):
@@ -2071,6 +2080,21 @@ class FragmentBundle(Fragment):
                     return False
             prev = piece
         return True
+
+
+    def copy_loc(self, other, deep=True):
+        if not self or not other:
+            return self
+
+        if not other.is_bundle() or not deep:
+            self.start_pos = other.start_pos
+            self.end_pos = other.end_pos
+            self.start_lincol = other.start_lincol
+            self.end_lincol = other.end_lincol
+        else:
+            for piece, piece_other in zip(self, other):
+                piece.copy_loc(piece_other)
+        return self
 
 
     # -- Size ----------------------------------------------------------------
