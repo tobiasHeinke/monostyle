@@ -1324,8 +1324,7 @@ class FragmentBundle(Fragment):
         self._transfere_attr(result)
 
 
-    def slice_match(self, match_obj, group, plenary=False, output_zero=True,
-                        filler=None, filler_mode=None):
+    def slice_match(self, match_obj, group, plenary=False, output_zero=True, filler=None):
         """relative to first."""
         if not self:
             return self.copy()
@@ -1333,8 +1332,8 @@ class FragmentBundle(Fragment):
         if match_obj.group(group) is None:
             return None if not plenary else (None, None, None)
 
-        return self.slice(self.loc_to_abs(match_obj.start(group), filler, filler_mode),
-                          self.loc_to_abs(match_obj.end(group), filler, filler_mode),
+        return self.slice(self.loc_to_abs(match_obj.start(group), filler),
+                          self.loc_to_abs(match_obj.end(group), filler),
                           plenary, output_zero)
 
 
