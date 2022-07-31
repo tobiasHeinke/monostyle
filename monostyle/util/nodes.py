@@ -20,8 +20,8 @@ class Node:
 
 
     def __index__(self):
-        if node.parent_node is not None:
-            return node.parent_node.child_nodes.index(self)
+        if self.parent_node is not None:
+            return self.parent_node.child_nodes.index(self)
 
 
     def detach(self):
