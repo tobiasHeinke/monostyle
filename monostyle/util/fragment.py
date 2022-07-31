@@ -7,7 +7,10 @@ Text line container.
 """
 
 class Fragment():
-    """A substring with positional information."""
+    """A substring with positional information.
+    Well formed if: A single string per line including a single newline at the end,
+    The end is after or equals start.
+    """
 
     __slots__ = ('filename', 'content', 'start_pos', 'end_pos', 'start_lincol', 'end_lincol')
 
