@@ -199,7 +199,7 @@ class Fragment():
 
 
     def issubset(self, other, pos_lincol):
-        """Is within the spans of other."""
+        """Is within the spans of other (_(A)_)."""
         if (not other.is_in_span(self.get_start(pos_lincol), False, True, True) or
                 not other.is_in_span(self.get_end(pos_lincol), False, True, True)):
             return False
@@ -212,7 +212,7 @@ class Fragment():
 
 
     def issuperset(self, other, pos_lincol):
-        """Other is within span."""
+        """Other is within span (_(B)_)."""
         if (not self.is_in_span(other.get_start(pos_lincol), False, True, True) or
                 not self.is_in_span(other.get_end(pos_lincol), False, True, True)):
             return False
@@ -781,35 +781,100 @@ class Fragment():
 
     # -- Location ------------------------------------------------------------
 
-    def move(self, pos=None, lincol=None, is_rel=False):
+    def move(self, pos=None, lincol=None, is_rel=False, start_end=True,
+             other=None, keep_bounds=True):
         """Moves the location."""
+        if not pos and not lincol:
+            return self
+
         if not is_rel:
-            if pos:
-                self.end_pos = pos + self.span_len(True)
-                self.start_pos = pos
+            if pos is not False:
+                if pos is None and other:
+                    pos = other.lincol_to_pos(lincol)
 
-            if lincol and self.start_lincol:
-                if self.start_lincol[0] == self.end_lincol[0]:
-                    self.end_lincol = lincol + self.span_len(False)
-                else:
-                    self.end_lincol = (lincol[0] + self.span_len(False)[0], self.end_lincol[1])
+                if pos is not None:
+                    if start_end:
+                        self.end_pos = pos + self.span_len(True)
+                        self.start_pos = pos
+                    else:
+                        self.start_pos = pos - self.span_len(True)
+                        self.end_pos = pos
 
-                self.start_lincol = lincol
+            if lincol is not False and self.start_lincol:
+                if not lincol and other:
+                    lincol = other.pos_to_lincol(self.start_pos if start_end else self.end_pos)
+
+                if lincol is not None:
+                    if start_end:
+                        if not other:
+                            lincol_rel = (lincol[0] - self.start_lincol[0],
+                                          lincol[1] - self.start_lincol[1])
+                            self.end_lincol = (self.end_lincol[0] + lincol_rel[0],
+                                               self.end_lincol[1] + lincol_rel[1])
+                        else:
+                            self.end_lincol = other.pos_to_lincol(self.end_pos
+                                                  if pos is not None else
+                                                  other.lincol_to_pos(lincol) +
+                                                  self.span_len(True))
+                        self.start_lincol = lincol
+                    else:
+                        if not other:
+                            lincol_rel = (lincol[0] - self.end_lincol[0],
+                                          lincol[1] - self.end_lincol[1])
+                            self.start_lincol = (self.start_lincol[0] + lincol_rel[0],
+                                                 self.start_lincol[1] + lincol_rel[1])
+                        else:
+                            self.start_lincol = other.pos_to_lincol(self.start_pos
+                                                    if pos is not None else
+                                                    other.lincol_to_pos(lincol) -
+                                                    self.span_len(True))
+                        self.end_lincol = lincol
 
         else:
             if pos:
                 self.start_pos += pos
                 self.end_pos += pos
 
-            if lincol and self.start_lincol:
-                if self.start_lincol[0] == self.end_lincol[0]:
-                    self.end_lincol = (self.end_lincol[0] + lincol[0],
-                                       self.end_lincol[1] + lincol[1])
-                else:
-                    self.end_lincol = (self.end_lincol[0] + lincol[0], self.end_lincol[1])
+            if lincol is not False and self.start_lincol:
+                if not lincol:
+                    lincol_other = other.pos_to_lincol(self.start_pos)
+                    lincol = (lincol_other[0] - self.start_lincol[0],
+                              lincol_other[1] - self.start_lincol[1])
 
                 self.start_lincol = (self.start_lincol[0] + lincol[0],
                                      self.start_lincol[1] + lincol[1])
+                if not other:
+                    self.end_lincol = (self.end_lincol[0] + lincol[0],
+                                       self.end_lincol[1] + lincol[1])
+                else:
+                    self.end_lincol = other.pos_to_lincol(self.end_pos
+                                          if pos is not None else
+                                          other.lincol_to_pos(self.start_lincol) +
+                                          self.span_len(True))
+
+                if pos is None and other:
+                    self.start_pos = other.lincol_to_pos(self.start_lincol)
+                    self.end_pos = other.lincol_to_pos(self.end_lincol)
+
+        if keep_bounds:
+            if other:
+                self.start_pos = max(min(self.start_pos, other.end_pos), other.start_pos)
+                self.end_pos = max(min(self.end_pos, other.end_pos), other.start_pos)
+            else:
+                self.start_pos = max(self.start_pos, 0)
+                self.end_pos = max(self.end_pos, 0)
+
+            if self.start_lincol:
+                self.start_lincol = (self.start_lincol[0], max(self.start_lincol[1], 0))
+                self.end_lincol = (self.end_lincol[0], max(self.end_lincol[1], 0))
+                if other:
+                    self.start_lincol = max(min(self.start_lincol, other.end_lincol),
+                                            other.start_lincol)
+                    self.end_lincol = max(min(self.end_lincol, other.end_lincol),
+                                          other.start_lincol)
+                else:
+                    self.start_lincol = (max(self.start_lincol[0], 0), self.start_lincol[1])
+                    self.end_lincol = (max(self.end_lincol[0], 0), self.end_lincol[1])
 
         return self
 
@@ -1774,25 +1839,22 @@ class FragmentBundle(Fragment):
 
     # -- Location ------------------------------------------------------------
 
-    def move(self, pos=None, lincol=None, is_rel=False):
-        if not is_rel:
-            for piece in self:
-                lincol_piece = None
-                if lincol:
-                    if piece.start_lincol[0] == self.start_lincol[0]:
-                        lincol_piece = lincol[0] + self.loc_to_rel(piece.start_lincol)
-                    else:
-                        lincol_piece = (lincol[0] + self.loc_to_rel(piece.start_lincol)[0],
-                                        piece.start_lincol[1])
-                piece.move(pos + self.loc_to_rel(piece.start_pos), lincol_piece, is_rel=is_rel)
+    def move(self, pos=None, lincol=None, is_rel=False, start_end=True,
+             other=None, keep_bounds=True):
+        if not pos and not lincol:
+            return self
 
-        else:
-            first_line = True
-            for piece in self:
-                if lincol and first_line and piece.start_lincol[0] != self.start_lincol[0]:
-                    lincol = (lincol[0], 0)
-                    first_line = False
-                piece.move(pos, lincol, is_rel=is_rel)
+        if not is_rel:
+            if pos:
+                pos = pos - self.start_pos if start_end else pos - self.end_pos
+            if lincol and self.start_lincol:
+                lincol = ((lincol[0] - self.start_lincol[0],
+                          lincol[1] - self.start_lincol[1]) if start_end else
+                         (lincol[0] - self.end_lincol[0],
+                          lincol[1] - self.end_lincol[1]))
+
+        for piece in self:
+            piece.move(pos, lincol, is_rel=True, other=other, keep_bounds=keep_bounds)
 
         return self
 
