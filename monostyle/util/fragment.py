@@ -609,8 +609,10 @@ class Fragment():
             yield None
 
 
-    def replace(self, new_content, open_end=True):
+    def replace(self, new_content, open_end=True, flush=True):
         if isinstance(new_content, str):
+            if not flush:
+                new_content = new_content + ''.join(self.content)[len(new_content):]
             new_content = new_content.splitlines(keepends=True)
         else:
             if len(new_content) != 0 and isinstance(new_content[0], list):
@@ -621,12 +623,14 @@ class Fragment():
                     for content in new_content:
                         new.extend(content)
                     new_content = new
+            if not flush:
+                new_content.extend(self.content[len(new_content):])
 
         self.content = new_content
         return self
 
 
-    def replace_over(self, new_content, open_end=True):
+    def replace_over(self, new_content, open_end=True, flush=True):
         if isinstance(new_content, str):
             if not open_end:
                 new_content = new_content[:len(self)]
@@ -635,6 +639,8 @@ class Fragment():
             if not open_end:
                 new_content = new_content[:len(self.content)]
 
+        if not flush:
+            new_content.extend(self.content[len(new_content):])
         self.content = new_content
         return self
 
@@ -1692,19 +1698,20 @@ class FragmentBundle(Fragment):
             yield None
 
 
-    def replace(self, new_content, open_end=True):
+    def replace(self, new_content, open_end=True, flush=True):
         """Map list entry to entry in bundle."""
         if not self:
             return self
 
         if isinstance(new_content, str):
-            self.bundle[0].replace(new_content)
+            self.bundle[0].replace(new_content, flush=flush)
         else:
             for piece, content in zip(self, new_content):
-                piece.replace(content)
+                piece.replace(content, flush=flush)
 
-            for piece in self.bundle[len(new_content):]:
-                piece.replace("")
+            if flush:
+                for piece in self.bundle[len(new_content):]:
+                    piece.replace("")
 
             if open_end:
                 for content in new_content[len(self.bundle):]:
@@ -1713,7 +1720,7 @@ class FragmentBundle(Fragment):
         return self
 
 
-    def replace_over(self, new_content, open_end=True):
+    def replace_over(self, new_content, open_end=True, flush=True):
         """Replace chars or lines distributed by the current content length."""
         if not self:
             return self
@@ -1724,12 +1731,14 @@ class FragmentBundle(Fragment):
             if prev_end < len(new_content):
                 length = len(piece) if pos_lincol else len(piece.content)
                 if open_end and index == len(self.bundle) - 1:
-                    piece.replace_over(new_content[prev_end:], open_end=True)
+                    piece.replace_over(new_content[prev_end:], open_end=True, flush=flush)
                 else:
-                    piece.replace_over(new_content[prev_end:prev_end + length])
+                    piece.replace_over(new_content[prev_end:prev_end + length], flush=flush)
                     prev_end += length
-            else:
+            elif flush:
                 piece.replace_over("")
+            else:
+                break
         return self
 
 
