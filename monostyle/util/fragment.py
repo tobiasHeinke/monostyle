@@ -35,7 +35,7 @@ class Fragment():
         if content is None:
             content = []
         elif isinstance(content, str):
-            content = [line for line in content.splitlines(keepends=True)]
+            content = list(content.splitlines(keepends=True))
         else:
             content = content.copy()
 
@@ -117,11 +117,11 @@ class Fragment():
         self.rermove_zero_len_end()
 
         if isinstance(new_content, str):
-            new_content = [line for line in new_content.splitlines(keepends=True)]
+            new_content = list(new_content.splitlines(keepends=True))
 
         is_empty = bool(not self.content)
-        is_nl_end = bool(not is_empty and self.content[-1].endswith('\n'))
-        if is_nl_end or is_empty:
+        is_eol_end = bool(not is_empty and self.content[-1].endswith('\n'))
+        if is_eol_end or is_empty:
             self.content.extend(new_content)
         else:
             self.content[-1] += new_content[0]
@@ -132,7 +132,7 @@ class Fragment():
 
             if self.end_lincol:
                 self.end_lincol = (self.end_lincol[0] + len(new_content) -
-                                   bool(not is_nl_end or is_empty), len(self.content[-1]))
+                                   bool(not is_eol_end or is_empty), len(self.content[-1]))
 
         return self
 
@@ -379,7 +379,7 @@ class Fragment():
         if isinstance(key, int):
             key = slice(key, key + 1)
 
-        return self.slice(start=key.start, end=key.stop, is_rel=True)
+        return self.slice(start=key.start, end=key.stop)
 
 
     def __setitem__(self, key, value):
@@ -518,7 +518,7 @@ class Fragment():
         if start is None and end is None:
             if not plenary:
                 return self.copy()
-            elif not output_zero:
+            if not output_zero:
                 return None, self.copy(), None
 
         if is_rel:
@@ -813,10 +813,9 @@ class Fragment():
                 if lincol is not None:
                     if start_end:
                         if not other:
-                            lincol_rel = (lincol[0] - self.start_lincol[0],
-                                          lincol[1] - self.start_lincol[1])
-                            self.end_lincol = (self.end_lincol[0] + lincol_rel[0],
-                                               self.end_lincol[1] + lincol_rel[1])
+                            self.end_lincol = tuple(a + b for a, b in zip(self.end_lincol,
+                                                    tuple(a - b for a, b in zip(lincol,
+                                                          self.start_lincol))))
                         else:
                             self.end_lincol = other.pos_to_lincol(self.end_pos
                                                   if pos is not None else
@@ -825,11 +824,9 @@ class Fragment():
                         self.start_lincol = lincol
                     else:
                         if not other:
-                            lincol_rel = (lincol[0] - self.end_lincol[0],
-                                          lincol[1] - self.end_lincol[1])
-                            self.start_lincol = (self.start_lincol[0] + lincol_rel[0],
-                                                 self.start_lincol[1] + lincol_rel[1])
-                        else:
+                            self.start_lincol = tuple(a + b for a, b in zip(self.start_lincol,
+                                                      tuple(a - b for a, b in zip(lincol,
+                                                            self.end_lincol))))
                             self.start_lincol = other.pos_to_lincol(self.start_pos
                                                     if pos is not None else
                                                     other.lincol_to_pos(lincol) -
@@ -843,15 +840,11 @@ class Fragment():
 
             if lincol is not False and self.start_lincol:
                 if not lincol:
-                    lincol_other = other.pos_to_lincol(self.start_pos)
-                    lincol = (lincol_other[0] - self.start_lincol[0],
-                              lincol_other[1] - self.start_lincol[1])
-
-                self.start_lincol = (self.start_lincol[0] + lincol[0],
-                                     self.start_lincol[1] + lincol[1])
+                    lincol = tuple(a - b for a, b in zip(other.pos_to_lincol(self.start_pos),
+                                                         self.start_lincol))
+                self.start_lincol = tuple(a + b for a, b in zip(self.start_lincol, lincol))
                 if not other:
-                    self.end_lincol = (self.end_lincol[0] + lincol[0],
-                                       self.end_lincol[1] + lincol[1])
+                    self.end_lincol = tuple(a + b for a, b in zip(self.end_lincol, lincol))
                 else:
                     self.end_lincol = other.pos_to_lincol(self.end_pos
                                           if pos is not None else
@@ -1642,7 +1635,7 @@ class FragmentBundle(Fragment):
         if not self or (start is None and end is None):
             if not plenary:
                 return self.copy()
-            elif not output_zero:
+            if not output_zero:
                 return None, self.copy(), None
 
         if is_rel:
@@ -1857,10 +1850,8 @@ class FragmentBundle(Fragment):
             if pos:
                 pos = pos - self.start_pos if start_end else pos - self.end_pos
             if lincol and self.start_lincol:
-                lincol = ((lincol[0] - self.start_lincol[0],
-                          lincol[1] - self.start_lincol[1]) if start_end else
-                         (lincol[0] - self.end_lincol[0],
-                          lincol[1] - self.end_lincol[1]))
+                lincol = tuple(a - b for a, b in zip(lincol, self.start_lincol if start_end else
+                                                     self.end_lincol))
 
         for piece in self:
             piece.move(pos, lincol, is_rel=True, other=other, keep_bounds=keep_bounds)

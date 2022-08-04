@@ -78,7 +78,7 @@ class PartofSpeech:
         if not joined or isinstance(obj, (str, list)):
             return obj
 
-        return list(value for value in iter_sub(obj))
+        return list(iter_sub(obj))
 
 
     def tag(self, word):

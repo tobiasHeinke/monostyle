@@ -34,7 +34,7 @@ class CharCatalog:
         if not joined or isinstance(obj, str):
             return obj
 
-        return "".join(list(value for value in iter_sub(obj)))
+        return "".join(iter_sub(obj))
 
 
     def tag(self, char):
