@@ -61,6 +61,19 @@ class Editor:
             return None
 
 
+    def _write_diff(self, filename, text_dst):
+        """Write diff output to the file."""
+        try:
+            with open(filename, "w", encoding="utf-8") as text_file:
+                text_file.write(text_dst)
+
+            return text_dst
+
+        except (IOError, OSError):
+            self._status = False
+            return None
+
+
     def add(self, new_change, pos_lincol=True):
         """Add replacement."""
         self._changes.combine(new_change, check_align=False, pos_lincol=pos_lincol, merge=False)
@@ -222,6 +235,35 @@ class Editor:
         return self._changes.is_in_span(loc)
 
 
+    def to_diff(self, pos_lincol=True, use_conflict_handling=False, ignore_filename=True,
+                output=None, date=None, n=3):
+        """Outputs a unified diff."""
+        import difflib
+        text_dst = self.apply(virtual=True, pos_lincol=pos_lincol,
+                              use_conflict_handling=use_conflict_handling,
+                              ignore_filename=ignore_filename)
+        if use_conflict_handling:
+            text_dst, conflicted = text_dst
+
+        result = "".join(difflib.unified_diff(
+                     list(self.source.iter_lines()), list(text_dst.iter_lines()),
+                     fromfile=self.source.filename, tofile=text_dst.filename,
+                     fromfiledate=date[0] if date else "",
+                     tofiledate=date[1] if date else "",
+                     n=n))
+
+        if not output:
+            if not use_conflict_handling:
+                return result
+
+            return result, conflicted
+
+        if not use_conflict_handling:
+            return self._write_diff(output, result)
+
+        return self._write_diff(output, result), conflicted
+
+
 class FilenameEditor(Editor):
     """File renaming with SVN."""
 
@@ -264,6 +306,33 @@ class FilenameEditor(Editor):
 
         vsn_inter.move(self.source.filename, str(text_dst))
         return text_dst
+
+
+    def to_diff(self, pos_lincol=True, use_conflict_handling=False, ignore_filename=True,
+                output=None):
+        """Outputs a ndiff with partial unified diff control lines."""
+        import difflib
+        text_dst = self.apply(virtual=True, pos_lincol=pos_lincol,
+                              use_conflict_handling=use_conflict_handling,
+                              ignore_filename=ignore_filename)
+        if use_conflict_handling:
+            text_dst, conflicted = text_dst
+
+        result = ["--- {0}\n+++ {1}\n".format(self.source.filename, text_dst)]
+        result.extend(list(difflib.ndiff(list(line + '\n' for line in self.source.iter_lines()),
+                                         list(line + '\n' for line in text_dst.iter_lines()))))
+        result = "".join(result)
+
+        if not output:
+            if not use_conflict_handling:
+                return result
+
+            return result, conflicted
+
+        if not use_conflict_handling:
+            return self._write_diff(output, result)
+
+        return self._write_diff(output, result), conflicted
 
 
 class PropEditor(Editor):
@@ -341,13 +410,13 @@ class EditorSession:
         """
         if mode == "text":
             self._editor_class = Editor
-        elif mode in {"filename", "filename"}:
+        elif mode in {"filename", "file name"}:
             self._editor_class = FilenameEditor
         elif mode in {"prop", "props", "property", "properties",
                       "conf", "config", "configuration"}:
             self._editor_class = PropEditor
         else:
-            print("Unknown EditorSession mode:", mode)
+            raise ValueError("'EditorSession' unknown mode:", mode)
 
         self._kwargs = kwargs
 
@@ -364,11 +433,11 @@ class EditorSession:
     def add(self, new_change, pos_lincol=True):
         """Store change in editor."""
         if (self._last_index is not None and
-                self._editors[self._last_index].new_change.filename == new_change.filename):
+                self._editors[self._last_index].source.filename == new_change.filename):
             self._editors[self._last_index].add(new_change, pos_lincol)
         else:
             for index, editor in enumerate(reversed(self._editors)):
-                if editor.new_change.filename == new_change.filename:
+                if editor.source.filename == new_change.filename:
                     editor.add(new_change, pos_lincol)
                     self._last_index = len(self._editors) - 1 - index
                     break
@@ -397,3 +466,23 @@ class EditorSession:
         self._editors.clear()
         if virtual:
             return result
+
+
+    def to_diff(self, pos_lincol=True, stop_on_conflict=False,
+                output=None, **kwargs):
+        """Create a diff from the editors."""
+        result = []
+        for editor in self._editors:
+            result.append(editor.to_diff(virtual=True, pos_lincol=pos_lincol, **kwargs))
+
+            if not editor:
+                print("Editor error: conflict in", editor.source.filename)
+                self._status = False
+                if stop_on_conflict:
+                    break
+
+        result = "".join(result)
+        if not output:
+            return result
+
+        Editor._write_diff(self, output, result)
