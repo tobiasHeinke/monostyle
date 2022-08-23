@@ -29,9 +29,6 @@ class Fragment():
         """
         self.filename = filename
 
-        start_pos = int(start_pos) if start_pos is not None else 0
-        end_pos = int(end_pos) if end_pos is not None else None
-
         if content is None:
             content = []
         elif isinstance(content, str):
@@ -41,24 +38,23 @@ class Fragment():
 
         self.content = content
 
-        if end_pos is None:
-            end_pos = start_pos + sum(map(len, content))
+        start_pos = int(start_pos) if start_pos is not None else 0
+        end_pos = int(end_pos) if end_pos is not None else None
 
-        if use_lincol:
-            if start_lincol is None:
-                start_lincol = (0, 0)
-            if end_lincol is None:
-                if len(content) == 0:
-                    end_lincol = start_lincol
-                elif len(content) == 1:
-                    end_lincol = (start_lincol[0], start_lincol[1] + len(content[-1]))
-                else:
-                    end_lincol = (start_lincol[0] + max(0, len(content) - 1), len(content[-1]))
+        if use_lincol and start_lincol is None:
+            start_lincol = (0, 0)
 
         self.start_pos = start_pos
-        self.end_pos = end_pos
         self.start_lincol = start_lincol
+        self.end_pos = end_pos
         self.end_lincol = end_lincol
+
+        if end_pos is None or (use_lincol and end_lincol is None):
+            if end_pos is None and (end_lincol is None and use_lincol):
+                pos_lincol = None
+            else:
+                pos_lincol = bool(end_pos is None)
+            self.correlate_len(pos_lincol=pos_lincol, start_end=False)
 
 
     def get_start(self, pos_lincol=True):
@@ -934,7 +930,7 @@ class Fragment():
         Negatives are shifted by one because of the lack of integer negative zero.
         """
         if isinstance(loc, int):
-            if loc < 0:
+            if loc >= 0:
                 return loc
             loc = self.span_len(True) + loc + 1
             if keep_bounds:
@@ -1114,7 +1110,7 @@ class Fragment():
 
     def span_len(self, pos_lincol):
         """Returns either the span char length or
-        the line span and column span of the first and last line.
+        the line span and signed column span of the first and last line.
         """
         if pos_lincol:
             return self.end_pos - self.start_pos
@@ -1126,7 +1122,8 @@ class Fragment():
 
 
     def size(self, pos_lincol):
-        """Returns the dimensions either the char length or the size of the bounding rectangle."""
+        """Returns the dimensions either the char length or
+        the size of the bounding rectangle."""
         if pos_lincol:
             return len(self)
 
@@ -1143,6 +1140,37 @@ class Fragment():
 
     def is_empty(self):
         return len(self.content) == 0
+
+
+    def correlate_len(self, pos_lincol=None, start_end=False, other=None, **_):
+        """Scale the span length to match the content length."""
+        if pos_lincol is None or pos_lincol is True:
+            if start_end:
+                self.start_pos = self.end_pos - len(self)
+            else:
+                self.end_pos = self.start_pos + len(self)
+
+        if pos_lincol is None or pos_lincol is False:
+            if start_end:
+                if len(self.content) == 0:
+                    self.start_lincol = self.end_lincol
+                else:
+                    if other is None:
+                        raise ValueError("Fragment.correlate_len with start lincol " +
+                                         "requires an 'other' reference")
+                    self.start_lincol = other.pos_lincol(
+                        self.start_pos if pos_lincol is None else
+                        self.end_pos - len(self))
+            else:
+                if len(self.content) == 0:
+                    self.end_lincol = self.start_lincol
+                elif len(self.content) == 1:
+                    self.end_lincol = (self.start_lincol[0],
+                                       self.start_lincol[1] + len(self.content[-1]))
+                else:
+                    self.end_lincol = (self.start_lincol[0] + max(0, len(self.content) - 1),
+                                       len(self.content[-1]))
+        return self
 
 
     # -- Iterate, Compare & Convert ------------------------------------------
@@ -1961,7 +1989,7 @@ class FragmentBundle(Fragment):
 
     def rel_to_start(self, loc, keep_bounds=True):
         if isinstance(loc, int):
-            if loc < 0:
+            if loc >= 0:
                 return loc
             loc = self.span_len(True) + loc + 1
             if keep_bounds:
@@ -2223,6 +2251,23 @@ class FragmentBundle(Fragment):
             if not piece.is_empty():
                 return False
         return True
+
+
+    def correlate_len(self, pos_lincol=None, start_end=False, other=None, individually=False):
+        if not self:
+            return self
+
+        if not individually and other is None:
+            raise ValueError("FragmentBundle.correlate_len non individual " +
+                             "requires an 'other' reference")
+        offset = 0
+        for piece in self:
+            if not individually and offset != 0:
+                piece.move(pos=offset, is_rel=True, start_end=True, other=other)
+            len_org = piece.span_len(True)
+            piece.correlate_len(pos_lincol, start_end, other)
+            offset += piece.span_len(True) - len_org
+        return self
 
 
     # -- Iterate, Compare & Convert ------------------------------------------
