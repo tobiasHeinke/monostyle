@@ -235,30 +235,61 @@ class Editor:
         return self._changes.is_in_span(loc)
 
 
-    def to_diff(self, pos_lincol=True, use_conflict_handling=False, ignore_filename=True,
-                output=None, date=None, n=3):
+    def to_diff(self, apply=None, diff=None, output=None):
         """Outputs a unified diff."""
+        def add_offset(m):
+            groups = list(m.groups())
+            groups[1] = str(int(groups[1]) + self.source.start_lincol[0])
+            groups[3] = str(int(groups[3]) + self.source.start_lincol[0])
+            return "".join(groups)
+
         import difflib
-        text_dst = self.apply(virtual=True, pos_lincol=pos_lincol,
-                              use_conflict_handling=use_conflict_handling,
-                              ignore_filename=ignore_filename)
-        if use_conflict_handling:
+        if apply is None:
+            apply = {}
+        if diff is None:
+            diff = {}
+        apply["virtual"] = True
+        text_dst = self.apply(**apply)
+        if apply.get("use_conflict_handling"):
             text_dst, conflicted = text_dst
 
-        result = "".join(difflib.unified_diff(
-                     list(self.source.iter_lines()), list(text_dst.iter_lines()),
-                     fromfile=self.source.filename, tofile=text_dst.filename,
-                     fromfiledate=date[0] if date else "",
-                     tofiledate=date[1] if date else "",
-                     n=n))
+        if not diff.get("fine", False):
+            if (not self.source.is_empty() and
+                self.source.start_lincol and self.source.start_lincol[1] != 0):
+                raise ValueError("Editor: Unified diff not at start of line")
+
+            result = "".join(difflib.unified_diff(
+                         list(self.source.iter_lines()), list(text_dst.iter_lines()),
+                         fromfile=self.source.filename, tofile=text_dst.filename,
+                         fromfiledate=diff.get("fromfiledate", ""),
+                         tofiledate=diff.get("tofiledate", ""),
+                         n=diff.get("n", 3)))
+
+            if (not self.source.is_empty() and
+                    self.source.start_lincol and self.source.start_lincol[0] != 0):
+                import re
+                loc_re = re.compile(r"^(@@ \-)(\d+?)((?:,\d+?)? \+)(\d+?)((?:,\d+?)? @@)$",
+                            re.MULTILINE)
+                result = re.sub(loc_re, add_offset, result)
+        else:
+            result = ["--- {0}{2}\n+++ {1}{3}\n".format(self.source.filename, text_dst.filename,
+                     "\t" + diff["fromfiledate"] if "fromfiledate" in diff.keys() else "",
+                     "\t" + diff["tofiledate"] if "tofiledate" in diff.keys() else "")]
+            result.append("@@@ {0}{1} @@@\n".format(self.source.start_pos + 1,
+                     " ({0},{1})".format(self.source.start_lincol[0] + 1,
+                        self.source.start_lincol[1] + 1)
+                     if self.source.start_lincol else ""))
+            result.extend(list(difflib.ndiff(list(self.source.iter_lines()),
+                                             list(text_dst.iter_lines()))))
+            result = "".join(result)
 
         if not output:
-            if not use_conflict_handling:
+            if not apply.get("use_conflict_handling"):
                 return result
 
             return result, conflicted
 
-        if not use_conflict_handling:
+        if not apply.get("use_conflict_handling"):
             return self._write_diff(output, result)
 
         return self._write_diff(output, result), conflicted
@@ -308,28 +339,41 @@ class FilenameEditor(Editor):
         return text_dst
 
 
-    def to_diff(self, pos_lincol=True, use_conflict_handling=False, ignore_filename=True,
-                output=None):
+    def to_diff(self, apply=None, diff=None, output=None):
         """Outputs a ndiff with partial unified diff control lines."""
         import difflib
-        text_dst = self.apply(virtual=True, pos_lincol=pos_lincol,
-                              use_conflict_handling=use_conflict_handling,
-                              ignore_filename=ignore_filename)
-        if use_conflict_handling:
+        if apply is None:
+            apply = {}
+        if diff is None:
+            diff = {}
+        apply["virtual"] = True
+        text_dst = self.apply(**apply)
+        if apply.get("use_conflict_handling"):
             text_dst, conflicted = text_dst
 
-        result = ["--- {0}\n+++ {1}\n".format(self.source.filename, text_dst)]
-        result.extend(list(difflib.ndiff(list(line + '\n' for line in self.source.iter_lines()),
-                                         list(line + '\n' for line in text_dst.iter_lines()))))
-        result = "".join(result)
+        if diff.get("fine", True):
+            result = ["--- {0}{2}\n+++ {1}{3}\n".format(self.source.filename, text_dst,
+                     "\t" + diff["fromfiledate"] if "fromfiledate" in diff.keys() else "",
+                     "\t" + diff["tofiledate"] if "tofiledate" in diff.keys() else "")]
+            result.extend(list(difflib.ndiff(list(line + '\n' for line in self.source.iter_lines()),
+                                             list(line + '\n' for line in text_dst.iter_lines()))))
+            result = "".join(result)
+        else:
+            result = "".join(difflib.unified_diff(
+                         list(line + '\n' for line in self.source.iter_lines()),
+                         list(line + '\n' for line in text_dst.iter_lines()),
+                         fromfile=self.source.filename, tofile=text_dst.filename,
+                         fromfiledate=diff.get("fromfiledate", ""),
+                         tofiledate=diff.get("tofiledate", ""),
+                         n=0))
 
         if not output:
-            if not use_conflict_handling:
+            if not apply.get("use_conflict_handling"):
                 return result
 
             return result, conflicted
 
-        if not use_conflict_handling:
+        if not apply.get("use_conflict_handling"):
             return self._write_diff(output, result)
 
         return self._write_diff(output, result), conflicted
@@ -448,12 +492,15 @@ class EditorSession:
                 self._last_index = len(self._editors) - 1
 
 
-    def apply(self, virtual=False, pos_lincol=True, stop_on_conflict=False):
+    def apply(self, virtual=False, pos_lincol=True, use_conflict_handling=False,
+              ignore_filename=True, stop_on_conflict=False):
         """Apply each editor."""
         if virtual:
             result = []
         for editor in self._editors:
-            output = editor.apply(virtual=virtual, pos_lincol=pos_lincol)
+            output = editor.apply(virtual=virtual, pos_lincol=pos_lincol,
+                                  use_conflict_handling=use_conflict_handling,
+                                  ignore_filename=ignore_filename)
             if virtual:
                 result.append(output)
 
@@ -468,12 +515,16 @@ class EditorSession:
             return result
 
 
-    def to_diff(self, pos_lincol=True, stop_on_conflict=False,
-                output=None, **kwargs):
+    def to_diff(self, apply=None, diff=None, output=None, stop_on_conflict=False):
         """Create a diff from the editors."""
+        if apply is None:
+            apply = {}
+        if diff is None:
+            diff = {}
         result = []
+        apply["virtual"] = True
         for editor in self._editors:
-            result.append(editor.to_diff(virtual=True, pos_lincol=pos_lincol, **kwargs))
+            result.append(editor.to_diff(apply, diff))
 
             if not editor:
                 print("Editor error: conflict in", editor.source.filename)
