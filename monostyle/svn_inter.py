@@ -13,7 +13,7 @@ import re
 import subprocess
 
 from monostyle.util.monostyle_io import print_over, single_text
-from monostyle.util.fragment import Fragment
+from monostyle.util.fragment import Fragment, FragmentBundle
 
 
 def get_revision(path):
@@ -38,7 +38,7 @@ def unversioned_files(path, binary_ext):
             yield filename
 
 
-def difference(from_vsn, is_internal, path, rev, binary_ext):
+def difference(from_vsn, path, is_internal=True, rev=None, binary_ext=None):
     is_change = False
     if not rev:
         rev = "BASE"
@@ -78,10 +78,11 @@ def difference(from_vsn, is_internal, path, rev, binary_ext):
                         rev += "HEAD"
 
     loc_re = re.compile(r"@@ \-\d+?(?:,\d+?)? \+(\d+?)(?:,\d+?)? @@")
-    code = None
-    context = []
+    source_all = None
+    changes_all = None
     skip = False
     body = False
+    control_prev = None
     for line in (diff if from_vsn else file_diff)(path, rev, is_change):
         try:
             line = line.decode("utf-8")
@@ -104,33 +105,68 @@ def difference(from_vsn, is_internal, path, rev, binary_ext):
             continue
 
         if line.startswith("@@"):
-            if code and len(code.content) != len(context):
-                yield code, context
+            if source_all is not None:
+                yield source_all, changes_all
 
-            code = Fragment(filename, [],
-                            start_lincol=(int(re.match(loc_re, line).group(1)) - 1, 0))
-            context = []
+            source_all = Fragment(filename, [],
+                                  start_lincol=(int(re.match(loc_re, line).group(1)) - 1, 0))
+            changes_all = FragmentBundle()
+            source = None
+            changes = None
             body = True
 
         elif body:
-            if line.startswith(' '):
-                code.extend(line[1:] + '\n')
-                context.append(code.end_lincol[0])
-            elif line.startswith('+'):
-                code.extend(line[1:] + '\n')
+            control, line = ((line[:1], line[1:] + '\n') if not line.startswith('\\') else
+                             (line[:2], line[2:] + '\n'))
+            if control == '+':
+                if changes is None:
+                    changes = Fragment(filename, line)
+                    if source:
+                        changes.copy_loc(source)
+                    else:
+                        changes.set_start(source_all.end_pos, source_all.end_lincol)
+                        changes.set_end(source_all.end_pos, source_all.end_lincol)
+                else:
+                    changes.extend(line, keep_end=True)
+            elif control == '-':
+                if source is None:
+                    source = Fragment(filename, line, source_all.end_pos,
+                                      start_lincol=source_all.end_lincol)
+                else:
+                    source.extend(line)
+                    if changes is not None:
+                        changes.set_end(source.end_pos, source.end_lincol)
+            elif control == ' ':
+                if source is not None:
+                    source_all.combine(source)
+                    source = None
+                if changes is not None:
+                    changes_all.combine(changes, merge=False)
+                    changes = None
 
-            elif line.startswith('\\'):
-                # backslash + space
-                message = line[2:]
-                if message == "No newline at end of file":
-                    if code and code.content: # remove previously added newline
-                        code = code.slice(end=code.rel_to_start(-2), is_rel=True)
+                source_all.extend(line)
+            elif control == '\\':
+                if line == "No newline at end of file\n":
+                    if control_prev == '+':
+                        changes = changes.slice(
+                            end=changes.rel_to_start(-2), is_rel=True)
+                    elif control_prev == '-':
+                        source = source.slice(
+                            end=source.rel_to_start(-2), is_rel=True)
+                    elif control_prev == ' ':
+                        source_all = source_all.slice(
+                            end=source_all.rel_to_start(-2), is_rel=True)
                 else:
                     print("{0}:{1}: unexpected version control message: {2}"
-                          .format(code.filename, code.end_lincol[0], message))
+                          .format(source_all.filename, source_all.end_lincol[0], line))
+            control_prev = control if control in "+- " else control_prev
 
-    if code and len(code.content) != len(context):
-        yield code, context
+    if source is not None:
+        source_all.combine(source)
+    if changes is not None:
+        changes_all.combine(changes, merge=False)
+    if changes_all:
+        yield source_all, changes_all
 
 
 def update_files(path, rev=None):
@@ -307,4 +343,4 @@ def run_diff(from_vsn, is_internal, path, rev, cached=None, unversioned=False):
             if text:
                 yield Fragment(filename, text), None, None
 
-    yield from difference(from_vsn, is_internal, path, rev, binary_ext)
+    yield from difference(from_vsn, path, is_internal, rev, binary_ext)

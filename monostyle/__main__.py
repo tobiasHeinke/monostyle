@@ -95,8 +95,11 @@ def get_hunks_version(path, parse_options, version_options):
     filter_options = {"tools": {"blank-line", "flavor", "indention", "heading-level",
                                 "heading-line-length", "mark", "markup-names",
                                 "start-case", "structure", "ui"}}
-    for code, context in vsn_inter.run_diff(path=path, **version_options):
-        filter_options["context"] = context
+    for source, changes in vsn_inter.run_diff(path=path, **version_options):
+        if not changes:
+            continue
+        code = source.union(changes)
+        filter_options["changes"] = changes.correlate_len(other=source)
         config_dynamic = {"_at_eof": not code.content[-1].endswith('\n')}
         yield code, parse_options, filter_options, config_dynamic
 
@@ -145,8 +148,8 @@ def apply(mods, path, rst_parser, parse_options, version_options=None):
     def filter_reports(report, options):
         """Filter out reports in the diff context."""
         return bool(report.tool in options["tools"] and
-                    report.output.start_lincol is not None and options["context"] is not None and
-                    report.output.start_lincol[0] in options["context"])
+                    report.output.start_lincol is not None and options["changes"] is not None and
+                    not options["changes"].is_in_span(report.output.start_lincol))
 
     reports = []
     mods_loop = []
