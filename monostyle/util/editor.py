@@ -235,6 +235,23 @@ class Editor:
         return self._changes.is_in_span(loc)
 
 
+    def add_diff(self, input, pos_lincol=True, use_git=True):
+        """Input a unified diff."""
+        if use_git:
+            import monostyle.git_inter as vsn_inter
+        else:
+            import monostyle.svn_inter as vsn_inter
+
+        found = False
+        for source_diff, changes_diff in vsn_inter.difference(False, input):
+            if self.source.filename == source_diff.filename:
+                self.add(changes_diff, pos_lincol=pos_lincol)
+                found = True
+            else:
+                if found:
+                    break
+
+
     def to_diff(self, apply=None, diff=None, output=None):
         """Outputs a unified diff."""
         def add_offset(m):
@@ -309,6 +326,15 @@ class FilenameEditor(Editor):
 
     def from_file(filename, changes=None, use_git=True):
         return FilenameEditor(Fragment(filename, None), changes=changes, use_git=use_git)
+
+
+    def add(self, new_change, pos_lincol=True):
+        """Add replacement."""
+        last = next(reversed(new_change))
+        if last and last.content[-1].endswith('\n'):
+            new_change = new_change.slice(
+                end=new_change.rel_to_start(-2), is_rel=True)
+        super().add(new_change, pos_lincol)
 
 
     def _read(self):
@@ -513,6 +539,17 @@ class EditorSession:
         self._editors.clear()
         if virtual:
             return result
+
+
+    def add_diff(self, input, pos_lincol=True, use_git=True):
+        """Input a unified diff."""
+        if use_git:
+            import monostyle.git_inter as vsn_inter
+        else:
+            import monostyle.svn_inter as vsn_inter
+
+        for _, changes_diff in vsn_inter.difference(False, input):
+            self.add(changes_diff, pos_lincol=pos_lincol)
 
 
     def to_diff(self, apply=None, diff=None, output=None, stop_on_conflict=False):
