@@ -515,6 +515,7 @@ def options_overide(options=None):
         "absolute_path": False,
         "file_title_ruler": None,
         "compact": False,
+        "sort_key": None,
         "show_summary": False,
         "summary_ruler": '_',
         **options

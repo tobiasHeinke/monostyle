@@ -423,7 +423,10 @@ class Fragment():
                     return self.copy().clear(True), self.copy(), self.copy().clear(False)
                 return None, self.copy(), None
 
-            start = self.get_start(isinstance(end, int))
+            if not is_rel:
+                start = self.get_start(isinstance(end, int))
+            else:
+                start = 0 if isinstance(end, int) else (0, 0)
 
         start_pos_abs = None
         if isinstance(start, int):
@@ -518,7 +521,8 @@ class Fragment():
                 return None, self.copy(), None
 
         if is_rel:
-            start = self.loc_to_abs(start)
+            if start is not None:
+                start = self.loc_to_abs(start)
             if end is not None:
                 end = self.loc_to_abs(end)
 
@@ -1606,7 +1610,10 @@ class FragmentBundle(Fragment):
                     return self.copy().clear(True), self.copy(), self.copy().clear(False)
                 return None, self.copy(), None
 
-            start = self.get_start(isinstance(end, int))
+            if not is_rel:
+                start = self.get_start(isinstance(end, int))
+            else:
+                start = 0 if isinstance(end, int) else (0, 0)
 
         if end is not None and end < start:
             end = start
@@ -1667,7 +1674,8 @@ class FragmentBundle(Fragment):
                 return None, self.copy(), None
 
         if is_rel:
-            start = self.loc_to_abs(start)
+            if start is not None:
+                start = self.loc_to_abs(start)
             if end is not None:
                 end = self.loc_to_abs(end)
 
