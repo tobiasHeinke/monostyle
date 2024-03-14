@@ -1142,6 +1142,25 @@ class Fragment():
         return len(self.content) == 0
 
 
+    def is_len_correlated(self, pos_lincol=None, **_):
+        """Check if the span length matches the content length."""
+        if pos_lincol is None or pos_lincol is True:
+            if self.size(True) != self.span_len(True):
+                return False
+
+        if pos_lincol is None or pos_lincol is False:
+            size = (max(len(self.content) - 1, 0),
+                    0 if len(self.content) == 0 else len(self.content[-1]))
+            span = (self.end_lincol[0] - self.start_lincol[0],
+                    self.end_lincol[1] - self.start_lincol[1]
+                    if self.end_lincol[0] == self.start_lincol[0] else
+                    self.end_lincol[1])
+            if size != span:
+                return False
+
+        return True
+
+
     def correlate_len(self, pos_lincol=None, start_end=False, other=None, **_):
         """Scale the span length to match the content length."""
         if pos_lincol is None or pos_lincol is True:
@@ -2129,13 +2148,13 @@ class FragmentBundle(Fragment):
         return False
 
 
-    def is_aligned(self, other, pos_lincol, last_only=True):
+    def is_aligned(self, other, pos_lincol, individually=False):
         if not self or not other:
             return True
 
         piece_first = next(iter(other))
 
-        if last_only:
+        if not individually:
             return self.bundle[-1].is_aligned(piece_first, pos_lincol)
 
         for piece in self:
@@ -2254,6 +2273,50 @@ class FragmentBundle(Fragment):
         for piece in self:
             if not piece.is_empty():
                 return False
+        return True
+
+
+    def is_len_correlated(self, pos_lincol=None, individually=False):
+        if self and not individually:
+            prev = None
+            size_pos = span_pos = 0
+            size_lincol = span_lincol = (0, 0)
+            for piece in self:
+                if prev and not prev.is_aligned(piece, pos_lincol):
+                    if (size_pos != span_pos or
+                            size_lincol != span_lincol):
+                        return False
+
+                if pos_lincol is None or pos_lincol is True:
+                    size_pos += piece.size(True)
+                    span_pos += piece.span_len(True)
+
+                if pos_lincol is None or pos_lincol is False:
+                    span = piece.span_len(False)
+                    if not prev or piece.end_lincol[0] == prev.end_lincol[0]:
+                        span_lincol = (span_lincol[0] + max(span[0] - 1, 0),
+                                       span_lincol[1] + span[1])
+                    else:
+                        span_lincol = (span_lincol[0] + span[0], span[1])
+                    size = (len(piece.content),
+                        len(piece.content[-1] if not piece.is_empty() else 0))
+                    if not prev or not prev.content or not prev.content[-1].endswith('\n'):
+                        size_lincol = (size_lincol[0] + max(size[0] - 1, 0),
+                                       size_lincol[1] + size[1]
+                                       if piece.content and len(piece.content) == 1 else
+                                       size[1])
+                    else:
+                        size_lincol = (size_lincol[0] + size[0], size[1])
+
+                prev = piece
+            if (size_pos != span_pos or
+                    size_lincol != span_lincol):
+                return False
+        else:
+            for piece in self:
+                if not piece.is_len_correlated(pos_lincol):
+                    return False
+
         return True
 
 
