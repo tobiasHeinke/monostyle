@@ -223,29 +223,23 @@ class Fragment():
     def union(self, other, pos_lincol):
         """Overlay other (A(B)B)."""
         new = FragmentBundle()
-        before = other.slice(end=self.get_start(pos_lincol), keep_bounds=False)
-        if before:
-            new.combine(before, False, pos_lincol=pos_lincol)
         if (self.is_in_span(other.get_start(pos_lincol), False, True, True) or
                 self.is_in_span(other.get_end(pos_lincol), False, True, True)):
             after = self
             for piece in other:
-                if piece.get_end(pos_lincol) < self.get_start(pos_lincol):
-                    continue
-                if piece.get_start(pos_lincol) > self.get_end(pos_lincol):
-                    break
-                before, _, after = after.slice(piece.get_start(pos_lincol),
-                                               piece.get_end(pos_lincol),
-                                               plenary=True, keep_bounds=False)
-                if before:
-                    new.combine(before, False, pos_lincol=pos_lincol, merge=False)
+                if (piece.get_end(pos_lincol) > self.get_start(pos_lincol) or
+                        piece.get_start(pos_lincol) <= self.get_end(pos_lincol)):
+                    before, _, after = after.slice(piece.get_start(pos_lincol),
+                                                   piece.get_end(pos_lincol),
+                                                   plenary=True, keep_bounds=False)
+                    if before:
+                        new.combine(before, False, pos_lincol=pos_lincol, merge=False)
                 new.combine(piece, False, pos_lincol=pos_lincol, merge=False)
-
             if after:
                 new.combine(after, False, pos_lincol=pos_lincol, merge=False)
-        after = other.slice(self.get_end(pos_lincol), keep_bounds=False)
-        if after:
-            new.combine(after, False, pos_lincol=pos_lincol, merge=False)
+
+        else:
+            new = other
 
         result = new.to_fragment()
         if result:
@@ -305,28 +299,30 @@ class Fragment():
     def symmetric_difference(self, other, pos_lincol):
         """Cut gaps with overlaps of other (A(_)B)."""
         new = FragmentBundle()
-        before = other.slice(end=self.get_start(pos_lincol), keep_bounds=False)
-        if before:
-            new.combine(before, False, pos_lincol=pos_lincol)
         if (self.is_in_span(other.get_start(pos_lincol), False, True, True) or
                 self.is_in_span(other.get_end(pos_lincol), False, True, True)):
             after = self
             for piece in other:
-                if piece.get_end(pos_lincol) < self.get_start(pos_lincol):
-                    continue
-                if piece.get_start(pos_lincol) > self.get_end(pos_lincol):
-                    break
-                before, _, after = after.slice(piece.get_start(pos_lincol),
-                                               piece.get_end(pos_lincol),
-                                               plenary=True, keep_bounds=False)
-                if before:
-                    new.combine(before, False, pos_lincol=pos_lincol, merge=False)
+                if (piece.get_end(pos_lincol) > self.get_start(pos_lincol) or
+                        piece.get_start(pos_lincol) <= self.get_end(pos_lincol)):
+                    before, _, after = after.slice(piece.get_start(pos_lincol),
+                                                   piece.get_end(pos_lincol),
+                                                   plenary=True, keep_bounds=False)
+                    if before:
+                        new.combine(before, False, pos_lincol=pos_lincol, merge=False)
+                piece_before, _, piece_after = piece.slice(self.get_start(pos_lincol),
+                                                           self.get_end(pos_lincol),
+                                                           plenary=True, keep_bounds=False)
+                if piece_before:
+                    new.combine(piece_before, False, pos_lincol=pos_lincol, merge=False)
+                if piece_after:
+                    new.combine(piece_after, False, pos_lincol=pos_lincol, merge=False)
 
             if after:
                 new.combine(after, False, pos_lincol=pos_lincol, merge=False)
-        after = other.slice(self.get_end(pos_lincol), keep_bounds=False)
-        if after:
-            new.combine(after, False, pos_lincol=pos_lincol, merge=False)
+        else:
+            new.combine(self, False, pos_lincol=pos_lincol, merge=False)
+            new.combine(other, False, pos_lincol=pos_lincol, merge=False)
 
         result = new.to_fragment()
         if result:
