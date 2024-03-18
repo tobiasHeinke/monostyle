@@ -393,11 +393,11 @@ class Fragment():
                 value.start_lincol = key.start
                 value.end_lincol = key.stop
 
-        return self.union_update(value, pos_lincol)
+        self.union_update(value, pos_lincol)
 
 
     def __delitem__(self, key):
-        return self.__setitem__(key, "")
+        self.__setitem__(key, "")
 
 
     def slice_match(self, match_obj, group, plenary=False, keep_bounds=True, **_):
@@ -823,6 +823,7 @@ class Fragment():
                             self.start_lincol = tuple(a + b for a, b in zip(self.start_lincol,
                                                       tuple(a - b for a, b in zip(lincol,
                                                             self.end_lincol))))
+                        else:
                             self.start_lincol = other.pos_to_lincol(self.start_pos
                                                     if pos is not None else
                                                     other.lincol_to_pos(lincol) -
@@ -1177,7 +1178,7 @@ class Fragment():
                     if other is None:
                         raise ValueError("Fragment.correlate_len with start lincol " +
                                          "requires an 'other' reference")
-                    self.start_lincol = other.pos_lincol(
+                    self.start_lincol = other.pos_to_lincol(
                         self.start_pos if pos_lincol is None else
                         self.end_pos - len(self))
             else:
@@ -1369,7 +1370,7 @@ class FragmentBundle(Fragment):
         """All filenames are the same."""
         prev = None
         for piece in self:
-            if prev.filename != piece.filename:
+            if prev and prev.filename != piece.filename:
                 return False
             prev = piece
         return True
@@ -1910,11 +1911,14 @@ class FragmentBundle(Fragment):
         return self
 
 
-    def switch_lincol(self):
+    def switch_lincol(self, before=None):
         if not self:
             return self
 
-        self.bundle[-1].switch_lincol()
+        if ((not before or not before.is_aligned(self.bundle[-1], True)) and
+                len(self.bundle) != 1):
+            before = self.bundle[-2]
+        self.bundle[-1].switch_lincol(before=before)
         return self
 
 
