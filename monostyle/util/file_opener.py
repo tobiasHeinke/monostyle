@@ -14,7 +14,7 @@ from monostyle.util.report import Report
 
 
 # For other text editors see:
-# https://developer.blender.org/diffusion/BM/browse/trunk/blender_docs/tools/open_quickfix_in_editor.py
+# https://projects.blender.org/blender/blender-manual/src/branch/main/tools/utils_ide/open_quickfix_in_editor.py
 
 def run(path, lincol):
     """Open the editor via cmd."""

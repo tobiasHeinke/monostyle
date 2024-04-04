@@ -22,7 +22,7 @@ def duplicated_image(toolname, reports):
         Returns an arbitrary sized unique ASCII string based on the file contents.
         (exact hashing method may change).
         """
-        # https://developer.blender.org/diffusion/BM/browse/trunk/blender_docs/tools_rst/rst_remap.py
+        # https://projects.blender.org/blender/blender-manual/src/branch/main/tools/utils_maintenance/rst_remap.py
         with open(filename, 'rb') as f:
             # first get the size
             import os

@@ -199,7 +199,7 @@ class Editor:
         find_re -- a reg exp pattern.
 
         Adapted from:
-        https://developer.blender.org/diffusion/BM/browse/trunk/blender_docs/tools_rst/rst_helpers/__init__.py
+        https://projects.blender.org/blender/blender-manual/src/branch/main/tools/utils_maintenance/rst_helpers/__init__.py
         """
         import re
 

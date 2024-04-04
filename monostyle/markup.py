@@ -1170,7 +1170,7 @@ def structure(toolname, document, reports, data):
         return node_active
 
     def repeat(node_active, waypoint_active, node_con, waypoint_con, span=None):
-        """Repeats the previous the operation while the note matches the waypoint."""
+        """Repeats the previous operation while the note matches the waypoint."""
         if waypoint_active["is_input"]:
             span = waypoint_active["node"][0]
         if waypoint_con["is_start"]:
@@ -1189,7 +1189,7 @@ def structure(toolname, document, reports, data):
         return node_active
 
     def duplicate(node_active, waypoint_active, node_con, waypoint_con):
-        """Repeats the previous the operation if the node matches a reference node."""
+        """Repeats the previous operation if the node matches a reference node."""
         if node_active is None or node_con is None:
             return node_active if node_active == node_con else None
 

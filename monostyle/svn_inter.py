@@ -5,7 +5,7 @@ svn_inter
 
 Interface to SVN.
 """
-# Based on https://developer.blender.org/diffusion/BM/browse/trunk/blender_docs/tools/svn_commit.py
+# Based on https://projects.blender.org/blender/blender-manual/src/branch/blender-v3.3-release/tools/svn_commit.py
 
 
 import os
