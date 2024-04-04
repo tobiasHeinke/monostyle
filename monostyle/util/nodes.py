@@ -34,8 +34,8 @@ class Node:
 
     def get_root(self):
         """Return the top-most parent."""
-        node = self.parent_node
-        while node:
+        node = self
+        while node.parent_node:
             node = node.parent_node
         return node
 

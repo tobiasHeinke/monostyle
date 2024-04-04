@@ -272,6 +272,6 @@ def run_diff(from_vsn, is_internal, path, rev, cached, unversioned=False):
         for filename in unversioned_files(path, binary_ext):
             filename, text = single_text(filename)
             if text:
-                yield Fragment(filename, text), None, None
+                yield Fragment(filename, text), None
 
     yield from difference(from_vsn, path, is_internal, rev, cached)

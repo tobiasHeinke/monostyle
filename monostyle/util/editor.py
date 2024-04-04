@@ -227,7 +227,7 @@ class Editor:
                     not self._changes.is_overlapped(new_change, pos_lincol) and
                     (ignore_filename or
                     (new_change.filename == self.source.filename and
-                     new_change.has_consistent_filenames(pos_lincol))))
+                     new_change.has_consistent_filenames())))
 
 
     def is_in_change(self, loc):
