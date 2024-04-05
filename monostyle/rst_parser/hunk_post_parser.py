@@ -9,6 +9,7 @@ Retrofit cut off node parts in differential hunks after main parsing.
 import re
 from monostyle.util.fragment import Fragment
 from monostyle.rst_parser.rst_node import NodeRST, NodePartRST
+import monostyle.rst_parser.walker as rst_walker
 
 
 def parse(rst_parser, document):
@@ -26,7 +27,7 @@ def toctree(rst_parser, document):
     """Find partial toctree directives."""
     doc_re = re.compile(r"\A *\S([^ \\/]+?[\\/])*[^ \\/]+?\.rst(?:$|\Z)")
     node = document.body.child_nodes.first()
-    if node.node_name == "text" and node.code.isspace():
+    if rst_walker.is_blank_text(node):
         node = node.next
     if not node or node.node_name != "block-quote":
         return document
@@ -75,7 +76,7 @@ def toctree(rst_parser, document):
 def refbox(rst_parser, document):
     """Find partial reference directives."""
     node = document.body.child_nodes.first()
-    if node.node_name == "text" and node.code.isspace():
+    if rst_walker.is_blank_text(node):
         node = node.next
     if not node or node.node_name != "block-quote":
         return document

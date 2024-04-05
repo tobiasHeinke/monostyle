@@ -201,7 +201,7 @@ def tool_title(toolname, document, reports):
     last_re = re.compile(r"(?:\-> |\A)([^>]*?)(?:\.\.\.)?\Z")
     for node in rst_walker.iter_node(document.body, "sect", enter_pos=False):
         node_next = node.next
-        if node_next.node_name == "text" and node.code.isspace():
+        if rst_walker.is_blank_text(node_next):
             node_next = node_next.next
         if not rst_walker.is_of(node_next, "dir", "reference"):
             continue

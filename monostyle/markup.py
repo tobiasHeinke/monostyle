@@ -14,6 +14,11 @@ import monostyle.rst_parser.walker as rst_walker
 from monostyle.rst_parser.core import RSTParser
 
 
+def is_blank(code):
+    """Check if the code is empty or contains only whitespaces."""
+    return code.is_empty() or all(map(str.isspace, code.iter_lines()))
+
+
 def highlight_pre(toolname):
     config = dict()
     config.update(monostyle_io.get_override(__file__, toolname, "thresholds", (0.6, 1.0)))
@@ -87,7 +92,7 @@ def highlight(toolname, document, reports, config):
                 if not node.next:
                     last_line = (next(node.code.reversed_splitlines())
                                  if node.code.span_len(True) != 0 else None)
-                    if not last_line or last_line.isspace():
+                    if not last_line or is_blank(last_line):
                         text_chars += blank_line
                 continue
 
@@ -219,7 +224,7 @@ def indention(toolname, document, reports):
             block_line_full = None
             is_first_line = is_hanging
             for line in node.code.splitlines():
-                if is_first_line or line.isspace():
+                if is_first_line or is_blank(line):
                     is_first_line = False
                     continue
 
@@ -247,8 +252,7 @@ def indention(toolname, document, reports):
     for node in rst_walker.iter_node(document, output_root=True):
         if node.node_name == "target":
             next_node = node.next
-            while (next_node and next_node.node_name == "text" and
-                   next_node.code.isspace()):
+            while rst_walker.is_blank_text(next_node):
                 next_node = next_node.next
             if next_node:
                 next_node = next_node.indent
@@ -285,7 +289,7 @@ def indention(toolname, document, reports):
                 if node_field.body and node_field.body.code.span_len(False)[0] > 1:
                     is_first = True
                     for line in node_field.body.code.splitlines():
-                        if is_first or line.isspace():
+                        if is_first or is_blank(line):
                             is_first = False
                             continue
 
@@ -386,7 +390,7 @@ def indention(toolname, document, reports):
                        node.code.start_lincol[0] == document.code.start_lincol[0]) or
                       (node.prev and not node.prev.prev and
                        node.prev.code.start_lincol[0] == document.code.start_lincol[0] and
-                       node.prev.node_name == "text" and node.prev.code.isspace())))):
+                       rst_walker.is_blank_text(node.prev))))):
                 if node.code.start_lincol[0] != 0:
                     # base indent is unknown
                     continue
@@ -1061,7 +1065,7 @@ def structure(toolname, document, reports, data):
     """Inspect the document structure by matching a path."""
     def matcher(node, waypoint):
         """Matches the node with the names in the waypoint."""
-        if node is None or node.code.isspace():
+        if node is None or is_blank(node.code):
             return bool(("None" in waypoint["node"][0]) == waypoint["node"][1])
         if "None" in waypoint["node"][0] and not waypoint["node"][1]:
             return True
@@ -1080,7 +1084,7 @@ def structure(toolname, document, reports, data):
         if waypoint["attr"][0] != "*":
             for entry in waypoint["attr"][0]:
                 value = rst_walker.get_attr(node, entry[0])
-                if value is None or value.code.isspace():
+                if value is None or is_blank(value.code):
                     return bool((entry[1] == "None") == waypoint["node"][1])
                 if (not((entry[1] == "*" or str(value.code).strip() == entry[1]) ==
                         waypoint["attr"][1])):
@@ -1091,7 +1095,7 @@ def structure(toolname, document, reports, data):
         """Returns if the node matches a reference node with a waypoint as criterion."""
         def attr_value(node, key):
             value = rst_walker.get_attr(node, key)
-            if value is None or value.code.isspace():
+            if value is None or is_blank(value.code):
                 return None
             return str(value.code).strip()
 
@@ -1123,7 +1127,7 @@ def structure(toolname, document, reports, data):
         def skip(node_active, waypoint_active):
             waypoint = waypoint_active if not waypoint_con else waypoint_con
             if node_active.node_name == "text":
-                return bool(node_active.code.isspace())
+                return rst_walker.is_blank_text(node_active)
             for typ in (("target",), ("comment",), ("substdef",),
                         ("dir", "highlight"), ("dir", "index")):
                 if rst_walker.is_of(node_active, *typ):

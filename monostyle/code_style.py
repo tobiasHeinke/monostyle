@@ -15,15 +15,12 @@ from monostyle.util.char_catalog import CharCatalog
 import monostyle.rst_parser.walker as rst_walker
 
 
-def is_blank_node(node):
-    """The node is empty or contains only whitespaces."""
-    if node.node_name == "text":
-        return node.code.isspace()
-    return False
-
-
 def blank_line(toolname, document, reports):
     """Blank line markup formatting."""
+    def is_blank(code):
+        """Check if the code is empty or contains only whitespaces."""
+        return code.is_empty() or all(map(str.isspace, code.iter_lines()))
+
     def counter(node, skip=False, stop_cond=None, invert=False):
         count = 0
         node_walk = node.prev if not invert else node
@@ -32,7 +29,7 @@ def blank_line(toolname, document, reports):
             for line in node_walk.code.reversed_splitlines():
                 if len(line) == 0:
                     continue
-                if line.start_lincol[1] == 0 and line.isspace():
+                if line.start_lincol[1] == 0 and is_blank(line):
                     count +=1
                 else:
                     break
@@ -61,7 +58,7 @@ def blank_line(toolname, document, reports):
             # Sphinx special metafields; check only first, flags only
             node = node.body.child_nodes.first()
             return bool(str(node.name.code) in {"tocdepth", "nocomments", "orphan", "nosearch"} and
-                        node.body.code.isspace())
+                        is_blank(node.body.code))
 
         for typ in (("target",), ("comment",), ("substdef",),
                     ("dir", "highlight"), ("dir", "index")):
@@ -76,7 +73,7 @@ def blank_line(toolname, document, reports):
 
     prime = None
     for node in rst_walker.iter_node(document.body):
-        if is_blank_node(node) or not node.indent:
+        if rst_walker.is_blank_text(node) or not node.indent:
             continue
 
         aim = 1 if node.prev else 0
@@ -119,7 +116,7 @@ def blank_line(toolname, document, reports):
                 elif (rst_walker.is_of(node, "dir", {"figure", "image"}) and
                         rst_walker.is_of(node_over, "dir", {"figure", "image"}) and
                         not node_over.body and
-                        (not node.body or node.body.code.isspace())):
+                        (not node.body or is_blank(node.body.code))):
                     aim_alt = 0
 
         if is_proxy or (node is not prime and is_sect(node)):
@@ -201,8 +198,7 @@ def flavor(toolname, document, reports):
                                    Report.misformatted(what="wrong char", where="bullet list")))
 
             if (len(node.body.code) == 1 and
-                    node.body.child_nodes.first().node_name == "text" and
-                    is_blank_node(node.body.child_nodes.first())):
+                    rst_walker.is_blank_text(node.body.child_nodes.first())):
                 reports.append(
                     Report('W', toolname, node.name_start.code.copy().clear(True),
                            Report.missing(what="empty comment", where="in empty list item")))
@@ -415,7 +411,8 @@ def style_extra(toolname, document, reports):
         elif node.node_name == "target":
             next_node = node.next
 
-            while next_node and (next_node.node_name == "target" or is_blank_node(next_node)):
+            while (next_node and
+                    (next_node.node_name == "target" or rst_walker.is_blank_text(next_node))):
                 next_node = next_node.next
 
             if rst_walker.is_of(next_node, "dir", {"figure", "image", "list-table"}):

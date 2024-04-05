@@ -760,18 +760,6 @@ class Fragment():
         return self
 
 
-    def isspace(self):
-        """The content is empty or contains only whitespaces."""
-        if len(self.content) == 0:
-            return True
-
-        for line_str in self.content:
-            if not line_str.isspace():
-                return False
-
-        return True
-
-
     def contains_line(self, line_str):
         """Shallow search content list."""
         return line_str in self.content
@@ -1858,17 +1846,6 @@ class FragmentBundle(Fragment):
             self.bundle = [self.bundle[-1].clear(start_end)]
 
         return self
-
-
-    def isspace(self):
-        if not self:
-            return True
-
-        for piece in self:
-            if not piece.isspace():
-                return False
-
-        return True
 
 
     def contains_line(self, line_str):

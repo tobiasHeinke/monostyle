@@ -421,6 +421,9 @@ def metric(toolname, document, reports):
         "para_long": 5,
         "para_short": 2
     }
+    def is_blank(code):
+        """Check if the code is empty or contains only whitespaces."""
+        return code.is_empty() or all(map(str.isspace, code.iter_lines()))
 
     def compare(node_cur, sen_full, counter, reports, sub_para=False, is_last=False):
         if node_cur.node_name == "sect":
@@ -461,7 +464,7 @@ def metric(toolname, document, reports):
                                        how="{0}/{1} paragraphs".format(
                                            counter["para_short"], 1)),
                                    node_cur.code
-                                   if not (node_cur.code.isspace() and node_cur.prev)
+                                   if not (is_blank(node_cur.code) and node_cur.prev)
                                    else node_cur.prev.code))
                         counter["para_short"] = 0
                     elif counter["para"] != 0:
@@ -496,7 +499,7 @@ def metric(toolname, document, reports):
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg, False):
         if node_cur is None or part.code.end_pos > node_cur.code.end_pos:
             if node_cur:
-                if not stop and sen_full and not sen_full.isspace():
+                if not stop and sen_full and not is_blank(sen_full):
                     counter["para"] += 1
                 node_prev = node_cur
                 is_last = bool(rst_walker.is_of(node_cur.parent_node,
@@ -569,7 +572,7 @@ def metric(toolname, document, reports):
                         sen_full = None
 
     if node_cur:
-        if not stop and sen_full and not sen_full.isspace():
+        if not stop and sen_full and not is_blank(sen_full):
             counter["para"] += 1
         reports = compare(node_cur, sen_full, counter, reports, is_last=True)
 

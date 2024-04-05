@@ -34,7 +34,7 @@ def get_link_titles(rst_parser):
             node_next = node.next
             while node_next:
                 if (node_next.node_name in {"target", "comment", "substdef"} or
-                        (node_next.node_name == "text" and node_next.code.isspace()) or
+                        rst_walker.is_blank_text(node_next) or
                         rst_walker.is_of(node_next, "dir", "highlight")):
                     node_next = node_next.next
                 else:

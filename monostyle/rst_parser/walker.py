@@ -169,6 +169,19 @@ def is_of(node, node_name_rule, name_rule=None, part_node_name_rule=None):
     return True
 
 
+def is_blank_text(node):
+    """Check if the node is text, empty or contains only whitespace."""
+    if node is None:
+        return False
+
+    if not is_of(node, "text"):
+        return False
+    if not node.code.is_empty() and not all(map(str.isspace, node.code.iter_lines())):
+        return False
+
+    return True
+
+
 def to_node(node):
     """Return part's parent if it's a part."""
     if not node:

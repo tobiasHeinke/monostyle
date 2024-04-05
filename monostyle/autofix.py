@@ -69,7 +69,9 @@ def apply(filename, tools, reports_unfixed, rst_parser):
         new_changes = FragmentBundle()
         for entry_old in changes_file:
             for entry in changes:
-                if entry_old.is_overlapped(entry, False) and entry_old.isspace():
+                if (entry_old.is_overlapped(entry, False) and
+                        (entry_old.is_empty() or
+                         all(map(str.isspace, entry_old.iter_lines())))):
                     break
             else:
                 new_changes.combine(entry_old, check_align=False, pos_lincol=False, merge=False)
