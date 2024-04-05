@@ -590,14 +590,14 @@ def ui_case(toolname, document, reports):
 
 
 OPS = (
-    ("abbr-caps", abbr_caps, abbr_caps_pre),
-    ("admonition-title", admonition_title, None),
-    ("heading-caps", heading_caps, heading_caps_pre),
-    ("pos-case", pos_case, None),
-    ("proper-noun", proper_noun, proper_noun_pre),
-    ("start-case", start_case, start_case_pre),
-    ("type", typ_case, typ_case_pre),
-    ("ui", ui_case, None),
+    ("abbr-caps", abbr_caps, abbr_caps_pre, None),
+    ("admonition-title", admonition_title, None, None),
+    ("heading-caps", heading_caps, heading_caps_pre, None),
+    ("pos-case", pos_case, None, None),
+    ("proper-noun", proper_noun, proper_noun_pre, None),
+    ("start-case", start_case, start_case_pre, None),
+    ("type", typ_case, typ_case_pre, None),
+    ("ui", ui_case, None, None),
 )
 
 

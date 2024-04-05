@@ -473,12 +473,12 @@ def style_extra(toolname, document, reports):
 
 
 OPS = (
-    ("blank-line", blank_line, None),
-    ("flavor", flavor, None),
-    ("heading-line-length", heading_lines, None),
-    ("line-style", line_style, line_style_pre),
-    ("long-line", long_line, None),
-    ("style-extra", style_extra, None)
+    ("blank-line", blank_line, None, None),
+    ("flavor", flavor, None, None),
+    ("heading-line-length", heading_lines, None, None),
+    ("line-style", line_style, line_style_pre, None),
+    ("long-line", long_line, None, None),
+    ("style-extra", style_extra, None, None)
 )
 
 

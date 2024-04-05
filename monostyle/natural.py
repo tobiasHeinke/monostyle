@@ -909,14 +909,14 @@ def repeated(toolname, document, reports, config):
 
 OPS = (
     ("abbreviation", abbreviation, abbreviation_pre, True),
-    ("article", article, article_pre),
-    ("collocation", collocation, collocation_pre),
-    ("grammar", search_pure, grammar_pre),
-    ("hyphen", hyphen, hyphen_pre),
-    ("metric", metric, None),
-    ("overuse", overuse, overuse_pre),
-    ("passive", search_pure, passive_pre),
-    ("repeated", repeated, repeated_pre),
+    ("article", article, article_pre, None),
+    ("collocation", collocation, collocation_pre, None),
+    ("grammar", search_pure, grammar_pre, None),
+    ("hyphen", hyphen, hyphen_pre, None),
+    ("metric", metric, None, None),
+    ("overuse", overuse, overuse_pre, None),
+    ("passive", search_pure, passive_pre, None),
+    ("repeated", repeated, repeated_pre, None),
 )
 
 

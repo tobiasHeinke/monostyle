@@ -73,14 +73,14 @@ def init(ops, op_names, mod_name):
             if init.lexicon_exist is False:
                 continue
 
-        for op in ops:
-            if op_name == op[0]:
+        for toolname, tool, tool_pre, do_loop in ops:
+            if op_name == toolname:
                 args = {}
-                if len(op) > 2 and op[2] is not None:
+                if tool_pre is not None:
                     # evaluate pre
-                    args = op[2](op[0])
+                    args = tool_pre(toolname)
 
-                ops_sel.append((op[0], op[1], args, bool(not(len(op) > 3 and not op[3]))))
+                ops_sel.append((toolname, tool, args, do_loop))
                 break
         else:
             print("{0}: unknown operation: {1}".format(mod_name, op_name))
@@ -156,8 +156,9 @@ def apply(mods, path, rst_parser, parse_options, version_options=None):
     for ops, ext_test in mods:
         ops_loop = []
         for op in ops:
-            if not op[3]:
-                reports = op[1](op[0], reports, **op[2])
+            toolname, tool, args, do_loop = op
+            if not do_loop:
+                reports = tool(toolname, reports, **args)
             else:
                 ops_loop.append(op)
 
@@ -213,16 +214,16 @@ def apply(mods, path, rst_parser, parse_options, version_options=None):
             if ext_test and not document.code.filename.endswith(ext_test):
                 continue
 
-            for op in ops:
+            for toolname, tool, args, do_loop in ops:
                 # init failed
-                if op[2] is None:
+                if args is None:
                     continue
 
-                if "config" in op[2]:
-                    op[2]["config"].update(config_dynamic)
+                if "config" in args:
+                    args["config"].update(config_dynamic)
 
                 reports_tool = []
-                reports_tool = op[1](op[0], document, reports_tool, **op[2])
+                reports_tool = tool(toolname, document, reports_tool, **args)
 
                 for report in reports_tool:
                     if not filter_options or not filter_reports(report, filter_options):
@@ -352,13 +353,13 @@ def main(descr=None, mod_selection=None, parse_options=None):
     parser = argparse.ArgumentParser(description=descr)
     if is_selection:
         tools = parser.add_argument_group(title="Tools")
-        for op in mod_selection[0]:
+        for toolname, tool, _, __ in mod_selection[0]:
             doc_str = ''
-            if op[1].__doc__ is not None:
+            if tool.__doc__ is not None:
                 # first char to lowercase
-                doc_str = op[1].__doc__[0].lower() + op[1].__doc__[1:]
-            tools.add_argument("--" + op[0], dest="op_names",
-                                action="append_const", const=op[0], metavar="",
+                doc_str = tool.__doc__[0].lower() + tool.__doc__[1:]
+            tools.add_argument("--" + toolname, dest="op_names",
+                                action="append_const", const=toolname, metavar="",
                                 help=doc_str)
 
     group = parser.add_mutually_exclusive_group()

@@ -108,7 +108,7 @@ def word_filtered(document):
 
 
 OPS = (
-    ("new-word", search, search_pre),
+    ("new-word", search, search_pre, None),
 )
 
 if __name__ == "__main__":

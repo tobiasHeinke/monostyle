@@ -102,9 +102,9 @@ def eof(toolname, document, reports, re_lib, config):
 
 
 OPS = (
-    ("char-search", char_search, None),
+    ("char-search", char_search, None, None),
     ("encoding", encoding, None, False),
-    ("EOF", eof, eof_pre),
+    ("EOF", eof, eof_pre, None),
 )
 
 if __name__ == "__main__":

@@ -495,10 +495,10 @@ def whitespace(toolname, document, reports, re_lib):
 
 
 OPS = (
-    ("mark", mark, mark_pre),
-    ("number", number, number_pre),
-    ("pairs", pairs, pairs_pre),
-    ("whitespace", whitespace, whitespace_pre)
+    ("mark", mark, mark_pre, None),
+    ("number", number, number_pre, None),
+    ("pairs", pairs, pairs_pre, None),
+    ("whitespace", whitespace, whitespace_pre, None)
 )
 
 

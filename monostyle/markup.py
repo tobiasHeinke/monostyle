@@ -1271,13 +1271,13 @@ def structure(toolname, document, reports, data):
 
 
 OPS = (
-    ("highlight", highlight, highlight_pre),
-    ("heading-level", heading_level, None),
-    ("indention", indention, None),
-    ("kbd", kbd, kbd_pre),
-    ("leak", leak, leak_pre),
-    ("markup-names", markup_names, None),
-    ("structure", structure, structure_pre),
+    ("highlight", highlight, highlight_pre, None),
+    ("heading-level", heading_level, None, None),
+    ("indention", indention, None, None),
+    ("kbd", kbd, kbd_pre, None),
+    ("leak", leak, leak_pre, None),
+    ("markup-names", markup_names, None, None),
+    ("structure", structure, structure_pre, None),
 )
 
 
