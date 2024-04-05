@@ -165,8 +165,8 @@ def page_name(toolname, document, reports):
 
             if was_kind:
                 found = False
-                for kind in {"node", "texture", "strip", "effect", "constraint", "modifier",
-                             "physics", "editor", "panel"}:
+                for kind in ("node", "texture", "strip", "effect", "constraint", "modifier",
+                             "physics", "editor", "panel"):
                     if kind.startswith(word):
                         match_count += 1
                         found = True

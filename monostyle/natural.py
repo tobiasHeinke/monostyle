@@ -99,7 +99,7 @@ def abbreviation_pre(_):
 
     args = dict()
     args["data"] = {"explanations": explanations, "ignore": ignore}
-    args["config"] = (instr_pos, instr_neg)
+    args["config"] = {"instr_pos": instr_pos, "instr_neg": instr_neg}
     return args
 
 
@@ -108,7 +108,8 @@ def abbreviation(toolname, document, reports, data, config):
     segmenter = Segmenter()
     part_of_speech = PartofSpeech()
 
-    for part in rst_walker.iter_nodeparts_instr(document.body, config[0], config[1]):
+    for part in rst_walker.iter_nodeparts_instr(document.body,
+                                                config["instr_pos"], config["instr_neg"]):
         for word in segmenter.iter_word(part.code):
             if not part_of_speech.isacr(word) and not part_of_speech.isabbr(word):
                 continue
