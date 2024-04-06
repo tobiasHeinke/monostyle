@@ -42,7 +42,7 @@ def blank_line(toolname, document, reports):
                 return count, node_walk, True
 
             if not was_space:
-                if skip and skip_over_sect(node_walk):
+                if skip and rst_walker.is_annotation(node_walk):
                     count = 0
                 else:
                     break
@@ -50,22 +50,6 @@ def blank_line(toolname, document, reports):
             node_walk = node_walk.prev if not invert else node_walk.next
 
         return count, node_walk, False
-
-    def skip_over_sect(node):
-        if not node:
-            return False
-        if node.node_name == "field-list":
-            # Sphinx special metafields; check only first, flags only
-            node = node.body.child_nodes.first()
-            return bool(str(node.name.code) in {"tocdepth", "nocomments", "orphan", "nosearch"} and
-                        is_blank(node.body.code))
-
-        for typ in (("target",), ("comment",), ("substdef",),
-                    ("dir", "highlight"), ("dir", "index")):
-            if rst_walker.is_of(node, *typ):
-                return True
-
-        return False
 
     def is_sect(node):
         return bool(node and (node.node_name == "sect" or
@@ -84,8 +68,8 @@ def blank_line(toolname, document, reports):
         count, node_over, __ = counter(node)
 
         is_proxy = False
-        if skip_over_sect(node):
-            if skip_over_sect(node_over):
+        if rst_walker.is_annotation(node):
+            if rst_walker.is_annotation(node_over):
                 aim_alt = 0
 
             _, node_under, __ = counter(node, True, invert=True)

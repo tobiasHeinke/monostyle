@@ -169,6 +169,27 @@ def is_of(node, node_name_rule, name_rule=None, part_node_name_rule=None):
     return True
 
 
+def is_annotation(node):
+    """Check if the node belongs to the annotation category
+    thus itself is not represented in builds.
+    """
+    if not node:
+        return False
+    if node.node_name == "field-list":
+        # Sphinx special metafields; check only first, flags only
+        node = node.body.child_nodes.first()
+        return bool(str(node.name.code) in {"tocdepth", "nocomments", "orphan", "nosearch"} and
+                    len(node.body.child_nodes) == 1 and
+                    is_blank_text(node.body.child_nodes.first()))
+
+    for typ in (("target",), ("comment",), ("substdef",),
+                ("dir", "highlight"), ("dir", "index")):
+        if is_of(node, *typ):
+            return True
+
+    return False
+
+
 def is_blank_text(node):
     """Check if the node is text, empty or contains only whitespace."""
     if node is None:

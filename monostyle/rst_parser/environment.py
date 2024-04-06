@@ -33,9 +33,8 @@ def get_link_titles(rst_parser):
         for node in rst_walker.iter_node(doc.body, "target"):
             node_next = node.next
             while node_next:
-                if (node_next.node_name in {"target", "comment", "substdef"} or
-                        rst_walker.is_blank_text(node_next) or
-                        rst_walker.is_of(node_next, "dir", "highlight")):
+                if (rst_walker.is_annotation(node_next) or
+                        rst_walker.is_blank_text(node_next)):
                     node_next = node_next.next
                 else:
                     if node_next.node_name == "sect":

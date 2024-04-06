@@ -1128,11 +1128,9 @@ def structure(toolname, document, reports, data):
             waypoint = waypoint_active if not waypoint_con else waypoint_con
             if node_active.node_name == "text":
                 return rst_walker.is_blank_text(node_active)
-            for typ in (("target",), ("comment",), ("substdef",),
-                        ("dir", "highlight"), ("dir", "index")):
-                if rst_walker.is_of(node_active, *typ):
-                    return bool(typ[0] != waypoint["node"] and
-                            (len(typ) == 1 or typ[1] != waypoint["name"]))
+            if rst_walker.is_annotation(node_active):
+                return bool(node_active.node_name != waypoint["node"] and
+                            (not node_active.name or node_active.name != waypoint["name"]))
             return False
 
         operators = {
