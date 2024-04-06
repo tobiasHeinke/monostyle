@@ -99,10 +99,10 @@ Explicit Block:
 		substdef
 			| {id} | {name} :: {name_end} {head}
 
-		footref
+		footdef
 			[ {id} ] {head}
 
-		citref
+		citdef
 			[ {id} ] {head}
 
 		target

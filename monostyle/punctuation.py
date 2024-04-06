@@ -330,7 +330,7 @@ def number(toolname, document, reports, re_lib):
         "substdef": {"image": ["head"], "unicode": "*", "replace": "*"},
         "comment": "*", "doctest": "*", "target": "*",
         "role": {"kbd": "*", "default": "*"},
-        "literal": "*", "standalone": "*", "footref": "*", "citref": "*"
+        "literal": "*", "standalone": "*", "foot": "*", "cit": "*"
     }
 
     for part in rst_walker.iter_nodeparts_instr(document.body, instr_pos, instr_neg):
